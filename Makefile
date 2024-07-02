@@ -7,6 +7,15 @@ build:
 	@echo "Building..."
 	@go build -o bin/ ./cmd/httpserver
 
-run: build
+buildd:
+	@echo "Build with docker"
+	@docker build -t goworkers .
+
+run:
 	@echo "Running..."
 	@go run ./cmd/httpserver
+
+rund:
+	@echo "Running with docker"
+	@docker run -p 8787:8787 --rm goworkers
+
