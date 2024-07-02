@@ -1,6 +1,6 @@
 module vibrain
 
-go 1.21.5
+go 1.22.4
 
 require (
 	github.com/getkin/kin-openapi v0.124.0
