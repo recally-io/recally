@@ -1,3 +1,6 @@
+PORT=8787
+
+
 lint:
 	@echo "Linting..."
 	@golangci-lint run --fix ./...  --enable gofumpt
@@ -17,5 +20,5 @@ run:
 
 rund:
 	@echo "Running with docker"
-	@docker run -p 8787:8787 --rm goworkers
+	@docker run -p $(PORT):$(PORT) --rm goworkers
 
