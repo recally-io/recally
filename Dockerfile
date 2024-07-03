@@ -16,5 +16,4 @@ WORKDIR /service/
 
 COPY --from=build /go/bin/app .
 
-EXPOSE 8787
 CMD ["./app"]
