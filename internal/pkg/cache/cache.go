@@ -8,8 +8,10 @@ import (
 )
 
 // var instance *cache.Cache
-var instance *cache.Cache
-var once sync.Once
+var (
+	instance *cache.Cache
+	once     sync.Once
+)
 
 // New creates a new cache instance
 func New() *cache.Cache {

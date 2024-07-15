@@ -5,12 +5,28 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
-	"vibrain/internal/pkg/config"
+	"vibrain/internal/pkg/constant"
 )
 
-var defaultLogAttrs = []string{config.ContextKeyRequestID, config.ContextKeyUserID}
+var defaultLogAttrs = []string{constant.ContextKeyRequestID, constant.ContextKeyUserID}
 
-func New() *slog.Logger {
+// Default logger
+var Default = New()
+
+// Logger is a wrapper around slog.Logger
+type Logger struct {
+	*slog.Logger
+}
+
+// Debug logs a message at level Fatal on the standard logger.
+// it will exit the program after logging
+func (l Logger) Fatal(msg string, args ...interface{}) {
+	l.Error(msg, args...)
+	os.Exit(1)
+}
+
+// New creates a new logger
+func New() Logger {
 	debug, err := strconv.ParseBool(os.Getenv("DEBUG"))
 	if err != nil {
 		debug = false
@@ -21,22 +37,26 @@ func New() *slog.Logger {
 	} else {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	}
-	return logger
+	return Logger{
+		Logger: logger,
+	}
 }
 
-func FromContext(ctx context.Context) *slog.Logger {
-	logger := getValFromContext(ctx, config.ContextKeyLogger)
+// FromContext returns a logger from context
+func FromContext(ctx context.Context) Logger {
+	logger := getValFromContext(ctx, constant.ContextKeyLogger)
 	if logger != nil {
-		return logger.(*slog.Logger)
+		return logger.(Logger)
 	}
-	newLogger := New()
-	handler := newLogger.Handler().WithAttrs(buildLogAttrs(ctx))
-	newLogger = slog.New(handler)
-	return newLogger
+	sLogger := New()
+	handler := sLogger.Handler().WithAttrs(buildLogAttrs(ctx))
+	return Logger{
+		Logger: slog.New(handler),
+	}
 }
 
 func getValFromContext(ctx context.Context, key string) interface{} {
-	return ctx.Value(config.ContextKey(key))
+	return ctx.Value(constant.ContextKey(key))
 }
 
 func buildLogAttrs(ctx context.Context) []slog.Attr {
