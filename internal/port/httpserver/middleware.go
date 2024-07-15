@@ -1,11 +1,10 @@
 package httpserver
 
 import (
-	"time"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/logger"
-
 	"log/slog"
+	"time"
+	"vibrain/internal/pkg/constant"
+	"vibrain/internal/pkg/logger"
 	"vibrain/internal/port/httpserver/contexts"
 
 	"github.com/google/uuid"
@@ -19,7 +18,7 @@ func registerMiddlewares(e *echo.Echo) {
 			return uuid.Must(uuid.NewV7()).String()
 		},
 		RequestIDHandler: func(c echo.Context, id string) {
-			contexts.Set(c, config.ContextKeyRequestID, id)
+			contexts.Set(c, constant.ContextKeyRequestID, id)
 		},
 	}))
 	e.Use(requestLoggerMiddleware())
@@ -37,7 +36,7 @@ func registerMiddlewares(e *echo.Echo) {
 func contextMiddleWare() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			contexts.Set(c, config.ContextKeyLogger, logger.FromContext(c.Request().Context()))
+			contexts.Set(c, constant.ContextKeyLogger, logger.FromContext(c.Request().Context()))
 			return next(c)
 		}
 	}

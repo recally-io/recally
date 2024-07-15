@@ -7,7 +7,6 @@ import (
 )
 
 func registerRouters(e *echo.Echo) {
-
 	v1Api := e.Group("/api/v1")
 
 	tools := v1Api.Group("/tools")

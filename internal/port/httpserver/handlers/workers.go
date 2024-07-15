@@ -19,8 +19,6 @@ func WebReaderHandler(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-
-
 	content, err := workers.WebReader(ctx, req.URL)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)

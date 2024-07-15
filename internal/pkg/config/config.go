@@ -4,6 +4,7 @@ import (
 	"vibrain/internal/pkg/logger"
 
 	"github.com/caarlos0/env/v11"
+	"github.com/joho/godotenv"
 )
 
 var Settings = &Config{}
@@ -37,6 +38,13 @@ type Config struct {
 }
 
 func init() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		logger.Default.Fatal("Error loading .env file", "err", err)
+	}
+	logger.Default.Info(".env file loaded")
+
+	// Load env to settings
 	if err := env.Parse(Settings); err != nil {
 		logger.Default.Fatal("failed to load settings", "err", err)
 	}
