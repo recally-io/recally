@@ -9,10 +9,10 @@ func JsonResponse(c echo.Context, code int, data interface{}) error {
 	})
 }
 
-func ErrorResponse(c echo.Context, code int, errs ...error) error {
+func ErrorResponse(c echo.Context, code int, err error) error {
 	return c.JSON(code, map[string]interface{}{
 		"success": false,
-		"errors":  errs,
+		"errors":  err.Error(),
 		"data":    nil,
 	})
 }

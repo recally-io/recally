@@ -12,7 +12,6 @@ import (
 	"vibrain/internal/port/httpserver"
 )
 
-
 type Service interface {
 	Name() string
 	Start(ctx context.Context)
@@ -24,26 +23,27 @@ func main() {
 	defer stop()
 	logger.Default.Info("starting service")
 
-	botService, err := bots.NewServer(config.Settings.TelegramToken, bots.DefaultHandlers()...)	
-	if err != nil {
-		logger.Default.Fatal("failed to create new bot service", "error", err)
+	services := make([]Service, 0)
+
+	if config.Settings.TelegramToken != "" {
+		botService, err := bots.NewServer(config.Settings.TelegramToken, bots.DefaultHandlers()...)
+		if err != nil {
+			logger.Default.Fatal("failed to create new bot service", "error", err)
+		}
+		services = append(services, botService)
 	}
 
 	httpService, err := httpserver.NewServer()
 	if err != nil {
 		logger.Default.Fatal("failed to create new http service", "error", err)
 	}
+	services = append(services, httpService)
 
 	queueService, err := queue.NewServer()
 	if err != nil {
 		logger.Default.Fatal("failed to create new queue service", "error", err)
 	}
-
-	services := []Service{
-		botService,
-		httpService,
-		queueService,
-	}
+	services = append(services, queueService)
 
 	// start services
 	for _, service := range services {
