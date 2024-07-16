@@ -2,42 +2,21 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
 	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/logger"
+	"vibrain/internal/port/bots"
 	"vibrain/internal/port/httpserver"
-
-	"github.com/labstack/echo/v4"
 )
 
-func newQueue(ctx context.Context) *queue.Queue {
-	q, err := queue.New(config.Settings.QueueDatabaseURL)
-	if err != nil {
-		logger.Default.Fatal("failed to create queue", "error", err)
-	}
-	go func() {
-		if err := q.Start(ctx); err != nil {
-			logger.Default.Fatal("failed to start queue", "error", err)
-		}
-		logger.Default.Info("queue started")
-	}()
-	return q
-}
 
-func newServer() *echo.Echo {
-	server := httpserver.New()
-	go func() {
-		addr := fmt.Sprintf(":%d", config.Settings.Port)
-		if err := server.Start(fmt.Sprintf(":%d", config.Settings.Port)); err != nil {
-			logger.Default.Fatal("failed to start server", "addr", addr, "error", err)
-		}
-		logger.Default.Info("server started", "addr", addr)
-	}()
-	return server
+type Service interface {
+	Name() string
+	Start(ctx context.Context)
+	Stop(ctx context.Context)
 }
 
 func main() {
@@ -45,23 +24,41 @@ func main() {
 	defer stop()
 	logger.Default.Info("starting service")
 
-	// start queue
-	q := newQueue(ctx)
-	// start http server
-	server := newServer()
+	botService, err := bots.NewServer(config.Settings.TelegramToken, bots.DefaultHandlers()...)	
+	if err != nil {
+		logger.Default.Fatal("failed to create new bot service", "error", err)
+	}
+
+	httpService, err := httpserver.NewServer()
+	if err != nil {
+		logger.Default.Fatal("failed to create new http service", "error", err)
+	}
+
+	queueService, err := queue.NewServer()
+	if err != nil {
+		logger.Default.Fatal("failed to create new queue service", "error", err)
+	}
+
+	services := []Service{
+		botService,
+		httpService,
+		queueService,
+	}
+
+	// start services
+	for _, service := range services {
+		go service.Start(ctx)
+		logger.Default.Info("service started", "name", service.Name())
+	}
 
 	// wait for signal and gracefully shutdown
 	<-ctx.Done()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// shutdown server
-	if err := server.Shutdown(ctx); err != nil {
-		logger.Default.Fatal("failed to shutdown server", "error", err)
-	}
-
-	// shutdown queue
-	if err := q.Stop(ctx); err != nil {
-		logger.Default.Fatal("failed to shutdown queue", "error", err)
+	// stop services
+	for _, service := range services {
+		service.Stop(ctx)
+		logger.Default.Info("service stopped", "name", service.Name())
 	}
 }

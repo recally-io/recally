@@ -33,8 +33,11 @@ var Settings = &Config{}
 type Config struct {
 	Debug            bool   `env:"DEBUG" envDefault:"false"`
 	Port             int    `env:"PORT" envDefault:"1323"`
+
 	DatabaseURL      string `env:"DATABASE_URL,required"`
 	QueueDatabaseURL string `env:"QUEUE_DATABASE_URL,expand" envDefault:"${DATABASE_URL}"`
+
+	TelegramToken string `env:"TELEGRAM_TOKEN,required"`
 }
 
 func init() {
