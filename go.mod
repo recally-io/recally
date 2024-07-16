@@ -4,6 +4,7 @@ go 1.22.4
 
 require (
 	github.com/caarlos0/env/v11 v11.1.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/joho/godotenv v1.5.1
@@ -11,6 +12,8 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/riverqueue/river v0.9.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
+	golang.org/x/oauth2 v0.21.0
+	gopkg.in/telebot.v3 v3.3.6
 )
 
 require (
@@ -31,5 +34,4 @@ require (
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	gopkg.in/telebot.v3 v3.3.6 // indirect
 )
