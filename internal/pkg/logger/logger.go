@@ -43,13 +43,15 @@ func New() Logger {
 }
 
 // FromContext returns a logger from context
-func FromContext(ctx context.Context) Logger {
+func FromContext(ctx context.Context, attrs ...slog.Attr) Logger {
 	logger := getValFromContext(ctx, constant.ContextKeyLogger)
 	if logger != nil {
 		return logger.(Logger)
 	}
 	sLogger := New()
-	handler := sLogger.Handler().WithAttrs(buildLogAttrs(ctx))
+
+	defaultAttrs := buildLogAttrs(ctx)
+	handler := sLogger.Handler().WithAttrs(append(defaultAttrs, attrs...))
 	return Logger{
 		Logger: slog.New(handler),
 	}
