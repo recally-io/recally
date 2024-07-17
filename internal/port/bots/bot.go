@@ -26,7 +26,6 @@ func New(token string, handlers ...Handler) (*tele.Bot, error) {
 		Token:  token,
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new bot: %w", err)
 	}
