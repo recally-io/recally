@@ -6,11 +6,9 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
-
 type Service struct {
 	b *tele.Bot
 }
-
 
 func NewServer(token string, handlers ...Handler) (*Service, error) {
 	b, err := New(token, handlers...)
