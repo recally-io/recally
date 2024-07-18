@@ -7,6 +7,7 @@ import (
 	"time"
 	"vibrain/internal/pkg/constant"
 	"vibrain/internal/pkg/logger"
+	"vibrain/internal/port/bots/handlers"
 
 	"github.com/google/uuid"
 	tele "gopkg.in/telebot.v3"
@@ -48,6 +49,7 @@ func DefaultHandlers() []Handler {
 			logger.FromContext(ctx).Info("start command")
 			return c.Send("Hello! I'm a bot. Ask me anything.")
 		}),
+		WithHandler(tele.OnText, handlers.TextHandler),
 	}
 }
 
