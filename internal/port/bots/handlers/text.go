@@ -2,8 +2,13 @@ package handlers
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"regexp"
+	"strings"
+	"time"
 	"vibrain/internal/core/workers"
+	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/constant"
 	"vibrain/internal/pkg/logger"
 
@@ -21,11 +26,57 @@ func TextHandler(c tele.Context) error {
 	if url == "" {
 		return c.Reply("Please provide a valid URL.")
 	}
-	summary, err := workers.WebSummary(ctx, url)
+	reader, err := workers.WebSummaryStream(ctx, url)
 	if err != nil {
-		return c.Reply("Failed to get summary.")
+		return c.Reply(fmt.Sprintf("Failed to get summary:\n%s", err.Error()))
 	}
-	return c.Reply(summary)
+	defer reader.Close()
+
+	processSendError := func(err error) error {
+		logger.FromContext(ctx).Error("TextHandler failed to send message", "error", err.Error())
+		return c.Reply("Failed to send message. " + err.Error())
+	}
+
+	msg, err := c.Bot().Send(user, "Please wait, I'm reading the page.")
+	if err != nil {
+		return processSendError(err)
+	}
+	resp := ""
+	chunk := ""
+	chunkSize := 400
+	for {
+		line, err := reader.Stream()
+		chunk += line
+
+		if err != nil {
+			if err == io.EOF {
+				resp += chunk
+				resp = strings.ReplaceAll(resp, "\\n", "\n")
+				cache.New().Set(fmt.Sprintf("WebSummary:%s", url), resp, 24*time.Hour)
+				if _, err := c.Bot().Edit(msg, resp); err != nil {
+					if strings.Contains(err.Error(), "message is not modified") {
+						return nil
+					}
+					return processSendError(err)
+				}
+				return nil
+			}
+			logger.FromContext(ctx).Error("TextHandler", "error", err.Error())
+			if _, err := c.Bot().Edit(msg, "Failed to get summary."); err != nil {
+				return processSendError(err)
+			}
+		}
+
+		if len(chunk) > chunkSize {
+			resp += chunk
+			chunk = ""
+			var newErr error
+			msg, newErr = c.Bot().Edit(msg, resp)
+			if newErr != nil {
+				return processSendError(err)
+			}
+		}
+	}
 }
 
 func getUrlFromText(text string) string {

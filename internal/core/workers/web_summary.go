@@ -18,21 +18,81 @@ import (
 
 const elmoSummaryUrl = "https://www.elmo.chat/api/v1/prompt"
 
+type StreamStringReader struct {
+	io.Closer
+	*bufio.Reader
+	Text string
+}
+
+func (r *StreamStringReader) Stream() (string, error) {
+	if r.Text != "" {
+		return r.Text, io.EOF
+	}
+	for {
+		// Read until the next newline
+		line, err := r.ReadBytes('\n')
+		if err != nil {
+			// If the error is EOF, send it to errChan and return
+			if errors.Is(err, io.EOF) {
+				return "", io.EOF
+			}
+			return "", err
+		}
+		if bytes.HasPrefix(line, []byte("0:")) {
+			// using regex to extract the summary text, origin text will be '0:"som text"', and I only want 'some text'
+			text := string(line[3 : len(line)-2])
+			return strings.ReplaceAll(text, "\\n", "\n"), nil
+		}
+	}
+}
+
+func (r *StreamStringReader) Close() {
+	if r.Closer != nil {
+		r.Closer.Close()
+	}
+}
+
 func WebSummary(ctx context.Context, url string) (string, error) {
+	cacheKey := fmt.Sprintf("WebSummary:%s", url)
+	reader, err := WebSummaryStream(ctx, url)
+	if err != nil {
+		return "", err
+	}
+	sb := strings.Builder{}
+	for {
+		line, err := reader.Stream()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				summary := sb.String()
+				summary = strings.ReplaceAll(summary, "\\n", "\n")
+				cache.New().Set(cacheKey, summary, 24*time.Hour)
+				return summary, nil
+			}
+			return "", err
+		}
+		sb.WriteString(line)
+	}
+}
+
+func WebSummaryStream(ctx context.Context, url string) (*StreamStringReader, error) {
 	return elmoSummary(ctx, url, "")
 }
 
-func elmoSummary(ctx context.Context, url, pageContent string) (string, error) {
+func elmoSummary(ctx context.Context, url, pageContent string) (*StreamStringReader, error) {
 	// get result from cache
 	cacheKey := fmt.Sprintf("WebSummary:%s", url)
+	reader := &StreamStringReader{}
 	if val, ok := cache.New().Get(cacheKey); ok {
 		logger.FromContext(ctx).Info("WebSummary", "cache", "hit", "url", url)
-		return val.(string), nil
+		reader = &StreamStringReader{
+			Text: val.(string),
+		}
+		return reader, nil
 	}
 	if pageContent == "" {
 		content, err := WebReader(ctx, url)
 		if err != nil {
-			return "", fmt.Errorf("failed to get content: %w", err)
+			return reader, fmt.Errorf("failed to get content: %w", err)
 		}
 		pageContent = content.Content
 		url = content.Url
@@ -55,7 +115,7 @@ func elmoSummary(ctx context.Context, url, pageContent string) (string, error) {
 
 	req, err := http.NewRequest("POST", elmoSummaryUrl, bytes.NewBuffer(body))
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return reader, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "text/plain;charset=UTF-8")
 	req.Header.Set("Accept", "*/*")
@@ -64,46 +124,20 @@ func elmoSummary(ctx context.Context, url, pageContent string) (string, error) {
 	client := newHttpClient()
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to send request: %w", err)
+		return reader, fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	// defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		respData, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return "", fmt.Errorf("failed to read response body: %w", err)
+			return reader, fmt.Errorf("failed to read response body: %w", err)
 		}
 		slog.Error("summary url error", "url", url, "status", resp.Status, "err", string(respData))
-		return "", fmt.Errorf("failed to get summary: %s, %v", resp.Status, string(respData))
+		return reader, fmt.Errorf("failed to get summary: %s, %v", resp.Status, string(respData))
 	}
-
-	summary, err := processStreamResponse(resp.Body)
-	if err == nil {
-		// set cache
-		logger.FromContext(ctx).Info("WebSummary", "cache", "set", "url", url)
-		cache.New().Set(cacheKey, summary, 24*time.Hour)
+	reader = &StreamStringReader{
+		Closer: resp.Body,
+		Reader: bufio.NewReader(resp.Body),
 	}
-
-	return summary, nil
-}
-
-func processStreamResponse(body io.ReadCloser) (string, error) {
-	var summary string
-	reader := bufio.NewReader(body)
-	defer body.Close()
-	for {
-		// Read until the next newline
-		line, err := reader.ReadBytes('\n')
-		if err != nil {
-			// If the error is EOF, send it to errChan and return
-			if errors.Is(err, io.EOF) {
-				summary = strings.ReplaceAll(summary, "\\n", "\n")
-				return summary, nil
-			}
-			return "", err
-		}
-		if bytes.HasPrefix(line, []byte("0:")) {
-			// using regex to extract the summary text, origin text will be '0:"som text"', and I only want 'some text'
-			summary += string(line[3 : len(line)-2])
-		}
-	}
+	return reader, nil
 }
