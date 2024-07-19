@@ -14,7 +14,6 @@ var mdParser goldmark.Markdown
 var once sync.Once
 
 func convertToTGMarkdown(md string) string {
-
 	once.Do(func() {
 		mdParser = tgmd.TGMD()
 		tgmd.Config.UpdateHeading1(tgmd.Element{

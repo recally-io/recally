@@ -5,16 +5,49 @@ import (
 	"fmt"
 	"net/http"
 	"vibrain/internal/pkg/config"
+	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
+	"vibrain/internal/port/httpserver/handlers"
 	"vibrain/web"
 
 	"github.com/labstack/echo/v4"
 )
 
-func New() *echo.Echo {
+type Service struct {
+	Server  *echo.Echo
+	Handler *handlers.Handler
+}
+
+func New(pool *db.Pool, opts ...handlers.Option) (*Service, error) {
+	handler := handlers.New(pool, opts...)
+	service := &Service{
+		Server: newServer(handler),
+	}
+	return service, nil
+}
+
+func (s *Service) Start(ctx context.Context) {
+	addr := fmt.Sprintf("localhost:%d", config.Settings.Service.Port)
+
+	if err := s.Server.Start(addr); err != nil {
+		logger.Default.Fatal("failed to start", "service", s.Name(), "addr", addr, "error", err)
+	}
+}
+
+func (s *Service) Stop(ctx context.Context) {
+	if err := s.Server.Shutdown(ctx); err != nil {
+		logger.Default.Fatal("failed to stop", "service", s.Name(), "error", err)
+	}
+}
+
+func (s *Service) Name() string {
+	return "http server"
+}
+
+func newServer(handler *handlers.Handler) *echo.Echo {
 	e := echo.New()
 	registerMiddlewares(e)
-	registerRouters(e)
+	registerRouters(e, handler)
 
 	// Health check
 	e.GET("/status", func(c echo.Context) error {
@@ -23,32 +56,4 @@ func New() *echo.Echo {
 	// static files
 	e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
 	return e
-}
-
-type HttpService struct {
-	E *echo.Echo
-}
-
-func NewServer() (*HttpService, error) {
-	return &HttpService{
-		E: New(),
-	}, nil
-}
-
-func (s *HttpService) Start(ctx context.Context) {
-	addr := fmt.Sprintf("localhost:%d", config.Settings.Port)
-
-	if err := s.E.Start(addr); err != nil {
-		logger.Default.Fatal("failed to start", "service", s.Name(), "addr", addr, "error", err)
-	}
-}
-
-func (s *HttpService) Stop(ctx context.Context) {
-	if err := s.E.Shutdown(ctx); err != nil {
-		logger.Default.Fatal("failed to stop", "service", s.Name(), "error", err)
-	}
-}
-
-func (s *HttpService) Name() string {
-	return "http server"
 }

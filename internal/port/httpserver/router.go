@@ -6,24 +6,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func registerRouters(e *echo.Echo) {
+func registerRouters(e *echo.Echo, handler *handlers.Handler) {
 	v1Api := e.Group("/api/v1")
-	apiToolsRouters(v1Api)
-	authRouters(e.Group("/oauth"))
-}
 
-func apiToolsRouters(e *echo.Group) {
-	tools := e.Group("/tools")
+	tools := v1Api.Group("/tools")
+	tools.GET("/web/reader", handler.WebReaderHandler)
+	tools.POST("/web/reader", handler.WebReaderHandler)
+	tools.GET("/web/search", handler.WebSearchHandler)
+	tools.POST("/web/search", handler.WebSearchHandler)
+	tools.GET("/web/summary", handler.WebSummaryHandler)
+	tools.POST("/web/summary", handler.WebSummaryHandler)
 
-	tools.GET("/web/reader", handlers.WebReaderHandler)
-	tools.POST("/web/reader", handlers.WebReaderHandler)
-	tools.GET("/web/search", handlers.WebSearchHandler)
-	tools.POST("/web/search", handlers.WebSearchHandler)
-	tools.GET("/web/summary", handlers.WebSummaryHandler)
-	tools.POST("/web/summary", handlers.WebSummaryHandler)
-}
-
-func authRouters(oauth *echo.Group) {
-	oauth.GET("/:provider/login", handlers.OAuthLoginHandler)
-	oauth.GET("/:provider/callback", handlers.OAuthCallbackHandler)
+	oauth := e.Group("/oauth")
+	oauth.GET("/:provider/login", handler.OAuthLoginHandler)
+	oauth.GET("/:provider/callback", handler.OAuthCallbackHandler)
 }

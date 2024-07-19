@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/logger"
 )
 
@@ -52,9 +51,9 @@ func (r *StreamStringReader) Close() {
 	}
 }
 
-func WebSummary(ctx context.Context, url string) (string, error) {
+func (w *Worker) WebSummary(ctx context.Context, url string) (string, error) {
 	cacheKey := fmt.Sprintf("WebSummary:%s", url)
-	reader, err := WebSummaryStream(ctx, url)
+	reader, err := w.WebSummaryStream(ctx, url)
 	if err != nil {
 		return "", err
 	}
@@ -65,7 +64,9 @@ func WebSummary(ctx context.Context, url string) (string, error) {
 			if errors.Is(err, io.EOF) {
 				summary := sb.String()
 				summary = strings.ReplaceAll(summary, "\\n", "\n")
-				cache.New().Set(cacheKey, summary, 24*time.Hour)
+				if w.cache != nil {
+					w.cache.SetWithContext(ctx, cacheKey, summary, 24*time.Hour)
+				}
 				return summary, nil
 			}
 			return "", err
@@ -74,23 +75,25 @@ func WebSummary(ctx context.Context, url string) (string, error) {
 	}
 }
 
-func WebSummaryStream(ctx context.Context, url string) (*StreamStringReader, error) {
-	return elmoSummary(ctx, url, "")
+func (w *Worker) WebSummaryStream(ctx context.Context, url string) (*StreamStringReader, error) {
+	return w.elmoSummary(ctx, url, "")
 }
 
-func elmoSummary(ctx context.Context, url, pageContent string) (*StreamStringReader, error) {
+func (w *Worker) elmoSummary(ctx context.Context, url, pageContent string) (*StreamStringReader, error) {
 	// get result from cache
 	cacheKey := fmt.Sprintf("WebSummary:%s", url)
 	reader := &StreamStringReader{}
-	if val, ok := cache.New().Get(cacheKey); ok {
-		logger.FromContext(ctx).Info("WebSummary", "cache", "hit", "url", url)
-		reader = &StreamStringReader{
-			Text: val.(string),
+	if w.cache != nil {
+		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
+			logger.FromContext(ctx).Info("WebSummary", "cache", "hit", "url", url)
+			reader = &StreamStringReader{
+				Text: val.(string),
+			}
+			return reader, nil
 		}
-		return reader, nil
 	}
 	if pageContent == "" {
-		content, err := WebReader(ctx, url)
+		content, err := w.WebReader(ctx, url)
 		if err != nil {
 			return reader, fmt.Errorf("failed to get content: %w", err)
 		}
