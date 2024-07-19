@@ -62,11 +62,15 @@ func contextMiddleware() tele.MiddlewareFunc {
 	return func(next tele.HandlerFunc) tele.HandlerFunc {
 		return func(c tele.Context) error {
 			ctx := context.Background()
+			start := time.Now()
 			ctx = context.WithValue(ctx, constant.ContextKey(constant.ContextKeyRequestID), uuid.Must(uuid.NewV7()).String())
 			ctx = context.WithValue(ctx, constant.ContextKey(constant.ContextKeyUserID), c.Sender().ID)
 			logger := logger.FromContext(ctx, slog.String("user_name", c.Sender().Username))
 			ctx = context.WithValue(ctx, constant.ContextKey(constant.ContextKeyLogger), logger)
 			c.Set(constant.ContextKeyContext, ctx)
+			defer func() {
+				logger.Info("message processed", slog.Duration("duration", time.Since(start)))
+			}()
 			return next(c)
 		}
 	}
