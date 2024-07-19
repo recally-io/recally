@@ -11,14 +11,16 @@ import (
 )
 
 func getOAuth2Config(provider string) (*oauth2.Config, error) {
-	if strings.ToLower(provider) == "github" {
-		return &oauth2.Config{
-			ClientID:     config.Settings.OAuthGithubKey,
-			ClientSecret: config.Settings.OAuthGithubSecret,
-			Endpoint:     github.Endpoint,
-			RedirectURL:  fmt.Sprintf("%s/oauth/github/callback", config.Settings.Fqdn),
-			Scopes:       []string{"user:email"},
-		}, nil
+	for _, oauth := range config.Settings.OAuths {
+		if strings.EqualFold(oauth.Provider, provider) {
+			return &oauth2.Config{
+				ClientID:     oauth.Key,
+				ClientSecret: oauth.Secret,
+				Endpoint:     github.Endpoint,
+				RedirectURL:  fmt.Sprintf("%s/oauth/github/callback", config.Settings.Service.Fqdn),
+				Scopes:       []string{"user:email"},
+			}, nil
+		}
 	}
 
 	return nil, fmt.Errorf("oauth provider '%s' not found", provider)

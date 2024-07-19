@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-	"vibrain/internal/core/workers"
-	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/constant"
 	"vibrain/internal/pkg/logger"
 
@@ -17,7 +15,7 @@ import (
 
 var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+`)
 
-func TextHandler(c tele.Context) error {
+func (h *Handler) TextHandler(c tele.Context) error {
 	user := c.Sender()
 	text := c.Text()
 	ctx := c.Get(constant.ContextKeyContext).(context.Context)
@@ -26,7 +24,7 @@ func TextHandler(c tele.Context) error {
 	if url == "" {
 		return c.Reply("Please provide a valid URL.")
 	}
-	reader, err := workers.WebSummaryStream(ctx, url)
+	reader, err := h.worker.WebSummaryStream(ctx, url)
 	if err != nil {
 		return c.Reply(fmt.Sprintf("Failed to get summary:\n%s", err.Error()))
 	}
@@ -52,7 +50,9 @@ func TextHandler(c tele.Context) error {
 			if err == io.EOF {
 				resp += chunk
 				resp = strings.ReplaceAll(resp, "\\n", "\n")
-				cache.New().Set(fmt.Sprintf("WebSummary:%s", url), resp, 24*time.Hour)
+				if h.Cache != nil {
+					h.Cache.SetWithContext(ctx, fmt.Sprintf("WebSummary:%s", url), resp, 24*time.Hour)
+				}
 				if _, err := c.Bot().Edit(msg, convertToTGMarkdown(resp), tele.ModeMarkdownV2); err != nil {
 					if strings.Contains(err.Error(), "message is not modified") {
 						return nil

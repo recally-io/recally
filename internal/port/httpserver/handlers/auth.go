@@ -13,7 +13,7 @@ func LoginHandler(c echo.Context) error {
 	return c.File("web/login.html")
 }
 
-func OAuthLoginHandler(c echo.Context) error {
+func (h *Handler) OAuthLoginHandler(c echo.Context) error {
 	provider := c.Param("provider")
 	ctx := c.Request().Context()
 	redirectUrl, err := auth.GetOAuth2RedirectURL(ctx, provider)
@@ -24,7 +24,7 @@ func OAuthLoginHandler(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
 }
 
-func OAuthCallbackHandler(c echo.Context) error {
+func (h *Handler) OAuthCallbackHandler(c echo.Context) error {
 	provider := c.Param("provider")
 	code := c.QueryParam("code")
 	ctx := c.Request().Context()

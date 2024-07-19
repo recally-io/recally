@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
-	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/logger"
 )
 
@@ -42,12 +41,14 @@ func newHttpClient() *http.Client {
 	}
 }
 
-func WebReader(ctx context.Context, url string) (*WebReaderContent, error) {
+func (w *Worker) WebReader(ctx context.Context, url string) (*WebReaderContent, error) {
 	// get result from cache
 	cacheKey := fmt.Sprintf("webreader:%s", url)
-	if val, ok := cache.New().Get(cacheKey); ok {
-		logger.FromContext(ctx).Info("WebReader", "cache", "hit", "url", url)
-		return val.(*WebReaderContent), nil
+	if w.cache != nil {
+		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
+			logger.FromContext(ctx).Info("WebReader", "cache", "hit", "url", url)
+			return val.(*WebReaderContent), nil
+		}
 	}
 	readerUrl := fmt.Sprintf("%s/%s", jinaReaderHost, url)
 	logger.FromContext(ctx).Info("WebReader", "url", readerUrl)
@@ -80,17 +81,21 @@ func WebReader(ctx context.Context, url string) (*WebReaderContent, error) {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 	// set cache
-	cache.New().Set(cacheKey, &content.Data, 24*time.Hour)
-	logger.FromContext(ctx).Info("WebReader", "cache", "set", "url", url)
+	if w.cache != nil {
+		w.cache.Set(cacheKey, &content.Data, 24*time.Hour)
+		logger.FromContext(ctx).Info("WebReader", "cache", "set", "url", url)
+	}
 	return &content.Data, nil
 }
 
-func WebSearcher(ctx context.Context, query string) ([]*WebReaderContent, error) {
+func (w *Worker) WebSearcher(ctx context.Context, query string) ([]*WebReaderContent, error) {
 	// get result from cache
 	cacheKey := fmt.Sprintf("websearcher:%s", query)
-	if val, ok := cache.New().Get(cacheKey); ok {
-		logger.FromContext(ctx).Info("WebSearcher", "cache", "hit", "query", query)
-		return val.([]*WebReaderContent), nil
+	if w.cache != nil {
+		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
+			logger.FromContext(ctx).Info("WebSearcher", "cache", "hit", "query", query)
+			return val.([]*WebReaderContent), nil
+		}
 	}
 	searcherUrl := fmt.Sprintf("%s/%s", jinaSearcherHost, query)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, searcherUrl, nil)
@@ -120,8 +125,9 @@ func WebSearcher(ctx context.Context, query string) ([]*WebReaderContent, error)
 	if err := json.NewDecoder(resp.Body).Decode(content); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
-
-	cache.New().Set(cacheKey, content.Data, 24*time.Hour)
-	logger.FromContext(ctx).Info("WebSearcher", "cache", "set", "query", query)
+	if w.cache != nil {
+		w.cache.SetWithContext(ctx, cacheKey, content.Data, 24*time.Hour)
+		logger.FromContext(ctx).Info("WebSearcher", "cache", "set", "query", query)
+	}
 	return content.Data, nil
 }
