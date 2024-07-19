@@ -3,6 +3,7 @@ module vibrain
 go 1.22.4
 
 require (
+	github.com/Mad-Pixels/goldmark-tgmd v0.0.10
 	github.com/caarlos0/env/v11 v11.1.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
@@ -12,6 +13,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/riverqueue/river v0.9.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
+	github.com/yuin/goldmark v1.6.0
 	golang.org/x/oauth2 v0.21.0
 	gopkg.in/telebot.v3 v3.3.6
 )

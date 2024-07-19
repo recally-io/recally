@@ -53,7 +53,7 @@ func TextHandler(c tele.Context) error {
 				resp += chunk
 				resp = strings.ReplaceAll(resp, "\\n", "\n")
 				cache.New().Set(fmt.Sprintf("WebSummary:%s", url), resp, 24*time.Hour)
-				if _, err := c.Bot().Edit(msg, resp); err != nil {
+				if _, err := c.Bot().Edit(msg, convertToTGMarkdown(resp), tele.ModeMarkdownV2); err != nil {
 					if strings.Contains(err.Error(), "message is not modified") {
 						return nil
 					}
