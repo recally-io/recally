@@ -8,7 +8,7 @@ RUN go mod download
 ENV CGO_ENABLED=0
 
 COPY . .
-RUN go build -ldflags="-s -w" -o /go/bin/app ./cmd/httpserver
+RUN go build -ldflags="-s -w" -o /go/bin/app main.go
 
 
 FROM gcr.io/distroless/base-debian12
