@@ -1,4 +1,14 @@
 services:
+  vibrain:
+    build: .
+    ports:
+      - "1323:1323"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+    volumes:
+      - .env:/app/.env
+    depends_on:
+      - postgres
   postgres:
     image: postgres:16
     environment:
