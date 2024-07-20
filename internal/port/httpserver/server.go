@@ -27,7 +27,7 @@ func New(pool *db.Pool, opts ...handlers.Option) (*Service, error) {
 }
 
 func (s *Service) Start(ctx context.Context) {
-	addr := fmt.Sprintf("localhost:%d", config.Settings.Service.Port)
+	addr := fmt.Sprintf("%s:%d", config.Settings.Service.Host, config.Settings.Service.Port)
 
 	if err := s.Server.Start(addr); err != nil {
 		logger.Default.Fatal("failed to start", "service", s.Name(), "addr", addr, "error", err)

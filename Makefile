@@ -4,9 +4,13 @@ lint:
 	@echo "Linting..."
 	@golangci-lint run --fix ./...  --enable gofumpt
 
-build:
+build: lint
 	@echo "Building..."
 	@go build -o bin/ main.go
+
+test: lint
+	@echo "Testing..."
+	@go test ./...
 
 run:
 	@echo "Running..."
