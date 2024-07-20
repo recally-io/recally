@@ -52,9 +52,9 @@ func (w *Worker) WebReader(ctx context.Context, url string) (*WebReaderContent, 
 	// get result from cache
 	cacheKey := cache.NewCacheKey(webReaderCacheDomian, url)
 	if w.cache != nil {
-		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
+		if val, ok := cache.Get[WebReaderContent](ctx, w.cache, cacheKey); ok {
 			logger.FromContext(ctx).Info("WebReader", "cache", "hit", "url", url)
-			return val.(*WebReaderContent), nil
+			return val, nil
 		}
 	}
 	readerUrl := fmt.Sprintf("%s/%s", jinaReaderHost, url)
@@ -99,13 +99,9 @@ func (w *Worker) WebSearcher(ctx context.Context, query string) ([]*WebReaderCon
 	// get result from cache
 	cacheKey := cache.NewCacheKey(webSearcherCacheDomian, query)
 	if w.cache != nil {
-		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
+		if val, ok := cache.Get[[]*WebReaderContent](ctx, w.cache, cacheKey); ok {
 			logger.FromContext(ctx).Info("WebSearcher", "cache", "hit", "query", query)
-			var content []*WebReaderContent
-			if err := json.Unmarshal(val.([]byte), &content); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal cache value: %w", err)
-			}
-			return content, nil
+			return *val, nil
 		}
 	}
 	searcherUrl := fmt.Sprintf("%s/%s", jinaSearcherHost, query)

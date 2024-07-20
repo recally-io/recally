@@ -85,10 +85,10 @@ func (w *Worker) elmoSummary(ctx context.Context, url, pageContent string) (*Str
 	cacheKey := cache.NewCacheKey(WebSummaryCacheDomian, url)
 	reader := &StreamStringReader{}
 	if w.cache != nil {
-		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
+		if val, ok := cache.Get[string](ctx, w.cache, cacheKey); ok {
 			logger.FromContext(ctx).Info("WebSummary", "cache", "hit", "url", url)
 			reader = &StreamStringReader{
-				Text: string(val.([]byte)),
+				Text: *val,
 			}
 			return reader, nil
 		}
