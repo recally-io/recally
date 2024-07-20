@@ -15,7 +15,7 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
-var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+`)
+var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+/?([^\s]*)`)
 
 func (h *Handler) TextHandler(c tele.Context) error {
 	user := c.Sender()
