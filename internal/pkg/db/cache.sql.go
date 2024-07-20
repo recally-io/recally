@@ -12,35 +12,38 @@ import (
 )
 
 const createCache = `-- name: CreateCache :exec
-INSERT INTO cache (key, value, expires_at, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO cache (domain, key, value, expires_at)
+VALUES ($1, $2, $3, $4)
 `
 
 type CreateCacheParams struct {
+	Domain    string
 	Key       string
-	Value     pgtype.Text
+	Value     []byte
 	ExpiresAt pgtype.Timestamp
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
 }
 
 func (q *Queries) CreateCache(ctx context.Context, arg CreateCacheParams) error {
 	_, err := q.db.Exec(ctx, createCache,
+		arg.Domain,
 		arg.Key,
 		arg.Value,
 		arg.ExpiresAt,
-		arg.CreatedAt,
-		arg.UpdatedAt,
 	)
 	return err
 }
 
 const deleteCacheByKey = `-- name: DeleteCacheByKey :exec
-DELETE FROM cache WHERE key = $1
+DELETE FROM cache WHERE key = $1 AND domain = $2
 `
 
-func (q *Queries) DeleteCacheByKey(ctx context.Context, key string) error {
-	_, err := q.db.Exec(ctx, deleteCacheByKey, key)
+type DeleteCacheByKeyParams struct {
+	Key    string
+	Domain string
+}
+
+func (q *Queries) DeleteCacheByKey(ctx context.Context, arg DeleteCacheByKeyParams) error {
+	_, err := q.db.Exec(ctx, deleteCacheByKey, arg.Key, arg.Domain)
 	return err
 }
 
@@ -54,14 +57,20 @@ func (q *Queries) DeleteExpiredCache(ctx context.Context, expiresAt pgtype.Times
 }
 
 const getCacheByKey = `-- name: GetCacheByKey :one
-SELECT id, key, value, expires_at, created_at, updated_at FROM cache WHERE key = $1
+SELECT id, domain, key, value, expires_at, created_at, updated_at FROM cache WHERE domain= $1 AND key = $2 AND expires_at > now()
 `
 
-func (q *Queries) GetCacheByKey(ctx context.Context, key string) (Cache, error) {
-	row := q.db.QueryRow(ctx, getCacheByKey, key)
+type GetCacheByKeyParams struct {
+	Domain string
+	Key    string
+}
+
+func (q *Queries) GetCacheByKey(ctx context.Context, arg GetCacheByKeyParams) (Cache, error) {
+	row := q.db.QueryRow(ctx, getCacheByKey, arg.Domain, arg.Key)
 	var i Cache
 	err := row.Scan(
 		&i.ID,
+		&i.Domain,
 		&i.Key,
 		&i.Value,
 		&i.ExpiresAt,
@@ -71,24 +80,40 @@ func (q *Queries) GetCacheByKey(ctx context.Context, key string) (Cache, error) 
 	return i, err
 }
 
+const isCacheExists = `-- name: IsCacheExists :one
+SELECT EXISTS(SELECT 1 FROM cache WHERE domain = $1 AND key = $2 AND expires_at > now()) as exists
+`
+
+type IsCacheExistsParams struct {
+	Domain string
+	Key    string
+}
+
+func (q *Queries) IsCacheExists(ctx context.Context, arg IsCacheExistsParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isCacheExists, arg.Domain, arg.Key)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const updateCache = `-- name: UpdateCache :exec
-UPDATE cache SET value = $2, expires_at = $3, updated_at = $4
-WHERE key = $1
+UPDATE cache SET value = $3, expires_at = $4
+WHERE key = $1 AND domain = $2
 `
 
 type UpdateCacheParams struct {
 	Key       string
-	Value     pgtype.Text
+	Domain    string
+	Value     []byte
 	ExpiresAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
 }
 
 func (q *Queries) UpdateCache(ctx context.Context, arg UpdateCacheParams) error {
 	_, err := q.db.Exec(ctx, updateCache,
 		arg.Key,
+		arg.Domain,
 		arg.Value,
 		arg.ExpiresAt,
-		arg.UpdatedAt,
 	)
 	return err
 }

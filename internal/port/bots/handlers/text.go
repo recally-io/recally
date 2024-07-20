@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"vibrain/internal/core/workers"
+	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/constant"
 	"vibrain/internal/pkg/logger"
 
@@ -51,7 +53,8 @@ func (h *Handler) TextHandler(c tele.Context) error {
 				resp += chunk
 				resp = strings.ReplaceAll(resp, "\\n", "\n")
 				if h.Cache != nil {
-					h.Cache.SetWithContext(ctx, fmt.Sprintf("WebSummary:%s", url), resp, 24*time.Hour)
+					cacheKey := cache.NewCacheKey(workers.WebSummaryCacheDomian, url)
+					h.Cache.SetWithContext(ctx, cacheKey, resp, 24*time.Hour)
 				}
 				if _, err := c.Bot().Edit(msg, convertToTGMarkdown(resp), tele.ModeMarkdownV2); err != nil {
 					if strings.Contains(err.Error(), "message is not modified") {

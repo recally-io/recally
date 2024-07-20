@@ -8,7 +8,14 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/logger"
+)
+
+const (
+	webReaderCacheDomian   = "webreader"
+	webSearcherCacheDomian = "websearcher"
+	WebSummaryCacheDomian  = "websummary"
 )
 
 type WebReaderContent struct {
@@ -43,7 +50,7 @@ func newHttpClient() *http.Client {
 
 func (w *Worker) WebReader(ctx context.Context, url string) (*WebReaderContent, error) {
 	// get result from cache
-	cacheKey := fmt.Sprintf("webreader:%s", url)
+	cacheKey := cache.NewCacheKey(webReaderCacheDomian, url)
 	if w.cache != nil {
 		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
 			logger.FromContext(ctx).Info("WebReader", "cache", "hit", "url", url)
@@ -90,11 +97,15 @@ func (w *Worker) WebReader(ctx context.Context, url string) (*WebReaderContent, 
 
 func (w *Worker) WebSearcher(ctx context.Context, query string) ([]*WebReaderContent, error) {
 	// get result from cache
-	cacheKey := fmt.Sprintf("websearcher:%s", query)
+	cacheKey := cache.NewCacheKey(webSearcherCacheDomian, query)
 	if w.cache != nil {
 		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
 			logger.FromContext(ctx).Info("WebSearcher", "cache", "hit", "query", query)
-			return val.([]*WebReaderContent), nil
+			var content []*WebReaderContent
+			if err := json.Unmarshal(val.([]byte), &content); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal cache value: %w", err)
+			}
+			return content, nil
 		}
 	}
 	searcherUrl := fmt.Sprintf("%s/%s", jinaSearcherHost, query)

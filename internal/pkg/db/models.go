@@ -10,8 +10,9 @@ import (
 
 type Cache struct {
 	ID        int32
+	Domain    string
 	Key       string
-	Value     pgtype.Text
+	Value     []byte
 	ExpiresAt pgtype.Timestamp
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
