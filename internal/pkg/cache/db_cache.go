@@ -55,7 +55,7 @@ func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value interf
 		logger.FromContext(ctx).Warn("failed to check cache exists", "key", key, "err", err)
 		return
 	}
-	jsonValue, err := json.Marshal(value)
+	jsonValue, err := Marshaler(value)
 	if err != nil {
 		logger.FromContext(ctx).Warn("failed to marshal value", "key", key, "err", err)
 		return
@@ -84,11 +84,11 @@ func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value interf
 	}
 }
 
-func (c *DbCache) Get(key CacheKey) (any, bool) {
+func (c *DbCache) Get(key CacheKey) ([]byte, bool) {
 	return c.GetWithContext(context.Background(), key)
 }
 
-func (c *DbCache) GetWithContext(ctx context.Context, key CacheKey) (any, bool) {
+func (c *DbCache) GetWithContext(ctx context.Context, key CacheKey) ([]byte, bool) {
 	item, err := c.getConn().GetCacheByKey(ctx, db.GetCacheByKeyParams{
 		Domain: key.Domain,
 		Key:    key.Key,
@@ -122,4 +122,24 @@ func (c *DbCache) DeleteExpiredWithContext(ctx context.Context) {
 	if err := c.getConn().DeleteExpiredCache(ctx, pgtype.Timestamp{Time: time.Now()}); err != nil {
 		logger.FromContext(ctx).Warn("failed to delete expired cache", "err", err)
 	}
+}
+
+func Marshaler[T any](value T) ([]byte, error) {
+	return json.Marshal(value)
+}
+
+func MustUnmarshaler[T any](data []byte, value *T) {
+	if err := json.Unmarshal(data, value); err != nil {
+		logger.Default.Fatal("failed to unmarshal cache value", "err", err)
+	}
+}
+
+func Get[T any](ctx context.Context, c *DbCache, key CacheKey) (*T, bool) {
+	data, ok := c.GetWithContext(ctx, key)
+	if !ok {
+		return nil, false
+	}
+	var value T
+	MustUnmarshaler(data, &value)
+	return &value, true
 }
