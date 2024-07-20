@@ -38,7 +38,7 @@ func main() {
 	}
 
 	// init cache service
-	cacheService := cache.New(cache.WithDB(pool))
+	cacheService := cache.NewDBCache(pool)
 
 	// start services
 	if config.Settings.TelegramToken != "" {

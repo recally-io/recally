@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/logger"
 )
 
@@ -52,7 +53,6 @@ func (r *StreamStringReader) Close() {
 }
 
 func (w *Worker) WebSummary(ctx context.Context, url string) (string, error) {
-	cacheKey := fmt.Sprintf("WebSummary:%s", url)
 	reader, err := w.WebSummaryStream(ctx, url)
 	if err != nil {
 		return "", err
@@ -65,6 +65,7 @@ func (w *Worker) WebSummary(ctx context.Context, url string) (string, error) {
 				summary := sb.String()
 				summary = strings.ReplaceAll(summary, "\\n", "\n")
 				if w.cache != nil {
+					cacheKey := cache.NewCacheKey(WebSummaryCacheDomian, url)
 					w.cache.SetWithContext(ctx, cacheKey, summary, 24*time.Hour)
 				}
 				return summary, nil
@@ -81,13 +82,13 @@ func (w *Worker) WebSummaryStream(ctx context.Context, url string) (*StreamStrin
 
 func (w *Worker) elmoSummary(ctx context.Context, url, pageContent string) (*StreamStringReader, error) {
 	// get result from cache
-	cacheKey := fmt.Sprintf("WebSummary:%s", url)
+	cacheKey := cache.NewCacheKey(WebSummaryCacheDomian, url)
 	reader := &StreamStringReader{}
 	if w.cache != nil {
 		if val, ok := w.cache.GetWithContext(ctx, cacheKey); ok {
 			logger.FromContext(ctx).Info("WebSummary", "cache", "hit", "url", url)
 			reader = &StreamStringReader{
-				Text: val.(string),
+				Text: string(val.([]byte)),
 			}
 			return reader, nil
 		}
