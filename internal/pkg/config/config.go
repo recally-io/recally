@@ -20,12 +20,13 @@ type OAuthConfig struct {
 
 type ServiceConfig struct {
 	Fqdn string `env:"FQDN" envDefault:"localhost:1323"`
+	Host string `env:"HOST" envDefault:"localhost"`
 	Port int    `env:"PORT" envDefault:"1323"`
 }
 
 type Config struct {
 	Debug   bool          `env:"DEBUG" envDefault:"false"`
-	Service ServiceConfig `envPrefix:"SERVICE"`
+	Service ServiceConfig `envPrefix:"SERVICE_"`
 
 	DatabaseURL      string `env:"DATABASE_URL,required"`
 	QueueDatabaseURL string `env:"QUEUE_DATABASE_URL,expand" envDefault:"${DATABASE_URL}"`
