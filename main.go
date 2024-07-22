@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"time"
+	"vibrain/database"
 	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
@@ -26,6 +27,9 @@ type Service interface {
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
+
+	migrations.Migrate(ctx, config.Settings.DatabaseURL)
+
 	logger.Default.Info("starting service")
 
 	services := make([]Service, 0)

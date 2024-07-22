@@ -4,17 +4,22 @@ lint:
 	@echo "Linting..."
 	@golangci-lint run --fix ./...  --enable gofumpt
 
-build: lint
+generate:
+	@echo "Generating..."
+	@go generate ./...
+	@go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
+
+build: generate lint
 	@echo "Building..."
-	@go build -o bin/ main.go
+	@go build -o bin/app main.go
 
 test: lint
 	@echo "Testing..."
 	@go test ./...
 
-run:
+run: build
 	@echo "Running..."
-	@go run ./cmd/httpserver
+	@./bin/app
 
 docker-build:
 	@echo "Building with docker"
