@@ -37,13 +37,13 @@ migrate-new:
 	@echo "Creating migration..."
 	@migrate create -ext sql -dir db/migrations -seq "$(name)"
 
-migrate-up:
-	@echo "Migrating up..."
-	@migrate -path db/migrations -database "$(DATABASE_URL)" up
+# migrate-up:
+# 	@echo "Migrating up..."
+# 	@migrate -path db/migrations -database "$(DATABASE_URL)" up
 
-migrate-down:
-	@echo "Migrating down..."
-	@migrate -path db/migrations -database "$(DATABASE_URL)" down
+# migrate-down:
+# 	@echo "Migrating down..."
+# 	@migrate -path db/migrations -database "$(DATABASE_URL)" down
 
 sqlc:
 	@echo "Generating sqlc..."
