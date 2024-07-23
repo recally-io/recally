@@ -29,7 +29,7 @@ type TelegramConfig struct {
 	Token       string `env:"TOKEN,required"`
 	Name        string `env:"NAME"`
 	Description string `env:"DESCRIPTION"`
-	Webhook     bool   `env:"WEBHOOK" envDefault:"false"`
+	Webhook     string `env:"WEBHOOK"`
 }
 
 type DatabaseConfig struct {
