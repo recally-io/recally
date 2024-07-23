@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"time"
-	"vibrain/database"
+	migrations "vibrain/database"
 	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
@@ -14,8 +14,6 @@ import (
 	"vibrain/internal/port/bots"
 	"vibrain/internal/port/httpserver"
 	httpserverHandlers "vibrain/internal/port/httpserver/handlers"
-
-	botsHandlers "vibrain/internal/port/bots/handlers"
 )
 
 type Service interface {
@@ -44,21 +42,30 @@ func main() {
 	// init cache service
 	cacheService := cache.NewDBCache(pool)
 
-	// start services
-	if config.Settings.Telegram.Token != "" {
-		botService, err := bots.NewServer(config.Settings.Telegram.Token, pool, botsHandlers.WithCache(cacheService))
-		if err != nil {
-			logger.Default.Fatal("failed to create new bot service", "error", err)
-		}
-		services = append(services, botService)
-	}
-
+	// start http service
 	httpService, err := httpserver.New(pool, httpserverHandlers.WithCache(cacheService))
 	if err != nil {
 		logger.Default.Fatal("failed to create new http service", "error", err)
 	}
 	services = append(services, httpService)
 
+	// start telegram bot service
+	if config.Settings.Telegram.Token != "" {
+		opts := make([]bots.Option, 0)
+		opts = append(opts, bots.WithCache(cacheService))
+
+		if config.Settings.Telegram.Webhook != "" {
+			opts = append(opts, bots.WithWebhook(httpService.Server, config.Settings.Telegram.Webhook))
+		}
+
+		botService, err := bots.NewServer(config.Settings.Telegram.Token, pool, opts...)
+		if err != nil {
+			logger.Default.Fatal("failed to create new bot service", "error", err)
+		}
+		services = append(services, botService)
+	}
+
+	// start queue service
 	queueService, err := queue.NewServer(pool)
 	if err != nil {
 		logger.Default.Fatal("failed to create new queue service", "error", err)

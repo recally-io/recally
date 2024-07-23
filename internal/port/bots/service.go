@@ -2,8 +2,11 @@ package bots
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
+	"net/url"
 	"time"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/constant"
@@ -12,13 +15,16 @@ import (
 	"vibrain/internal/port/bots/handlers"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	tele "gopkg.in/telebot.v3"
 	"gopkg.in/telebot.v3/middleware"
 )
 
 type Service struct {
-	b       *tele.Bot
-	handler *handlers.Handler
+	b          *tele.Bot
+	handler    *handlers.Handler
+	token      string
+	webhookUrl string
 }
 
 type Option func(*Service)
@@ -29,23 +35,71 @@ func WithCache(c *cache.DbCache) Option {
 	}
 }
 
-func NewServer(token string, pool *db.Pool, opts ...handlers.Option) (*Service, error) {
-	handler := handlers.New(pool, opts...)
+func WithWebhook(e *echo.Echo, webhookUrl string) Option {
+	return func(s *Service) {
+		s.webhookUrl = webhookUrl
+		u, err := url.Parse(webhookUrl)
+		if err != nil {
+			logger.Default.Fatal("failed to parse webhook url", "err", err)
+		}
+		e.POST(u.Path, func(c echo.Context) error {
+			if s.token != "" && c.Request().Header.Get("X-Telegram-Bot-Api-Secret-Token") != s.token {
+				logger.FromContext(c.Request().Context()).Error("invalid secret token in request")
+				return c.String(http.StatusUnauthorized, "invalid secret token")
+			}
+
+			var update tele.Update
+			if err := json.NewDecoder(c.Request().Body).Decode(&update); err != nil {
+				logger.FromContext(c.Request().Context()).Error("cannot decode update", "err", err)
+				return c.String(http.StatusBadRequest, fmt.Sprintf("cannot decode update: %s", err))
+			}
+			s.b.Updates <- update
+			return nil
+		})
+	}
+}
+
+func NewServer(token string, pool *db.Pool, opts ...Option) (*Service, error) {
+	handler := handlers.New(pool)
+
 	b, err := newBot(token, handler)
 	if err != nil {
 		return nil, err
 	}
 	return &Service{
-		b: b,
+		token: token,
+		b:     b,
 	}, nil
 }
 
 func (s *Service) Start(ctx context.Context) {
-	s.b.Start()
+	if s.webhookUrl != "" {
+		// SetWebhook
+		params := map[string]string{
+			"url": s.webhookUrl,
+			// "drop_pending_updates": "true",
+			// "secret_token": 	   s.token,
+		}
+		if _, err := s.b.Raw("setWebhook", params); err != nil {
+			logger.FromContext(ctx).Error("failed to set webhook", "err", err)
+		}
+	} else {
+		s.b.Start()
+	}
 }
 
 func (s *Service) Stop(ctx context.Context) {
-	s.b.Stop()
+	if s.webhookUrl != "" {
+		dropPending := true
+		// RemoveWebhook
+		if _, err := s.b.Raw("deleteWebhook", map[string]bool{
+			"drop_pending_updates": dropPending,
+		}); err != nil {
+			logger.FromContext(ctx).Error("failed to remove webhook", "err", err)
+		}
+	} else {
+		s.b.Stop()
+	}
 }
 
 func (s *Service) Name() string {
