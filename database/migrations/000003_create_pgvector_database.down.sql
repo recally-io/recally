@@ -1,0 +1,4 @@
+
+DROP EXTENSION IF EXISTS vector;
+
+DROP TABLE IF EXISTS text_embeddings;

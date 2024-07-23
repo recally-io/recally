@@ -4,6 +4,8 @@
 // database/migrations/000001_new_cache_table.up.sql
 // database/migrations/000002_river.down.sql
 // database/migrations/000002_river.up.sql
+// database/migrations/000003_create_pgvector_database.down.sql
+// database/migrations/000003_create_pgvector_database.up.sql
 package migrations
 
 import (
@@ -155,7 +157,47 @@ func _000002_riverUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000002_river.up.sql", size: 5041, mode: os.FileMode(420), modTime: time.Unix(1721491002, 0)}
+	info := bindataFileInfo{name: "000002_river.up.sql", size: 5041, mode: os.FileMode(420), modTime: time.Unix(1721705023, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000003_create_pgvector_databaseDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xe2\x72\x09\xf2\x0f\x50\x70\x8d\x08\x71\xf5\x0b\xf6\xf4\xf7\x53\xf0\x74\x53\x70\x8d\xf0\x0c\x0e\x09\x56\x28\x4b\x4d\x2e\xc9\x2f\xb2\xe6\x82\xa8\x08\x71\x74\xf2\x71\x45\x92\x2d\x49\xad\x28\x89\x4f\xcd\x4d\x4a\x4d\x49\xc9\xcc\x4b\x2f\xb6\xe6\x02\x04\x00\x00\xff\xff\x07\xcb\xdb\x69\x49\x00\x00\x00")
+
+func _000003_create_pgvector_databaseDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000003_create_pgvector_databaseDownSql,
+		"000003_create_pgvector_database.down.sql",
+	)
+}
+
+func _000003_create_pgvector_databaseDownSql() (*asset, error) {
+	bytes, err := _000003_create_pgvector_databaseDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000003_create_pgvector_database.down.sql", size: 73, mode: os.FileMode(420), modTime: time.Unix(1721724824, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000003_create_pgvector_databaseUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x94\x90\x41\x6b\xc2\x30\x14\xc7\xef\xf9\x14\xef\xa6\xc2\x3c\x8c\xb1\x1d\xf4\x14\xeb\x53\xb2\xb5\x69\x49\xd2\x51\x4f\x25\x9a\x20\x81\x59\x47\x9b\x8d\xc2\xd8\x77\x1f\xcd\xb4\x15\xe7\x65\x39\xe6\xfd\x7f\x8f\xff\xfb\x4d\xa7\x10\xd5\x56\x7b\x0b\xd9\xfa\xd5\xee\xfc\xb1\x06\x6c\xbd\xad\x1a\x77\xac\x48\x24\x90\x2a\x04\x2c\x14\x72\xc9\x52\x0e\x6c\x05\x3c\x55\x80\x05\x93\x4a\xc2\x67\xc8\xcf\x09\x99\x0e\x5b\x7e\xff\xc0\xeb\xed\x9b\x3d\xf3\x8a\x2e\x62\x24\x00\x70\xc5\x7b\xdb\xfa\xd2\x1e\xb6\xd6\x18\x57\xed\x1b\x18\x87\x4c\xf7\x9c\x81\x05\x5b\x4b\x14\x8c\xc6\x90\x09\x96\x50\xb1\x81\x17\xdc\xdc\xf5\x89\x83\xf5\xda\x68\xaf\xe1\x59\xa6\x7c\x11\xb6\xf2\x3c\x8e\x61\x89\x2b\x9a\xc7\x0a\x46\x5f\xdf\xa3\xd9\x2c\x0c\x07\xe8\xa3\xb1\x75\xe9\x0c\x34\xbe\x76\xd5\xbe\x87\x86\x40\xd7\x08\x14\x16\xea\xc6\xec\xa2\xe8\xe9\xc8\xf1\xfd\xe3\xc3\xd3\xe4\x46\x74\x17\x5c\x98\x52\x7b\x50\x2c\x41\xa9\x68\x92\xf5\xcd\xa2\x5c\x08\xe4\xaa\xec\x27\x17\xfd\xde\xcd\x3f\xb8\x80\x4d\xe6\xe4\xac\x99\xf1\x25\x16\x57\x8a\x9d\x69\xcb\xee\x6a\x48\xf9\x5f\xdd\x27\x1d\x93\x39\xf9\x09\x00\x00\xff\xff\x9d\xcf\x7e\x7e\x06\x02\x00\x00")
+
+func _000003_create_pgvector_databaseUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000003_create_pgvector_databaseUpSql,
+		"000003_create_pgvector_database.up.sql",
+	)
+}
+
+func _000003_create_pgvector_databaseUpSql() (*asset, error) {
+	bytes, err := _000003_create_pgvector_databaseUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000003_create_pgvector_database.up.sql", size: 518, mode: os.FileMode(420), modTime: time.Unix(1721728155, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -212,10 +254,12 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"000001_new_cache_table.down.sql": _000001_new_cache_tableDownSql,
-	"000001_new_cache_table.up.sql":   _000001_new_cache_tableUpSql,
-	"000002_river.down.sql":           _000002_riverDownSql,
-	"000002_river.up.sql":             _000002_riverUpSql,
+	"000001_new_cache_table.down.sql":          _000001_new_cache_tableDownSql,
+	"000001_new_cache_table.up.sql":            _000001_new_cache_tableUpSql,
+	"000002_river.down.sql":                    _000002_riverDownSql,
+	"000002_river.up.sql":                      _000002_riverUpSql,
+	"000003_create_pgvector_database.down.sql": _000003_create_pgvector_databaseDownSql,
+	"000003_create_pgvector_database.up.sql":   _000003_create_pgvector_databaseUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -259,10 +303,12 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"000001_new_cache_table.down.sql": &bintree{_000001_new_cache_tableDownSql, map[string]*bintree{}},
-	"000001_new_cache_table.up.sql":   &bintree{_000001_new_cache_tableUpSql, map[string]*bintree{}},
-	"000002_river.down.sql":           &bintree{_000002_riverDownSql, map[string]*bintree{}},
-	"000002_river.up.sql":             &bintree{_000002_riverUpSql, map[string]*bintree{}},
+	"000001_new_cache_table.down.sql":          &bintree{_000001_new_cache_tableDownSql, map[string]*bintree{}},
+	"000001_new_cache_table.up.sql":            &bintree{_000001_new_cache_tableUpSql, map[string]*bintree{}},
+	"000002_river.down.sql":                    &bintree{_000002_riverDownSql, map[string]*bintree{}},
+	"000002_river.up.sql":                      &bintree{_000002_riverUpSql, map[string]*bintree{}},
+	"000003_create_pgvector_database.down.sql": &bintree{_000003_create_pgvector_databaseDownSql, map[string]*bintree{}},
+	"000003_create_pgvector_database.up.sql":   &bintree{_000003_create_pgvector_databaseUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory
