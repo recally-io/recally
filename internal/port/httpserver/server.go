@@ -31,7 +31,8 @@ func New(pool *db.Pool, opts ...Option) (*Service, error) {
 	handler := handlers.New(pool)
 
 	service := &Service{
-		Server: newServer(handler),
+		Server:  newServer(handler),
+		Handler: handler,
 	}
 	for _, opt := range opts {
 		opt(service)
