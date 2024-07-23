@@ -9,7 +9,7 @@ generate:
 	@go generate ./...
 	@go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
 
-build: generate lint
+build: lint
 	@echo "Building..."
 	@go build -o bin/app main.go
 
@@ -17,9 +17,17 @@ test: lint
 	@echo "Testing..."
 	@go test ./...
 
-run: build
+run: build db-up
 	@echo "Running..."
 	@./bin/app
+
+ngrok:
+	@echo "Running ngrok..."
+	@ngrok http 1323
+
+db-up:
+	@echo "Starting database..."
+	@docker compose up -d postgres
 
 docker-build:
 	@echo "Building with docker"

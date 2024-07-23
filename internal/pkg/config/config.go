@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"vibrain/internal/pkg/logger"
 
@@ -24,17 +25,35 @@ type ServiceConfig struct {
 	Port int    `env:"PORT" envDefault:"1323"`
 }
 
+type TelegramConfig struct {
+	Token       string `env:"TOKEN,required"`
+	Name        string `env:"NAME"`
+	Description string `env:"DESCRIPTION"`
+	Webhook     bool   `env:"WEBHOOK" envDefault:"false"`
+}
+
+type DatabaseConfig struct {
+	Driver   string `env:"DRIVER" envDefault:"postgres"`
+	Host     string `env:"HOST" envDefault:"localhost"`
+	Port     int    `env:"PORT" envDefault:"5432"`
+	User     string `env:"USER" envDefault:"postgres"`
+	Password string `env:"PASSWORD" envDefault:"postgres"`
+	Database string `env:"DATABASE" envDefault:"postgres"`
+}
+
+func (db DatabaseConfig) URL() string {
+	return fmt.Sprintf("%s://%s:%s@%s:%d/%s?sslmode=disable", db.Driver, db.User, db.Password, db.Host, db.Port, db.Database)
+}
+
 type Config struct {
 	Debug   bool          `env:"DEBUG" envDefault:"false"`
 	Service ServiceConfig `envPrefix:"SERVICE_"`
 
-	DatabaseURL      string `env:"DATABASE_URL,required"`
-	QueueDatabaseURL string `env:"QUEUE_DATABASE_URL,expand" envDefault:"${DATABASE_URL}"`
-
-	TelegramToken string `env:"TELEGRAM_TOKEN"`
+	Database DatabaseConfig `envPrefix:"DATABASE_"`
+	Telegram TelegramConfig `envPrefix:"TELEGRAM_"`
 
 	JWTSecret string        `env:"JWT_SECRET,required"`
-	OAuths    []OAuthConfig `envPrefix:"OAUTH"`
+	OAuths    []OAuthConfig `envPrefix:"OAUTH_"`
 }
 
 func init() {
