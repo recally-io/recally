@@ -13,7 +13,6 @@ import (
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/port/bots"
 	"vibrain/internal/port/httpserver"
-	httpserverHandlers "vibrain/internal/port/httpserver/handlers"
 )
 
 type Service interface {
@@ -43,7 +42,7 @@ func main() {
 	cacheService := cache.NewDBCache(pool)
 
 	// start http service
-	httpService, err := httpserver.New(pool, httpserverHandlers.WithCache(cacheService))
+	httpService, err := httpserver.New(pool, httpserver.WithCache(cacheService))
 	if err != nil {
 		logger.Default.Fatal("failed to create new http service", "error", err)
 	}
