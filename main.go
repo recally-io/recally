@@ -28,7 +28,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
 
-	migrations.Migrate(ctx, config.Settings.DatabaseURL)
+	migrations.Migrate(ctx, config.Settings.Database.URL())
 
 	logger.Default.Info("starting service")
 
@@ -36,7 +36,7 @@ func main() {
 
 	// init basic services
 	// init db pool
-	pool, err := db.NewPool(ctx, config.Settings.DatabaseURL)
+	pool, err := db.NewPool(ctx, config.Settings.Database.URL())
 	if err != nil {
 		logger.Default.Fatal("failed to create new database pool", "error", err)
 	}
@@ -45,8 +45,8 @@ func main() {
 	cacheService := cache.NewDBCache(pool)
 
 	// start services
-	if config.Settings.TelegramToken != "" {
-		botService, err := bots.NewServer(config.Settings.TelegramToken, pool, botsHandlers.WithCache(cacheService))
+	if config.Settings.Telegram.Token != "" {
+		botService, err := bots.NewServer(config.Settings.Telegram.Token, pool, botsHandlers.WithCache(cacheService))
 		if err != nil {
 			logger.Default.Fatal("failed to create new bot service", "error", err)
 		}
