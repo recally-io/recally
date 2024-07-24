@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
@@ -18,10 +19,22 @@ type Service struct {
 	Handler *handlers.Handler
 }
 
-func New(pool *db.Pool, opts ...handlers.Option) (*Service, error) {
-	handler := handlers.New(pool, opts...)
+type Option func(*Service)
+
+func WithCache(c *cache.DbCache) Option {
+	return func(s *Service) {
+		s.Handler.Cache = c
+	}
+}
+
+func New(pool *db.Pool, opts ...Option) (*Service, error) {
+	handler := handlers.New(pool)
+
 	service := &Service{
 		Server: newServer(handler),
+	}
+	for _, opt := range opts {
+		opt(service)
 	}
 	return service, nil
 }
