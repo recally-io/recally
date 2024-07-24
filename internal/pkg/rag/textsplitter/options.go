@@ -1,7 +1,7 @@
 package textsplitter
 
 const (
-	_defaultTokenChunkSize    = 1000
+	_defaultTokenChunkSize    = 2000
 	_defaultTokenChunkOverlap = 200
 )
 

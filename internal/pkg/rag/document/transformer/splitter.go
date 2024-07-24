@@ -13,18 +13,20 @@ var ErrMismatchMetadatasAndText = errors.New("number of texts and metadatas does
 
 func WithTextSplitter(textSplitter textsplitter.TextSplitter) Transformer {
 	return func(docs []document.Document) ([]document.Document, error) {
-		texts := make([]string, 0)
-		metadatas := make([]map[string]any, 0)
-		for _, document := range docs {
-			texts = append(texts, document.Content)
-			metadatas = append(metadatas, document.Metadata)
-		}
+		return Batch(func(d []document.Document) ([]document.Document, error) {
+			texts := make([]string, 0)
+			metadatas := make([]map[string]any, 0)
+			for _, document := range d {
+				texts = append(texts, document.Content)
+				metadatas = append(metadatas, document.Metadata)
+			}
 
-		return CreateDocuments(textSplitter, texts, metadatas)
+			return createDocuments(textSplitter, texts, metadatas)
+		}, docs)
 	}
 }
 
-func CreateDocuments(textSplitter textsplitter.TextSplitter, texts []string, metadatas []map[string]any) ([]document.Document, error) {
+func createDocuments(textSplitter textsplitter.TextSplitter, texts []string, metadatas []map[string]any) ([]document.Document, error) {
 	if len(metadatas) == 0 {
 		metadatas = make([]map[string]any, len(texts))
 	}
