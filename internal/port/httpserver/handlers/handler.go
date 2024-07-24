@@ -12,12 +12,9 @@ type Handler struct {
 	worker *workers.Worker
 }
 
-func New(pool *db.Pool, opts ...Option) *Handler {
+func New(pool *db.Pool) *Handler {
 	h := &Handler{
 		Pool: pool,
-	}
-	for _, opt := range opts {
-		opt(h)
 	}
 
 	workerService := workers.New()
@@ -26,12 +23,4 @@ func New(pool *db.Pool, opts ...Option) *Handler {
 	}
 
 	return h
-}
-
-type Option func(*Handler)
-
-func WithCache(c *cache.DbCache) Option {
-	return func(s *Handler) {
-		s.Cache = c
-	}
 }
