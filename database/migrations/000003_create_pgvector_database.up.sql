@@ -6,7 +6,7 @@ CREATE TABLE
     IF NOT EXISTS text_embeddings (
         id BIGSERIAL PRIMARY KEY,
         metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
-        user_id string NOT NULL,
+        user_id varchar(32) NOT NULL,
         text TEXT NOT NULL,
         embeddings vector (1536) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
