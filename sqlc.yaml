@@ -1,10 +1,16 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "db/queries/*.sql"
-    schema: "db/migrations/*.up.sql"
+    queries: "database/queries/*.sql"
+    schema: "database/migrations/*.up.sql"
     gen:
       go:
         package: "db"
         out: "internal/pkg/db"
         sql_package: "pgx/v5"
+        overrides:
+            - column: "text_embeddings.metadata"
+              go_type:
+                  import: "vibrain/internal/pkg/db/types"
+                  # package: "types"
+                  type: "JSONB"

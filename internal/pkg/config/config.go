@@ -45,6 +45,11 @@ func (db DatabaseConfig) URL() string {
 	return fmt.Sprintf("%s://%s:%s@%s:%d/%s?sslmode=disable", db.Driver, db.User, db.Password, db.Host, db.Port, db.Database)
 }
 
+type OpenAIConfig struct {
+	BaseURL string `env:"BASE_URL" envDefault:"https://api.openai.com"`
+	ApiKey  string `env:"API_KEY,required"`
+}
+
 type Config struct {
 	Debug   bool          `env:"DEBUG" envDefault:"false"`
 	Service ServiceConfig `envPrefix:"SERVICE_"`
@@ -54,6 +59,7 @@ type Config struct {
 
 	JWTSecret string        `env:"JWT_SECRET,required"`
 	OAuths    []OAuthConfig `envPrefix:"OAUTH_"`
+	OpenAI    OpenAIConfig  `envPrefix:"OPENAI_"`
 }
 
 func init() {

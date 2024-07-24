@@ -2,12 +2,14 @@ include .env
 
 lint:
 	@echo "Linting..."
+	@go mod tidy
 	@golangci-lint run --fix ./...  --enable gofumpt
 
 generate:
 	@echo "Generating..."
 	@go generate ./...
 	@go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
+	@sqlc generate
 
 build: lint
 	@echo "Building..."
@@ -43,7 +45,7 @@ docker-down:
 
 migrate-new:
 	@echo "Creating migration..."
-	@migrate create -ext sql -dir db/migrations -seq "$(name)"
+	@migrate create -ext sql -dir database/migrations -seq "$(name)"
 
 # migrate-up:
 # 	@echo "Migrating up..."
