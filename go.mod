@@ -12,13 +12,16 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pgvector/pgvector-go v0.2.0
 	github.com/riverqueue/river v0.9.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
+	github.com/sashabaranov/go-openai v1.27.0
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.32.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.32.0
 	github.com/yuin/goldmark v1.6.0
 	golang.org/x/oauth2 v0.21.0
+	golang.org/x/sync v0.7.0
 	gopkg.in/telebot.v3 v3.3.6
 )
 
@@ -84,7 +87,6 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
