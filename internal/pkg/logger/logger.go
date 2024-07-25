@@ -8,7 +8,7 @@ import (
 	"vibrain/internal/pkg/constant"
 )
 
-var defaultLogAttrs = []string{constant.ContextKeyRequestID, constant.ContextKeyUserID}
+var defaultLogAttrs = []string{constant.ContextKeyRequestID, constant.ContextKeyUserID, constant.ContextKeyUserName}
 
 // Default logger
 var Default = New()

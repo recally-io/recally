@@ -25,9 +25,8 @@ type Bot struct {
 type BotType string
 
 const (
-	ReaderBot  BotType = "readerbot"
-	ChatBot    BotType = "chatbot"
-	MemChatBot BotType = "memchatbot"
+	ReaderBot BotType = "readerbot"
+	ChatBot   BotType = "chatbot"
 )
 
 type BotOption func(Bot)

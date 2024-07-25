@@ -6,7 +6,7 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-const defaultModel = "gpt-4o-mini"
+const defaultModel = OpenAIGPT4oMini
 
 // Option is a function that configures a CallOptions.
 type Option func(*Options)

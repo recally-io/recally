@@ -239,7 +239,7 @@ func _000004_create_assistant_threadsUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000004_create_assistant_threads.up.sql", size: 3916, mode: os.FileMode(420), modTime: time.Unix(1721897825, 0)}
+	info := bindataFileInfo{name: "000004_create_assistant_threads.up.sql", size: 3916, mode: os.FileMode(420), modTime: time.Unix(1721915982, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

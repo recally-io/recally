@@ -66,16 +66,6 @@ func main() {
 		}
 		services = append(services, botService)
 	}
-
-	if config.Settings.Telegram.MemChat.Token != "" {
-		cfg := config.Settings.Telegram.MemChat
-		botService, err := bots.NewServer(bots.MemChatBot, cfg, pool, httpService.Server, cacheService)
-		if err != nil {
-			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.MemChatBot, "name", cfg.Name)
-		}
-		services = append(services, botService)
-	}
-
 	// start queue service
 	queueService, err := queue.NewServer(pool)
 	if err != nil {
