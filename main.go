@@ -51,16 +51,27 @@ func main() {
 	// start telegram bot service
 	if config.Settings.Telegram.Reader.Token != "" {
 		cfg := config.Settings.Telegram.Reader
-		opts := make([]bots.Option, 0)
-		opts = append(opts, bots.WithCache(cacheService))
-
-		if cfg.Webhook != "" {
-			opts = append(opts, bots.WithWebhook(httpService.Server, cfg.Webhook))
-		}
-
-		botService, err := bots.NewServer(cfg.Token, pool, opts...)
+		botService, err := bots.NewServer(bots.ReaderBot, cfg, pool, httpService.Server, cacheService)
 		if err != nil {
-			logger.Default.Fatal("failed to create new bot service", "error", err)
+			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.ReaderBot, "name", cfg.Name)
+		}
+		services = append(services, botService)
+	}
+
+	if config.Settings.Telegram.Chat.Token != "" {
+		cfg := config.Settings.Telegram.Chat
+		botService, err := bots.NewServer(bots.ChatBot, cfg, pool, httpService.Server, cacheService)
+		if err != nil {
+			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.ChatBot, "name", cfg.Name)
+		}
+		services = append(services, botService)
+	}
+
+	if config.Settings.Telegram.MemChat.Token != "" {
+		cfg := config.Settings.Telegram.MemChat
+		botService, err := bots.NewServer(bots.MemChatBot, cfg, pool, httpService.Server, cacheService)
+		if err != nil {
+			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.MemChatBot, "name", cfg.Name)
 		}
 		services = append(services, botService)
 	}
