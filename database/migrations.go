@@ -28,7 +28,8 @@ func Migrate(ctx context.Context, databaseURL string) {
 			logger.Default.Info("No migration needed")
 			return
 		}
-		logger.Default.Fatal("Error while migrating", err, "err")
+		logger.Default.Error("Error while migrating", "err", err)
+		return
 	}
 	logger.Default.Info("Migration successful")
 }
