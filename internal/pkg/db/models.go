@@ -61,6 +61,73 @@ func (ns NullRiverJobState) Value() (driver.Value, error) {
 	return string(ns.RiverJobState), nil
 }
 
+type Assistant struct {
+	ID           int32
+	Uuid         pgtype.UUID
+	UserID       pgtype.UUID
+	Name         string
+	Description  pgtype.Text
+	SystemPrompt pgtype.Text
+	Model        string
+	Metadata     []byte
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type AssistantAttachment struct {
+	ID        int32
+	Uuid      pgtype.UUID
+	UserID    pgtype.UUID
+	Entity    string
+	EntityID  pgtype.UUID
+	FileType  pgtype.Text
+	FileUrl   pgtype.Text
+	Size      pgtype.Int4
+	Metadata  []byte
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type AssistantEmbeddding struct {
+	ID           int32
+	UserID       pgtype.UUID
+	MessageID    pgtype.UUID
+	AttachmentID pgtype.UUID
+	Text         string
+	Embeddings   pgvector.Vector
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type AssistantMessage struct {
+	ID          int32
+	Uuid        pgtype.UUID
+	UserID      pgtype.UUID
+	ThreadID    pgtype.UUID
+	Model       pgtype.Text
+	Token       pgtype.Int4
+	Role        string
+	Text        pgtype.Text
+	Attachments []pgtype.UUID
+	Metadata    []byte
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type AssistantThread struct {
+	ID               int32
+	Uuid             pgtype.UUID
+	UserID           pgtype.UUID
+	AssistantID      pgtype.UUID
+	Name             string
+	Description      pgtype.Text
+	Model            string
+	IsLongTermMemory pgtype.Bool
+	Metadata         []byte
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
+}
+
 type Cache struct {
 	ID        int32
 	Domain    string
@@ -113,4 +180,19 @@ type TextEmbedding struct {
 	Embeddings pgvector.Vector
 	CreatedAt  pgtype.Timestamp
 	UpdatedAt  pgtype.Timestamp
+}
+
+type User struct {
+	ID                  int32
+	Uuid                pgtype.UUID
+	Username            pgtype.Text
+	Email               pgtype.Text
+	Github              pgtype.Text
+	Google              pgtype.Text
+	Telegram            pgtype.Text
+	ActivateAssistantID pgtype.UUID
+	ActivateThreadID    pgtype.UUID
+	Status              string
+	CreatedAt           pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
 }
