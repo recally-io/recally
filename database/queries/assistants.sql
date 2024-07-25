@@ -1,8 +1,9 @@
 -- CRUD for assistants
 
--- name: CreateAssistant :exec
+-- name: CreateAssistant :one
 INSERT INTO assistants (user_id, name, description, system_prompt, model, metadata)
-VALUES ($1, $2, $3, $4, $5, $6);
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING *;
 
 -- name: GetAssistant :one
 SELECT * FROM assistants WHERE uuid = $1;
@@ -18,9 +19,10 @@ DELETE FROM assistants WHERE uuid = $1;
 SELECT * FROM assistants WHERE user_id = $1 ORDER BY created_at DESC;
 
 -- CRUD for assistant_threads
--- name: CreateAssistantThread :exec
+-- name: CreateAssistantThread :one
 INSERT INTO assistant_threads (user_id, assistant_id, name, description, model, is_long_term_memory, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7);
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING *;
 
 -- name: GetAssistantThread :one
 SELECT * FROM assistant_threads WHERE uuid = $1;
@@ -39,9 +41,10 @@ SELECT * FROM assistant_threads WHERE user_id = $1 ORDER BY created_at DESC;
 SELECT * FROM assistant_threads WHERE assistant_id = $1 ORDER BY created_at DESC;
 
 -- CRUD for assistant_thread_messages
--- name: CreateThreadMessage :exec
+-- name: CreateThreadMessage :one
 INSERT INTO assistant_messages (user_id, thread_id, model, token, role, text, attachments, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING *;
 
 -- name: GetThreadMessage :one
 SELECT * FROM assistant_messages WHERE uuid = $1;
@@ -56,9 +59,10 @@ DELETE FROM assistant_messages WHERE uuid = $1;
 SELECT * FROM assistant_messages WHERE thread_id = $1 ORDER BY created_at DESC;
 
 -- CRUD for assistant_attachments
--- name: CreateAttachment :exec
+-- name: CreateAttachment :one
 INSERT INTO assistant_attachments (user_id, entity, entity_id, file_type, file_url, size, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7);
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING *;
 
 -- name: GetAttachment :one
 SELECT * FROM assistant_attachments WHERE uuid = $1;
@@ -76,9 +80,10 @@ SELECT * FROM assistant_attachments WHERE entity = $1 AND entity_id = $2 ORDER B
 SELECT * FROM assistant_attachments WHERE user_id = $1 ORDER BY created_at DESC;
 
 -- CRUD for assistant_message_embedddings
--- name: CreateAssistantEmbedding :exec
+-- name: CreateAssistantEmbedding :one
 INSERT INTO assistant_embedddings (user_id, message_id, attachment_id, embeddings)
-VALUES ($1, $2, $3, $4);
+VALUES ($1, $2, $3, $4)
+RETURNING *;
 
 -- name: DeleteAssistantEmbeddings :exec
 DELETE FROM assistant_embedddings WHERE id = $1;

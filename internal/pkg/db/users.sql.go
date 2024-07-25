@@ -44,9 +44,10 @@ func (q *Queries) GetTelegramUser(ctx context.Context, telegram pgtype.Text) (Us
 	return i, err
 }
 
-const inserUser = `-- name: InserUser :exec
+const inserUser = `-- name: InserUser :one
 INSERT INTO users (username, telegram, activate_assistant_id, activate_thread_id)
 VALUES ($1, $2, $3, $4)
+RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at
 `
 
 type InserUserParams struct {
@@ -56,18 +57,34 @@ type InserUserParams struct {
 	ActivateThreadID    pgtype.UUID
 }
 
-func (q *Queries) InserUser(ctx context.Context, arg InserUserParams) error {
-	_, err := q.db.Exec(ctx, inserUser,
+func (q *Queries) InserUser(ctx context.Context, arg InserUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, inserUser,
 		arg.Username,
 		arg.Telegram,
 		arg.ActivateAssistantID,
 		arg.ActivateThreadID,
 	)
-	return err
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.Username,
+		&i.Email,
+		&i.Github,
+		&i.Google,
+		&i.Telegram,
+		&i.ActivateAssistantID,
+		&i.ActivateThreadID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
-const updateTelegramUser = `-- name: UpdateTelegramUser :exec
+const updateTelegramUser = `-- name: UpdateTelegramUser :one
 UPDATE users SET activate_assistant_id = $1, activate_thread_id = $2 WHERE telegram = $3
+RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at
 `
 
 type UpdateTelegramUserParams struct {
@@ -76,7 +93,22 @@ type UpdateTelegramUserParams struct {
 	Telegram            pgtype.Text
 }
 
-func (q *Queries) UpdateTelegramUser(ctx context.Context, arg UpdateTelegramUserParams) error {
-	_, err := q.db.Exec(ctx, updateTelegramUser, arg.ActivateAssistantID, arg.ActivateThreadID, arg.Telegram)
-	return err
+func (q *Queries) UpdateTelegramUser(ctx context.Context, arg UpdateTelegramUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateTelegramUser, arg.ActivateAssistantID, arg.ActivateThreadID, arg.Telegram)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.Username,
+		&i.Email,
+		&i.Github,
+		&i.Google,
+		&i.Telegram,
+		&i.ActivateAssistantID,
+		&i.ActivateThreadID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

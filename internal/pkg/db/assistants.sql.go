@@ -8,14 +8,16 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pgvector/pgvector-go"
 )
 
-const createAssistant = `-- name: CreateAssistant :exec
+const createAssistant = `-- name: CreateAssistant :one
 
 INSERT INTO assistants (user_id, name, description, system_prompt, model, metadata)
 VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, uuid, user_id, name, description, system_prompt, model, metadata, created_at, updated_at
 `
 
 type CreateAssistantParams struct {
@@ -28,8 +30,8 @@ type CreateAssistantParams struct {
 }
 
 // CRUD for assistants
-func (q *Queries) CreateAssistant(ctx context.Context, arg CreateAssistantParams) error {
-	_, err := q.db.Exec(ctx, createAssistant,
+func (q *Queries) CreateAssistant(ctx context.Context, arg CreateAssistantParams) (Assistant, error) {
+	row := q.db.QueryRow(ctx, createAssistant,
 		arg.UserID,
 		arg.Name,
 		arg.Description,
@@ -37,12 +39,26 @@ func (q *Queries) CreateAssistant(ctx context.Context, arg CreateAssistantParams
 		arg.Model,
 		arg.Metadata,
 	)
-	return err
+	var i Assistant
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.UserID,
+		&i.Name,
+		&i.Description,
+		&i.SystemPrompt,
+		&i.Model,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
-const createAssistantEmbedding = `-- name: CreateAssistantEmbedding :exec
+const createAssistantEmbedding = `-- name: CreateAssistantEmbedding :one
 INSERT INTO assistant_embedddings (user_id, message_id, attachment_id, embeddings)
 VALUES ($1, $2, $3, $4)
+RETURNING id, user_id, message_id, attachment_id, text, embeddings, created_at, updated_at
 `
 
 type CreateAssistantEmbeddingParams struct {
@@ -53,19 +69,31 @@ type CreateAssistantEmbeddingParams struct {
 }
 
 // CRUD for assistant_message_embedddings
-func (q *Queries) CreateAssistantEmbedding(ctx context.Context, arg CreateAssistantEmbeddingParams) error {
-	_, err := q.db.Exec(ctx, createAssistantEmbedding,
+func (q *Queries) CreateAssistantEmbedding(ctx context.Context, arg CreateAssistantEmbeddingParams) (AssistantEmbeddding, error) {
+	row := q.db.QueryRow(ctx, createAssistantEmbedding,
 		arg.UserID,
 		arg.MessageID,
 		arg.AttachmentID,
 		arg.Embeddings,
 	)
-	return err
+	var i AssistantEmbeddding
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.MessageID,
+		&i.AttachmentID,
+		&i.Text,
+		&i.Embeddings,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
-const createAssistantThread = `-- name: CreateAssistantThread :exec
+const createAssistantThread = `-- name: CreateAssistantThread :one
 INSERT INTO assistant_threads (user_id, assistant_id, name, description, model, is_long_term_memory, metadata)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, uuid, user_id, assistant_id, name, description, model, is_long_term_memory, metadata, created_at, updated_at
 `
 
 type CreateAssistantThreadParams struct {
@@ -79,8 +107,8 @@ type CreateAssistantThreadParams struct {
 }
 
 // CRUD for assistant_threads
-func (q *Queries) CreateAssistantThread(ctx context.Context, arg CreateAssistantThreadParams) error {
-	_, err := q.db.Exec(ctx, createAssistantThread,
+func (q *Queries) CreateAssistantThread(ctx context.Context, arg CreateAssistantThreadParams) (AssistantThread, error) {
+	row := q.db.QueryRow(ctx, createAssistantThread,
 		arg.UserID,
 		arg.AssistantID,
 		arg.Name,
@@ -89,12 +117,27 @@ func (q *Queries) CreateAssistantThread(ctx context.Context, arg CreateAssistant
 		arg.IsLongTermMemory,
 		arg.Metadata,
 	)
-	return err
+	var i AssistantThread
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.UserID,
+		&i.AssistantID,
+		&i.Name,
+		&i.Description,
+		&i.Model,
+		&i.IsLongTermMemory,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
-const createAttachment = `-- name: CreateAttachment :exec
+const createAttachment = `-- name: CreateAttachment :one
 INSERT INTO assistant_attachments (user_id, entity, entity_id, file_type, file_url, size, metadata)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, uuid, user_id, entity, entity_id, file_type, file_url, size, metadata, created_at, updated_at
 `
 
 type CreateAttachmentParams struct {
@@ -108,8 +151,8 @@ type CreateAttachmentParams struct {
 }
 
 // CRUD for assistant_attachments
-func (q *Queries) CreateAttachment(ctx context.Context, arg CreateAttachmentParams) error {
-	_, err := q.db.Exec(ctx, createAttachment,
+func (q *Queries) CreateAttachment(ctx context.Context, arg CreateAttachmentParams) (AssistantAttachment, error) {
+	row := q.db.QueryRow(ctx, createAttachment,
 		arg.UserID,
 		arg.Entity,
 		arg.EntityID,
@@ -118,12 +161,27 @@ func (q *Queries) CreateAttachment(ctx context.Context, arg CreateAttachmentPara
 		arg.Size,
 		arg.Metadata,
 	)
-	return err
+	var i AssistantAttachment
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.UserID,
+		&i.Entity,
+		&i.EntityID,
+		&i.FileType,
+		&i.FileUrl,
+		&i.Size,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
-const createThreadMessage = `-- name: CreateThreadMessage :exec
+const createThreadMessage = `-- name: CreateThreadMessage :one
 INSERT INTO assistant_messages (user_id, thread_id, model, token, role, text, attachments, metadata)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id, uuid, user_id, thread_id, model, token, role, text, attachments, metadata, created_at, updated_at
 `
 
 type CreateThreadMessageParams struct {
@@ -133,13 +191,13 @@ type CreateThreadMessageParams struct {
 	Token       pgtype.Int4
 	Role        string
 	Text        pgtype.Text
-	Attachments []pgtype.UUID
+	Attachments []uuid.UUID
 	Metadata    []byte
 }
 
 // CRUD for assistant_thread_messages
-func (q *Queries) CreateThreadMessage(ctx context.Context, arg CreateThreadMessageParams) error {
-	_, err := q.db.Exec(ctx, createThreadMessage,
+func (q *Queries) CreateThreadMessage(ctx context.Context, arg CreateThreadMessageParams) (AssistantMessage, error) {
+	row := q.db.QueryRow(ctx, createThreadMessage,
 		arg.UserID,
 		arg.ThreadID,
 		arg.Model,
@@ -149,15 +207,30 @@ func (q *Queries) CreateThreadMessage(ctx context.Context, arg CreateThreadMessa
 		arg.Attachments,
 		arg.Metadata,
 	)
-	return err
+	var i AssistantMessage
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.UserID,
+		&i.ThreadID,
+		&i.Model,
+		&i.Token,
+		&i.Role,
+		&i.Text,
+		&i.Attachments,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const deleteAssistant = `-- name: DeleteAssistant :exec
 DELETE FROM assistants WHERE uuid = $1
 `
 
-func (q *Queries) DeleteAssistant(ctx context.Context, uuid pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteAssistant, uuid)
+func (q *Queries) DeleteAssistant(ctx context.Context, argUuid uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAssistant, argUuid)
 	return err
 }
 
@@ -174,8 +247,8 @@ const deleteAssistantThread = `-- name: DeleteAssistantThread :exec
 DELETE FROM assistant_threads WHERE uuid = $1
 `
 
-func (q *Queries) DeleteAssistantThread(ctx context.Context, uuid pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteAssistantThread, uuid)
+func (q *Queries) DeleteAssistantThread(ctx context.Context, argUuid uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAssistantThread, argUuid)
 	return err
 }
 
@@ -183,8 +256,8 @@ const deleteAttachment = `-- name: DeleteAttachment :exec
 DELETE FROM assistant_attachments WHERE uuid = $1
 `
 
-func (q *Queries) DeleteAttachment(ctx context.Context, uuid pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteAttachment, uuid)
+func (q *Queries) DeleteAttachment(ctx context.Context, argUuid uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAttachment, argUuid)
 	return err
 }
 
@@ -192,8 +265,8 @@ const deleteThreadMessage = `-- name: DeleteThreadMessage :exec
 DELETE FROM assistant_messages WHERE uuid = $1
 `
 
-func (q *Queries) DeleteThreadMessage(ctx context.Context, uuid pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteThreadMessage, uuid)
+func (q *Queries) DeleteThreadMessage(ctx context.Context, argUuid uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteThreadMessage, argUuid)
 	return err
 }
 
@@ -201,8 +274,8 @@ const getAssistant = `-- name: GetAssistant :one
 SELECT id, uuid, user_id, name, description, system_prompt, model, metadata, created_at, updated_at FROM assistants WHERE uuid = $1
 `
 
-func (q *Queries) GetAssistant(ctx context.Context, uuid pgtype.UUID) (Assistant, error) {
-	row := q.db.QueryRow(ctx, getAssistant, uuid)
+func (q *Queries) GetAssistant(ctx context.Context, argUuid uuid.UUID) (Assistant, error) {
+	row := q.db.QueryRow(ctx, getAssistant, argUuid)
 	var i Assistant
 	err := row.Scan(
 		&i.ID,
@@ -223,8 +296,8 @@ const getAssistantThread = `-- name: GetAssistantThread :one
 SELECT id, uuid, user_id, assistant_id, name, description, model, is_long_term_memory, metadata, created_at, updated_at FROM assistant_threads WHERE uuid = $1
 `
 
-func (q *Queries) GetAssistantThread(ctx context.Context, uuid pgtype.UUID) (AssistantThread, error) {
-	row := q.db.QueryRow(ctx, getAssistantThread, uuid)
+func (q *Queries) GetAssistantThread(ctx context.Context, argUuid uuid.UUID) (AssistantThread, error) {
+	row := q.db.QueryRow(ctx, getAssistantThread, argUuid)
 	var i AssistantThread
 	err := row.Scan(
 		&i.ID,
@@ -246,8 +319,8 @@ const getAttachment = `-- name: GetAttachment :one
 SELECT id, uuid, user_id, entity, entity_id, file_type, file_url, size, metadata, created_at, updated_at FROM assistant_attachments WHERE uuid = $1
 `
 
-func (q *Queries) GetAttachment(ctx context.Context, uuid pgtype.UUID) (AssistantAttachment, error) {
-	row := q.db.QueryRow(ctx, getAttachment, uuid)
+func (q *Queries) GetAttachment(ctx context.Context, argUuid uuid.UUID) (AssistantAttachment, error) {
+	row := q.db.QueryRow(ctx, getAttachment, argUuid)
 	var i AssistantAttachment
 	err := row.Scan(
 		&i.ID,
@@ -269,8 +342,8 @@ const getThreadMessage = `-- name: GetThreadMessage :one
 SELECT id, uuid, user_id, thread_id, model, token, role, text, attachments, metadata, created_at, updated_at FROM assistant_messages WHERE uuid = $1
 `
 
-func (q *Queries) GetThreadMessage(ctx context.Context, uuid pgtype.UUID) (AssistantMessage, error) {
-	row := q.db.QueryRow(ctx, getThreadMessage, uuid)
+func (q *Queries) GetThreadMessage(ctx context.Context, argUuid uuid.UUID) (AssistantMessage, error) {
+	row := q.db.QueryRow(ctx, getThreadMessage, argUuid)
 	var i AssistantMessage
 	err := row.Scan(
 		&i.ID,
@@ -534,7 +607,7 @@ ORDER BY 1 - (embedding <=> $2) LIMIT $3
 `
 
 type SimilaritySearchForThreadByCosineDistanceParams struct {
-	Uuid       pgtype.UUID
+	Uuid       uuid.UUID
 	Embeddings pgvector.Vector
 	Limit      int32
 }
@@ -575,7 +648,7 @@ WHERE uuid = $1
 `
 
 type UpdateAssistantParams struct {
-	Uuid         pgtype.UUID
+	Uuid         uuid.UUID
 	Name         string
 	Description  pgtype.Text
 	SystemPrompt pgtype.Text
@@ -601,7 +674,7 @@ WHERE uuid = $1
 `
 
 type UpdateAssistantThreadParams struct {
-	Uuid             pgtype.UUID
+	Uuid             uuid.UUID
 	Name             string
 	Description      pgtype.Text
 	Model            string
@@ -626,7 +699,7 @@ UPDATE assistant_attachments SET file_type = $2, file_url = $3, size = $4, metad
 `
 
 type UpdateAttachmentParams struct {
-	Uuid     pgtype.UUID
+	Uuid     uuid.UUID
 	FileType pgtype.Text
 	FileUrl  pgtype.Text
 	Size     pgtype.Int4
@@ -649,9 +722,9 @@ UPDATE assistant_messages SET text = $2, attachments = $3, metadata = $4 WHERE u
 `
 
 type UpdateThreadMessageParams struct {
-	Uuid        pgtype.UUID
+	Uuid        uuid.UUID
 	Text        pgtype.Text
-	Attachments []pgtype.UUID
+	Attachments []uuid.UUID
 	Metadata    []byte
 }
 

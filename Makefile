@@ -57,6 +57,10 @@ migrate-down:
 	@echo "Migrating down..."
 	@migrate -path database/migrations -database "$(DATABASE_URL)" down
 
+psql:
+	@echo "Connecting to database..."
+	@docker compose exec -it postgres psql -U ${DATABASE_USER} -d ${DATABASE_NAME}
+
 sqlc:
 	@echo "Generating sqlc..."
 	@sqlc generate

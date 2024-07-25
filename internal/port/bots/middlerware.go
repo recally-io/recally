@@ -2,6 +2,7 @@ package bots
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 	"vibrain/internal/pkg/constant"
@@ -17,8 +18,9 @@ func contextMiddleware() tele.MiddlewareFunc {
 			ctx := context.Background()
 			start := time.Now()
 			ctx = context.WithValue(ctx, constant.ContextKey(constant.ContextKeyRequestID), uuid.Must(uuid.NewV7()).String())
-			ctx = context.WithValue(ctx, constant.ContextKey(constant.ContextKeyUserID), c.Sender().ID)
-			logger := logger.FromContext(ctx, slog.String("user_name", c.Sender().Username))
+			ctx = context.WithValue(ctx, constant.ContextKey(constant.ContextKeyUserID), fmt.Sprintf("%d", c.Sender().ID))
+			ctx = context.WithValue(ctx, constant.ContextKey(constant.ContextKeyUserName), c.Sender().Username)
+			logger := logger.FromContext(ctx)
 			ctx = context.WithValue(ctx, constant.ContextKey(constant.ContextKeyLogger), logger)
 			c.Set(constant.ContextKeyContext, ctx)
 			defer func() {

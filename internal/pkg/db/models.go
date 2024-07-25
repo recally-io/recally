@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pgvector/pgvector-go"
 	"vibrain/internal/pkg/db/types"
@@ -63,7 +64,7 @@ func (ns NullRiverJobState) Value() (driver.Value, error) {
 
 type Assistant struct {
 	ID           int32
-	Uuid         pgtype.UUID
+	Uuid         uuid.UUID
 	UserID       pgtype.UUID
 	Name         string
 	Description  pgtype.Text
@@ -76,7 +77,7 @@ type Assistant struct {
 
 type AssistantAttachment struct {
 	ID        int32
-	Uuid      pgtype.UUID
+	Uuid      uuid.UUID
 	UserID    pgtype.UUID
 	Entity    string
 	EntityID  pgtype.UUID
@@ -101,14 +102,14 @@ type AssistantEmbeddding struct {
 
 type AssistantMessage struct {
 	ID          int32
-	Uuid        pgtype.UUID
+	Uuid        uuid.UUID
 	UserID      pgtype.UUID
 	ThreadID    pgtype.UUID
 	Model       pgtype.Text
 	Token       pgtype.Int4
 	Role        string
 	Text        pgtype.Text
-	Attachments []pgtype.UUID
+	Attachments []uuid.UUID
 	Metadata    []byte
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
@@ -116,7 +117,7 @@ type AssistantMessage struct {
 
 type AssistantThread struct {
 	ID               int32
-	Uuid             pgtype.UUID
+	Uuid             uuid.UUID
 	UserID           pgtype.UUID
 	AssistantID      pgtype.UUID
 	Name             string
@@ -184,7 +185,7 @@ type TextEmbedding struct {
 
 type User struct {
 	ID                  int32
-	Uuid                pgtype.UUID
+	Uuid                uuid.UUID
 	Username            pgtype.Text
 	Email               pgtype.Text
 	Github              pgtype.Text
