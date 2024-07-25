@@ -25,10 +25,10 @@ type ServiceConfig struct {
 }
 
 type TelegramConfig struct {
-	Token       string `env:"TOKEN,required"`
-	Name        string `env:"NAME"`
-	Description string `env:"DESCRIPTION"`
-	Webhook     string `env:"WEBHOOK"`
+	Name        string `env:"NAME" envDefault:"Vibrain Bot"`
+	Token       string `env:"TOKEN"`
+	Webhook     bool   `env:"WEBHOOK"`
+	Description string `env:"DESCRIPTION" envDefault:"Hi, I'am Vibrain Bot. Contact me for more information on Twitter https://x.com/LiuVaayne"`
 }
 
 type DatabaseConfig struct {
@@ -55,7 +55,9 @@ type Config struct {
 
 	Database DatabaseConfig `envPrefix:"DATABASE_"`
 	Telegram struct {
-		Reader TelegramConfig `envPrefix:"READER_"`
+		Reader  TelegramConfig `envPrefix:"READER_"`
+		Chat    TelegramConfig `envPrefix:"CHAT_"`
+		MemChat TelegramConfig `envPrefix:"MEMCHAT_"`
 	} `envPrefix:"TELEGRAM_"`
 
 	JWTSecret string `env:"JWT_SECRET,required"`

@@ -17,7 +17,7 @@ import (
 
 var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+/?([^\s]*)`)
 
-func (h *Handler) TextHandler(c tele.Context) error {
+func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	user := c.Sender()
 	text := c.Text()
 	ctx := c.Get(constant.ContextKeyContext).(context.Context)
