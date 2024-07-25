@@ -49,15 +49,16 @@ func main() {
 	services = append(services, httpService)
 
 	// start telegram bot service
-	if config.Settings.Telegram.Token != "" {
+	if config.Settings.Telegram.Reader.Token != "" {
+		cfg := config.Settings.Telegram.Reader
 		opts := make([]bots.Option, 0)
 		opts = append(opts, bots.WithCache(cacheService))
 
-		if config.Settings.Telegram.Webhook != "" {
-			opts = append(opts, bots.WithWebhook(httpService.Server, config.Settings.Telegram.Webhook))
+		if cfg.Webhook != "" {
+			opts = append(opts, bots.WithWebhook(httpService.Server, cfg.Webhook))
 		}
 
-		botService, err := bots.NewServer(config.Settings.Telegram.Token, pool, opts...)
+		botService, err := bots.NewServer(cfg.Token, pool, opts...)
 		if err != nil {
 			logger.Default.Fatal("failed to create new bot service", "error", err)
 		}

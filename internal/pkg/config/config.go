@@ -12,7 +12,6 @@ import (
 var Settings = &Config{}
 
 type OAuthConfig struct {
-	Provider string   `env:"PROVIDER,required"`
 	Endpoint string   `env:"ENDPOINT"`
 	Key      string   `env:"KEY,required"`
 	Secret   string   `env:"SECRET,required"`
@@ -55,11 +54,15 @@ type Config struct {
 	Service ServiceConfig `envPrefix:"SERVICE_"`
 
 	Database DatabaseConfig `envPrefix:"DATABASE_"`
-	Telegram TelegramConfig `envPrefix:"TELEGRAM_"`
+	Telegram struct {
+		Reader TelegramConfig `envPrefix:"READER_"`
+	} `envPrefix:"TELEGRAM_"`
 
-	JWTSecret string        `env:"JWT_SECRET,required"`
-	OAuths    []OAuthConfig `envPrefix:"OAUTH_"`
-	OpenAI    OpenAIConfig  `envPrefix:"OPENAI_"`
+	JWTSecret string `env:"JWT_SECRET,required"`
+	OAuths    struct {
+		Github OAuthConfig `envPrefix:"GITHUB_"`
+	} `envPrefix:"OAUTH_"`
+	OpenAI OpenAIConfig `envPrefix:"OPENAI_"`
 }
 
 func init() {
