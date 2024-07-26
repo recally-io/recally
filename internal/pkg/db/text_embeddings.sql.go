@@ -18,8 +18,8 @@ DELETE FROM text_embeddings
 WHERE id = $1
 `
 
-func (q *Queries) DeleteTextEmbeddingById(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, deleteTextEmbeddingById, id)
+func (q *Queries) DeleteTextEmbeddingById(ctx context.Context, db DBTX, id int64) error {
+	_, err := db.Exec(ctx, deleteTextEmbeddingById, id)
 	return err
 }
 
@@ -39,8 +39,8 @@ type GetTextEmbeddingByIdRow struct {
 	Embeddings pgvector.Vector
 }
 
-func (q *Queries) GetTextEmbeddingById(ctx context.Context, id int64) (GetTextEmbeddingByIdRow, error) {
-	row := q.db.QueryRow(ctx, getTextEmbeddingById, id)
+func (q *Queries) GetTextEmbeddingById(ctx context.Context, db DBTX, id int64) (GetTextEmbeddingByIdRow, error) {
+	row := db.QueryRow(ctx, getTextEmbeddingById, id)
 	var i GetTextEmbeddingByIdRow
 	err := row.Scan(
 		&i.ID,
@@ -66,8 +66,8 @@ type InsertTextEmbeddingParams struct {
 	Metadata   types.JSONB
 }
 
-func (q *Queries) InsertTextEmbedding(ctx context.Context, arg InsertTextEmbeddingParams) error {
-	_, err := q.db.Exec(ctx, insertTextEmbedding,
+func (q *Queries) InsertTextEmbedding(ctx context.Context, db DBTX, arg InsertTextEmbeddingParams) error {
+	_, err := db.Exec(ctx, insertTextEmbedding,
 		arg.UserID,
 		arg.Text,
 		arg.Embeddings,
@@ -99,8 +99,8 @@ type SimilaritySearchByCosineDistanceRow struct {
 	Score     int32
 }
 
-func (q *Queries) SimilaritySearchByCosineDistance(ctx context.Context, arg SimilaritySearchByCosineDistanceParams) ([]SimilaritySearchByCosineDistanceRow, error) {
-	rows, err := q.db.Query(ctx, similaritySearchByCosineDistance, arg.UserID, arg.Embeddings, arg.Limit)
+func (q *Queries) SimilaritySearchByCosineDistance(ctx context.Context, db DBTX, arg SimilaritySearchByCosineDistanceParams) ([]SimilaritySearchByCosineDistanceRow, error) {
+	rows, err := db.Query(ctx, similaritySearchByCosineDistance, arg.UserID, arg.Embeddings, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +152,8 @@ type SimilaritySearchByCosineDistanceWithFilterRow struct {
 	Score     int32
 }
 
-func (q *Queries) SimilaritySearchByCosineDistanceWithFilter(ctx context.Context, arg SimilaritySearchByCosineDistanceWithFilterParams) ([]SimilaritySearchByCosineDistanceWithFilterRow, error) {
-	rows, err := q.db.Query(ctx, similaritySearchByCosineDistanceWithFilter,
+func (q *Queries) SimilaritySearchByCosineDistanceWithFilter(ctx context.Context, db DBTX, arg SimilaritySearchByCosineDistanceWithFilterParams) ([]SimilaritySearchByCosineDistanceWithFilterRow, error) {
+	rows, err := db.Query(ctx, similaritySearchByCosineDistanceWithFilter,
 		arg.UserID,
 		arg.Embeddings,
 		arg.Column3,
@@ -208,8 +208,8 @@ type SimilaritySearchByL2DistanceRow struct {
 	Score     interface{}
 }
 
-func (q *Queries) SimilaritySearchByL2Distance(ctx context.Context, arg SimilaritySearchByL2DistanceParams) ([]SimilaritySearchByL2DistanceRow, error) {
-	rows, err := q.db.Query(ctx, similaritySearchByL2Distance, arg.UserID, arg.Embeddings, arg.Limit)
+func (q *Queries) SimilaritySearchByL2Distance(ctx context.Context, db DBTX, arg SimilaritySearchByL2DistanceParams) ([]SimilaritySearchByL2DistanceRow, error) {
+	rows, err := db.Query(ctx, similaritySearchByL2Distance, arg.UserID, arg.Embeddings, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -261,8 +261,8 @@ type SimilaritySearchByL2DistanceWithFilterRow struct {
 	Score     interface{}
 }
 
-func (q *Queries) SimilaritySearchByL2DistanceWithFilter(ctx context.Context, arg SimilaritySearchByL2DistanceWithFilterParams) ([]SimilaritySearchByL2DistanceWithFilterRow, error) {
-	rows, err := q.db.Query(ctx, similaritySearchByL2DistanceWithFilter,
+func (q *Queries) SimilaritySearchByL2DistanceWithFilter(ctx context.Context, db DBTX, arg SimilaritySearchByL2DistanceWithFilterParams) ([]SimilaritySearchByL2DistanceWithFilterRow, error) {
+	rows, err := db.Query(ctx, similaritySearchByL2DistanceWithFilter,
 		arg.UserID,
 		arg.Embeddings,
 		arg.Column3,

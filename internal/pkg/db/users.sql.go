@@ -15,8 +15,8 @@ const deleteTelegramUser = `-- name: DeleteTelegramUser :exec
 DELETE FROM users WHERE telegram = $1
 `
 
-func (q *Queries) DeleteTelegramUser(ctx context.Context, telegram pgtype.Text) error {
-	_, err := q.db.Exec(ctx, deleteTelegramUser, telegram)
+func (q *Queries) DeleteTelegramUser(ctx context.Context, db DBTX, telegram pgtype.Text) error {
+	_, err := db.Exec(ctx, deleteTelegramUser, telegram)
 	return err
 }
 
@@ -24,8 +24,8 @@ const getTelegramUser = `-- name: GetTelegramUser :one
 SELECT id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at FROM users WHERE telegram = $1
 `
 
-func (q *Queries) GetTelegramUser(ctx context.Context, telegram pgtype.Text) (User, error) {
-	row := q.db.QueryRow(ctx, getTelegramUser, telegram)
+func (q *Queries) GetTelegramUser(ctx context.Context, db DBTX, telegram pgtype.Text) (User, error) {
+	row := db.QueryRow(ctx, getTelegramUser, telegram)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -57,8 +57,8 @@ type InserUserParams struct {
 	ActivateThreadID    pgtype.UUID
 }
 
-func (q *Queries) InserUser(ctx context.Context, arg InserUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, inserUser,
+func (q *Queries) InserUser(ctx context.Context, db DBTX, arg InserUserParams) (User, error) {
+	row := db.QueryRow(ctx, inserUser,
 		arg.Username,
 		arg.Telegram,
 		arg.ActivateAssistantID,
@@ -93,8 +93,8 @@ type UpdateTelegramUserParams struct {
 	Telegram            pgtype.Text
 }
 
-func (q *Queries) UpdateTelegramUser(ctx context.Context, arg UpdateTelegramUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, updateTelegramUser, arg.ActivateAssistantID, arg.ActivateThreadID, arg.Telegram)
+func (q *Queries) UpdateTelegramUser(ctx context.Context, db DBTX, arg UpdateTelegramUserParams) (User, error) {
+	row := db.QueryRow(ctx, updateTelegramUser, arg.ActivateAssistantID, arg.ActivateThreadID, arg.Telegram)
 	var i User
 	err := row.Scan(
 		&i.ID,
