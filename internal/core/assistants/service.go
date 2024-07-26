@@ -3,7 +3,6 @@ package assistants
 import (
 	"context"
 	"fmt"
-	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
 
 	"github.com/google/uuid"
@@ -11,33 +10,47 @@ import (
 )
 
 type Service struct {
-	repository Repository
-	llm        *llms.LLM
+	llm *llms.LLM
 }
 
-func NewService(db *db.Pool, llm *llms.LLM) (*Service, error) {
+func NewService(llm *llms.LLM) (*Service, error) {
 	s := &Service{
-		repository: NewRepository(db),
-		llm:        llm,
+		llm: llm,
 	}
 
 	return s, nil
 }
 
 func (s *Service) CreateAssistant(ctx context.Context, assistant *Assistant) error {
-	return s.repository.CreateAssistant(ctx, assistant)
+	r, err := RepositoryFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get repository from context: %w", err)
+	}
+	return r.CreateAssistant(ctx, assistant)
 }
 
 func (s *Service) GetAssistant(ctx context.Context, id uuid.UUID) (*Assistant, error) {
-	return s.repository.GetAssistant(ctx, id)
+	r, err := RepositoryFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repository from context: %w", err)
+	}
+	return r.GetAssistant(ctx, id)
 }
 
 func (s *Service) CreateThread(ctx context.Context, thread *Thread) error {
-	return s.repository.CreateThread(ctx, thread)
+	r, err := RepositoryFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get repository from context: %w", err)
+	}
+	return r.CreateThread(ctx, thread)
 }
 
 func (s *Service) GetThread(ctx context.Context, id uuid.UUID) (*Thread, error) {
-	return s.repository.GetThread(ctx, id)
+	r, err := RepositoryFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repository from context: %w", err)
+	}
+	return r.GetThread(ctx, id)
 }
 
 func (s *Service) AddThreadMessage(ctx context.Context, thread *Thread, role, text string) error {
@@ -49,10 +62,18 @@ func (s *Service) AddThreadMessage(ctx context.Context, thread *Thread, role, te
 		Role:     role,
 		Text:     text,
 	}
-	return s.repository.CreateThreadMessage(ctx, thread.Id, message)
+	r, err := RepositoryFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get repository from context: %w", err)
+	}
+	return r.CreateThreadMessage(ctx, thread.Id, message)
 }
 
 func (s *Service) RunThread(ctx context.Context, thread *Thread) (*ThreadMessage, error) {
+	r, err := RepositoryFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repository from context: %w", err)
+	}
 	oaiMessages := make([]openai.ChatCompletionMessage, 0)
 	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 		Role:    "system",
@@ -78,7 +99,7 @@ func (s *Service) RunThread(ctx context.Context, thread *Thread) (*ThreadMessage
 		Token:    usage.TotalTokens,
 	}
 
-	if err := s.repository.CreateThreadMessage(ctx, thread.Id, message); err != nil {
+	if err := r.CreateThreadMessage(ctx, thread.Id, message); err != nil {
 		return nil, fmt.Errorf("failed to save thread message: %w", err)
 	}
 	return &message, err

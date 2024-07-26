@@ -46,16 +46,20 @@ func TransactionMiddleware(pool *db.Pool) tele.MiddlewareFunc {
 				if r := recover(); r != nil {
 					if err := tx.Rollback(context.Background()); err != nil {
 						logger.FromContext(ctx).Error("failed to rollback transaction", "err", err)
+					} else {
+						logger.FromContext(ctx).Error("transaction rollbacked after panic")
 					}
 					panic(r)
 				}
 			}()
 
 			if err := next(c); err != nil {
+				logger.FromContext(ctx).Error("transaction rollbacked after failed to process message", "err", err)
 				return tx.Rollback(context.Background())
 			}
-
-			return tx.Commit(context.Background())
+			err = tx.Commit(context.Background())
+			logger.FromContext(ctx).Debug("transaction commited", "err", err)
+			return err
 		}
 	}
 }

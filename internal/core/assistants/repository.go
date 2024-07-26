@@ -3,9 +3,11 @@ package assistants
 import (
 	"context"
 	"fmt"
+	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/db"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -22,8 +24,16 @@ type repository struct {
 	db *db.Queries
 }
 
-func NewRepository(pool *db.Pool) Repository {
-	return &repository{db: db.New(pool)}
+func NewRepository(db *db.Queries) Repository {
+	return &repository{db: db}
+}
+
+func RepositoryFromContext(ctx context.Context) (Repository, error) {
+	tx, ok := contexts.Get[pgx.Tx](ctx, contexts.ContextKeyTx)
+	if !ok {
+		return nil, fmt.Errorf("failed to get db from context")
+	}
+	return NewRepository(db.New(tx)), nil
 }
 
 func (r *repository) CreateAssistant(ctx context.Context, assistant *Assistant) error {

@@ -2,6 +2,8 @@ package llms
 
 import (
 	"context"
+	"time"
+	"vibrain/internal/pkg/logger"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -21,6 +23,7 @@ func New(baseUrl, apiKey string) *LLM {
 }
 
 func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, options ...Option) (openai.ChatCompletionChoice, openai.Usage, error) {
+	start := time.Now()
 	opts := &Options{}
 	for _, o := range options {
 		o(opts)
@@ -32,6 +35,11 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 	if err != nil {
 		return openai.ChatCompletionChoice{}, openai.Usage{}, err
 	}
-
+	logger.FromContext(ctx).Info("time for generated content",
+		"duration", time.Since(start),
+		"model", req.Model,
+		"prompt_tokens", resp.Usage.PromptTokens,
+		"completion_tokens", resp.Usage.CompletionTokens,
+	)
 	return resp.Choices[0], resp.Usage, nil
 }
