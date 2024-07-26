@@ -3,6 +3,7 @@ package assistants
 import (
 	"context"
 	"fmt"
+	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
 
 	"github.com/google/uuid"
@@ -11,49 +12,35 @@ import (
 
 type Service struct {
 	llm *llms.LLM
+	r   Repository
 }
 
 func NewService(llm *llms.LLM) (*Service, error) {
 	s := &Service{
 		llm: llm,
+		r:   NewRepository(),
 	}
 
 	return s, nil
 }
 
-func (s *Service) CreateAssistant(ctx context.Context, assistant *Assistant) error {
-	r, err := RepositoryFromContext(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get repository from context: %w", err)
-	}
-	return r.CreateAssistant(ctx, assistant)
+func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *Assistant) error {
+	return s.r.CreateAssistant(ctx, tx, assistant)
 }
 
-func (s *Service) GetAssistant(ctx context.Context, id uuid.UUID) (*Assistant, error) {
-	r, err := RepositoryFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get repository from context: %w", err)
-	}
-	return r.GetAssistant(ctx, id)
+func (s *Service) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Assistant, error) {
+	return s.r.GetAssistant(ctx, tx, id)
 }
 
-func (s *Service) CreateThread(ctx context.Context, thread *Thread) error {
-	r, err := RepositoryFromContext(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get repository from context: %w", err)
-	}
-	return r.CreateThread(ctx, thread)
+func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *Thread) error {
+	return s.r.CreateThread(ctx, tx, thread)
 }
 
-func (s *Service) GetThread(ctx context.Context, id uuid.UUID) (*Thread, error) {
-	r, err := RepositoryFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get repository from context: %w", err)
-	}
-	return r.GetThread(ctx, id)
+func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thread, error) {
+	return s.r.GetThread(ctx, tx, id)
 }
 
-func (s *Service) AddThreadMessage(ctx context.Context, thread *Thread, role, text string) error {
+func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *Thread, role, text string) error {
 	thread.AddMessage(role, text)
 	message := ThreadMessage{
 		UserID:   thread.UserId,
@@ -62,18 +49,10 @@ func (s *Service) AddThreadMessage(ctx context.Context, thread *Thread, role, te
 		Role:     role,
 		Text:     text,
 	}
-	r, err := RepositoryFromContext(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get repository from context: %w", err)
-	}
-	return r.CreateThreadMessage(ctx, thread.Id, message)
+	return s.r.CreateThreadMessage(ctx, tx, thread.Id, message)
 }
 
-func (s *Service) RunThread(ctx context.Context, thread *Thread) (*ThreadMessage, error) {
-	r, err := RepositoryFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get repository from context: %w", err)
-	}
+func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *Thread) (*ThreadMessage, error) {
 	oaiMessages := make([]openai.ChatCompletionMessage, 0)
 	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 		Role:    "system",
@@ -99,8 +78,20 @@ func (s *Service) RunThread(ctx context.Context, thread *Thread) (*ThreadMessage
 		Token:    usage.TotalTokens,
 	}
 
-	if err := r.CreateThreadMessage(ctx, thread.Id, message); err != nil {
+	if err := s.r.CreateThreadMessage(ctx, tx, thread.Id, message); err != nil {
 		return nil, fmt.Errorf("failed to save thread message: %w", err)
 	}
 	return &message, err
+}
+
+func (s *Service) GetTelegramUser(ctx context.Context, tx db.DBTX, userID string) (*User, error) {
+	return s.r.GetTelegramUser(ctx, tx, userID)
+}
+
+func (s *Service) CreateTelegramUser(ctx context.Context, tx db.DBTX, userName string, userID string) (*User, error) {
+	return s.r.CreateTelegramUser(ctx, tx, userName, userID)
+}
+
+func (s *Service) UpdateTelegramUser(ctx context.Context, tx db.DBTX, user User) (*User, error) {
+	return s.r.UpdateTelegramUser(ctx, tx, user)
 }

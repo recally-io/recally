@@ -24,7 +24,8 @@ func NewCacheKey(domain, key string) CacheKey {
 }
 
 type DbCache struct {
-	Pool *db.Pool
+	tx *db.Pool
+	db *db.Queries
 }
 
 type Option func(*DbCache)
@@ -32,7 +33,8 @@ type Option func(*DbCache)
 // NewDBCache creates a new cache instance
 func NewDBCache(pool *db.Pool, opts ...Option) *DbCache {
 	service := &DbCache{
-		Pool: pool,
+		tx: pool,
+		db: db.New(),
 	}
 
 	for _, opt := range opts {
@@ -41,16 +43,12 @@ func NewDBCache(pool *db.Pool, opts ...Option) *DbCache {
 	return service
 }
 
-func (c *DbCache) getConn() *db.Queries {
-	return db.New(c.Pool)
-}
-
 func (c *DbCache) Set(key CacheKey, value interface{}, expiration time.Duration) {
 	c.SetWithContext(context.Background(), key, value, expiration)
 }
 
 func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value interface{}, expiration time.Duration) {
-	ok, err := c.getConn().IsCacheExists(ctx, db.IsCacheExistsParams{Domain: key.Domain, Key: key.Key})
+	ok, err := c.db.IsCacheExists(ctx, c.tx, db.IsCacheExistsParams{Domain: key.Domain, Key: key.Key})
 	if err != nil {
 		logger.FromContext(ctx).Warn("failed to check cache exists", "key", key, "err", err)
 		return
@@ -68,7 +66,7 @@ func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value interf
 			ExpiresAt: pgtype.Timestamp{Time: time.Now().Add(expiration), Valid: true},
 		}
 
-		if err := c.getConn().CreateCache(ctx, params); err != nil {
+		if err := c.db.CreateCache(ctx, c.tx, params); err != nil {
 			logger.FromContext(ctx).Warn("failed to create cache", "key", key, "err", err)
 		}
 	} else {
@@ -78,7 +76,7 @@ func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value interf
 			Value:     jsonValue,
 			ExpiresAt: pgtype.Timestamp{Time: time.Now().Add(expiration), Valid: true},
 		}
-		if err := c.getConn().UpdateCache(ctx, params); err != nil {
+		if err := c.db.UpdateCache(ctx, c.tx, params); err != nil {
 			logger.FromContext(ctx).Warn("failed to update cache", "key", key, "err", err)
 		}
 	}
@@ -89,7 +87,7 @@ func (c *DbCache) Get(key CacheKey) ([]byte, bool) {
 }
 
 func (c *DbCache) GetWithContext(ctx context.Context, key CacheKey) ([]byte, bool) {
-	item, err := c.getConn().GetCacheByKey(ctx, db.GetCacheByKeyParams{
+	item, err := c.db.GetCacheByKey(ctx, c.tx, db.GetCacheByKeyParams{
 		Domain: key.Domain,
 		Key:    key.Key,
 	})
@@ -106,7 +104,7 @@ func (c *DbCache) Delete(key CacheKey) {
 }
 
 func (c *DbCache) DeleteWithContext(ctx context.Context, key CacheKey) {
-	if err := c.getConn().DeleteCacheByKey(ctx, db.DeleteCacheByKeyParams{
+	if err := c.db.DeleteCacheByKey(ctx, c.tx, db.DeleteCacheByKeyParams{
 		Key:    key.Key,
 		Domain: key.Domain,
 	}); err != nil {
@@ -119,7 +117,7 @@ func (c *DbCache) DeleteExpired() {
 }
 
 func (c *DbCache) DeleteExpiredWithContext(ctx context.Context) {
-	if err := c.getConn().DeleteExpiredCache(ctx, pgtype.Timestamp{Time: time.Now()}); err != nil {
+	if err := c.db.DeleteExpiredCache(ctx, c.tx, pgtype.Timestamp{Time: time.Now()}); err != nil {
 		logger.FromContext(ctx).Warn("failed to delete expired cache", "err", err)
 	}
 }

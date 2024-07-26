@@ -6,33 +6,35 @@ import (
 	"strings"
 	"vibrain/internal/core/assistants"
 	"vibrain/internal/pkg/contexts"
+	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
 
+	"github.com/jackc/pgx/v5"
 	"gopkg.in/telebot.v3"
 )
 
 func (h *Handler) LLMChatHandler(c telebot.Context) error {
-	ctx, user, repo, err := h.initHandlerRequest(c)
+	ctx, user, tx, err := h.initHandlerRequest(c)
 	if err != nil {
 		logger.FromContext(ctx).Error("init request error", "err", err)
 		_ = c.Reply("Failed to processing message, please retry.")
 		return err
 	}
 
-	thread, err := h.getActivateThread(ctx, repo, user)
+	thread, err := h.getActivateThread(ctx, tx, user)
 	if err != nil {
 		logger.FromContext(ctx).Error("Failed to get thread", "err", err)
 		_ = c.Reply("Failed to get thread " + err.Error())
 		return err
 	}
 
-	if err := h.assistant.AddThreadMessage(ctx, thread, "user", strings.TrimSpace(c.Text())); err != nil {
+	if err := h.assistant.AddThreadMessage(ctx, tx, thread, "user", strings.TrimSpace(c.Text())); err != nil {
 		logger.FromContext(ctx).Error("Failed to add message to thread", "err", err)
 		_ = c.Reply("Failed to add message to thread " + err.Error())
 		return err
 	}
 
-	message, err := h.assistant.RunThread(ctx, thread)
+	message, err := h.assistant.RunThread(ctx, tx, thread)
 	if err != nil {
 		logger.FromContext(ctx).Error("Failed to run thread", "err", err)
 		_ = c.Reply("Failed to run thread " + err.Error())
@@ -44,7 +46,7 @@ func (h *Handler) LLMChatHandler(c telebot.Context) error {
 }
 
 func (h *Handler) LLMChatNewAssistanthandler(c telebot.Context) error {
-	ctx, user, repo, err := h.initHandlerRequest(c)
+	ctx, user, tx, err := h.initHandlerRequest(c)
 	if err != nil {
 		logger.FromContext(ctx).Error("init request error", "err", err)
 		_ = c.Reply("Failed to processing message, please retry.")
@@ -52,13 +54,13 @@ func (h *Handler) LLMChatNewAssistanthandler(c telebot.Context) error {
 	}
 
 	assistant := assistants.NewAssistant(user.ID)
-	if err := h.assistant.CreateAssistant(ctx, assistant); err != nil {
+	if err := h.assistant.CreateAssistant(ctx, tx, assistant); err != nil {
 		_ = c.Reply("Failed to create assistant " + err.Error())
 		return err
 	}
 
 	user.ActivateAssistantID = assistant.Id
-	_, err = repo.UpdateUser(ctx, *user)
+	_, err = h.assistant.UpdateTelegramUser(ctx, tx, *user)
 	if err != nil {
 		_ = c.Reply("Failed to update user " + err.Error())
 		return err
@@ -73,14 +75,14 @@ func (h *Handler) LLMChatListAssistantshandler(c telebot.Context) error {
 }
 
 func (h *Handler) LLMChatNewThreadHandler(c telebot.Context) error {
-	ctx, user, repo, err := h.initHandlerRequest(c)
+	ctx, user, tx, err := h.initHandlerRequest(c)
 	if err != nil {
 		logger.FromContext(ctx).Error("init request error", "err", err)
 		_ = c.Reply("Failed to processing message, please retry.")
 		return err
 	}
 
-	assistant, err := h.getActivateAssistant(ctx, user)
+	assistant, err := h.getActivateAssistant(ctx, tx, user)
 	if err != nil {
 		logger.FromContext(ctx).Error("TextHandler", "error", err)
 		_ = c.Reply("Failed to get assistant " + err.Error())
@@ -88,14 +90,14 @@ func (h *Handler) LLMChatNewThreadHandler(c telebot.Context) error {
 	}
 
 	thread := assistants.NewThread(user.ID, *assistant)
-	if err := h.assistant.CreateThread(ctx, thread); err != nil {
+	if err := h.assistant.CreateThread(ctx, tx, thread); err != nil {
 		_ = c.Reply("Failed to create thread " + err.Error())
 		return err
 	}
 
 	user.ActivateThreadID = thread.Id
 	user.ActivateAssistantID = assistant.Id
-	_, err = repo.UpdateUser(ctx, *user)
+	_, err = h.assistant.UpdateTelegramUser(ctx, tx, *user)
 	if err != nil {
 		_ = c.Reply("Failed to update user " + err.Error())
 		return err
@@ -109,12 +111,12 @@ func (h *Handler) LLMChatListThreadHandler(c telebot.Context) error {
 	return c.Reply("Not Implemented")
 }
 
-func (h *Handler) getActivateAssistant(ctx context.Context, user *User) (*assistants.Assistant, error) {
-	assistant, err := h.assistant.GetAssistant(ctx, user.ActivateAssistantID)
+func (h *Handler) getActivateAssistant(ctx context.Context, tx db.DBTX, user *assistants.User) (*assistants.Assistant, error) {
+	assistant, err := h.assistant.GetAssistant(ctx, tx, user.ActivateAssistantID)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
 			assistant = assistants.NewAssistant(user.ID)
-			if err := h.assistant.CreateAssistant(ctx, assistant); err != nil {
+			if err := h.assistant.CreateAssistant(ctx, tx, assistant); err != nil {
 				return nil, fmt.Errorf("failed to create assistant: %w", err)
 			}
 		} else {
@@ -124,21 +126,21 @@ func (h *Handler) getActivateAssistant(ctx context.Context, user *User) (*assist
 	return assistant, nil
 }
 
-func (h *Handler) getActivateThread(ctx context.Context, repo Repository, user *User) (*assistants.Thread, error) {
-	thread, err := h.assistant.GetThread(ctx, user.ActivateThreadID)
+func (h *Handler) getActivateThread(ctx context.Context, tx db.DBTX, user *assistants.User) (*assistants.Thread, error) {
+	thread, err := h.assistant.GetThread(ctx, tx, user.ActivateThreadID)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
-			assistant, err := h.getActivateAssistant(ctx, user)
+			assistant, err := h.getActivateAssistant(ctx, tx, user)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get activate assistant when : %w", err)
 			}
 			thread = assistants.NewThread(user.ID, *assistant)
-			if err := h.assistant.CreateThread(ctx, thread); err != nil {
+			if err := h.assistant.CreateThread(ctx, tx, thread); err != nil {
 				return nil, fmt.Errorf("failed to create thread: %w", err)
 			}
 			user.ActivateThreadID = thread.Id
 			user.ActivateAssistantID = assistant.Id
-			_, err = repo.UpdateUser(ctx, *user)
+			_, err = h.assistant.UpdateTelegramUser(ctx, tx, *user)
 			if err != nil {
 				return nil, fmt.Errorf("failed to update user: %w", err)
 			}
@@ -149,16 +151,30 @@ func (h *Handler) getActivateThread(ctx context.Context, repo Repository, user *
 	return thread, nil
 }
 
-func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *User, Repository, error) {
+func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *assistants.User, db.DBTX, error) {
 	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
-	repo, err := NewRepositoryFromContext(ctx)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to get repository: %w", err)
-	}
-	user, err := repo.GetOrCreateUser(ctx)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to get or create user: %w", err)
+
+	tx, ok := contexts.Get[pgx.Tx](ctx, contexts.ContextKeyTx)
+	if !ok {
+		return nil, nil, nil, fmt.Errorf("failed to get dbtx from context")
 	}
 
-	return ctx, user, repo, nil
+	userID, ok := contexts.Get[string](ctx, contexts.ContextKeyUserID)
+	if !ok {
+		return nil, nil, nil, fmt.Errorf("failed to get userID from context")
+	}
+	user, err := h.assistant.GetTelegramUser(ctx, tx, userID)
+	if err != nil {
+		if db.IsNotFound(err) {
+			userName := ctx.Value(contexts.ContextKey(contexts.ContextKeyUserName)).(string)
+			user, err = h.assistant.CreateTelegramUser(ctx, tx, userName, userID)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("failed to create user: %w", err)
+			}
+		} else {
+			return nil, nil, nil, fmt.Errorf("failed to get user: %w", err)
+		}
+	}
+
+	return ctx, user, tx, nil
 }

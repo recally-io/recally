@@ -23,8 +23,8 @@ type CreateCacheParams struct {
 	ExpiresAt pgtype.Timestamp
 }
 
-func (q *Queries) CreateCache(ctx context.Context, arg CreateCacheParams) error {
-	_, err := q.db.Exec(ctx, createCache,
+func (q *Queries) CreateCache(ctx context.Context, db DBTX, arg CreateCacheParams) error {
+	_, err := db.Exec(ctx, createCache,
 		arg.Domain,
 		arg.Key,
 		arg.Value,
@@ -42,8 +42,8 @@ type DeleteCacheByKeyParams struct {
 	Domain string
 }
 
-func (q *Queries) DeleteCacheByKey(ctx context.Context, arg DeleteCacheByKeyParams) error {
-	_, err := q.db.Exec(ctx, deleteCacheByKey, arg.Key, arg.Domain)
+func (q *Queries) DeleteCacheByKey(ctx context.Context, db DBTX, arg DeleteCacheByKeyParams) error {
+	_, err := db.Exec(ctx, deleteCacheByKey, arg.Key, arg.Domain)
 	return err
 }
 
@@ -51,8 +51,8 @@ const deleteExpiredCache = `-- name: DeleteExpiredCache :exec
 DELETE FROM cache WHERE expires_at < $1
 `
 
-func (q *Queries) DeleteExpiredCache(ctx context.Context, expiresAt pgtype.Timestamp) error {
-	_, err := q.db.Exec(ctx, deleteExpiredCache, expiresAt)
+func (q *Queries) DeleteExpiredCache(ctx context.Context, db DBTX, expiresAt pgtype.Timestamp) error {
+	_, err := db.Exec(ctx, deleteExpiredCache, expiresAt)
 	return err
 }
 
@@ -65,8 +65,8 @@ type GetCacheByKeyParams struct {
 	Key    string
 }
 
-func (q *Queries) GetCacheByKey(ctx context.Context, arg GetCacheByKeyParams) (Cache, error) {
-	row := q.db.QueryRow(ctx, getCacheByKey, arg.Domain, arg.Key)
+func (q *Queries) GetCacheByKey(ctx context.Context, db DBTX, arg GetCacheByKeyParams) (Cache, error) {
+	row := db.QueryRow(ctx, getCacheByKey, arg.Domain, arg.Key)
 	var i Cache
 	err := row.Scan(
 		&i.ID,
@@ -89,8 +89,8 @@ type IsCacheExistsParams struct {
 	Key    string
 }
 
-func (q *Queries) IsCacheExists(ctx context.Context, arg IsCacheExistsParams) (bool, error) {
-	row := q.db.QueryRow(ctx, isCacheExists, arg.Domain, arg.Key)
+func (q *Queries) IsCacheExists(ctx context.Context, db DBTX, arg IsCacheExistsParams) (bool, error) {
+	row := db.QueryRow(ctx, isCacheExists, arg.Domain, arg.Key)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -108,8 +108,8 @@ type UpdateCacheParams struct {
 	ExpiresAt pgtype.Timestamp
 }
 
-func (q *Queries) UpdateCache(ctx context.Context, arg UpdateCacheParams) error {
-	_, err := q.db.Exec(ctx, updateCache,
+func (q *Queries) UpdateCache(ctx context.Context, db DBTX, arg UpdateCacheParams) error {
+	_, err := db.Exec(ctx, updateCache,
 		arg.Key,
 		arg.Domain,
 		arg.Value,
