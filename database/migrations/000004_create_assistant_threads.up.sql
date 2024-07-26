@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS assistant_threads (
     assistant_id UUID REFERENCES assistants(uuid),
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    system_prompt TEXT,
     model VARCHAR(32) NOT NULL,
     is_long_term_memory BOOLEAN DEFAULT FALSE,
     metadata JSONB DEFAULT '{}'::JSONB,

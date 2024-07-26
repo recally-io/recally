@@ -15,6 +15,7 @@ type Repository interface {
 
 	CreateThread(ctx context.Context, thread *Thread) error
 	GetThread(ctx context.Context, id uuid.UUID) (*Thread, error)
+	CreateThreadMessage(ctx context.Context, threadID uuid.UUID, message ThreadMessage) error
 }
 
 type repository struct {
@@ -81,12 +82,52 @@ func (r *repository) GetThread(ctx context.Context, id uuid.UUID) (*Thread, erro
 		return nil, fmt.Errorf("failed to get thread: %w", err)
 	}
 	thread := &Thread{
-		Id:          th.Uuid,
-		UserId:      th.UserID.Bytes,
-		AssistantId: th.AssistantID.Bytes,
-		Name:        th.Name,
-		Description: th.Description.String,
-		Model:       th.Model,
+		Id:           th.Uuid,
+		UserId:       th.UserID.Bytes,
+		AssistantId:  th.AssistantID.Bytes,
+		Name:         th.Name,
+		Description:  th.Description.String,
+		Model:        th.Model,
+		SystemPrompt: th.SystemPrompt.String,
 	}
+
+	messages, err := r.ListThreadMessages(ctx, th.Uuid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get thread messages: %w", err)
+	}
+	thread.Messages = messages
 	return thread, nil
+}
+
+func (r *repository) ListThreadMessages(ctx context.Context, threadID uuid.UUID) ([]ThreadMessage, error) {
+	messages, err := r.db.ListThreadMessages(ctx, pgtype.UUID{Bytes: threadID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get thread messages: %w", err)
+	}
+
+	var result []ThreadMessage
+	for _, msg := range messages {
+		result = append(result, ThreadMessage{
+			Role:      msg.Role,
+			Text:      msg.Text.String,
+			CreatedAt: msg.CreatedAt.Time,
+			UpdatedAt: msg.UpdatedAt.Time,
+		})
+	}
+
+	return result, nil
+}
+
+func (r *repository) CreateThreadMessage(ctx context.Context, threadID uuid.UUID, message ThreadMessage) error {
+	_, err := r.db.CreateThreadMessage(ctx, db.CreateThreadMessageParams{
+		UserID:   pgtype.UUID{Bytes: message.UserID, Valid: true},
+		ThreadID: pgtype.UUID{Bytes: threadID, Valid: true},
+		Model:    pgtype.Text{String: message.Model, Valid: message.Model != ""},
+		Role:     message.Role,
+		Text:     pgtype.Text{String: message.Text, Valid: true},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to save thread message: %w", err)
+	}
+	return nil
 }

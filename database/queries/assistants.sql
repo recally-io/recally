@@ -20,15 +20,15 @@ SELECT * FROM assistants WHERE user_id = $1 ORDER BY created_at DESC;
 
 -- CRUD for assistant_threads
 -- name: CreateAssistantThread :one
-INSERT INTO assistant_threads (user_id, assistant_id, name, description, model, is_long_term_memory, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO assistant_threads (user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
 -- name: GetAssistantThread :one
 SELECT * FROM assistant_threads WHERE uuid = $1;
 
 -- name: UpdateAssistantThread :exec
-UPDATE assistant_threads SET name = $2, description = $3, model = $4, is_long_term_memory = $5, metadata = $6 
+UPDATE assistant_threads SET name = $2, description = $3, model = $4, is_long_term_memory = $5, metadata = $6, system_prompt = $7 
 WHERE uuid = $1;
 
 -- name: DeleteAssistantThread :exec
@@ -56,7 +56,7 @@ UPDATE assistant_messages SET text = $2, attachments = $3, metadata = $4 WHERE u
 DELETE FROM assistant_messages WHERE uuid = $1;
 
 -- name: ListThreadMessages :many
-SELECT * FROM assistant_messages WHERE thread_id = $1 ORDER BY created_at DESC;
+SELECT * FROM assistant_messages WHERE thread_id = $1 ORDER BY created_at ASC;
 
 -- CRUD for assistant_attachments
 -- name: CreateAttachment :one
