@@ -50,5 +50,5 @@ func NewChatBot(cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, dbCache 
 			Handler:  h.LLMChatHandler,
 		},
 	}
-	return NewBot(cfg, handlers, e)
+	return NewBot(cfg, pool, handlers, e)
 }

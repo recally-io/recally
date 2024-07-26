@@ -26,5 +26,5 @@ func NewReaderBot(cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, dbCach
 			Handler:  h.WebSummaryHandler,
 		},
 	}
-	return NewBot(cfg, handlers, e)
+	return NewBot(cfg, pool, handlers, e)
 }

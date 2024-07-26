@@ -31,7 +31,7 @@ func New(pool *db.Pool, opts ...Option) (*Service, error) {
 	handler := handlers.New(pool)
 
 	service := &Service{
-		Server:  newServer(handler),
+		Server:  newServer(handler, pool),
 		Handler: handler,
 	}
 	for _, opt := range opts {
@@ -58,9 +58,9 @@ func (s *Service) Name() string {
 	return "http server"
 }
 
-func newServer(handler *handlers.Handler) *echo.Echo {
+func newServer(handler *handlers.Handler, pool *db.Pool) *echo.Echo {
 	e := echo.New()
-	registerMiddlewares(e)
+	registerMiddlewares(e, pool)
 	registerRouters(e, handler)
 
 	// Health check

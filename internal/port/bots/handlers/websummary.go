@@ -9,7 +9,7 @@ import (
 	"time"
 	"vibrain/internal/core/workers"
 	"vibrain/internal/pkg/cache"
-	"vibrain/internal/pkg/constant"
+	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/logger"
 
 	tele "gopkg.in/telebot.v3"
@@ -20,7 +20,7 @@ var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+/?
 func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	user := c.Sender()
 	text := c.Text()
-	ctx := c.Get(constant.ContextKeyContext).(context.Context)
+	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
 	logger.FromContext(ctx).Info("TextHandler", "user", user.Username, "text", text)
 	url := getUrlFromText(text)
 	if url == "" {

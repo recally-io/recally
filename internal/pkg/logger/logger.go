@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
-	"vibrain/internal/pkg/constant"
+	"vibrain/internal/pkg/contexts"
 )
 
-var defaultLogAttrs = []string{constant.ContextKeyRequestID, constant.ContextKeyUserID, constant.ContextKeyUserName}
+var defaultLogAttrs = []string{contexts.ContextKeyRequestID, contexts.ContextKeyUserID, contexts.ContextKeyUserName}
 
 // Default logger
 var Default = New()
@@ -50,9 +50,9 @@ func New() Logger {
 
 // FromContext returns a logger from context
 func FromContext(ctx context.Context, attrs ...slog.Attr) Logger {
-	logger := getValFromContext(ctx, constant.ContextKeyLogger)
-	if logger != nil {
-		return logger.(Logger)
+	logger, ok := contexts.Get[Logger](ctx, contexts.ContextKeyLogger)
+	if ok {
+		return logger
 	}
 	sLogger := New()
 
@@ -63,14 +63,12 @@ func FromContext(ctx context.Context, attrs ...slog.Attr) Logger {
 	}
 }
 
-func getValFromContext(ctx context.Context, key string) interface{} {
-	return ctx.Value(constant.ContextKey(key))
-}
-
 func buildLogAttrs(ctx context.Context) []slog.Attr {
 	attrs := make([]slog.Attr, 0)
 	for _, key := range defaultLogAttrs {
-		if val := getValFromContext(ctx, key); val != nil {
+
+		val, ok := contexts.Get[any](ctx, key)
+		if ok {
 			attrs = append(attrs, slog.Any(key, val))
 		}
 	}
