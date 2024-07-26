@@ -2,9 +2,13 @@ package handlers
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/db"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -12,14 +16,24 @@ type Repository interface {
 	GetUser(ctx context.Context, userID string) (*User, error)
 	CreateUser(ctx context.Context, userName string, userID string) (*User, error)
 	UpdateUser(ctx context.Context, user User) (*User, error)
+	// GetOrCreateUser gets user by telegram userID, if user not found, creates new user with userName and userID
+	GetOrCreateUser(ctx context.Context) (*User, error)
 }
 
 type repository struct {
 	db *db.Queries
 }
 
-func NewRepository(pool *db.Pool) Repository {
-	return &repository{db: db.New(pool)}
+func NewRepository(db *db.Queries) Repository {
+	return &repository{db: db}
+}
+
+func NewRepositoryFromContext(ctx context.Context) (Repository, error) {
+	tx, ok := contexts.Get[pgx.Tx](ctx, contexts.ContextKeyTx)
+	if ok {
+		return NewRepository(db.New(tx)), nil
+	}
+	return nil, fmt.Errorf("failed to get db pool from context")
 }
 
 func (r *repository) GetUser(ctx context.Context, userID string) (*User, error) {
@@ -72,4 +86,24 @@ func (r *repository) UpdateUser(ctx context.Context, user User) (*User, error) {
 		ActivateAssistantID: dbUser.ActivateAssistantID.Bytes,
 		ActivateThreadID:    dbUser.ActivateThreadID.Bytes,
 	}, nil
+}
+
+func (r *repository) GetOrCreateUser(ctx context.Context) (*User, error) {
+	userID, ok := contexts.Get[string](ctx, contexts.ContextKeyUserID)
+	if !ok {
+		return nil, fmt.Errorf("failed to get userID from context")
+	}
+	user, err := r.GetUser(ctx, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			userName := ctx.Value(contexts.ContextKey(contexts.ContextKeyUserName)).(string)
+			user, err = r.CreateUser(ctx, userName, userID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create user: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to get user: %w", err)
+		}
+	}
+	return user, nil
 }

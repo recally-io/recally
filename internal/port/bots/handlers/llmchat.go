@@ -12,55 +12,60 @@ import (
 )
 
 func (h *Handler) LLMChatHandler(c telebot.Context) error {
-	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
-
-	user, err := h.getOrCreateUser(ctx)
+	ctx, user, repo, err := h.initHandlerRequest(c)
 	if err != nil {
-		logger.FromContext(ctx).Error("Failed to get or create user", "err", err)
-		return c.Reply("Failed to get or create user " + err.Error())
+		logger.FromContext(ctx).Error("init request error", "err", err)
+		_ = c.Reply("Failed to processing message, please retry.")
+		return err
 	}
 
-	thread, err := h.getActivateThread(ctx, user)
+	thread, err := h.getActivateThread(ctx, repo, user)
 	if err != nil {
 		logger.FromContext(ctx).Error("Failed to get thread", "err", err)
-		return c.Reply("Failed to get thread " + err.Error())
+		_ = c.Reply("Failed to get thread " + err.Error())
+		return err
 	}
 
 	if err := h.assistant.AddThreadMessage(ctx, thread, "user", strings.TrimSpace(c.Text())); err != nil {
 		logger.FromContext(ctx).Error("Failed to add message to thread", "err", err)
-		return c.Reply("Failed to add message to thread " + err.Error())
+		_ = c.Reply("Failed to add message to thread " + err.Error())
+		return err
 	}
 
 	message, err := h.assistant.RunThread(ctx, thread)
 	if err != nil {
 		logger.FromContext(ctx).Error("Failed to run thread", "err", err)
-		return c.Reply("Failed to run thread " + err.Error())
+		_ = c.Reply("Failed to run thread " + err.Error())
+		return err
 	}
 	md := convertToTGMarkdown(message.Text)
-	return c.Reply(md, telebot.ModeMarkdownV2)
+	_ = c.Reply(md, telebot.ModeMarkdownV2)
+	return nil
 }
 
 func (h *Handler) LLMChatNewAssistanthandler(c telebot.Context) error {
-	var err error
-	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
-	user, err := h.getOrCreateUser(ctx)
+	ctx, user, repo, err := h.initHandlerRequest(c)
 	if err != nil {
-		logger.FromContext(ctx).Error("TextHandler", "error", err)
-		return c.Reply("Failed to get or create user " + err.Error())
+		logger.FromContext(ctx).Error("init request error", "err", err)
+		_ = c.Reply("Failed to processing message, please retry.")
+		return err
 	}
 
 	assistant := assistants.NewAssistant(user.ID)
 	if err := h.assistant.CreateAssistant(ctx, assistant); err != nil {
-		return c.Reply("Failed to create assistant " + err.Error())
+		_ = c.Reply("Failed to create assistant " + err.Error())
+		return err
 	}
 
 	user.ActivateAssistantID = assistant.Id
-	_, err = h.repository.UpdateUser(ctx, *user)
+	_, err = repo.UpdateUser(ctx, *user)
 	if err != nil {
-		return c.Reply("Failed to update user " + err.Error())
+		_ = c.Reply("Failed to update user " + err.Error())
+		return err
 	}
 
-	return c.Reply("Assistant created successfully. Assistant ID: " + assistant.Id.String())
+	_ = c.Reply("Assistant created successfully. Assistant ID: " + assistant.Id.String())
+	return nil
 }
 
 func (h *Handler) LLMChatListAssistantshandler(c telebot.Context) error {
@@ -68,33 +73,36 @@ func (h *Handler) LLMChatListAssistantshandler(c telebot.Context) error {
 }
 
 func (h *Handler) LLMChatNewThreadHandler(c telebot.Context) error {
-	var err error
-	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
-	user, err := h.getOrCreateUser(ctx)
+	ctx, user, repo, err := h.initHandlerRequest(c)
 	if err != nil {
-		logger.FromContext(ctx).Error("TextHandler", "error", err)
-		return c.Reply("Failed to get or create user " + err.Error())
+		logger.FromContext(ctx).Error("init request error", "err", err)
+		_ = c.Reply("Failed to processing message, please retry.")
+		return err
 	}
 
 	assistant, err := h.getActivateAssistant(ctx, user)
 	if err != nil {
 		logger.FromContext(ctx).Error("TextHandler", "error", err)
-		return c.Reply("Failed to get assistant " + err.Error())
+		_ = c.Reply("Failed to get assistant " + err.Error())
+		return err
 	}
 
 	thread := assistants.NewThread(user.ID, *assistant)
 	if err := h.assistant.CreateThread(ctx, thread); err != nil {
-		return c.Reply("Failed to create thread " + err.Error())
+		_ = c.Reply("Failed to create thread " + err.Error())
+		return err
 	}
 
 	user.ActivateThreadID = thread.Id
 	user.ActivateAssistantID = assistant.Id
-	_, err = h.repository.UpdateUser(ctx, *user)
+	_, err = repo.UpdateUser(ctx, *user)
 	if err != nil {
-		return c.Reply("Failed to update user " + err.Error())
+		_ = c.Reply("Failed to update user " + err.Error())
+		return err
 	}
 
-	return c.Reply("Assistant Thread created successfully. Thread ID: " + assistant.Id.String())
+	_ = c.Reply("Assistant Thread created successfully. Thread ID: " + assistant.Id.String())
+	return nil
 }
 
 func (h *Handler) LLMChatListThreadHandler(c telebot.Context) error {
@@ -116,7 +124,7 @@ func (h *Handler) getActivateAssistant(ctx context.Context, user *User) (*assist
 	return assistant, nil
 }
 
-func (h *Handler) getActivateThread(ctx context.Context, user *User) (*assistants.Thread, error) {
+func (h *Handler) getActivateThread(ctx context.Context, repo Repository, user *User) (*assistants.Thread, error) {
 	thread, err := h.assistant.GetThread(ctx, user.ActivateThreadID)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
@@ -130,7 +138,7 @@ func (h *Handler) getActivateThread(ctx context.Context, user *User) (*assistant
 			}
 			user.ActivateThreadID = thread.Id
 			user.ActivateAssistantID = assistant.Id
-			_, err = h.repository.UpdateUser(ctx, *user)
+			_, err = repo.UpdateUser(ctx, *user)
 			if err != nil {
 				return nil, fmt.Errorf("failed to update user: %w", err)
 			}
@@ -139,4 +147,18 @@ func (h *Handler) getActivateThread(ctx context.Context, user *User) (*assistant
 		}
 	}
 	return thread, nil
+}
+
+func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *User, Repository, error) {
+	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
+	repo, err := NewRepositoryFromContext(ctx)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to get repository: %w", err)
+	}
+	user, err := repo.GetOrCreateUser(ctx)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to get or create user: %w", err)
+	}
+
+	return ctx, user, repo, nil
 }

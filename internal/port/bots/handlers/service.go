@@ -11,19 +11,17 @@ import (
 )
 
 type Handler struct {
-	Cache      *cache.DbCache
-	worker     *workers.Worker
-	assistant  *assistants.Service
-	repository Repository
+	Cache     *cache.DbCache
+	worker    *workers.Worker
+	assistant *assistants.Service
 }
 
 func New(pool *db.Pool, opts ...Option) *Handler {
 	h := &Handler{
-		worker:     workers.New(),
-		repository: NewRepository(pool),
+		worker: workers.New(),
 	}
 	llm := llms.New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
-	ass, err := assistants.NewService(pool, llm)
+	ass, err := assistants.NewService(llm)
 	if err != nil {
 		logger.Default.Fatal("failed to create assistant service", "err", err)
 	}
