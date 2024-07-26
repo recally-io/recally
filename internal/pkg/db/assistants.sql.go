@@ -91,9 +91,9 @@ func (q *Queries) CreateAssistantEmbedding(ctx context.Context, arg CreateAssist
 }
 
 const createAssistantThread = `-- name: CreateAssistantThread :one
-INSERT INTO assistant_threads (user_id, assistant_id, name, description, model, is_long_term_memory, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, uuid, user_id, assistant_id, name, description, model, is_long_term_memory, metadata, created_at, updated_at
+INSERT INTO assistant_threads (user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id, uuid, user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata, created_at, updated_at
 `
 
 type CreateAssistantThreadParams struct {
@@ -101,6 +101,7 @@ type CreateAssistantThreadParams struct {
 	AssistantID      pgtype.UUID
 	Name             string
 	Description      pgtype.Text
+	SystemPrompt     pgtype.Text
 	Model            string
 	IsLongTermMemory pgtype.Bool
 	Metadata         []byte
@@ -113,6 +114,7 @@ func (q *Queries) CreateAssistantThread(ctx context.Context, arg CreateAssistant
 		arg.AssistantID,
 		arg.Name,
 		arg.Description,
+		arg.SystemPrompt,
 		arg.Model,
 		arg.IsLongTermMemory,
 		arg.Metadata,
@@ -125,6 +127,7 @@ func (q *Queries) CreateAssistantThread(ctx context.Context, arg CreateAssistant
 		&i.AssistantID,
 		&i.Name,
 		&i.Description,
+		&i.SystemPrompt,
 		&i.Model,
 		&i.IsLongTermMemory,
 		&i.Metadata,
@@ -293,7 +296,7 @@ func (q *Queries) GetAssistant(ctx context.Context, argUuid uuid.UUID) (Assistan
 }
 
 const getAssistantThread = `-- name: GetAssistantThread :one
-SELECT id, uuid, user_id, assistant_id, name, description, model, is_long_term_memory, metadata, created_at, updated_at FROM assistant_threads WHERE uuid = $1
+SELECT id, uuid, user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata, created_at, updated_at FROM assistant_threads WHERE uuid = $1
 `
 
 func (q *Queries) GetAssistantThread(ctx context.Context, argUuid uuid.UUID) (AssistantThread, error) {
@@ -306,6 +309,7 @@ func (q *Queries) GetAssistantThread(ctx context.Context, argUuid uuid.UUID) (As
 		&i.AssistantID,
 		&i.Name,
 		&i.Description,
+		&i.SystemPrompt,
 		&i.Model,
 		&i.IsLongTermMemory,
 		&i.Metadata,
@@ -363,7 +367,7 @@ func (q *Queries) GetThreadMessage(ctx context.Context, argUuid uuid.UUID) (Assi
 }
 
 const listAssistantThreads = `-- name: ListAssistantThreads :many
-SELECT id, uuid, user_id, assistant_id, name, description, model, is_long_term_memory, metadata, created_at, updated_at FROM assistant_threads WHERE assistant_id = $1 ORDER BY created_at DESC
+SELECT id, uuid, user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata, created_at, updated_at FROM assistant_threads WHERE assistant_id = $1 ORDER BY created_at DESC
 `
 
 func (q *Queries) ListAssistantThreads(ctx context.Context, assistantID pgtype.UUID) ([]AssistantThread, error) {
@@ -382,6 +386,7 @@ func (q *Queries) ListAssistantThreads(ctx context.Context, assistantID pgtype.U
 			&i.AssistantID,
 			&i.Name,
 			&i.Description,
+			&i.SystemPrompt,
 			&i.Model,
 			&i.IsLongTermMemory,
 			&i.Metadata,
@@ -399,7 +404,7 @@ func (q *Queries) ListAssistantThreads(ctx context.Context, assistantID pgtype.U
 }
 
 const listAssistantThreadsByUser = `-- name: ListAssistantThreadsByUser :many
-SELECT id, uuid, user_id, assistant_id, name, description, model, is_long_term_memory, metadata, created_at, updated_at FROM assistant_threads WHERE user_id = $1 ORDER BY created_at DESC
+SELECT id, uuid, user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata, created_at, updated_at FROM assistant_threads WHERE user_id = $1 ORDER BY created_at DESC
 `
 
 func (q *Queries) ListAssistantThreadsByUser(ctx context.Context, userID pgtype.UUID) ([]AssistantThread, error) {
@@ -418,6 +423,7 @@ func (q *Queries) ListAssistantThreadsByUser(ctx context.Context, userID pgtype.
 			&i.AssistantID,
 			&i.Name,
 			&i.Description,
+			&i.SystemPrompt,
 			&i.Model,
 			&i.IsLongTermMemory,
 			&i.Metadata,
@@ -547,7 +553,7 @@ func (q *Queries) ListAttachmentsByUser(ctx context.Context, userID pgtype.UUID)
 }
 
 const listThreadMessages = `-- name: ListThreadMessages :many
-SELECT id, uuid, user_id, thread_id, model, token, role, text, attachments, metadata, created_at, updated_at FROM assistant_messages WHERE thread_id = $1 ORDER BY created_at DESC
+SELECT id, uuid, user_id, thread_id, model, token, role, text, attachments, metadata, created_at, updated_at FROM assistant_messages WHERE thread_id = $1 ORDER BY created_at ASC
 `
 
 func (q *Queries) ListThreadMessages(ctx context.Context, threadID pgtype.UUID) ([]AssistantMessage, error) {
@@ -669,7 +675,7 @@ func (q *Queries) UpdateAssistant(ctx context.Context, arg UpdateAssistantParams
 }
 
 const updateAssistantThread = `-- name: UpdateAssistantThread :exec
-UPDATE assistant_threads SET name = $2, description = $3, model = $4, is_long_term_memory = $5, metadata = $6 
+UPDATE assistant_threads SET name = $2, description = $3, model = $4, is_long_term_memory = $5, metadata = $6, system_prompt = $7 
 WHERE uuid = $1
 `
 
@@ -680,6 +686,7 @@ type UpdateAssistantThreadParams struct {
 	Model            string
 	IsLongTermMemory pgtype.Bool
 	Metadata         []byte
+	SystemPrompt     pgtype.Text
 }
 
 func (q *Queries) UpdateAssistantThread(ctx context.Context, arg UpdateAssistantThreadParams) error {
@@ -690,6 +697,7 @@ func (q *Queries) UpdateAssistantThread(ctx context.Context, arg UpdateAssistant
 		arg.Model,
 		arg.IsLongTermMemory,
 		arg.Metadata,
+		arg.SystemPrompt,
 	)
 	return err
 }

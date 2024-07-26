@@ -4,24 +4,26 @@ import (
 	"vibrain/internal/core/assistants"
 	"vibrain/internal/core/workers"
 	"vibrain/internal/pkg/cache"
+	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
 )
 
 type Handler struct {
-	Cache     *cache.DbCache
-	worker    *workers.Worker
-	assistant *assistants.Service
-	tx        *db.Queries
+	Cache      *cache.DbCache
+	worker     *workers.Worker
+	assistant  *assistants.Service
+	repository Repository
 }
 
 func New(pool *db.Pool, opts ...Option) *Handler {
 	h := &Handler{
-		worker: workers.New(),
-		tx:     db.New(pool),
+		worker:     workers.New(),
+		repository: NewRepository(pool),
 	}
-
-	ass, err := assistants.NewService(pool)
+	llm := llms.New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
+	ass, err := assistants.NewService(pool, llm)
 	if err != nil {
 		logger.Default.Fatal("failed to create assistant service", "err", err)
 	}

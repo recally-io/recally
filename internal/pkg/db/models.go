@@ -122,6 +122,7 @@ type AssistantThread struct {
 	AssistantID      pgtype.UUID
 	Name             string
 	Description      pgtype.Text
+	SystemPrompt     pgtype.Text
 	Model            string
 	IsLongTermMemory pgtype.Bool
 	Metadata         []byte

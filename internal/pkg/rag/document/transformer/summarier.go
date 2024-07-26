@@ -23,7 +23,7 @@ func WithLLMSummarier(llm *llms.LLM, opts ...llms.Option) Transformer {
 						Content: fmt.Sprintf("%s\n####\n%s", summaryPrompt, doc.Content),
 					},
 				}
-				resp, err := llm.GenerateContent(ctx, messages, opts...)
+				resp, _, err := llm.GenerateContent(ctx, messages, opts...)
 				if err != nil {
 					return nil, err
 				}

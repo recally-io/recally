@@ -10,13 +10,17 @@ type LLM struct {
 	client *openai.Client
 }
 
-func New(client *openai.Client) *LLM {
+func New(baseUrl, apiKey string) *LLM {
+	cfg := openai.DefaultConfig(apiKey)
+	if baseUrl != "" {
+		cfg.BaseURL = baseUrl
+	}
 	return &LLM{
-		client: client,
+		client: openai.NewClientWithConfig(cfg),
 	}
 }
 
-func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, options ...Option) (openai.ChatCompletionChoice, error) {
+func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, options ...Option) (openai.ChatCompletionChoice, openai.Usage, error) {
 	opts := &Options{}
 	for _, o := range options {
 		o(opts)
@@ -26,8 +30,8 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 
 	resp, err := l.client.CreateChatCompletion(ctx, req)
 	if err != nil {
-		return openai.ChatCompletionChoice{}, err
+		return openai.ChatCompletionChoice{}, openai.Usage{}, err
 	}
 
-	return resp.Choices[0], nil
+	return resp.Choices[0], resp.Usage, nil
 }
