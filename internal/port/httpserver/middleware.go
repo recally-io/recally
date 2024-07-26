@@ -1,24 +1,25 @@
 package httpserver
 
 import (
+	"context"
 	"log/slog"
 	"time"
-	"vibrain/internal/pkg/constant"
+	"vibrain/internal/pkg/contexts"
+	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
-	"vibrain/internal/port/httpserver/contexts"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func registerMiddlewares(e *echo.Echo) {
+func registerMiddlewares(e *echo.Echo, pool *db.Pool) {
 	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
 			return uuid.Must(uuid.NewV7()).String()
 		},
 		RequestIDHandler: func(c echo.Context, id string) {
-			contexts.Set(c, constant.ContextKeyRequestID, id)
+			setContext(c, contexts.ContextKeyRequestID, id)
 		},
 	}))
 	e.Use(requestLoggerMiddleware())
@@ -30,13 +31,14 @@ func registerMiddlewares(e *echo.Echo) {
 		Timeout:      30 * time.Second,
 	}))
 	e.Use(contextMiddleWare())
+	e.Use(transactionMiddleWare(pool))
 }
 
 // contextMiddleWare is a middleware that sets logger and other context values to echo.Context
 func contextMiddleWare() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			contexts.Set(c, constant.ContextKeyLogger, logger.FromContext(c.Request().Context()))
+			setContext(c, contexts.ContextKeyLogger, logger.FromContext(c.Request().Context()))
 			return next(c)
 		}
 	}
@@ -82,4 +84,42 @@ func requestLoggerMiddleware() echo.MiddlewareFunc {
 		HandleError:   true, // forwards error to the global error handler, so it can decide appropriate status code
 		LogValuesFunc: logValuesFunc,
 	})
+}
+
+// contextMiddleWare is a middleware that sets logger and other context values to echo.Context
+func transactionMiddleWare(pool *db.Pool) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ctx := c.Request().Context()
+			tx, err := pool.Begin(ctx)
+			if err != nil {
+				return err
+			}
+			setContext(c, contexts.ContextKeyTx, tx)
+			defer func() {
+				if r := recover(); r != nil {
+					if err := tx.Rollback(context.Background()); err != nil {
+						logger.FromContext(ctx).Error("failed to rollback transaction", "err", err)
+					}
+					panic(r)
+				}
+			}()
+
+			if err := next(c); err != nil {
+				return tx.Rollback(context.Background())
+			}
+
+			return tx.Commit(context.Background())
+		}
+	}
+}
+
+func setContext(c echo.Context, key string, value interface{}) {
+	ctx := contexts.Set(c.Request().Context(), key, value)
+
+	// set to context.Context
+	c.SetRequest(c.Request().WithContext(ctx))
+
+	// set to echo.Context
+	c.Set(key, value)
 }

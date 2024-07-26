@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"strings"
 	"vibrain/internal/core/assistants"
-	"vibrain/internal/pkg/constant"
+	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/logger"
 
 	"gopkg.in/telebot.v3"
 )
 
 func (h *Handler) LLMChatHandler(c telebot.Context) error {
-	ctx := c.Get(constant.ContextKeyContext).(context.Context)
+	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
 
 	user, err := h.getOrCreateUser(ctx)
 	if err != nil {
@@ -42,7 +42,7 @@ func (h *Handler) LLMChatHandler(c telebot.Context) error {
 
 func (h *Handler) LLMChatNewAssistanthandler(c telebot.Context) error {
 	var err error
-	ctx := c.Get(constant.ContextKeyContext).(context.Context)
+	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
 	user, err := h.getOrCreateUser(ctx)
 	if err != nil {
 		logger.FromContext(ctx).Error("TextHandler", "error", err)
@@ -69,7 +69,7 @@ func (h *Handler) LLMChatListAssistantshandler(c telebot.Context) error {
 
 func (h *Handler) LLMChatNewThreadHandler(c telebot.Context) error {
 	var err error
-	ctx := c.Get(constant.ContextKeyContext).(context.Context)
+	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
 	user, err := h.getOrCreateUser(ctx)
 	if err != nil {
 		logger.FromContext(ctx).Error("TextHandler", "error", err)

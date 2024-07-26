@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 	"vibrain/internal/pkg/config"
+	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
@@ -42,7 +43,7 @@ type Handler struct {
 	Description string
 }
 
-func NewBot(cfg config.TelegramConfig, handlers []Handler, e *echo.Echo) (*Bot, error) {
+func NewBot(cfg config.TelegramConfig, pool *db.Pool, handlers []Handler, e *echo.Echo) (*Bot, error) {
 	bot := &Bot{
 		cfg: cfg,
 	}
@@ -54,7 +55,7 @@ func NewBot(cfg config.TelegramConfig, handlers []Handler, e *echo.Echo) (*Bot, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new bot: %w", err)
 	}
-	registerMiddlewarw(b)
+	registerMiddlewarw(b, pool)
 
 	for _, handler := range handlers {
 		b.Handle(handler.Endpoint, handler.Handler)
@@ -69,9 +70,10 @@ func NewBot(cfg config.TelegramConfig, handlers []Handler, e *echo.Echo) (*Bot, 
 	return bot, nil
 }
 
-func registerMiddlewarw(b *telebot.Bot) {
+func registerMiddlewarw(b *telebot.Bot, db *db.Pool) {
 	b.Use(contextMiddleware())
 	b.Use(middleware.Recover())
+	b.Use(TransactionMiddleware(db))
 }
 
 func setWebhook(bot *telebot.Bot, e *echo.Echo, webhookPath string) {
