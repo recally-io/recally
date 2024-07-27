@@ -3,13 +3,11 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/port/httpserver/handlers"
-	"vibrain/web"
 
 	"github.com/labstack/echo/v4"
 )
@@ -62,12 +60,5 @@ func newServer(handler *handlers.Handler, pool *db.Pool) *echo.Echo {
 	e := echo.New()
 	registerMiddlewares(e, pool)
 	registerRouters(e, handler)
-
-	// Health check
-	e.GET("/status", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
-	})
-	// static files
-	e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
 	return e
 }
