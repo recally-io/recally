@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"runtime/debug"
 	"time"
 	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/db"
@@ -30,6 +31,11 @@ func contextMiddleware() tele.MiddlewareFunc {
 			return next(c)
 		}
 	}
+}
+
+func recoverErrorHandler(err error, c tele.Context) {
+	logger.FromContext(c.Get(contexts.ContextKeyContext).(context.Context)).Error("recovered from panic", "err", err, "trace", debug.Stack())
+	_ = c.Reply("Something went wrong, Please try again later")
 }
 
 func TransactionMiddleware(pool *db.Pool) tele.MiddlewareFunc {
