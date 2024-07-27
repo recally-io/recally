@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
@@ -43,6 +42,11 @@ type Handler struct {
 	Description string
 }
 
+type DummyWebhookPoller struct{}
+
+func (d *DummyWebhookPoller) Poll(b *telebot.Bot, updates chan telebot.Update, stop chan struct{}) {
+}
+
 func NewBot(cfg config.TelegramConfig, pool *db.Pool, handlers []Handler, e *echo.Echo) (*Bot, error) {
 	bot := &Bot{
 		cfg: cfg,
@@ -50,7 +54,7 @@ func NewBot(cfg config.TelegramConfig, pool *db.Pool, handlers []Handler, e *ech
 
 	b, err := telebot.NewBot(telebot.Settings{
 		Token:  cfg.Token,
-		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+		Poller: &DummyWebhookPoller{},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new bot: %w", err)
@@ -88,7 +92,7 @@ func setWebhook(b *Bot, e *echo.Echo, webhookPath string) {
 			logger.FromContext(c.Request().Context()).Error("cannot decode update", "err", err)
 			return c.String(http.StatusBadRequest, fmt.Sprintf("cannot decode update: %s", err))
 		}
-		b.Updates <- update
+		b.ProcessUpdate(update)
 		return nil
 	})
 }
