@@ -23,7 +23,7 @@ func registerMiddlewares(e *echo.Echo, pool *db.Pool) {
 		},
 	}))
 	e.Use(requestLoggerMiddleware())
-	e.Use(middleware.Recover())
+	e.Use(recoverMiddleware())
 	e.Use(middleware.CORS())
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Skipper:      middleware.DefaultSkipper,
@@ -42,6 +42,15 @@ func contextMiddleWare() echo.MiddlewareFunc {
 			return next(c)
 		}
 	}
+}
+
+func recoverMiddleware() echo.MiddlewareFunc {
+	cfg := middleware.DefaultRecoverConfig
+	cfg.LogErrorFunc = func(c echo.Context, err error, stack []byte) error {
+		logger.FromContext(c.Request().Context()).Error("recovered from panic", "err", err, "stack", string(stack))
+		return err
+	}
+	return middleware.RecoverWithConfig(cfg)
 }
 
 func requestLoggerMiddleware() echo.MiddlewareFunc {

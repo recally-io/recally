@@ -72,7 +72,7 @@ func NewBot(cfg config.TelegramConfig, pool *db.Pool, handlers []Handler, e *ech
 
 func registerMiddlewarw(b *telebot.Bot, db *db.Pool) {
 	b.Use(contextMiddleware())
-	b.Use(middleware.Recover())
+	b.Use(middleware.Recover(recoverErrorHandler))
 	b.Use(TransactionMiddleware(db))
 }
 
