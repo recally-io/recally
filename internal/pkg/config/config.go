@@ -25,9 +25,10 @@ type ServiceConfig struct {
 }
 
 type TelegramConfig struct {
-	Name        string `env:"NAME" envDefault:"Vibrain Bot"`
+	Name        string `env:"NAME" envDefault:"VibrainBot"`
 	Token       string `env:"TOKEN"`
 	Webhook     bool   `env:"WEBHOOK"`
+	WebhookSecrectToken string `env:"WEBHOOK_SECRET_TOKEN"`
 	Description string `env:"DESCRIPTION" envDefault:"Hi, I'am Vibrain Bot. Contact me for more information on Twitter https://x.com/LiuVaayne"`
 }
 

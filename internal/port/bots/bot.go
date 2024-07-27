@@ -65,7 +65,7 @@ func NewBot(cfg config.TelegramConfig, pool *db.Pool, handlers []Handler, e *ech
 
 	if e != nil && cfg.Webhook {
 		bot.webhookPath = fmt.Sprintf("/telegram/bot/%s/%s", cfg.Name, uuid.New().String())
-		setWebhook(b, e, bot.webhookPath)
+		setWebhook(bot, e, bot.webhookPath)
 	}
 	return bot, nil
 }
@@ -76,9 +76,9 @@ func registerMiddlewarw(b *telebot.Bot, db *db.Pool) {
 	b.Use(TransactionMiddleware(db))
 }
 
-func setWebhook(bot *telebot.Bot, e *echo.Echo, webhookPath string) {
+func setWebhook(b *Bot, e *echo.Echo, webhookPath string) {
 	e.POST(webhookPath, func(c echo.Context) error {
-		if bot.Token != "" && c.Request().Header.Get("X-Telegram-Bot-Api-Secret-Token") != bot.Token {
+		if b.cfg.WebhookSecrectToken != "" && c.Request().Header.Get("X-Telegram-Bot-Api-Secret-Token") != b.cfg.WebhookSecrectToken {
 			logger.FromContext(c.Request().Context()).Error("invalid secret token in request")
 			return c.String(http.StatusUnauthorized, "invalid secret token")
 		}
@@ -88,7 +88,7 @@ func setWebhook(bot *telebot.Bot, e *echo.Echo, webhookPath string) {
 			logger.FromContext(c.Request().Context()).Error("cannot decode update", "err", err)
 			return c.String(http.StatusBadRequest, fmt.Sprintf("cannot decode update: %s", err))
 		}
-		bot.Updates <- update
+		b.Updates <- update
 		return nil
 	})
 }
@@ -116,9 +116,11 @@ func (b *Bot) Start(ctx context.Context) {
 
 	if b.webhookPath != "" {
 		params := map[string]string{
-			"url": fmt.Sprintf("%s%s", config.Settings.Service.Fqdn, b.webhookPath),
-			// "drop_pending_updates": "true",
-			// "secret_token": 	   s.token,
+			"url":                  fmt.Sprintf("%s%s", config.Settings.Service.Fqdn, b.webhookPath),
+			"drop_pending_updates": "true",
+		}
+		if b.cfg.WebhookSecrectToken != "" {
+			params["secret_token"] = b.cfg.WebhookSecrectToken
 		}
 		if _, err := b.Raw("setWebhook", params); err != nil {
 			logger.Error("failed to set webhook", "err", err)
