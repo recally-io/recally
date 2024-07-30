@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"time"
+	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/pkg/tools"
 )
@@ -56,7 +57,7 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 		return "", err
 	}
 
-	result, err := t.Search(ctx, params)
+	result, err := t.SearchWithCache(ctx, params, cache.MemCache)
 	if err != nil {
 		return "", fmt.Errorf("failed to invoke tool: %w", err)
 	}
@@ -94,4 +95,22 @@ func (t *Tool) Search(ctx context.Context, args RequestArgs) ([]*Content, error)
 		return nil, fmt.Errorf("failed to decode jina searcher response: %w", err)
 	}
 	return content.Data, nil
+}
+
+// ReadWithCache reads content from a URL with cache.
+func (t *Tool) SearchWithCache(ctx context.Context, args RequestArgs, cacheService cache.Cache) ([]*Content, error) {
+	// get result from cache
+	cacheKey := cache.NewCacheKey("JinaSearcher", args.Query)
+	if val, ok := cache.Get[[]*Content](ctx, cacheService, cacheKey); ok {
+		logger.FromContext(ctx).Info("JinaSearcher", "cache", "hit", "query", args.Query)
+		return *val, nil
+	}
+	data, err := t.Search(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+	// set cache
+	cacheService.Set(cacheKey, data, 24*time.Hour)
+	logger.FromContext(ctx).Info("JinaSearcher", "cache", "set", "query", args.Query)
+	return data, nil
 }

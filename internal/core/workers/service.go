@@ -3,7 +3,7 @@ package workers
 import "vibrain/internal/pkg/cache"
 
 type Worker struct {
-	cache *cache.DbCache
+	cache cache.Cache
 }
 
 func New() *Worker {
@@ -12,7 +12,7 @@ func New() *Worker {
 
 type Option func(*Worker)
 
-func WithCache(cache *cache.DbCache) Option {
+func WithCache(cache cache.Cache) Option {
 	return func(w *Worker) {
 		w.cache = cache
 	}

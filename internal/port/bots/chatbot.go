@@ -10,8 +10,8 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-func NewChatBot(cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, dbCache *cache.DbCache) (*Bot, error) {
-	h := handlers.New(pool, handlers.WithCache(dbCache))
+func NewChatBot(cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache) (*Bot, error) {
+	h := handlers.New(pool, handlers.WithCache(cacheService))
 	handlers := []Handler{
 		{
 			Endpoint: "/start",

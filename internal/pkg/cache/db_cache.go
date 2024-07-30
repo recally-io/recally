@@ -131,13 +131,3 @@ func MustUnmarshaler[T any](data []byte, value *T) {
 		logger.Default.Fatal("failed to unmarshal cache value", "err", err)
 	}
 }
-
-func Get[T any](ctx context.Context, c *DbCache, key CacheKey) (*T, bool) {
-	data, ok := c.GetWithContext(ctx, key)
-	if !ok {
-		return nil, false
-	}
-	var value T
-	MustUnmarshaler(data, &value)
-	return &value, true
-}

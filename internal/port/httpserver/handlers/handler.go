@@ -8,7 +8,7 @@ import (
 
 type Handler struct {
 	Pool   *db.Pool
-	Cache  *cache.DbCache
+	Cache  cache.Cache
 	worker *workers.Worker
 }
 

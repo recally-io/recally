@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"time"
+	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/pkg/tools"
 )
@@ -56,7 +57,7 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 		return "", err
 	}
 
-	result, err := t.Read(ctx, params)
+	result, err := t.ReadWithCache(ctx, params, cache.MemCache)
 	if err != nil {
 		return "", fmt.Errorf("failed to invoke tool: %w", err)
 	}
@@ -65,6 +66,9 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 
 func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 	url := args.Url
+	if url == "" {
+		return nil, fmt.Errorf("jina reader: url is empty")
+	}
 	url = fmt.Sprintf("%s/%s", jinaHost, url)
 	logger.FromContext(ctx).Debug("jina reader start", "url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -95,4 +99,22 @@ func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 		return nil, fmt.Errorf("failed to decode jina reader response: %w", err)
 	}
 	return &content.Data, nil
+}
+
+// ReadWithCache reads content from a URL with cache.
+func (t *Tool) ReadWithCache(ctx context.Context, args RequestArgs, cacheService cache.Cache) (*Content, error) {
+	// get result from cache
+	cacheKey := cache.NewCacheKey("JinaReader", args.Url)
+	if val, ok := cache.Get[Content](ctx, cacheService, cacheKey); ok {
+		logger.FromContext(ctx).Info("JinaReader", "cache", "hit", "url", args.Url)
+		return val, nil
+	}
+	data, err := t.Read(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+	// set cache
+	cacheService.Set(cacheKey, data, 24*time.Hour)
+	logger.FromContext(ctx).Info("JinaReader", "cache", "set", "url", args.Url)
+	return data, nil
 }

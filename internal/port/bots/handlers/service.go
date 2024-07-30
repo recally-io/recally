@@ -11,7 +11,7 @@ import (
 )
 
 type Handler struct {
-	Cache     *cache.DbCache
+	Cache     cache.Cache
 	worker    *workers.Worker
 	assistant *assistants.Service
 }
@@ -40,7 +40,7 @@ func New(pool *db.Pool, opts ...Option) *Handler {
 
 type Option func(*Handler)
 
-func WithCache(c *cache.DbCache) Option {
+func WithCache(c cache.Cache) Option {
 	return func(s *Handler) {
 		s.Cache = c
 	}
