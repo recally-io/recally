@@ -12,7 +12,7 @@ import (
 const pansearchHost = "https://www.pansearch.me"
 
 func getBuildId() (string, error) {
-	client := newHttpClient()
+	client := http.DefaultClient
 	resp, err := client.Get(pansearchHost)
 	if err != nil {
 		slog.Error("Failed to send request", "err", err, "url", pansearchHost)
@@ -49,7 +49,7 @@ func SearchAliPan(query string) ([]*PansearchData, error) {
 		return nil, err
 	}
 
-	client := newHttpClient()
+	client := http.DefaultClient
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/_next/data/%s/search.json", pansearchHost, buildId), nil)
 	if err != nil {

@@ -6,7 +6,10 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-const defaultModel = OpenAIGPT4oMini
+const (
+	defaultModel     = OpenAIGPT4oMini
+	ToolTypeFunction = "function"
+)
 
 // Option is a function that configures a CallOptions.
 type Option func(*Options)

@@ -50,6 +50,11 @@ type OpenAIConfig struct {
 	ApiKey  string `env:"API_KEY,required"`
 }
 
+type GoogleSearchConfig struct {
+	ApiKey   string `env:"API_KEY"`
+	EngineID string `env:"ENGINE_ID"`
+}
+
 type Config struct {
 	Debug   bool          `env:"DEBUG" envDefault:"false"`
 	Service ServiceConfig `envPrefix:"SERVICE_"`
@@ -65,7 +70,8 @@ type Config struct {
 	OAuths    struct {
 		Github OAuthConfig `envPrefix:"GITHUB_"`
 	} `envPrefix:"OAUTH_"`
-	OpenAI OpenAIConfig `envPrefix:"OPENAI_"`
+	OpenAI       OpenAIConfig       `envPrefix:"OPENAI_"`
+	GoogleSearch GoogleSearchConfig `envPrefix:"GOOGLE_SEARCH_"`
 }
 
 func init() {
