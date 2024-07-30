@@ -63,7 +63,6 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 	return t.MarshalResult(ctx, result)
 }
 
-
 func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 	url := args.Url
 	url = fmt.Sprintf("%s/%s", jinaHost, url)
