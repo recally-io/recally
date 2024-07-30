@@ -13,13 +13,13 @@ type Service struct {
 	*Bot
 }
 
-func NewServer(botType BotType, cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, dbCache *cache.DbCache) (*Service, error) {
+func NewServer(botType BotType, cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache) (*Service, error) {
 	var b *Bot
 	var err error
 	if botType == ReaderBot {
-		b, err = NewReaderBot(cfg, pool, e, dbCache)
+		b, err = NewReaderBot(cfg, pool, e, cacheService)
 	} else if botType == ChatBot {
-		b, err = NewChatBot(cfg, pool, e, dbCache)
+		b, err = NewChatBot(cfg, pool, e, cacheService)
 	}
 	if err != nil {
 		return nil, err

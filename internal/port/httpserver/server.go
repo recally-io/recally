@@ -19,7 +19,7 @@ type Service struct {
 
 type Option func(*Service)
 
-func WithCache(c *cache.DbCache) Option {
+func WithCache(c cache.Cache) Option {
 	return func(s *Service) {
 		s.Handler.Cache = c
 	}

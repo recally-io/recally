@@ -125,8 +125,7 @@ func (w *Worker) elmoSummary(ctx context.Context, url, pageContent string) (*Str
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
 
-	client := newHttpClient()
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return reader, fmt.Errorf("failed to send request: %w", err)
 	}

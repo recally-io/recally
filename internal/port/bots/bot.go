@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
@@ -52,9 +53,16 @@ func NewBot(cfg config.TelegramConfig, pool *db.Pool, handlers []Handler, e *ech
 		cfg: cfg,
 	}
 
+	var poller telebot.Poller
+	if cfg.Webhook {
+		poller = &DummyWebhookPoller{}
+	} else {
+		poller = &telebot.LongPoller{Timeout: 10 * time.Second}
+	}
+
 	b, err := telebot.NewBot(telebot.Settings{
 		Token:  cfg.Token,
-		Poller: &DummyWebhookPoller{},
+		Poller: poller,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new bot: %w", err)
@@ -117,7 +125,29 @@ func (b *Bot) Start(ctx context.Context) {
 			logger.Info("success set commands", "commands", commands)
 		}
 	}
+	// remove webhook if there is any
+	b.removeWebhook()
+	// add new webhook if there is any
+	b.addWebhook()
+	b.Bot.Start()
+}
 
+func (b *Bot) Stop(ctx context.Context) {
+	b.removeWebhook()
+	b.Bot.Stop()
+}
+
+func (b *Bot) removeWebhook() {
+	if _, err := b.Raw("deleteWebhook", map[string]bool{
+		"drop_pending_updates": true,
+	}); err != nil {
+		logger.Default.Error("failed to remove webhook", "err", err)
+	} else {
+		logger.Default.Info("success remove webhook")
+	}
+}
+
+func (b *Bot) addWebhook() {
 	if b.webhookPath != "" {
 		params := map[string]string{
 			"url":                  fmt.Sprintf("%s%s", config.Settings.Service.Fqdn, b.webhookPath),
@@ -127,29 +157,12 @@ func (b *Bot) Start(ctx context.Context) {
 			params["secret_token"] = b.cfg.WebhookSecrectToken
 		}
 		if _, err := b.Raw("setWebhook", params); err != nil {
-			logger.Error("failed to set webhook", "err", err)
+			logger.Default.Error("failed to set webhook", "err", err)
 		} else {
-			logger.Info("success set webhook", "url", params["url"])
+			logger.Default.Info("success set webhook", "url", params["url"])
 		}
 		return
 	}
-	b.Bot.Start()
-}
-
-func (b *Bot) Stop(ctx context.Context) {
-	if b.webhookPath != "" {
-		dropPending := true
-		// RemoveWebhook
-		if _, err := b.Raw("deleteWebhook", map[string]bool{
-			"drop_pending_updates": dropPending,
-		}); err != nil {
-			logger.FromContext(ctx).Error("failed to remove webhook", "err", err)
-		} else {
-			logger.FromContext(ctx).Info("success remove webhook", "drop_pending_updates", dropPending)
-		}
-		return
-	}
-	b.Bot.Stop()
 }
 
 func (b *Bot) AddHandler(handler Handler) {
