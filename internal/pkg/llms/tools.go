@@ -4,12 +4,17 @@ import (
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/tools"
 	"vibrain/internal/pkg/tools/googlesearch"
+	"vibrain/internal/pkg/tools/jinareader"
+	"vibrain/internal/pkg/tools/jinasearcher"
 
 	"github.com/sashabaranov/go-openai"
 )
 
 func DefaultLLMToolMappings() map[string]tools.Tool {
-	allTools := []tools.Tool{}
+	allTools := []tools.Tool{
+		jinareader.New(),
+		jinasearcher.New(),
+	}
 
 	if config.Settings.GoogleSearch.ApiKey != "" && config.Settings.GoogleSearch.EngineID != "" {
 		allTools = append(allTools, googlesearch.New(config.Settings.GoogleSearch.ApiKey, config.Settings.GoogleSearch.EngineID))

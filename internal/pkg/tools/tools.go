@@ -2,6 +2,8 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/invopop/jsonschema"
 	"github.com/sashabaranov/go-openai"
@@ -42,3 +44,21 @@ func (t *BaseTool) Schema() *openai.FunctionDefinition {
 		Parameters:  paramsSchema,
 	}
 }
+
+// UnmarshalArgs unmarshals the args string into the params struct.
+// params must be a pointer to a struct.
+func (t *BaseTool) UnmarshalArgs(ctx context.Context, args string, params any) error {
+	if err := json.Unmarshal([]byte(args), &params); err != nil {
+		return fmt.Errorf("failed to unmarshal %s request: %w", t.Name, err)
+	}
+	return nil
+}
+
+func (t *BaseTool) MarshalResult(ctx context.Context, result any) (string, error) {
+	b, err := json.Marshal(result)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal %s result: %w", t.Name, err)
+	}
+	return string(b), nil
+}
+

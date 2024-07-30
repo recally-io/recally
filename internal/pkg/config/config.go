@@ -51,8 +51,8 @@ type OpenAIConfig struct {
 }
 
 type GoogleSearchConfig struct {
-	ApiKey   string `env:"API_KEY,required"`
-	EngineID string `env:"ENGINE_ID,required"`
+	ApiKey   string `env:"API_KEY"`
+	EngineID string `env:"ENGINE_ID"`
 }
 
 type Config struct {

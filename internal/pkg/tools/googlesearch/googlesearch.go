@@ -51,33 +51,32 @@ type Result struct {
 	Kind  string       `json:"kind"`
 }
 
-func (gs *Tool) Invoke(ctx context.Context, args string) (string, error) {
+func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 	var params RequestArgs
-	if err := json.Unmarshal([]byte(args), &params); err != nil {
-		return "", fmt.Errorf("failed to unmarshal google search request: %w", err)
+	if err := t.UnmarshalArgs(ctx, args, &params); err != nil {
+		return "", err
 	}
 
-	result, err := gs.Search(ctx, params)
+	result, err := t.Search(ctx, params)
 	if err != nil {
-		return "", fmt.Errorf("failed to search google: %w", err)
+		return "", fmt.Errorf("failed to invoke tool: %w", err)
 	}
-	text, err := json.Marshal(result)
-	return string(text), err
+	return t.MarshalResult(ctx, result)
 }
 
-func (gs *Tool) Search(ctx context.Context, args RequestArgs) (*Result, error) {
+func (t *Tool) Search(ctx context.Context, args RequestArgs) (*Result, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://www.googleapis.com/customsearch/v1", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create google search request: %w", err)
 	}
 
 	params := req.URL.Query()
-	params.Add("key", gs.apiKey)
-	params.Add("cx", gs.searchEngineID)
+	params.Add("key", t.apiKey)
+	params.Add("cx", t.searchEngineID)
 	params.Add("q", args.Q)
 	req.URL.RawQuery = params.Encode()
 
-	resp, err := gs.client.Do(req)
+	resp, err := t.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send google search request: %w", err)
 	}
