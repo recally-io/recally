@@ -1,0 +1,28 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "prettier . --write",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mantine/core": "^7.12.0",
+    "@mantine/hooks": "^7.12.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@iconify/react": "^5.0.2",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.2.0",
+    "postcss": "^8.4.41",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
+    "vite": "^5.0.0"
+  }
+}

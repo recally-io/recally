@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//go:embed all:public
+//go:embed all:dist
 var StaticFiles embed.FS
 
 var StaticHttpFS http.FileSystem

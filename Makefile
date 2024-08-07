@@ -2,10 +2,14 @@ include .env
 
 DATABASE_URL=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable
 
-lint:
+lint: lint-web
 	@echo "Linting..."
 	@go mod tidy
 	@golangci-lint run --fix ./...  --enable gofumpt
+
+lint-web:
+	@echo "Linting web..."
+	@prettier ./web --write
 
 generate:
 	@echo "Generating..."
@@ -13,9 +17,13 @@ generate:
 	@go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
 	@sqlc generate
 
-build: lint
+build: lint build-ui
 	@echo "Building..."
 	@go build -o bin/app main.go
+
+build-ui: lint-web
+	@echo "Building UI..."
+	@cd web && bun run build
 
 test: lint
 	@echo "Testing..."

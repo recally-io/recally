@@ -2,8 +2,7 @@
 
 Using Golang to build cloudflare workers.
 
-
-## OpenAPI 
+## OpenAPI
 
 Using AI to generate OpenAPI specs and then using [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) to generate the go server code.
 
@@ -15,8 +14,6 @@ Using AI to generate the DB schema and then using [sqlc](https://github.com/sqlc
 - [migrate](https://github.com/golang-migrate/migrate) to manage DB migrations
 - [pgx](https://github.com/jackc/pgx) for postgres driver
 
-
-
 ## Setup
 
 ```
@@ -24,7 +21,6 @@ go build -o bin/go-workers cmd/httpserver/main.go
 
 ./bin/go-workers
 ```
-
 
 ## API
 
