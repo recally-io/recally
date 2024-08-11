@@ -1,34 +1,64 @@
 import {
-  Button,
+  AppShell,
   Center,
-  Flex,
   MantineProvider,
+  Text,
   createTheme,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
+import { useDisclosure } from "@mantine/hooks";
+import Header from "./components/header";
+import Sidebar from "./components/sidebar";
+import ChatWindowsComponent from "./components/thread";
 
 export default function App() {
   const theme = createTheme({});
   return (
     <>
       <MantineProvider theme={theme} defaultColorScheme="auto">
-        <Center m="xl">
-          <Flex
-            mih={50}
-            bg="rgba(0, 0, 0, .3)"
-            gap="md"
-            justify="flex-start"
-            align="flex-start"
-            direction="row"
-            wrap="wrap"
-          >
-            <h1>Hello </h1>
-            <Button color="red">Button 1</Button>
-            <Button color="indigo.5">Button 2</Button>
-            <Button color="violet">Button 3</Button>
-          </Flex>
-        </Center>
+        <Layout />
       </MantineProvider>
     </>
+  );
+}
+
+function Layout() {
+  const [opened, { toggle }] = useDisclosure(true);
+
+  return (
+    <AppShell
+      header={{ height: "36px" }}
+      navbar={{
+        width: "260px",
+        breakpoint: "sm",
+        collapsed: { mobile: !opened, desktop: !opened },
+      }}
+      padding="md"
+      withBorder={false}
+    >
+      <AppShell.Header>
+        <Header opened={opened} toggle={toggle} />
+      </AppShell.Header>
+
+      <AppShell.Navbar
+        p="md"
+        style={{
+          maxWidth: "260px",
+        }}
+      >
+        <Sidebar />
+      </AppShell.Navbar>
+
+      <AppShell.Main>
+        <ChatWindowsComponent />
+      </AppShell.Main>
+      <AppShell.Footer>
+        <Center>
+          <Text align="center" size="xs">
+            © 2024 Vibrain Inc.
+          </Text>
+        </Center>
+      </AppShell.Footer>
+    </AppShell>
   );
 }

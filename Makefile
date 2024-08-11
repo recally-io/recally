@@ -33,6 +33,10 @@ run: build db-up
 	@echo "Running..."
 	@./bin/app
 
+run-web:
+	@echo "Running web..."
+	@cd web && bun run dev
+
 ngrok:
 	@echo "Running ngrok..."
 	@ngrok http 1323
