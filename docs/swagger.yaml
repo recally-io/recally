@@ -1,0 +1,320 @@
+basePath: /api/v1
+definitions:
+  handlers.JSONResult:
+    description: JSONResult represents the structure of the JSON response.
+    properties:
+      code:
+        description: Code is an integer value that represents the HTTP status code.
+        example: 200
+        type: integer
+      data:
+        description: Data is an interface value that represents the data of the response.
+      error:
+        description: Error is an error value that represents the error of the response.
+      message:
+        description: Message is a string value that represents the message of the
+          response.
+        example: OK
+        type: string
+      success:
+        description: Success is a boolean value that indicates whether the request
+          was successful.
+        type: boolean
+    type: object
+  jinareader.Content:
+    properties:
+      content:
+        type: string
+      description:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  jinasearcher.Content:
+    properties:
+      content:
+        type: string
+      description:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+host: localhost:1323
+info:
+  contact:
+    email: vibrain@vaayne.com
+    name: Vaayne
+    url: https://vaayne.com
+  description: This is a simple API for Vibrain project.
+  termsOfService: https://vibrain.vaayne.com/terms/
+  title: Vibrain API
+  version: "1.0"
+paths:
+  /web/reader:
+    get:
+      consumes:
+      - application/json
+      description: Read the content of a web page
+      parameters:
+      - description: URL of the web page
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/jinareader.Content'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Read web content
+      tags:
+      - tools
+    post:
+      consumes:
+      - application/json
+      description: Read the content of a web page
+      parameters:
+      - description: URL of the web page
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/jinareader.Content'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Read web content
+      tags:
+      - tools
+  /web/search:
+    get:
+      consumes:
+      - application/json
+      description: Search the content of a web page
+      parameters:
+      - description: Query string
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/jinasearcher.Content'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Search web content
+      tags:
+      - tools
+    post:
+      consumes:
+      - application/json
+      description: Search the content of a web page
+      parameters:
+      - description: Query string
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/jinasearcher.Content'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Search web content
+      tags:
+      - tools
+  /web/summary:
+    get:
+      consumes:
+      - application/json
+      description: Get the summary of a web page
+      parameters:
+      - description: URL of the web page
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/plain
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Get web summary
+      tags:
+      - tools
+    post:
+      consumes:
+      - application/json
+      description: Get the summary of a web page
+      parameters:
+      - description: URL of the web page
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/plain
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Get web summary
+      tags:
+      - tools
+swagger: "2.0"

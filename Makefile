@@ -16,6 +16,8 @@ generate:
 	@go generate ./...
 	@go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
 	@sqlc generate
+	@echo "Generate API spec ..."
+	@swag init -g internal/port/httpserver/router.go
 
 build: lint build-ui
 	@echo "Building..."

@@ -5,9 +5,23 @@ import (
 	"vibrain/internal/port/httpserver/handlers"
 	"vibrain/web"
 
+	_ "vibrain/docs"
+
 	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
+//	@title			Vibrain API
+//	@version		1.0
+//	@description	This is a simple API for Vibrain project.
+//	@termsOfService	https://vibrain.vaayne.com/terms/
+
+//	@contact.name	Vaayne
+//	@contact.url	https://vaayne.com
+//	@contact.email	vibrain@vaayne.com
+
+// @host		localhost:1323
+// @BasePath	/api/v1
 func registerRouters(e *echo.Echo, handler *handlers.Handler) {
 	v1Api := e.Group("/api/v1")
 
@@ -33,6 +47,8 @@ func registerRouters(e *echo.Echo, handler *handlers.Handler) {
 		routes := e.Routes()
 		return handlers.JsonResponse(c, http.StatusOK, routes)
 	})
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// static files
 	e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
