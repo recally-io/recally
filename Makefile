@@ -16,10 +16,15 @@ generate:
 	@go generate ./...
 	@go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
 	@sqlc generate
+
+generate-spec:
 	@echo "Generate API spec ..."
 	@swag init -g internal/port/httpserver/router.go
+	@echo "Generating SDK ..."
+	@mkdir -p web/src/sdk && rm -rf web/src/sdk
+	@openapi-generator generate -i docs/swagger.yaml -g typescript-fetch -o web/src/sdk
 
-build: lint build-ui
+build: generate-spec lint build-ui
 	@echo "Building..."
 	@go build -o bin/app main.go
 

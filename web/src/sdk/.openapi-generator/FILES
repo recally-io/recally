@@ -1,0 +1,13 @@
+.openapi-generator-ignore
+apis/ToolsApi.ts
+apis/index.ts
+index.ts
+models/HandlersJSONResult.ts
+models/JinareaderContent.ts
+models/JinasearcherContent.ts
+models/WebReaderGet200Response.ts
+models/WebReaderGet400Response.ts
+models/WebSearchGet200Response.ts
+models/WebSummaryGet200Response.ts
+models/index.ts
+runtime.ts
