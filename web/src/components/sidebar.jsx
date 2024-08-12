@@ -10,8 +10,10 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 export default function Sidebar() {
+  let { assistantId, threadId } = useParams();
   const theme = useMantineTheme();
   const data = [
     { id: "1", value: "Thread 1" },
@@ -26,7 +28,6 @@ export default function Sidebar() {
     { id: "10", value: "Thread 10" },
   ];
   const [conversations, setConversations] = useState(data);
-  const [activateThreadId, setActivateThreadId] = useState();
 
   const addNewThread = () => {
     console.log("Add new Thread", conversations);
@@ -35,8 +36,10 @@ export default function Sidebar() {
       ...conversations,
       { id: newThreadId, value: `Thread ${newThreadId}` },
     ]);
-    setActivateThreadId(newThreadId);
   };
+
+  console.log("assistantId", assistantId);
+  console.log("threadId", threadId);
 
   return (
     <>
@@ -77,14 +80,18 @@ export default function Sidebar() {
         <ScrollArea>
           <Stack align="stretch" justify="start" gap="sm">
             {conversations.map((item) => (
-              <Button
-                onClick={() => setActivateThreadId(item.id)}
+              <Link
+                to={`/assistants/${assistantId}/threads/${item.id}`}
                 key={item.id}
-                variant={activateThreadId == item.id ? "filled" : "subtle"}
-                radius="md"
               >
-                Thread tilte {item.value}
-              </Button>
+                <Button
+                  radius="md"
+                  w="100%"
+                  variant={threadId == item.id ? "filled" : "subtle"}
+                >
+                  {item.value}
+                </Button>
+              </Link>
             ))}
           </Stack>
         </ScrollArea>
