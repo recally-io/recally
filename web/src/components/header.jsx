@@ -5,21 +5,26 @@ import {
   Button,
   Flex,
   Menu,
+  NavLink,
   useMantineColorScheme,
 } from "@mantine/core";
 import avatarImgUrl from "../assets/avatar-1.png";
 
-export default function Header({ opened, toggle }) {
+export default function Header({ opened, toggle, showNavBurger }) {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
   return (
     <>
       <Flex direction="row" justify="space-between" align="center" px="md">
-        <Burger
-          opened={opened}
-          onClick={toggle}
-          size="sm"
-          aria-label="Toggle navigation"
-        />
+        {showNavBurger && (
+          <Burger
+            opened={opened}
+            onClick={toggle}
+            size="sm"
+            aria-label="Toggle navigation"
+          />
+        )}
+        <NavLink href="/" label="Vibrain"></NavLink>
+        <NavLink href="/assistants.html" label="Assistants"></NavLink>
         <Flex direction="row" justify="space-around" align="center">
           <Button
             variant="transparent"

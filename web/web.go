@@ -16,9 +16,9 @@ var StaticHttpFS http.FileSystem
 
 func init() {
 	if config.Settings.Debug {
-		StaticHttpFS = http.FS(os.DirFS("web/public"))
+		StaticHttpFS = http.FS(os.DirFS("web/dist"))
 	} else {
-		PublicDirFS := echo.MustSubFS(StaticFiles, "public")
+		PublicDirFS := echo.MustSubFS(StaticFiles, "dist")
 		StaticHttpFS = http.FS(PublicDirFS)
 	}
 }

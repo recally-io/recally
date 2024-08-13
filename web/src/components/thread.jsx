@@ -67,13 +67,16 @@ export default function ChatWindowsComponent() {
     },
   });
 
+  let url = new URL(window.location.href);
+  let params = new URLSearchParams(url.search);
+  let threadId = params.get("threadId");
   const messageS = () => {
     return (
       <Flex justify="flex-end" align="flex-start" direction="row" gap="sm">
         <Paper
           shadow="sm"
           p="md"
-          maw="80%"
+          maw="90%"
           radius="lg"
           bg={colorScheme === "dark" ? "" : "blue.2"}
         >
@@ -91,7 +94,7 @@ export default function ChatWindowsComponent() {
         <Paper
           shadow="sm"
           p="md"
-          maw="80%"
+          maw="90%"
           radius="lg"
           bg={colorScheme === "dark" ? "" : "green.2"}
         >
@@ -139,74 +142,76 @@ export default function ChatWindowsComponent() {
 
   return (
     <>
-      <Flex direction="column" justify="space-between" h="calc(100vh - 80px)">
-        <ScrollArea
-          style={{
-            flex: 1,
-          }}
-        >
-          <Stack spacing="md" py="lg">
-            {messageS()}
-            {messageR()}
-          </Stack>
-        </ScrollArea>
-        <Container
-          w="100%"
-          style={{
-            position: "sticky",
-            bottom: 0,
-          }}
-        >
-          <TextInput
-            placeholder="Send a message"
-            variant="filled"
-            radius="lg"
-            leftSection={menu()}
-            leftSectionWidth={42}
-          ></TextInput>
-        </Container>
-      </Flex>
+      <Container size="xl">
+        <Flex direction="column" justify="space-between" h="89vh">
+          <ScrollArea
+            style={{
+              flex: 1,
+            }}
+          >
+            <Stack spacing="md" py="lg">
+              {messageS()}
+              {messageR()}
+            </Stack>
+          </ScrollArea>
+          <Container
+            w="100%"
+            style={{
+              position: "sticky",
+              bottom: 0,
+            }}
+          >
+            <TextInput
+              placeholder="Send a message"
+              variant="filled"
+              radius="lg"
+              leftSection={menu()}
+              leftSectionWidth={42}
+            ></TextInput>
+          </Container>
+        </Flex>
 
-      {/* settings modal */}
-      <Modal
-        opened={settingsOpened}
-        onClose={closeSettings}
-        title="Advance Settings"
-      >
-        <form
-          onSubmit={settingsForm.onSubmit((values) => console.log(values))}
-          mode=""
+        {/* settings modal */}
+        <Modal
+          opened={settingsOpened}
+          onClose={closeSettings}
+          title="Advance Settings"
         >
-          <Stack spacing="md">
-            <Stack spacing="xs">
-              <Text size="sm">Temperature</Text>
-              <Slider
-                min={0}
-                max={1}
-                step={0.1}
-                key={settingsForm.key("temperature")}
-                {...settingsForm.getInputProps("temperature")}
-                labelAlwaysOn
-              />
+          <form
+            onSubmit={settingsForm.onSubmit((values) => console.log(values))}
+            mode=""
+          >
+            <Stack spacing="md">
+              <Stack spacing="xs">
+                <Text size="sm">Temperature</Text>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  key={settingsForm.key("temperature")}
+                  {...settingsForm.getInputProps("temperature")}
+                  labelAlwaysOn
+                />
+              </Stack>
+              <Stack spacing="xs">
+                <Text size="sm">Max Tokens</Text>
+                <Slider
+                  min={0}
+                  max={4096}
+                  step={1}
+                  key={settingsForm.key("maxToken")}
+                  {...settingsForm.getInputProps("maxToken")}
+                  labelAlwaysOn
+                />
+              </Stack>
             </Stack>
-            <Stack spacing="xs">
-              <Text size="sm">Max Tokens</Text>
-              <Slider
-                min={0}
-                max={4096}
-                step={1}
-                key={settingsForm.key("maxToken")}
-                {...settingsForm.getInputProps("maxToken")}
-                labelAlwaysOn
-              />
-            </Stack>
-          </Stack>
-          <Group justify="flex-end" mt="md">
-            <Button type="submit">Submit</Button>
-            <Button type="reset">Reset</Button>
-          </Group>
-        </form>
-      </Modal>
+            <Group justify="flex-end" mt="md">
+              <Button type="submit">Submit</Button>
+              <Button type="reset">Reset</Button>
+            </Group>
+          </form>
+        </Modal>
+      </Container>
     </>
   );
 }

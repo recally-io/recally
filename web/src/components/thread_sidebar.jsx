@@ -10,10 +10,18 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
 
 export default function Sidebar() {
-  let { assistantId, threadId } = useParams();
+  let url = new URL(window.location.href);
+  // path: /threads.html?thread-id=1&assistant-id=1
+  let params = new URLSearchParams(url.search);
+  let threadId = params.get("thread-id");
+  let assistantId = params.get("assistant-id");
+  if (!assistantId) {
+    // redirect to /assistants.html
+    window.location.href = "/assistants.html";
+  }
+
   const theme = useMantineTheme();
   const data = [
     { id: "1", value: "Thread 1" },
@@ -36,10 +44,8 @@ export default function Sidebar() {
       ...conversations,
       { id: newThreadId, value: `Thread ${newThreadId}` },
     ]);
+    window.location.href = `/threads.html?thread-id=${newThreadId}&assistant-id=${assistantId}`;
   };
-
-  console.log("assistantId", assistantId);
-  console.log("threadId", threadId);
 
   return (
     <>
@@ -80,18 +86,16 @@ export default function Sidebar() {
         <ScrollArea>
           <Stack align="stretch" justify="start" gap="sm">
             {conversations.map((item) => (
-              <Link
-                to={`/assistants/${assistantId}/threads/${item.id}`}
-                key={item.id}
+              <Button
+                radius="md"
+                w="100%"
+                variant={threadId == item.id ? "filled" : "subtle"}
+                onClick={() => {
+                  window.location.href = `/threads.html?thread-id=${item.id}&assistant-id=${assistantId}`;
+                }}
               >
-                <Button
-                  radius="md"
-                  w="100%"
-                  variant={threadId == item.id ? "filled" : "subtle"}
-                >
-                  {item.value}
-                </Button>
-              </Link>
+                {item.value}
+              </Button>
             ))}
           </Stack>
         </ScrollArea>
