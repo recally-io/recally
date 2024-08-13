@@ -37,6 +37,11 @@ func registerRouters(e *echo.Echo, handler *handlers.Handler) {
 	oauth.GET("/:provider/login", handler.OAuthLoginHandler)
 	oauth.GET("/:provider/callback", handler.OAuthCallbackHandler)
 
+	assistants := v1Api.Group("/assistants")
+	assistants.GET("/", handler.ListAssistants)
+	assistants.GET("/:assistant-id/threads", handler.ListThreads)
+	assistants.GET("/:assistant-id/threads/:thread-id", handler.ListThreadMessages)
+
 	// Health check
 	e.GET("/status", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})

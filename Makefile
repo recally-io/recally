@@ -22,7 +22,7 @@ generate-spec:
 	@swag init -g internal/port/httpserver/router.go
 	@echo "Generating SDK ..."
 	@mkdir -p web/src/sdk && rm -rf web/src/sdk
-	@openapi-generator generate -i docs/swagger.yaml -g typescript-fetch -o web/src/sdk
+	@openapi-generator generate --skip-validate-spec -i docs/swagger.yaml -g typescript-fetch -o web/src/sdk
 
 build: generate-spec lint build-ui
 	@echo "Building..."

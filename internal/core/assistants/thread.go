@@ -2,6 +2,7 @@ package assistants
 
 import (
 	"time"
+	"vibrain/internal/pkg/db"
 
 	"github.com/google/uuid"
 )
@@ -9,14 +10,25 @@ import (
 type ThreadMetaData struct{}
 
 type ThreadMessage struct {
-	UserID    uuid.UUID
-	ThreadID  uuid.UUID
-	Model     string
-	Token     int
-	Role      string
-	Text      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	UserID    uuid.UUID `json:"user_id"`
+	ThreadID  uuid.UUID `json:"thread_id"`
+	Model     string    `json:"model"`
+	Token     int       `json:"token"`
+	Role      string    `json:"role"`
+	Text      string    `json:"text"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (t *ThreadMessage) FromDBO(dbo *db.AssistantMessage) {
+	t.UserID = dbo.UserID.Bytes
+	t.ThreadID = dbo.ThreadID.Bytes
+	t.Model = dbo.Model.String
+	t.Token = int(dbo.Token.Int32)
+	t.Role = dbo.Role
+	t.Text = dbo.Text.String
+	t.CreatedAt = dbo.CreatedAt.Time
+	t.UpdatedAt = dbo.UpdatedAt.Time
 }
 
 type Thread struct {
@@ -29,6 +41,20 @@ type Thread struct {
 	Model        string          `json:"model"`
 	MetaData     ThreadMetaData  `json:"metadata"`
 	Messages     []ThreadMessage `json:"messages"`
+	CreatedAt    time.Time       `json:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at"`
+}
+
+func (t *Thread) FromDBO(dbo *db.AssistantThread) {
+	t.Id = dbo.Uuid
+	t.UserId = dbo.UserID.Bytes
+	t.AssistantId = dbo.AssistantID.Bytes
+	t.SystemPrompt = dbo.SystemPrompt.String
+	t.Name = dbo.Name
+	t.Description = dbo.Description.String
+	t.Model = dbo.Model
+	t.CreatedAt = dbo.CreatedAt.Time
+	t.UpdatedAt = dbo.UpdatedAt.Time
 }
 
 func (t *Thread) AddMessage(role, text string) {

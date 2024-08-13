@@ -1,6 +1,8 @@
 package assistants
 
 import (
+	"time"
+	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
 
 	"github.com/google/uuid"
@@ -16,6 +18,20 @@ type Assistant struct {
 	SystemPrompt string            `json:"system_prompt"`
 	Model        string            `json:"model"`
 	MetaData     AssistantMetaData `json:"metadata"`
+	CreatedAt    time.Time         `json:"created_at"`
+	UpdatedAt    time.Time         `json:"updated_at"`
+}
+
+// FromDBO converts a database object to a domain object
+func (a *Assistant) FromDBO(dbo *db.Assistant) {
+	a.Id = dbo.Uuid
+	a.UserId = dbo.UserID.Bytes
+	a.Name = dbo.Name
+	a.Description = dbo.Description.String
+	a.SystemPrompt = dbo.SystemPrompt.String
+	a.Model = dbo.Model
+	a.CreatedAt = dbo.CreatedAt.Time
+	a.UpdatedAt = dbo.UpdatedAt.Time
 }
 
 type AssistantOption func(*Assistant)

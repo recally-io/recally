@@ -24,6 +24,10 @@ func NewService(llm *llms.LLM) (*Service, error) {
 	return s, nil
 }
 
+func (s *Service) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]Assistant, error) {
+	return s.r.ListAssistants(ctx, tx, userId)
+}
+
 func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *Assistant) error {
 	return s.r.CreateAssistant(ctx, tx, assistant)
 }
@@ -32,12 +36,20 @@ func (s *Service) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*
 	return s.r.GetAssistant(ctx, tx, id)
 }
 
+func (s *Service) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]Thread, error) {
+	return s.r.ListThreads(ctx, tx, assistantID)
+}
+
 func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *Thread) error {
 	return s.r.CreateThread(ctx, tx, thread)
 }
 
 func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thread, error) {
 	return s.r.GetThread(ctx, tx, id)
+}
+
+func (s *Service) ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessage, error) {
+	return s.r.ListThreadMessages(ctx, tx, threadID)
 }
 
 func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *Thread, role, text string) error {

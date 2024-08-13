@@ -14,16 +14,16 @@
 
 import * as runtime from "../runtime";
 import type {
+  AssistantsGet400Response,
   WebReaderGet200Response,
-  WebReaderGet400Response,
   WebSearchGet200Response,
   WebSummaryGet200Response,
 } from "../models/index";
 import {
+  AssistantsGet400ResponseFromJSON,
+  AssistantsGet400ResponseToJSON,
   WebReaderGet200ResponseFromJSON,
   WebReaderGet200ResponseToJSON,
-  WebReaderGet400ResponseFromJSON,
-  WebReaderGet400ResponseToJSON,
   WebSearchGet200ResponseFromJSON,
   WebSearchGet200ResponseToJSON,
   WebSummaryGet200ResponseFromJSON,

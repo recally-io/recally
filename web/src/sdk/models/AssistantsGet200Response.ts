@@ -13,84 +13,97 @@
  */
 
 import { mapValues } from "../runtime";
+import type { AssistantsAssistant } from "./AssistantsAssistant";
+import {
+  AssistantsAssistantFromJSON,
+  AssistantsAssistantFromJSONTyped,
+  AssistantsAssistantToJSON,
+} from "./AssistantsAssistant";
+
 /**
  *
  * @export
- * @interface WebReaderGet400Response
+ * @interface AssistantsGet200Response
  */
-export interface WebReaderGet400Response {
+export interface AssistantsGet200Response {
   /**
    * Code is an integer value that represents the HTTP status code.
    * @type {number}
-   * @memberof WebReaderGet400Response
+   * @memberof AssistantsGet200Response
    */
   code?: number;
   /**
    *
-   * @type {object}
-   * @memberof WebReaderGet400Response
+   * @type {Array<AssistantsAssistant>}
+   * @memberof AssistantsGet200Response
    */
-  data?: object;
+  data?: Array<AssistantsAssistant>;
   /**
    * Error is an error value that represents the error of the response.
    * @type {object}
-   * @memberof WebReaderGet400Response
+   * @memberof AssistantsGet200Response
    */
   error?: object;
   /**
    * Message is a string value that represents the message of the response.
    * @type {string}
-   * @memberof WebReaderGet400Response
+   * @memberof AssistantsGet200Response
    */
   message?: string;
   /**
    * Success is a boolean value that indicates whether the request was successful.
    * @type {boolean}
-   * @memberof WebReaderGet400Response
+   * @memberof AssistantsGet200Response
    */
   success?: boolean;
 }
 
 /**
- * Check if a given object implements the WebReaderGet400Response interface.
+ * Check if a given object implements the AssistantsGet200Response interface.
  */
-export function instanceOfWebReaderGet400Response(
+export function instanceOfAssistantsGet200Response(
   value: object,
-): value is WebReaderGet400Response {
+): value is AssistantsGet200Response {
   return true;
 }
 
-export function WebReaderGet400ResponseFromJSON(
+export function AssistantsGet200ResponseFromJSON(
   json: any,
-): WebReaderGet400Response {
-  return WebReaderGet400ResponseFromJSONTyped(json, false);
+): AssistantsGet200Response {
+  return AssistantsGet200ResponseFromJSONTyped(json, false);
 }
 
-export function WebReaderGet400ResponseFromJSONTyped(
+export function AssistantsGet200ResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): WebReaderGet400Response {
+): AssistantsGet200Response {
   if (json == null) {
     return json;
   }
   return {
     code: json["code"] == null ? undefined : json["code"],
-    data: json["data"] == null ? undefined : json["data"],
+    data:
+      json["data"] == null
+        ? undefined
+        : (json["data"] as Array<any>).map(AssistantsAssistantFromJSON),
     error: json["error"] == null ? undefined : json["error"],
     message: json["message"] == null ? undefined : json["message"],
     success: json["success"] == null ? undefined : json["success"],
   };
 }
 
-export function WebReaderGet400ResponseToJSON(
-  value?: WebReaderGet400Response | null,
+export function AssistantsGet200ResponseToJSON(
+  value?: AssistantsGet200Response | null,
 ): any {
   if (value == null) {
     return value;
   }
   return {
     code: value["code"],
-    data: value["data"],
+    data:
+      value["data"] == null
+        ? undefined
+        : (value["data"] as Array<any>).map(AssistantsAssistantToJSON),
     error: value["error"],
     message: value["message"],
     success: value["success"],

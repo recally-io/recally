@@ -1,5 +1,76 @@
 basePath: /api/v1
 definitions:
+  assistants.Assistant:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      metadata:
+        $ref: '#/definitions/assistants.AssistantMetaData'
+      model:
+        type: string
+      name:
+        type: string
+      system_prompt:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      uuid:
+        type: string
+    type: object
+  assistants.AssistantMetaData:
+    type: object
+  assistants.Thread:
+    properties:
+      assistant_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      messages:
+        items:
+          $ref: '#/definitions/assistants.ThreadMessage'
+        type: array
+      metadata:
+        $ref: '#/definitions/assistants.ThreadMetaData'
+      model:
+        type: string
+      name:
+        type: string
+      system_prompt:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      uuid:
+        type: string
+    type: object
+  assistants.ThreadMessage:
+    properties:
+      created_at:
+        type: string
+      model:
+        type: string
+      role:
+        type: string
+      text:
+        type: string
+      thread_id:
+        type: string
+      token:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  assistants.ThreadMetaData:
+    type: object
   handlers.JSONResult:
     description: JSONResult represents the structure of the JSON response.
     properties:
@@ -54,6 +125,126 @@ info:
   title: Vibrain API
   version: "1.0"
 paths:
+  /assistants:
+    get:
+      consumes:
+      - application/json
+      description: Lists the assistants for a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/assistants.Assistant'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Assistants
+      tags:
+      - Assistants
+  /assistants/{assistant-id}/threads:
+    get:
+      consumes:
+      - application/json
+      description: Lists the threads for an assistant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/assistants.Thread'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Threads
+      tags:
+      - Assistants
+  /assistants/{assistant-id}/threads/{thread-id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Lists the messages for a thread
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/assistants.ThreadMessage'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Thread Messages
+      tags:
+      - Assistants
   /web/reader:
     get:
       consumes:

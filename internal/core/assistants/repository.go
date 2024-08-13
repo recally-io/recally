@@ -11,10 +11,14 @@ import (
 
 type Repository interface {
 	CreateAssistant(ctx context.Context, tx db.DBTX, assistant *Assistant) error
+	ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]Assistant, error)
 	GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Assistant, error)
+	// DeleteAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 
+	ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]Thread, error)
 	CreateThread(ctx context.Context, tx db.DBTX, thread *Thread) error
 	GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thread, error)
+	// DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 
 	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessage, error)
 	CreateThreadMessage(ctx context.Context, tx db.DBTX, threadID uuid.UUID, message ThreadMessage) error
@@ -30,6 +34,20 @@ type repository struct {
 
 func NewRepository() Repository {
 	return &repository{db: db.New()}
+}
+
+func (r *repository) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]Assistant, error) {
+	asts, err := r.db.ListAssistantsByUser(ctx, tx, pgtype.UUID{Bytes: userId, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get assistants: %w", err)
+	}
+	asstants := make([]Assistant, 0, len(asts))
+	for _, ast := range asts {
+		var a Assistant
+		a.FromDBO(&ast)
+		asstants = append(asstants, a)
+	}
+	return asstants, nil
 }
 
 func (r *repository) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *Assistant) error {
@@ -53,16 +71,9 @@ func (r *repository) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get assistant: %w", err)
 	}
-
-	assistant := &Assistant{
-		Id:           ast.Uuid,
-		UserId:       ast.UserID.Bytes,
-		Name:         ast.Name,
-		Description:  ast.Description.String,
-		SystemPrompt: ast.SystemPrompt.String,
-		Model:        ast.Model,
-	}
-	return assistant, nil
+	var assistant Assistant
+	assistant.FromDBO(&ast)
+	return &assistant, nil
 }
 
 func (r *repository) CreateThread(ctx context.Context, tx db.DBTX, thread *Thread) error {
@@ -82,27 +93,36 @@ func (r *repository) CreateThread(ctx context.Context, tx db.DBTX, thread *Threa
 	return nil
 }
 
+func (r *repository) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]Thread, error) {
+	threads, err := r.db.ListAssistantThreads(ctx, tx, pgtype.UUID{Bytes: assistantID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get threads: %w", err)
+	}
+
+	var result []Thread
+	for _, th := range threads {
+		var t Thread
+		t.FromDBO(&th)
+		result = append(result, t)
+	}
+
+	return result, nil
+}
+
 func (r *repository) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thread, error) {
 	th, err := r.db.GetAssistantThread(ctx, tx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thread: %w", err)
 	}
-	thread := &Thread{
-		Id:           th.Uuid,
-		UserId:       th.UserID.Bytes,
-		AssistantId:  th.AssistantID.Bytes,
-		Name:         th.Name,
-		Description:  th.Description.String,
-		Model:        th.Model,
-		SystemPrompt: th.SystemPrompt.String,
-	}
+	var t Thread
+	t.FromDBO(&th)
 
 	messages, err := r.ListThreadMessages(ctx, tx, th.Uuid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thread messages: %w", err)
 	}
-	thread.Messages = messages
-	return thread, nil
+	t.Messages = messages
+	return &t, nil
 }
 
 func (r *repository) ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessage, error) {
@@ -113,12 +133,10 @@ func (r *repository) ListThreadMessages(ctx context.Context, tx db.DBTX, threadI
 
 	var result []ThreadMessage
 	for _, msg := range messages {
-		result = append(result, ThreadMessage{
-			Role:      msg.Role,
-			Text:      msg.Text.String,
-			CreatedAt: msg.CreatedAt.Time,
-			UpdatedAt: msg.UpdatedAt.Time,
-		})
+		var m ThreadMessage
+		m.FromDBO(&msg)
+
+		result = append(result, m)
 	}
 
 	return result, nil

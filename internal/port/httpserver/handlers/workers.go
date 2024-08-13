@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"log/slog"
 	"net/http"
+	"vibrain/internal/pkg/logger"
 
 	"github.com/labstack/echo/v4"
 )
@@ -58,7 +58,7 @@ func (h *Handler) WebSearchHandler(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
-	slog.InfoContext(c.Request().Context(), "WebSearchHandler", "query", req.Query)
+	logger.FromContext(ctx).Info("WebSearchHandler", "query", req.Query)
 	content, err := h.worker.WebSearcher(ctx, req.Query)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)

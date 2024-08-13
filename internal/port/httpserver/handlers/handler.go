@@ -1,15 +1,17 @@
 package handlers
 
 import (
+	"vibrain/internal/core/assistants"
 	"vibrain/internal/core/workers"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/db"
 )
 
 type Handler struct {
-	Pool   *db.Pool
-	Cache  cache.Cache
-	worker *workers.Worker
+	Pool      *db.Pool
+	Cache     cache.Cache
+	worker    *workers.Worker
+	assistant *assistants.Service
 }
 
 func New(pool *db.Pool) *Handler {

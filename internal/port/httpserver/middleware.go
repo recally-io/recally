@@ -2,8 +2,11 @@ package httpserver
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"strings"
 	"time"
+	"vibrain/internal/pkg/auth"
 	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
@@ -32,6 +35,24 @@ func registerMiddlewares(e *echo.Echo, pool *db.Pool) {
 	}))
 	e.Use(contextMiddleWare())
 	e.Use(transactionMiddleWare(pool))
+	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		KeyLookup: "cookie:token",
+		Validator: authValidation,
+		Skipper: func(c echo.Context) bool {
+			// do not skip auth for /api/ paths
+			return !strings.HasPrefix(c.Path(), "/api/")
+		},
+	}))
+}
+
+func authValidation(key string, c echo.Context) (bool, error) {
+	// validate key
+	user, err := auth.ValidateJWT(key)
+	if err != nil {
+		return false, fmt.Errorf("invalid token: %w", err)
+	}
+	setContext(c, contexts.ContextKeyUserID, user.UserID)
+	return true, nil
 }
 
 // contextMiddleWare is a middleware that sets logger and other context values to echo.Context

@@ -1,9 +1,7 @@
-import { act } from "react";
 import { create } from "zustand";
 
 const useStore = create((set) => ({
   user: null,
-  theme: "light",
   threads: [],
 
   // 更新 user 的操作
