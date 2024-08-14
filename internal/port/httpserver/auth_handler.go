@@ -1,22 +1,40 @@
-package handlers
+package httpserver
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"vibrain/internal/pkg/auth"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/oauth2"
 )
 
-func LoginHandler(c echo.Context) error {
-	// return web/login.html page
-	return c.File("web/login.html")
+type authService interface {
+	GetOAuth2RedirectURL(ctx context.Context, provider string) (string, error)
+	GetOAuth2Token(ctx context.Context, provider, code string) (*oauth2.Token, error)
 }
 
-func (h *Handler) OAuthLoginHandler(c echo.Context) error {
+type authHandler struct {
+	service authService
+}
+
+func newAuthHandler(service authService) *authHandler {
+	return &authHandler{
+		service: service,
+	}
+}
+
+func (h *authHandler) Register(g *echo.Group) {
+	oauth := g.Group("/oauth")
+	oauth.GET("/:provider/login", h.oAuthLogin)
+	oauth.GET("/:provider/callback", h.oAuthCallback)
+}
+
+func (h *authHandler) oAuthLogin(c echo.Context) error {
 	provider := c.Param("provider")
 	ctx := c.Request().Context()
-	redirectUrl, err := auth.GetOAuth2RedirectURL(ctx, provider)
+	redirectUrl, err := h.service.GetOAuth2RedirectURL(ctx, provider)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth redirect url: %w", err))
 	}
@@ -24,12 +42,12 @@ func (h *Handler) OAuthLoginHandler(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
 }
 
-func (h *Handler) OAuthCallbackHandler(c echo.Context) error {
+func (h *authHandler) oAuthCallback(c echo.Context) error {
 	provider := c.Param("provider")
 	code := c.QueryParam("code")
 	ctx := c.Request().Context()
 
-	token, err := auth.GetOAuth2Token(ctx, provider, code)
+	token, err := h.service.GetOAuth2Token(ctx, provider, code)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth token: %w", err))
 	}

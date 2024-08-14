@@ -2,7 +2,9 @@ include .env
 
 DATABASE_URL=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable
 
-lint: lint-web
+lint: lint-web lint-go
+
+lint-go:
 	@echo "Linting..."
 	@go mod tidy
 	@golangci-lint run --fix ./...  --enable gofumpt

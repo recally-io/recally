@@ -15,13 +15,11 @@ type Service struct {
 	r   Repository
 }
 
-func NewService(llm *llms.LLM) (*Service, error) {
-	s := &Service{
+func NewService(llm *llms.LLM) *Service {
+	return &Service{
 		llm: llm,
 		r:   NewRepository(),
 	}
-
-	return s, nil
 }
 
 func (s *Service) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]Assistant, error) {

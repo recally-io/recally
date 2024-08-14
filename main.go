@@ -10,6 +10,7 @@ import (
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/port/bots"
 	"vibrain/internal/port/httpserver"
@@ -42,7 +43,8 @@ func main() {
 	cacheService := cache.NewDBCache(pool)
 
 	// start http service
-	httpService, err := httpserver.New(pool, httpserver.WithCache(cacheService))
+	llm := llms.New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
+	httpService, err := httpserver.New(pool, llm, httpserver.WithCache(cacheService))
 	if err != nil {
 		logger.Default.Fatal("failed to create new http service", "error", err)
 	}
@@ -51,7 +53,7 @@ func main() {
 	// start telegram bot service
 	if config.Settings.Telegram.Reader.Token != "" {
 		cfg := config.Settings.Telegram.Reader
-		botService, err := bots.NewServer(bots.ReaderBot, cfg, pool, httpService.Server, cacheService)
+		botService, err := bots.NewServer(bots.ReaderBot, cfg, pool, httpService.Server, cacheService, llm)
 		if err != nil {
 			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.ReaderBot, "name", cfg.Name)
 		}
@@ -60,7 +62,7 @@ func main() {
 
 	if config.Settings.Telegram.Chat.Token != "" {
 		cfg := config.Settings.Telegram.Chat
-		botService, err := bots.NewServer(bots.ChatBot, cfg, pool, httpService.Server, cacheService)
+		botService, err := bots.NewServer(bots.ChatBot, cfg, pool, httpService.Server, cacheService, llm)
 		if err != nil {
 			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.ChatBot, "name", cfg.Name)
 		}

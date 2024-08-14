@@ -28,13 +28,13 @@ func (h *Handler) LLMChatHandler(c telebot.Context) error {
 		return err
 	}
 
-	if err := h.assistant.AddThreadMessage(ctx, tx, thread, "user", strings.TrimSpace(c.Text())); err != nil {
+	if err := h.assistantService.AddThreadMessage(ctx, tx, thread, "user", strings.TrimSpace(c.Text())); err != nil {
 		logger.FromContext(ctx).Error("Failed to add message to thread", "err", err)
 		_ = c.Reply("Failed to add message to thread " + err.Error())
 		return err
 	}
 
-	message, err := h.assistant.RunThread(ctx, tx, thread)
+	message, err := h.assistantService.RunThread(ctx, tx, thread)
 	if err != nil {
 		logger.FromContext(ctx).Error("Failed to run thread", "err", err)
 		_ = c.Reply("Failed to run thread " + err.Error())
@@ -54,13 +54,13 @@ func (h *Handler) LLMChatNewAssistanthandler(c telebot.Context) error {
 	}
 
 	assistant := assistants.NewAssistant(user.ID)
-	if err := h.assistant.CreateAssistant(ctx, tx, assistant); err != nil {
+	if err := h.assistantService.CreateAssistant(ctx, tx, assistant); err != nil {
 		_ = c.Reply("Failed to create assistant " + err.Error())
 		return err
 	}
 
 	user.ActivateAssistantID = assistant.Id
-	_, err = h.assistant.UpdateTelegramUser(ctx, tx, *user)
+	_, err = h.assistantService.UpdateTelegramUser(ctx, tx, *user)
 	if err != nil {
 		_ = c.Reply("Failed to update user " + err.Error())
 		return err
@@ -90,14 +90,14 @@ func (h *Handler) LLMChatNewThreadHandler(c telebot.Context) error {
 	}
 
 	thread := assistants.NewThread(user.ID, *assistant)
-	if err := h.assistant.CreateThread(ctx, tx, thread); err != nil {
+	if err := h.assistantService.CreateThread(ctx, tx, thread); err != nil {
 		_ = c.Reply("Failed to create thread " + err.Error())
 		return err
 	}
 
 	user.ActivateThreadID = thread.Id
 	user.ActivateAssistantID = assistant.Id
-	_, err = h.assistant.UpdateTelegramUser(ctx, tx, *user)
+	_, err = h.assistantService.UpdateTelegramUser(ctx, tx, *user)
 	if err != nil {
 		_ = c.Reply("Failed to update user " + err.Error())
 		return err
@@ -112,11 +112,11 @@ func (h *Handler) LLMChatListThreadHandler(c telebot.Context) error {
 }
 
 func (h *Handler) getActivateAssistant(ctx context.Context, tx db.DBTX, user *assistants.User) (*assistants.Assistant, error) {
-	assistant, err := h.assistant.GetAssistant(ctx, tx, user.ActivateAssistantID)
+	assistant, err := h.assistantService.GetAssistant(ctx, tx, user.ActivateAssistantID)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
 			assistant = assistants.NewAssistant(user.ID)
-			if err := h.assistant.CreateAssistant(ctx, tx, assistant); err != nil {
+			if err := h.assistantService.CreateAssistant(ctx, tx, assistant); err != nil {
 				return nil, fmt.Errorf("failed to create assistant: %w", err)
 			}
 		} else {
@@ -127,7 +127,7 @@ func (h *Handler) getActivateAssistant(ctx context.Context, tx db.DBTX, user *as
 }
 
 func (h *Handler) getActivateThread(ctx context.Context, tx db.DBTX, user *assistants.User) (*assistants.Thread, error) {
-	thread, err := h.assistant.GetThread(ctx, tx, user.ActivateThreadID)
+	thread, err := h.assistantService.GetThread(ctx, tx, user.ActivateThreadID)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
 			assistant, err := h.getActivateAssistant(ctx, tx, user)
@@ -135,12 +135,12 @@ func (h *Handler) getActivateThread(ctx context.Context, tx db.DBTX, user *assis
 				return nil, fmt.Errorf("failed to get activate assistant when : %w", err)
 			}
 			thread = assistants.NewThread(user.ID, *assistant)
-			if err := h.assistant.CreateThread(ctx, tx, thread); err != nil {
+			if err := h.assistantService.CreateThread(ctx, tx, thread); err != nil {
 				return nil, fmt.Errorf("failed to create thread: %w", err)
 			}
 			user.ActivateThreadID = thread.Id
 			user.ActivateAssistantID = assistant.Id
-			_, err = h.assistant.UpdateTelegramUser(ctx, tx, *user)
+			_, err = h.assistantService.UpdateTelegramUser(ctx, tx, *user)
 			if err != nil {
 				return nil, fmt.Errorf("failed to update user: %w", err)
 			}
@@ -163,11 +163,11 @@ func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *assis
 	if !ok {
 		return nil, nil, nil, fmt.Errorf("failed to get userID from context")
 	}
-	user, err := h.assistant.GetTelegramUser(ctx, tx, userID)
+	user, err := h.assistantService.GetTelegramUser(ctx, tx, userID)
 	if err != nil {
 		if db.IsNotFound(err) {
 			userName := ctx.Value(contexts.ContextKey(contexts.ContextKeyUserName)).(string)
-			user, err = h.assistant.CreateTelegramUser(ctx, tx, userName, userID)
+			user, err = h.assistantService.CreateTelegramUser(ctx, tx, userName, userID)
 			if err != nil {
 				return nil, nil, nil, fmt.Errorf("failed to create user: %w", err)
 			}

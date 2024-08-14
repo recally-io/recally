@@ -16,7 +16,9 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func registerMiddlewares(e *echo.Echo, pool *db.Pool) {
+func (s *Service) registerMiddlewares() {
+	e := s.Server
+	pool := s.pool
 	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
 			return uuid.Must(uuid.NewV7()).String()
