@@ -13,94 +13,82 @@
  */
 
 import { mapValues } from "../runtime";
-import type { JinasearcherContent } from "./JinasearcherContent";
-import {
-  JinasearcherContentFromJSON,
-  JinasearcherContentFromJSONTyped,
-  JinasearcherContentToJSON,
-} from "./JinasearcherContent";
-
 /**
- *
+ * JSONResult represents the structure of the JSON response.
  * @export
- * @interface WebSearchGet200Response
+ * @interface HttpserverJSONResult
  */
-export interface WebSearchGet200Response {
+export interface HttpserverJSONResult {
   /**
    * Code is an integer value that represents the HTTP status code.
    * @type {number}
-   * @memberof WebSearchGet200Response
+   * @memberof HttpserverJSONResult
    */
   code?: number;
   /**
-   *
-   * @type {JinasearcherContent}
-   * @memberof WebSearchGet200Response
+   * Data is an interface value that represents the data of the response.
+   * @type {object}
+   * @memberof HttpserverJSONResult
    */
-  data?: JinasearcherContent;
+  data?: object;
   /**
    * Error is an error value that represents the error of the response.
    * @type {object}
-   * @memberof WebSearchGet200Response
+   * @memberof HttpserverJSONResult
    */
   error?: object;
   /**
    * Message is a string value that represents the message of the response.
    * @type {string}
-   * @memberof WebSearchGet200Response
+   * @memberof HttpserverJSONResult
    */
   message?: string;
   /**
    * Success is a boolean value that indicates whether the request was successful.
    * @type {boolean}
-   * @memberof WebSearchGet200Response
+   * @memberof HttpserverJSONResult
    */
   success?: boolean;
 }
 
 /**
- * Check if a given object implements the WebSearchGet200Response interface.
+ * Check if a given object implements the HttpserverJSONResult interface.
  */
-export function instanceOfWebSearchGet200Response(
+export function instanceOfHttpserverJSONResult(
   value: object,
-): value is WebSearchGet200Response {
+): value is HttpserverJSONResult {
   return true;
 }
 
-export function WebSearchGet200ResponseFromJSON(
-  json: any,
-): WebSearchGet200Response {
-  return WebSearchGet200ResponseFromJSONTyped(json, false);
+export function HttpserverJSONResultFromJSON(json: any): HttpserverJSONResult {
+  return HttpserverJSONResultFromJSONTyped(json, false);
 }
 
-export function WebSearchGet200ResponseFromJSONTyped(
+export function HttpserverJSONResultFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): WebSearchGet200Response {
+): HttpserverJSONResult {
   if (json == null) {
     return json;
   }
   return {
     code: json["code"] == null ? undefined : json["code"],
-    data:
-      json["data"] == null
-        ? undefined
-        : JinasearcherContentFromJSON(json["data"]),
+    data: json["data"] == null ? undefined : json["data"],
     error: json["error"] == null ? undefined : json["error"],
     message: json["message"] == null ? undefined : json["message"],
     success: json["success"] == null ? undefined : json["success"],
   };
 }
 
-export function WebSearchGet200ResponseToJSON(
-  value?: WebSearchGet200Response | null,
+export function HttpserverJSONResultToJSON(
+  value?: HttpserverJSONResult | null,
 ): any {
   if (value == null) {
     return value;
   }
   return {
     code: value["code"],
-    data: JinasearcherContentToJSON(value["data"]),
+    data: value["data"],
     error: value["error"],
     message: value["message"],
     success: value["success"],

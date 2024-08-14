@@ -39,7 +39,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -60,7 +60,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -78,7 +78,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -113,7 +113,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -134,7 +134,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -152,7 +152,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -187,7 +187,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -208,7 +208,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -226,7 +226,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -242,7 +242,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/web/reader": {
+        "/tools/web/reader": {
             "get": {
                 "description": "Read the content of a web page",
                 "consumes": [
@@ -270,7 +270,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -288,7 +288,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -306,7 +306,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -348,7 +348,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -366,7 +366,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -384,7 +384,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -400,7 +400,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/web/search": {
+        "/tools/web/search": {
             "get": {
                 "description": "Search the content of a web page",
                 "consumes": [
@@ -428,7 +428,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -446,7 +446,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -464,7 +464,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -506,7 +506,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -524,7 +524,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -542,7 +542,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -558,7 +558,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/web/summary": {
+        "/tools/web/summary": {
             "get": {
                 "description": "Get the summary of a web page",
                 "consumes": [
@@ -587,7 +587,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -605,7 +605,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -623,7 +623,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -666,7 +666,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -684,7 +684,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -702,7 +702,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/handlers.JSONResult"
+                                    "$ref": "#/definitions/httpserver.JSONResult"
                                 },
                                 {
                                     "type": "object",
@@ -828,7 +828,7 @@ const docTemplate = `{
         "assistants.ThreadMetaData": {
             "type": "object"
         },
-        "handlers.JSONResult": {
+        "httpserver.JSONResult": {
             "description": "JSONResult represents the structure of the JSON response.",
             "type": "object",
             "properties": {

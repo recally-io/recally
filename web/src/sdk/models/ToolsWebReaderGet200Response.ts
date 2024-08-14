@@ -13,82 +13,94 @@
  */
 
 import { mapValues } from "../runtime";
+import type { JinareaderContent } from "./JinareaderContent";
+import {
+  JinareaderContentFromJSON,
+  JinareaderContentFromJSONTyped,
+  JinareaderContentToJSON,
+} from "./JinareaderContent";
+
 /**
- * JSONResult represents the structure of the JSON response.
+ *
  * @export
- * @interface HandlersJSONResult
+ * @interface ToolsWebReaderGet200Response
  */
-export interface HandlersJSONResult {
+export interface ToolsWebReaderGet200Response {
   /**
    * Code is an integer value that represents the HTTP status code.
    * @type {number}
-   * @memberof HandlersJSONResult
+   * @memberof ToolsWebReaderGet200Response
    */
   code?: number;
   /**
-   * Data is an interface value that represents the data of the response.
-   * @type {object}
-   * @memberof HandlersJSONResult
+   *
+   * @type {JinareaderContent}
+   * @memberof ToolsWebReaderGet200Response
    */
-  data?: object;
+  data?: JinareaderContent;
   /**
    * Error is an error value that represents the error of the response.
    * @type {object}
-   * @memberof HandlersJSONResult
+   * @memberof ToolsWebReaderGet200Response
    */
   error?: object;
   /**
    * Message is a string value that represents the message of the response.
    * @type {string}
-   * @memberof HandlersJSONResult
+   * @memberof ToolsWebReaderGet200Response
    */
   message?: string;
   /**
    * Success is a boolean value that indicates whether the request was successful.
    * @type {boolean}
-   * @memberof HandlersJSONResult
+   * @memberof ToolsWebReaderGet200Response
    */
   success?: boolean;
 }
 
 /**
- * Check if a given object implements the HandlersJSONResult interface.
+ * Check if a given object implements the ToolsWebReaderGet200Response interface.
  */
-export function instanceOfHandlersJSONResult(
+export function instanceOfToolsWebReaderGet200Response(
   value: object,
-): value is HandlersJSONResult {
+): value is ToolsWebReaderGet200Response {
   return true;
 }
 
-export function HandlersJSONResultFromJSON(json: any): HandlersJSONResult {
-  return HandlersJSONResultFromJSONTyped(json, false);
+export function ToolsWebReaderGet200ResponseFromJSON(
+  json: any,
+): ToolsWebReaderGet200Response {
+  return ToolsWebReaderGet200ResponseFromJSONTyped(json, false);
 }
 
-export function HandlersJSONResultFromJSONTyped(
+export function ToolsWebReaderGet200ResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): HandlersJSONResult {
+): ToolsWebReaderGet200Response {
   if (json == null) {
     return json;
   }
   return {
     code: json["code"] == null ? undefined : json["code"],
-    data: json["data"] == null ? undefined : json["data"],
+    data:
+      json["data"] == null
+        ? undefined
+        : JinareaderContentFromJSON(json["data"]),
     error: json["error"] == null ? undefined : json["error"],
     message: json["message"] == null ? undefined : json["message"],
     success: json["success"] == null ? undefined : json["success"],
   };
 }
 
-export function HandlersJSONResultToJSON(
-  value?: HandlersJSONResult | null,
+export function ToolsWebReaderGet200ResponseToJSON(
+  value?: ToolsWebReaderGet200Response | null,
 ): any {
   if (value == null) {
     return value;
   }
   return {
     code: value["code"],
-    data: value["data"],
+    data: JinareaderContentToJSON(value["data"]),
     error: value["error"],
     message: value["message"],
     success: value["success"],

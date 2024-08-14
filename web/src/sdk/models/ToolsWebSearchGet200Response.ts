@@ -13,84 +13,94 @@
  */
 
 import { mapValues } from "../runtime";
+import type { JinasearcherContent } from "./JinasearcherContent";
+import {
+  JinasearcherContentFromJSON,
+  JinasearcherContentFromJSONTyped,
+  JinasearcherContentToJSON,
+} from "./JinasearcherContent";
+
 /**
  *
  * @export
- * @interface WebSummaryGet200Response
+ * @interface ToolsWebSearchGet200Response
  */
-export interface WebSummaryGet200Response {
+export interface ToolsWebSearchGet200Response {
   /**
    * Code is an integer value that represents the HTTP status code.
    * @type {number}
-   * @memberof WebSummaryGet200Response
+   * @memberof ToolsWebSearchGet200Response
    */
   code?: number;
   /**
    *
-   * @type {string}
-   * @memberof WebSummaryGet200Response
+   * @type {JinasearcherContent}
+   * @memberof ToolsWebSearchGet200Response
    */
-  data?: string;
+  data?: JinasearcherContent;
   /**
    * Error is an error value that represents the error of the response.
    * @type {object}
-   * @memberof WebSummaryGet200Response
+   * @memberof ToolsWebSearchGet200Response
    */
   error?: object;
   /**
    * Message is a string value that represents the message of the response.
    * @type {string}
-   * @memberof WebSummaryGet200Response
+   * @memberof ToolsWebSearchGet200Response
    */
   message?: string;
   /**
    * Success is a boolean value that indicates whether the request was successful.
    * @type {boolean}
-   * @memberof WebSummaryGet200Response
+   * @memberof ToolsWebSearchGet200Response
    */
   success?: boolean;
 }
 
 /**
- * Check if a given object implements the WebSummaryGet200Response interface.
+ * Check if a given object implements the ToolsWebSearchGet200Response interface.
  */
-export function instanceOfWebSummaryGet200Response(
+export function instanceOfToolsWebSearchGet200Response(
   value: object,
-): value is WebSummaryGet200Response {
+): value is ToolsWebSearchGet200Response {
   return true;
 }
 
-export function WebSummaryGet200ResponseFromJSON(
+export function ToolsWebSearchGet200ResponseFromJSON(
   json: any,
-): WebSummaryGet200Response {
-  return WebSummaryGet200ResponseFromJSONTyped(json, false);
+): ToolsWebSearchGet200Response {
+  return ToolsWebSearchGet200ResponseFromJSONTyped(json, false);
 }
 
-export function WebSummaryGet200ResponseFromJSONTyped(
+export function ToolsWebSearchGet200ResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): WebSummaryGet200Response {
+): ToolsWebSearchGet200Response {
   if (json == null) {
     return json;
   }
   return {
     code: json["code"] == null ? undefined : json["code"],
-    data: json["data"] == null ? undefined : json["data"],
+    data:
+      json["data"] == null
+        ? undefined
+        : JinasearcherContentFromJSON(json["data"]),
     error: json["error"] == null ? undefined : json["error"],
     message: json["message"] == null ? undefined : json["message"],
     success: json["success"] == null ? undefined : json["success"],
   };
 }
 
-export function WebSummaryGet200ResponseToJSON(
-  value?: WebSummaryGet200Response | null,
+export function ToolsWebSearchGet200ResponseToJSON(
+  value?: ToolsWebSearchGet200Response | null,
 ): any {
   if (value == null) {
     return value;
   }
   return {
     code: value["code"],
-    data: value["data"],
+    data: JinasearcherContentToJSON(value["data"]),
     error: value["error"],
     message: value["message"],
     success: value["success"],

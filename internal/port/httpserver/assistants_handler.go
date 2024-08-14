@@ -8,6 +8,7 @@ import (
 	"vibrain/internal/core/assistants"
 	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -47,14 +48,15 @@ func (h *assistantHandler) Register(e *echo.Group) {
 // @Tags Assistants
 // @Accept json
 // @Produce json
-// @success 200 {object} handlers.JSONResult{data=[]assistants.Assistant} "Success"
-// @Failure 400 {object} handlers.JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} handlers.JSONResult{data=nil} "Internal Server Error"
+// @success 200 {object} JSONResult{data=[]assistants.Assistant} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
 // @Router /assistants [get]
 func (h *assistantHandler) listAssistants(c echo.Context) error {
 	ctx := c.Request().Context()
 	// userId
 	userId, ok := contexts.Get[string](ctx, contexts.ContextKeyUserID)
+	logger.FromContext(ctx).Info("list assistants", "user_id", userId)
 	if !ok {
 		return ErrorResponse(c, http.StatusUnauthorized, fmt.Errorf("user not found"))
 	}
@@ -81,9 +83,9 @@ func (h *assistantHandler) listAssistants(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @PathParam assistant-id path string true "Assistant ID"
-// @success 200 {object} handlers.JSONResult{data=[]assistants.Thread} "Success"
-// @Failure 400 {object} handlers.JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} handlers.JSONResult{data=nil} "Internal Server Error"
+// @success 200 {object} JSONResult{data=[]assistants.Thread} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
 // @Router /assistants/{assistant-id}/threads [get]
 func (h *assistantHandler) listThreads(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -115,9 +117,9 @@ func (h *assistantHandler) listThreads(c echo.Context) error {
 // @Produce json
 // @PathParam assistant-id path string true "Assistant ID"
 // @PathParam thread-id path string true "Thread ID"
-// @success 200 {object} handlers.JSONResult{data=[]assistants.ThreadMessage} "Success"
-// @Failure 400 {object} handlers.JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} handlers.JSONResult{data=nil} "Internal Server Error"
+// @success 200 {object} JSONResult{data=[]assistants.ThreadMessage} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
 // @Router /assistants/{assistant-id}/threads/{thread-id}/messages [get]
 func (h *assistantHandler) listThreadMessages(c echo.Context) error {
 	ctx := c.Request().Context()

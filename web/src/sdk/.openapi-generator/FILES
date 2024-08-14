@@ -10,11 +10,11 @@ models/AssistantsGet200Response.ts
 models/AssistantsGet400Response.ts
 models/AssistantsThread.ts
 models/AssistantsThreadMessage.ts
-models/HandlersJSONResult.ts
+models/HttpserverJSONResult.ts
 models/JinareaderContent.ts
 models/JinasearcherContent.ts
-models/WebReaderGet200Response.ts
-models/WebSearchGet200Response.ts
-models/WebSummaryGet200Response.ts
+models/ToolsWebReaderGet200Response.ts
+models/ToolsWebSearchGet200Response.ts
+models/ToolsWebSummaryGet200Response.ts
 models/index.ts
 runtime.ts

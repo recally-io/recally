@@ -2,11 +2,9 @@ package httpserver
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"strings"
 	"time"
-	"vibrain/internal/pkg/auth"
 	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
@@ -48,12 +46,13 @@ func (s *Service) registerMiddlewares() {
 }
 
 func authValidation(key string, c echo.Context) (bool, error) {
+	setContext(c, contexts.ContextKeyUserID, uuid.NewString())
 	// validate key
-	user, err := auth.ValidateJWT(key)
-	if err != nil {
-		return false, fmt.Errorf("invalid token: %w", err)
-	}
-	setContext(c, contexts.ContextKeyUserID, user.UserID)
+	// user, err := auth.ValidateJWT(key)
+	// if err != nil {
+	// 	return false, fmt.Errorf("invalid token: %w", err)
+	// }
+	// setContext(c, contexts.ContextKeyUserID, user.UserID)
 	return true, nil
 }
 
@@ -138,7 +137,10 @@ func transactionMiddleWare(pool *db.Pool) echo.MiddlewareFunc {
 			}()
 
 			if err := next(c); err != nil {
-				return tx.Rollback(context.Background())
+				if err := tx.Rollback(context.Background()); err != nil {
+					logger.FromContext(ctx).Error("failed to rollback transaction", "err", err)
+				}
+				return err
 			}
 
 			return tx.Commit(context.Background())

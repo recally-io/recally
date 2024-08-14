@@ -26,14 +26,14 @@ func newToolsHandler(service toolService) *toolsHandler {
 	}
 }
 
-func (api *toolsHandler) Register(g *echo.Group) {
-	tools := g.Group("/tools")
-	tools.GET("/web/reader", api.webReaderHandler)
-	tools.POST("/web/reader", api.webReaderHandler)
-	tools.GET("/web/search", api.webSearchHandler)
-	tools.POST("/web/search", api.webSearchHandler)
-	tools.GET("/web/summary", api.webSummaryHandler)
-	tools.POST("/web/summary", api.webSummaryHandler)
+func (api *toolsHandler) Register(e *echo.Group) {
+	g := e.Group("/tools")
+	g.GET("/web/reader", api.webReaderHandler)
+	g.POST("/web/reader", api.webReaderHandler)
+	g.GET("/web/search", api.webSearchHandler)
+	g.POST("/web/search", api.webSearchHandler)
+	g.GET("/web/summary", api.webSummaryHandler)
+	g.POST("/web/summary", api.webSummaryHandler)
 }
 
 type WebReaderRequest struct {
@@ -46,11 +46,11 @@ type WebReaderRequest struct {
 // @Accept json
 // @Produce json
 // @Param url query string true "URL of the web page"
-// @success 200 {object} handlers.JSONResult{data=jinareader.Content} "Success"
-// @Failure 400 {object} handlers.JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} handlers.JSONResult{data=nil} "Internal Server Error"
-// @Router /web/reader [get]
-// @Router /web/reader [post]
+// @success 200 {object} JSONResult{data=jinareader.Content} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /tools/web/reader [get]
+// @Router /tools/web/reader [post]
 func (h *toolsHandler) webReaderHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(WebReaderRequest)
@@ -76,11 +76,11 @@ type WebSearchRequest struct {
 // @Accept json
 // @Produce json
 // @Param query query string true "Query string"
-// @success 200 {object} handlers.JSONResult{data=jinasearcher.Content} "Success"
-// @Failure 400 {object} handlers.JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} handlers.JSONResult{data=nil} "Internal Server Error"
-// @Router /web/search [get]
-// @Router /web/search [post]
+// @success 200 {object} JSONResult{data=jinasearcher.Content} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /tools/web/search [get]
+// @Router /tools/web/search [post]
 func (h *toolsHandler) webSearchHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(WebSearchRequest)
@@ -106,11 +106,11 @@ type WebSummaryRequest struct {
 // @Produce json
 // @Produce plain
 // @Param url query string true "URL of the web page"
-// @success 200 {object} handlers.JSONResult{data=string} "Success"
-// @Failure 400 {object} handlers.JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} handlers.JSONResult{data=nil} "Internal Server Error"
-// @Router /web/summary [get]
-// @Router /web/summary [post]
+// @success 200 {object} JSONResult{data=string} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /tools/web/summary [get]
+// @Router /tools/web/summary [post]
 func (h *toolsHandler) webSummaryHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(WebSummaryRequest)

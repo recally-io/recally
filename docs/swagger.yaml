@@ -71,7 +71,7 @@ definitions:
     type: object
   assistants.ThreadMetaData:
     type: object
-  handlers.JSONResult:
+  httpserver.JSONResult:
     description: JSONResult represents the structure of the JSON response.
     properties:
       code:
@@ -137,7 +137,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   items:
@@ -148,7 +148,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -157,7 +157,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -177,7 +177,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   items:
@@ -188,7 +188,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -197,7 +197,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -217,7 +217,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   items:
@@ -228,7 +228,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -237,7 +237,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -245,7 +245,7 @@ paths:
       summary: List Thread Messages
       tags:
       - Assistants
-  /web/reader:
+  /tools/web/reader:
     get:
       consumes:
       - application/json
@@ -263,7 +263,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   $ref: '#/definitions/jinareader.Content'
@@ -272,7 +272,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -281,7 +281,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -306,7 +306,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   $ref: '#/definitions/jinareader.Content'
@@ -315,7 +315,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -324,7 +324,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -332,7 +332,7 @@ paths:
       summary: Read web content
       tags:
       - tools
-  /web/search:
+  /tools/web/search:
     get:
       consumes:
       - application/json
@@ -350,7 +350,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   $ref: '#/definitions/jinasearcher.Content'
@@ -359,7 +359,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -368,7 +368,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -393,7 +393,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   $ref: '#/definitions/jinasearcher.Content'
@@ -402,7 +402,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -411,7 +411,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -419,7 +419,7 @@ paths:
       summary: Search web content
       tags:
       - tools
-  /web/summary:
+  /tools/web/summary:
     get:
       consumes:
       - application/json
@@ -438,7 +438,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: string
@@ -447,7 +447,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -456,7 +456,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -482,7 +482,7 @@ paths:
           description: Success
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: string
@@ -491,7 +491,7 @@ paths:
           description: Bad Request
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object
@@ -500,7 +500,7 @@ paths:
           description: Internal Server Error
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.JSONResult'
+            - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
                   type: object

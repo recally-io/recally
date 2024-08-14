@@ -15,42 +15,42 @@
 import * as runtime from "../runtime";
 import type {
   AssistantsGet400Response,
-  WebReaderGet200Response,
-  WebSearchGet200Response,
-  WebSummaryGet200Response,
+  ToolsWebReaderGet200Response,
+  ToolsWebSearchGet200Response,
+  ToolsWebSummaryGet200Response,
 } from "../models/index";
 import {
   AssistantsGet400ResponseFromJSON,
   AssistantsGet400ResponseToJSON,
-  WebReaderGet200ResponseFromJSON,
-  WebReaderGet200ResponseToJSON,
-  WebSearchGet200ResponseFromJSON,
-  WebSearchGet200ResponseToJSON,
-  WebSummaryGet200ResponseFromJSON,
-  WebSummaryGet200ResponseToJSON,
+  ToolsWebReaderGet200ResponseFromJSON,
+  ToolsWebReaderGet200ResponseToJSON,
+  ToolsWebSearchGet200ResponseFromJSON,
+  ToolsWebSearchGet200ResponseToJSON,
+  ToolsWebSummaryGet200ResponseFromJSON,
+  ToolsWebSummaryGet200ResponseToJSON,
 } from "../models/index";
 
-export interface WebReaderGetRequest {
+export interface ToolsWebReaderGetRequest {
   url: string;
 }
 
-export interface WebReaderPostRequest {
+export interface ToolsWebReaderPostRequest {
   url: string;
 }
 
-export interface WebSearchGetRequest {
+export interface ToolsWebSearchGetRequest {
   query: string;
 }
 
-export interface WebSearchPostRequest {
+export interface ToolsWebSearchPostRequest {
   query: string;
 }
 
-export interface WebSummaryGetRequest {
+export interface ToolsWebSummaryGetRequest {
   url: string;
 }
 
-export interface WebSummaryPostRequest {
+export interface ToolsWebSummaryPostRequest {
   url: string;
 }
 
@@ -62,14 +62,14 @@ export class ToolsApi extends runtime.BaseAPI {
    * Read the content of a web page
    * Read web content
    */
-  async webReaderGetRaw(
-    requestParameters: WebReaderGetRequest,
+  async toolsWebReaderGetRaw(
+    requestParameters: ToolsWebReaderGetRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<WebReaderGet200Response>> {
+  ): Promise<runtime.ApiResponse<ToolsWebReaderGet200Response>> {
     if (requestParameters["url"] == null) {
       throw new runtime.RequiredError(
         "url",
-        'Required parameter "url" was null or undefined when calling webReaderGet().',
+        'Required parameter "url" was null or undefined when calling toolsWebReaderGet().',
       );
     }
 
@@ -83,7 +83,7 @@ export class ToolsApi extends runtime.BaseAPI {
 
     const response = await this.request(
       {
-        path: `/web/reader`,
+        path: `/tools/web/reader`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -92,7 +92,7 @@ export class ToolsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      WebReaderGet200ResponseFromJSON(jsonValue),
+      ToolsWebReaderGet200ResponseFromJSON(jsonValue),
     );
   }
 
@@ -100,11 +100,11 @@ export class ToolsApi extends runtime.BaseAPI {
    * Read the content of a web page
    * Read web content
    */
-  async webReaderGet(
-    requestParameters: WebReaderGetRequest,
+  async toolsWebReaderGet(
+    requestParameters: ToolsWebReaderGetRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<WebReaderGet200Response> {
-    const response = await this.webReaderGetRaw(
+  ): Promise<ToolsWebReaderGet200Response> {
+    const response = await this.toolsWebReaderGetRaw(
       requestParameters,
       initOverrides,
     );
@@ -115,14 +115,14 @@ export class ToolsApi extends runtime.BaseAPI {
    * Read the content of a web page
    * Read web content
    */
-  async webReaderPostRaw(
-    requestParameters: WebReaderPostRequest,
+  async toolsWebReaderPostRaw(
+    requestParameters: ToolsWebReaderPostRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<WebReaderGet200Response>> {
+  ): Promise<runtime.ApiResponse<ToolsWebReaderGet200Response>> {
     if (requestParameters["url"] == null) {
       throw new runtime.RequiredError(
         "url",
-        'Required parameter "url" was null or undefined when calling webReaderPost().',
+        'Required parameter "url" was null or undefined when calling toolsWebReaderPost().',
       );
     }
 
@@ -136,7 +136,7 @@ export class ToolsApi extends runtime.BaseAPI {
 
     const response = await this.request(
       {
-        path: `/web/reader`,
+        path: `/tools/web/reader`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
@@ -145,7 +145,7 @@ export class ToolsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      WebReaderGet200ResponseFromJSON(jsonValue),
+      ToolsWebReaderGet200ResponseFromJSON(jsonValue),
     );
   }
 
@@ -153,11 +153,11 @@ export class ToolsApi extends runtime.BaseAPI {
    * Read the content of a web page
    * Read web content
    */
-  async webReaderPost(
-    requestParameters: WebReaderPostRequest,
+  async toolsWebReaderPost(
+    requestParameters: ToolsWebReaderPostRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<WebReaderGet200Response> {
-    const response = await this.webReaderPostRaw(
+  ): Promise<ToolsWebReaderGet200Response> {
+    const response = await this.toolsWebReaderPostRaw(
       requestParameters,
       initOverrides,
     );
@@ -168,14 +168,14 @@ export class ToolsApi extends runtime.BaseAPI {
    * Search the content of a web page
    * Search web content
    */
-  async webSearchGetRaw(
-    requestParameters: WebSearchGetRequest,
+  async toolsWebSearchGetRaw(
+    requestParameters: ToolsWebSearchGetRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<WebSearchGet200Response>> {
+  ): Promise<runtime.ApiResponse<ToolsWebSearchGet200Response>> {
     if (requestParameters["query"] == null) {
       throw new runtime.RequiredError(
         "query",
-        'Required parameter "query" was null or undefined when calling webSearchGet().',
+        'Required parameter "query" was null or undefined when calling toolsWebSearchGet().',
       );
     }
 
@@ -189,7 +189,7 @@ export class ToolsApi extends runtime.BaseAPI {
 
     const response = await this.request(
       {
-        path: `/web/search`,
+        path: `/tools/web/search`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -198,7 +198,7 @@ export class ToolsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      WebSearchGet200ResponseFromJSON(jsonValue),
+      ToolsWebSearchGet200ResponseFromJSON(jsonValue),
     );
   }
 
@@ -206,11 +206,11 @@ export class ToolsApi extends runtime.BaseAPI {
    * Search the content of a web page
    * Search web content
    */
-  async webSearchGet(
-    requestParameters: WebSearchGetRequest,
+  async toolsWebSearchGet(
+    requestParameters: ToolsWebSearchGetRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<WebSearchGet200Response> {
-    const response = await this.webSearchGetRaw(
+  ): Promise<ToolsWebSearchGet200Response> {
+    const response = await this.toolsWebSearchGetRaw(
       requestParameters,
       initOverrides,
     );
@@ -221,14 +221,14 @@ export class ToolsApi extends runtime.BaseAPI {
    * Search the content of a web page
    * Search web content
    */
-  async webSearchPostRaw(
-    requestParameters: WebSearchPostRequest,
+  async toolsWebSearchPostRaw(
+    requestParameters: ToolsWebSearchPostRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<WebSearchGet200Response>> {
+  ): Promise<runtime.ApiResponse<ToolsWebSearchGet200Response>> {
     if (requestParameters["query"] == null) {
       throw new runtime.RequiredError(
         "query",
-        'Required parameter "query" was null or undefined when calling webSearchPost().',
+        'Required parameter "query" was null or undefined when calling toolsWebSearchPost().',
       );
     }
 
@@ -242,7 +242,7 @@ export class ToolsApi extends runtime.BaseAPI {
 
     const response = await this.request(
       {
-        path: `/web/search`,
+        path: `/tools/web/search`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
@@ -251,7 +251,7 @@ export class ToolsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      WebSearchGet200ResponseFromJSON(jsonValue),
+      ToolsWebSearchGet200ResponseFromJSON(jsonValue),
     );
   }
 
@@ -259,11 +259,11 @@ export class ToolsApi extends runtime.BaseAPI {
    * Search the content of a web page
    * Search web content
    */
-  async webSearchPost(
-    requestParameters: WebSearchPostRequest,
+  async toolsWebSearchPost(
+    requestParameters: ToolsWebSearchPostRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<WebSearchGet200Response> {
-    const response = await this.webSearchPostRaw(
+  ): Promise<ToolsWebSearchGet200Response> {
+    const response = await this.toolsWebSearchPostRaw(
       requestParameters,
       initOverrides,
     );
@@ -274,14 +274,14 @@ export class ToolsApi extends runtime.BaseAPI {
    * Get the summary of a web page
    * Get web summary
    */
-  async webSummaryGetRaw(
-    requestParameters: WebSummaryGetRequest,
+  async toolsWebSummaryGetRaw(
+    requestParameters: ToolsWebSummaryGetRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<WebSummaryGet200Response>> {
+  ): Promise<runtime.ApiResponse<ToolsWebSummaryGet200Response>> {
     if (requestParameters["url"] == null) {
       throw new runtime.RequiredError(
         "url",
-        'Required parameter "url" was null or undefined when calling webSummaryGet().',
+        'Required parameter "url" was null or undefined when calling toolsWebSummaryGet().',
       );
     }
 
@@ -295,7 +295,7 @@ export class ToolsApi extends runtime.BaseAPI {
 
     const response = await this.request(
       {
-        path: `/web/summary`,
+        path: `/tools/web/summary`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -304,7 +304,7 @@ export class ToolsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      WebSummaryGet200ResponseFromJSON(jsonValue),
+      ToolsWebSummaryGet200ResponseFromJSON(jsonValue),
     );
   }
 
@@ -312,11 +312,11 @@ export class ToolsApi extends runtime.BaseAPI {
    * Get the summary of a web page
    * Get web summary
    */
-  async webSummaryGet(
-    requestParameters: WebSummaryGetRequest,
+  async toolsWebSummaryGet(
+    requestParameters: ToolsWebSummaryGetRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<WebSummaryGet200Response> {
-    const response = await this.webSummaryGetRaw(
+  ): Promise<ToolsWebSummaryGet200Response> {
+    const response = await this.toolsWebSummaryGetRaw(
       requestParameters,
       initOverrides,
     );
@@ -327,14 +327,14 @@ export class ToolsApi extends runtime.BaseAPI {
    * Get the summary of a web page
    * Get web summary
    */
-  async webSummaryPostRaw(
-    requestParameters: WebSummaryPostRequest,
+  async toolsWebSummaryPostRaw(
+    requestParameters: ToolsWebSummaryPostRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<WebSummaryGet200Response>> {
+  ): Promise<runtime.ApiResponse<ToolsWebSummaryGet200Response>> {
     if (requestParameters["url"] == null) {
       throw new runtime.RequiredError(
         "url",
-        'Required parameter "url" was null or undefined when calling webSummaryPost().',
+        'Required parameter "url" was null or undefined when calling toolsWebSummaryPost().',
       );
     }
 
@@ -348,7 +348,7 @@ export class ToolsApi extends runtime.BaseAPI {
 
     const response = await this.request(
       {
-        path: `/web/summary`,
+        path: `/tools/web/summary`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
@@ -357,7 +357,7 @@ export class ToolsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      WebSummaryGet200ResponseFromJSON(jsonValue),
+      ToolsWebSummaryGet200ResponseFromJSON(jsonValue),
     );
   }
 
@@ -365,11 +365,11 @@ export class ToolsApi extends runtime.BaseAPI {
    * Get the summary of a web page
    * Get web summary
    */
-  async webSummaryPost(
-    requestParameters: WebSummaryPostRequest,
+  async toolsWebSummaryPost(
+    requestParameters: ToolsWebSummaryPostRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<WebSummaryGet200Response> {
-    const response = await this.webSummaryPostRaw(
+  ): Promise<ToolsWebSummaryGet200Response> {
+    const response = await this.toolsWebSummaryPostRaw(
       requestParameters,
       initOverrides,
     );
