@@ -7,59 +7,157 @@ import (
 	"vibrain/internal/pkg/llms"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/sashabaranov/go-openai"
 )
 
 type Service struct {
 	llm *llms.LLM
-	r   Repository
+	dao dao
 }
 
 func NewService(llm *llms.LLM) *Service {
 	return &Service{
 		llm: llm,
-		r:   NewRepository(),
+		dao: db.New(),
 	}
 }
 
 func (s *Service) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]AssistantDTO, error) {
-	return s.r.ListAssistants(ctx, tx, userId)
+	asts, err := s.dao.ListAssistantsByUser(ctx, tx, pgtype.UUID{Bytes: userId, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get assistants: %w", err)
+	}
+	asstants := make([]AssistantDTO, 0, len(asts))
+	for _, ast := range asts {
+		var a AssistantDTO
+		a.Load(&ast)
+		asstants = append(asstants, a)
+	}
+	return asstants, nil
 }
 
-func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *AssistantDTO) error {
-	return s.r.CreateAssistant(ctx, tx, assistant)
+func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *AssistantDTO) (*AssistantDTO, error) {
+	model := assistant.Dump()
+	ast, err := s.dao.CreateAssistant(ctx, tx, db.CreateAssistantParams{
+		UserID:       model.UserID,
+		Name:         model.Name,
+		Description:  model.Description,
+		SystemPrompt: model.SystemPrompt,
+		Model:        model.Model,
+		Metadata:     model.Metadata,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create assistant: %w", err)
+	}
+	assistant.Load(&ast)
+	return assistant, nil
 }
 
 func (s *Service) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*AssistantDTO, error) {
-	return s.r.GetAssistant(ctx, tx, id)
+	ast, err := s.dao.GetAssistant(ctx, tx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get assistant: %w", err)
+	}
+	var assistant AssistantDTO
+	assistant.Load(&ast)
+	return &assistant, nil
 }
 
 func (s *Service) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]ThreadDTO, error) {
-	return s.r.ListThreads(ctx, tx, assistantID)
+	threads, err := s.dao.ListAssistantThreads(ctx, tx, pgtype.UUID{Bytes: assistantID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get threads: %w", err)
+	}
+
+	var result []ThreadDTO
+	for _, th := range threads {
+		var t ThreadDTO
+		t.Load(&th)
+		result = append(result, t)
+	}
+
+	return result, nil
 }
 
-func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) error {
-	return s.r.CreateThread(ctx, tx, thread)
+func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadDTO, error) {
+	model := thread.Dump()
+	th, err := s.dao.CreateAssistantThread(ctx, tx, db.CreateAssistantThreadParams{
+		UserID:      model.UserID,
+		AssistantID: model.AssistantID,
+		Name:        model.Name,
+		Description: model.Description,
+		Model:       model.Model,
+		Metadata:    model.Metadata,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create thread: %w", err)
+	}
+	thread.Load(&th)
+	return thread, nil
 }
 
 func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*ThreadDTO, error) {
-	return s.r.GetThread(ctx, tx, id)
+	th, err := s.dao.GetAssistantThread(ctx, tx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get thread: %w", err)
+	}
+	var t ThreadDTO
+	t.Load(&th)
+
+	messages, err := s.ListThreadMessages(ctx, tx, th.Uuid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get thread messages: %w", err)
+	}
+	t.Messages = messages
+	return &t, nil
 }
 
 func (s *Service) ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessageDTO, error) {
-	return s.r.ListThreadMessages(ctx, tx, threadID)
+	messages, err := s.dao.ListThreadMessages(ctx, tx, pgtype.UUID{Bytes: threadID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get thread messages: %w", err)
+	}
+
+	var result []ThreadMessageDTO
+	for _, msg := range messages {
+		var m ThreadMessageDTO
+		m.Load(&msg)
+
+		result = append(result, m)
+	}
+
+	return result, nil
 }
 
-func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *ThreadDTO, role, text string) error {
+func (s *Service) CreateThreadMessage(ctx context.Context, tx db.DBTX, threadId uuid.UUID, message *ThreadMessageDTO) (*ThreadMessageDTO, error) {
+	model := message.Dump()
+	tm, err := s.dao.CreateThreadMessage(ctx, tx, db.CreateThreadMessageParams{
+		UserID:      model.UserID,
+		ThreadID:    model.ThreadID,
+		Model:       model.Model,
+		Role:        model.Role,
+		Text:        model.Text,
+		Attachments: model.Attachments,
+		Metadata:    model.Metadata,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to save thread message: %w", err)
+	}
+	message.Load(&tm)
+	return message, nil
+}
+
+func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *ThreadDTO, role, text string) (*ThreadMessageDTO, error) {
 	thread.AddMessage(role, text)
-	message := ThreadMessageDTO{
+	message := &ThreadMessageDTO{
 		UserID:   thread.UserId,
 		ThreadID: thread.Id,
 		Model:    thread.Model,
 		Role:     role,
 		Text:     text,
 	}
-	return s.r.CreateThreadMessage(ctx, tx, thread.Id, message)
+	return s.CreateThreadMessage(ctx, tx, thread.Id, message)
 }
 
 func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadMessageDTO, error) {
@@ -79,7 +177,7 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) 
 		return nil, err
 	}
 
-	message := ThreadMessageDTO{
+	message := &ThreadMessageDTO{
 		UserID:   thread.UserId,
 		ThreadID: thread.Id,
 		Model:    thread.Model,
@@ -88,20 +186,9 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) 
 		Token:    usage.TotalTokens,
 	}
 
-	if err := s.r.CreateThreadMessage(ctx, tx, thread.Id, message); err != nil {
+	message, err = s.CreateThreadMessage(ctx, tx, thread.Id, message)
+	if err != nil {
 		return nil, fmt.Errorf("failed to save thread message: %w", err)
 	}
-	return &message, err
-}
-
-func (s *Service) GetTelegramUser(ctx context.Context, tx db.DBTX, userID string) (*User, error) {
-	return s.r.GetTelegramUser(ctx, tx, userID)
-}
-
-func (s *Service) CreateTelegramUser(ctx context.Context, tx db.DBTX, userName string, userID string) (*User, error) {
-	return s.r.CreateTelegramUser(ctx, tx, userName, userID)
-}
-
-func (s *Service) UpdateTelegramUser(ctx context.Context, tx db.DBTX, user User) (*User, error) {
-	return s.r.UpdateTelegramUser(ctx, tx, user)
+	return message, err
 }
