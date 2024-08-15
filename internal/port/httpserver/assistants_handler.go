@@ -15,11 +15,11 @@ import (
 )
 
 type assistantService interface {
-	ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]assistants.Assistant, error)
-	CreateAssistant(ctx context.Context, tx db.DBTX, assistant *assistants.Assistant) error
-	GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.Assistant, error)
-	ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]assistants.Thread, error)
-	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]assistants.ThreadMessage, error)
+	ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]assistants.AssistantDTO, error)
+	CreateAssistant(ctx context.Context, tx db.DBTX, assistant *assistants.AssistantDTO) error
+	GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.AssistantDTO, error)
+	ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]assistants.ThreadDTO, error)
+	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]assistants.ThreadMessageDTO, error)
 }
 
 type assistantHandler struct {

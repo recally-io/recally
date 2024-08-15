@@ -22,37 +22,37 @@ func NewService(llm *llms.LLM) *Service {
 	}
 }
 
-func (s *Service) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]Assistant, error) {
+func (s *Service) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]AssistantDTO, error) {
 	return s.r.ListAssistants(ctx, tx, userId)
 }
 
-func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *Assistant) error {
+func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *AssistantDTO) error {
 	return s.r.CreateAssistant(ctx, tx, assistant)
 }
 
-func (s *Service) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Assistant, error) {
+func (s *Service) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*AssistantDTO, error) {
 	return s.r.GetAssistant(ctx, tx, id)
 }
 
-func (s *Service) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]Thread, error) {
+func (s *Service) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]ThreadDTO, error) {
 	return s.r.ListThreads(ctx, tx, assistantID)
 }
 
-func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *Thread) error {
+func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) error {
 	return s.r.CreateThread(ctx, tx, thread)
 }
 
-func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thread, error) {
+func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*ThreadDTO, error) {
 	return s.r.GetThread(ctx, tx, id)
 }
 
-func (s *Service) ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessage, error) {
+func (s *Service) ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessageDTO, error) {
 	return s.r.ListThreadMessages(ctx, tx, threadID)
 }
 
-func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *Thread, role, text string) error {
+func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *ThreadDTO, role, text string) error {
 	thread.AddMessage(role, text)
-	message := ThreadMessage{
+	message := ThreadMessageDTO{
 		UserID:   thread.UserId,
 		ThreadID: thread.Id,
 		Model:    thread.Model,
@@ -62,7 +62,7 @@ func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *Thre
 	return s.r.CreateThreadMessage(ctx, tx, thread.Id, message)
 }
 
-func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *Thread) (*ThreadMessage, error) {
+func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadMessageDTO, error) {
 	oaiMessages := make([]openai.ChatCompletionMessage, 0)
 	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 		Role:    "system",
@@ -79,7 +79,7 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *Thread) (*T
 		return nil, err
 	}
 
-	message := ThreadMessage{
+	message := ThreadMessageDTO{
 		UserID:   thread.UserId,
 		ThreadID: thread.Id,
 		Model:    thread.Model,

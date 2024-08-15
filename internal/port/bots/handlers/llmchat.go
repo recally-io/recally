@@ -111,7 +111,7 @@ func (h *Handler) LLMChatListThreadHandler(c telebot.Context) error {
 	return c.Reply("Not Implemented")
 }
 
-func (h *Handler) getActivateAssistant(ctx context.Context, tx db.DBTX, user *assistants.User) (*assistants.Assistant, error) {
+func (h *Handler) getActivateAssistant(ctx context.Context, tx db.DBTX, user *assistants.User) (*assistants.AssistantDTO, error) {
 	assistant, err := h.assistantService.GetAssistant(ctx, tx, user.ActivateAssistantID)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
@@ -126,7 +126,7 @@ func (h *Handler) getActivateAssistant(ctx context.Context, tx db.DBTX, user *as
 	return assistant, nil
 }
 
-func (h *Handler) getActivateThread(ctx context.Context, tx db.DBTX, user *assistants.User) (*assistants.Thread, error) {
+func (h *Handler) getActivateThread(ctx context.Context, tx db.DBTX, user *assistants.User) (*assistants.ThreadDTO, error) {
 	thread, err := h.assistantService.GetThread(ctx, tx, user.ActivateThreadID)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {

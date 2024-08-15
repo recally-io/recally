@@ -10,18 +10,18 @@ import (
 )
 
 type Repository interface {
-	CreateAssistant(ctx context.Context, tx db.DBTX, assistant *Assistant) error
-	ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]Assistant, error)
-	GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Assistant, error)
+	CreateAssistant(ctx context.Context, tx db.DBTX, assistant *AssistantDTO) error
+	ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]AssistantDTO, error)
+	GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*AssistantDTO, error)
 	// DeleteAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 
-	ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]Thread, error)
-	CreateThread(ctx context.Context, tx db.DBTX, thread *Thread) error
-	GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thread, error)
+	ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]ThreadDTO, error)
+	CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) error
+	GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*ThreadDTO, error)
 	// DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 
-	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessage, error)
-	CreateThreadMessage(ctx context.Context, tx db.DBTX, threadID uuid.UUID, message ThreadMessage) error
+	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessageDTO, error)
+	CreateThreadMessage(ctx context.Context, tx db.DBTX, threadID uuid.UUID, message ThreadMessageDTO) error
 
 	GetTelegramUser(ctx context.Context, tx db.DBTX, userID string) (*User, error)
 	CreateTelegramUser(ctx context.Context, tx db.DBTX, userName string, userID string) (*User, error)
@@ -36,21 +36,21 @@ func NewRepository() Repository {
 	return &repository{db: db.New()}
 }
 
-func (r *repository) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]Assistant, error) {
+func (r *repository) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]AssistantDTO, error) {
 	asts, err := r.db.ListAssistantsByUser(ctx, tx, pgtype.UUID{Bytes: userId, Valid: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get assistants: %w", err)
 	}
-	asstants := make([]Assistant, 0, len(asts))
+	asstants := make([]AssistantDTO, 0, len(asts))
 	for _, ast := range asts {
-		var a Assistant
-		a.FromDBO(&ast)
+		var a AssistantDTO
+		a.Load(&ast)
 		asstants = append(asstants, a)
 	}
 	return asstants, nil
 }
 
-func (r *repository) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *Assistant) error {
+func (r *repository) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *AssistantDTO) error {
 	ast, err := r.db.CreateAssistant(ctx, tx, db.CreateAssistantParams{
 		UserID:       pgtype.UUID{Bytes: assistant.UserId, Valid: true},
 		Name:         assistant.Name,
@@ -66,17 +66,17 @@ func (r *repository) CreateAssistant(ctx context.Context, tx db.DBTX, assistant 
 	return nil
 }
 
-func (r *repository) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Assistant, error) {
+func (r *repository) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*AssistantDTO, error) {
 	ast, err := r.db.GetAssistant(ctx, tx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get assistant: %w", err)
 	}
-	var assistant Assistant
-	assistant.FromDBO(&ast)
+	var assistant AssistantDTO
+	assistant.Load(&ast)
 	return &assistant, nil
 }
 
-func (r *repository) CreateThread(ctx context.Context, tx db.DBTX, thread *Thread) error {
+func (r *repository) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) error {
 	th, err := r.db.CreateAssistantThread(ctx, tx, db.CreateAssistantThreadParams{
 		UserID:      pgtype.UUID{Bytes: thread.UserId, Valid: true},
 		AssistantID: pgtype.UUID{Bytes: thread.AssistantId, Valid: true},
@@ -93,29 +93,29 @@ func (r *repository) CreateThread(ctx context.Context, tx db.DBTX, thread *Threa
 	return nil
 }
 
-func (r *repository) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]Thread, error) {
+func (r *repository) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]ThreadDTO, error) {
 	threads, err := r.db.ListAssistantThreads(ctx, tx, pgtype.UUID{Bytes: assistantID, Valid: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get threads: %w", err)
 	}
 
-	var result []Thread
+	var result []ThreadDTO
 	for _, th := range threads {
-		var t Thread
-		t.FromDBO(&th)
+		var t ThreadDTO
+		t.Load(&th)
 		result = append(result, t)
 	}
 
 	return result, nil
 }
 
-func (r *repository) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thread, error) {
+func (r *repository) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*ThreadDTO, error) {
 	th, err := r.db.GetAssistantThread(ctx, tx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thread: %w", err)
 	}
-	var t Thread
-	t.FromDBO(&th)
+	var t ThreadDTO
+	t.Load(&th)
 
 	messages, err := r.ListThreadMessages(ctx, tx, th.Uuid)
 	if err != nil {
@@ -125,16 +125,16 @@ func (r *repository) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*
 	return &t, nil
 }
 
-func (r *repository) ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessage, error) {
+func (r *repository) ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessageDTO, error) {
 	messages, err := r.db.ListThreadMessages(ctx, tx, pgtype.UUID{Bytes: threadID, Valid: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thread messages: %w", err)
 	}
 
-	var result []ThreadMessage
+	var result []ThreadMessageDTO
 	for _, msg := range messages {
-		var m ThreadMessage
-		m.FromDBO(&msg)
+		var m ThreadMessageDTO
+		m.Load(&msg)
 
 		result = append(result, m)
 	}
@@ -142,7 +142,7 @@ func (r *repository) ListThreadMessages(ctx context.Context, tx db.DBTX, threadI
 	return result, nil
 }
 
-func (r *repository) CreateThreadMessage(ctx context.Context, tx db.DBTX, threadID uuid.UUID, message ThreadMessage) error {
+func (r *repository) CreateThreadMessage(ctx context.Context, tx db.DBTX, threadID uuid.UUID, message ThreadMessageDTO) error {
 	_, err := r.db.CreateThreadMessage(ctx, tx, db.CreateThreadMessageParams{
 		UserID:   pgtype.UUID{Bytes: message.UserID, Valid: true},
 		ThreadID: pgtype.UUID{Bytes: threadID, Valid: true},
