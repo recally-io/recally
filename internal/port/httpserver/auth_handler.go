@@ -19,14 +19,11 @@ type authHandler struct {
 	service authService
 }
 
-func newAuthHandler(service authService) *authHandler {
-	return &authHandler{
-		service: service,
+func registerAuthHandlers(e *echo.Group) {
+	h := &authHandler{
+		service: auth.New(),
 	}
-}
-
-func (h *authHandler) Register(g *echo.Group) {
-	oauth := g.Group("/oauth")
+	oauth := e.Group("/oauth")
 	oauth.GET("/:provider/login", h.oAuthLogin)
 	oauth.GET("/:provider/callback", h.oAuthCallback)
 }

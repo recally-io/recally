@@ -2,9 +2,6 @@ package httpserver
 
 import (
 	"net/http"
-	"vibrain/internal/core/assistants"
-	"vibrain/internal/core/workers"
-	"vibrain/internal/pkg/auth"
 	"vibrain/web"
 
 	_ "vibrain/docs"
@@ -28,17 +25,9 @@ func (s *Service) registerRouters() {
 	e := s.Server
 	v1Api := e.Group("/api/v1")
 
-	// Authentication API
-	authApi := newAuthHandler(auth.New())
-	authApi.Register(v1Api)
-
-	// Assistant API
-	assistantApi := newAssistantHandler(assistants.NewService(s.llm))
-	assistantApi.Register(v1Api)
-
-	// Tools API
-	toolsApi := newToolsHandler(workers.New(s.cache))
-	toolsApi.Register(v1Api)
+	registerAuthHandlers(v1Api)
+	registerAssistantHandlers(v1Api, s)
+	registerToolsHandlers(v1Api, s)
 
 	// Health check
 	e.GET("/status", func(c echo.Context) error {

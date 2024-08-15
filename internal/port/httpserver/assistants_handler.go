@@ -26,11 +26,8 @@ type assistantHandler struct {
 	service assistantService
 }
 
-func newAssistantHandler(service assistantService) *assistantHandler {
-	return &assistantHandler{service: service}
-}
-
-func (h *assistantHandler) Register(e *echo.Group) {
+func registerAssistantHandlers(e *echo.Group, s *Service) {
+	h := &assistantHandler{service: assistants.NewService(s.llm)}
 	g := e.Group("/assistants")
 	g.GET("/", h.listAssistants)
 	g.GET("/:assistant-id/threads", h.listThreads)

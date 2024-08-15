@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"net/http"
+	"vibrain/internal/core/workers"
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/pkg/tools/jinareader"
 	"vibrain/internal/pkg/tools/jinasearcher"
@@ -20,20 +21,17 @@ type toolsHandler struct {
 	service toolService
 }
 
-func newToolsHandler(service toolService) *toolsHandler {
-	return &toolsHandler{
-		service: service,
+func registerToolsHandlers(e *echo.Group, s *Service) {
+	h := &toolsHandler{
+		service: workers.New(s.cache),
 	}
-}
-
-func (api *toolsHandler) Register(e *echo.Group) {
 	g := e.Group("/tools")
-	g.GET("/web/reader", api.webReaderHandler)
-	g.POST("/web/reader", api.webReaderHandler)
-	g.GET("/web/search", api.webSearchHandler)
-	g.POST("/web/search", api.webSearchHandler)
-	g.GET("/web/summary", api.webSummaryHandler)
-	g.POST("/web/summary", api.webSummaryHandler)
+	g.GET("/web/reader", h.webReaderHandler)
+	g.POST("/web/reader", h.webReaderHandler)
+	g.GET("/web/search", h.webSearchHandler)
+	g.POST("/web/search", h.webSearchHandler)
+	g.GET("/web/summary", h.webSummaryHandler)
+	g.POST("/web/summary", h.webSummaryHandler)
 }
 
 type WebReaderRequest struct {
