@@ -8,8 +8,55 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at
+`
+
+type CreateUserParams struct {
+	Username            pgtype.Text
+	Email               pgtype.Text
+	Github              pgtype.Text
+	Google              pgtype.Text
+	Telegram            pgtype.Text
+	ActivateAssistantID pgtype.UUID
+	ActivateThreadID    pgtype.UUID
+	Status              string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, db DBTX, arg CreateUserParams) (User, error) {
+	row := db.QueryRow(ctx, createUser,
+		arg.Username,
+		arg.Email,
+		arg.Github,
+		arg.Google,
+		arg.Telegram,
+		arg.ActivateAssistantID,
+		arg.ActivateThreadID,
+		arg.Status,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.Username,
+		&i.Email,
+		&i.Github,
+		&i.Google,
+		&i.Telegram,
+		&i.ActivateAssistantID,
+		&i.ActivateThreadID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
 
 const deleteTelegramUser = `-- name: DeleteTelegramUser :exec
 DELETE FROM users WHERE telegram = $1
@@ -26,6 +73,30 @@ SELECT id, uuid, username, email, github, google, telegram, activate_assistant_i
 
 func (q *Queries) GetTelegramUser(ctx context.Context, db DBTX, telegram pgtype.Text) (User, error) {
 	row := db.QueryRow(ctx, getTelegramUser, telegram)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.Username,
+		&i.Email,
+		&i.Github,
+		&i.Google,
+		&i.Telegram,
+		&i.ActivateAssistantID,
+		&i.ActivateThreadID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserById = `-- name: GetUserById :one
+SELECT id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at FROM users WHERE uuid = $1
+`
+
+func (q *Queries) GetUserById(ctx context.Context, db DBTX, argUuid uuid.UUID) (User, error) {
+	row := db.QueryRow(ctx, getUserById, argUuid)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -95,6 +166,56 @@ type UpdateTelegramUserParams struct {
 
 func (q *Queries) UpdateTelegramUser(ctx context.Context, db DBTX, arg UpdateTelegramUserParams) (User, error) {
 	row := db.QueryRow(ctx, updateTelegramUser, arg.ActivateAssistantID, arg.ActivateThreadID, arg.Telegram)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.Username,
+		&i.Email,
+		&i.Github,
+		&i.Google,
+		&i.Telegram,
+		&i.ActivateAssistantID,
+		&i.ActivateThreadID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUserById = `-- name: UpdateUserById :one
+UPDATE users SET username = $2, email = $3, github = $4,
+  google = $5, telegram = $6, 
+  activate_assistant_id=$7, activate_thread_id=$8, status = $9
+WHERE uuid = $1
+RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at
+`
+
+type UpdateUserByIdParams struct {
+	Uuid                uuid.UUID
+	Username            pgtype.Text
+	Email               pgtype.Text
+	Github              pgtype.Text
+	Google              pgtype.Text
+	Telegram            pgtype.Text
+	ActivateAssistantID pgtype.UUID
+	ActivateThreadID    pgtype.UUID
+	Status              string
+}
+
+func (q *Queries) UpdateUserById(ctx context.Context, db DBTX, arg UpdateUserByIdParams) (User, error) {
+	row := db.QueryRow(ctx, updateUserById,
+		arg.Uuid,
+		arg.Username,
+		arg.Email,
+		arg.Github,
+		arg.Google,
+		arg.Telegram,
+		arg.ActivateAssistantID,
+		arg.ActivateThreadID,
+		arg.Status,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,

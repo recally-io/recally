@@ -4,15 +4,21 @@ import (
 	"context"
 	"fmt"
 	"vibrain/internal/pkg/config"
+	"vibrain/internal/pkg/db"
 
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
 
-type Service struct{}
+type Service struct {
+	dao dto
+}
 
 func New() *Service {
-	return &Service{}
+	return &Service{
+		dao: db.New(),
+	}
 }
 
 func getOAuth2Config(provider string) (*oauth2.Config, error) {
@@ -49,4 +55,34 @@ func (s *Service) GetOAuth2Token(ctx context.Context, provider, code string) (*o
 		return nil, fmt.Errorf("failed to exchange oauth code: %w", err)
 	}
 	return token, nil
+}
+
+func (s *Service) GetUserById(ctx context.Context, tx db.DBTX, userId uuid.UUID) (*UserDTO, error) {
+	user, err := s.dao.GetUserById(ctx, tx, userId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	u := new(UserDTO)
+	u.Load(&user)
+	return u, nil
+}
+
+func (s *Service) CreateUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*UserDTO, error) {
+	dbUser := user.Dump()
+	params := db.CreateUserParams{
+		Username:            dbUser.Username,
+		Email:               dbUser.Email,
+		Github:              dbUser.Github,
+		Google:              dbUser.Google,
+		Telegram:            dbUser.Telegram,
+		ActivateAssistantID: dbUser.ActivateAssistantID,
+		ActivateThreadID:    dbUser.ActivateThreadID,
+		Status:              dbUser.Status,
+	}
+	userModel, err := s.dao.CreateUser(ctx, tx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+	user.Load(&userModel)
+	return user, nil
 }
