@@ -23,6 +23,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.32.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.32.0
 	github.com/yuin/goldmark v1.6.0
+	golang.org/x/crypto v0.26.0
 	golang.org/x/oauth2 v0.21.0
 	golang.org/x/sync v0.8.0
 	gopkg.in/telebot.v3 v3.3.6
@@ -100,7 +101,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect

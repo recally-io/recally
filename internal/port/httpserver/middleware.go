@@ -39,8 +39,7 @@ func (s *Service) registerMiddlewares() {
 		KeyLookup: "cookie:token",
 		Validator: authValidation,
 		Skipper: func(c echo.Context) bool {
-			// do not skip auth for /api/ paths
-			return !strings.HasPrefix(c.Path(), "/api/")
+			return strings.HasPrefix(c.Path(), "/api/v1/oauth/") || strings.HasPrefix(c.Path(), "/api/v1/auth/") || !strings.HasPrefix(c.Path(), "/api/")
 		},
 	}))
 }
@@ -100,6 +99,9 @@ func requestLoggerMiddleware() echo.MiddlewareFunc {
 	}
 
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		Skipper: func(c echo.Context) bool {
+			return strings.HasPrefix(c.Request().RequestURI, "/assets/")
+		},
 		LogStatus:  true,
 		LogURI:     true,
 		LogError:   true,

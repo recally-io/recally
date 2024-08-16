@@ -13,14 +13,15 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at
+INSERT INTO users (username, email, password_hash, github, google, telegram, activate_assistant_id, activate_thread_id, status)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at, password_hash
 `
 
 type CreateUserParams struct {
 	Username            pgtype.Text
 	Email               pgtype.Text
+	PasswordHash        pgtype.Text
 	Github              pgtype.Text
 	Google              pgtype.Text
 	Telegram            pgtype.Text
@@ -33,6 +34,7 @@ func (q *Queries) CreateUser(ctx context.Context, db DBTX, arg CreateUserParams)
 	row := db.QueryRow(ctx, createUser,
 		arg.Username,
 		arg.Email,
+		arg.PasswordHash,
 		arg.Github,
 		arg.Google,
 		arg.Telegram,
@@ -54,6 +56,7 @@ func (q *Queries) CreateUser(ctx context.Context, db DBTX, arg CreateUserParams)
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PasswordHash,
 	)
 	return i, err
 }
@@ -68,7 +71,7 @@ func (q *Queries) DeleteTelegramUser(ctx context.Context, db DBTX, telegram pgty
 }
 
 const getTelegramUser = `-- name: GetTelegramUser :one
-SELECT id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at FROM users WHERE telegram = $1
+SELECT id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at, password_hash FROM users WHERE telegram = $1
 `
 
 func (q *Queries) GetTelegramUser(ctx context.Context, db DBTX, telegram pgtype.Text) (User, error) {
@@ -87,12 +90,38 @@ func (q *Queries) GetTelegramUser(ctx context.Context, db DBTX, telegram pgtype.
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PasswordHash,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at, password_hash FROM users WHERE email = $1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, db DBTX, email pgtype.Text) (User, error) {
+	row := db.QueryRow(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.Username,
+		&i.Email,
+		&i.Github,
+		&i.Google,
+		&i.Telegram,
+		&i.ActivateAssistantID,
+		&i.ActivateThreadID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PasswordHash,
 	)
 	return i, err
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at FROM users WHERE uuid = $1
+SELECT id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at, password_hash FROM users WHERE uuid = $1
 `
 
 func (q *Queries) GetUserById(ctx context.Context, db DBTX, argUuid uuid.UUID) (User, error) {
@@ -111,6 +140,7 @@ func (q *Queries) GetUserById(ctx context.Context, db DBTX, argUuid uuid.UUID) (
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PasswordHash,
 	)
 	return i, err
 }
@@ -118,7 +148,7 @@ func (q *Queries) GetUserById(ctx context.Context, db DBTX, argUuid uuid.UUID) (
 const inserUser = `-- name: InserUser :one
 INSERT INTO users (username, telegram, activate_assistant_id, activate_thread_id)
 VALUES ($1, $2, $3, $4)
-RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at
+RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at, password_hash
 `
 
 type InserUserParams struct {
@@ -149,13 +179,14 @@ func (q *Queries) InserUser(ctx context.Context, db DBTX, arg InserUserParams) (
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PasswordHash,
 	)
 	return i, err
 }
 
 const updateTelegramUser = `-- name: UpdateTelegramUser :one
 UPDATE users SET activate_assistant_id = $1, activate_thread_id = $2 WHERE telegram = $3
-RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at
+RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at, password_hash
 `
 
 type UpdateTelegramUserParams struct {
@@ -180,6 +211,7 @@ func (q *Queries) UpdateTelegramUser(ctx context.Context, db DBTX, arg UpdateTel
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PasswordHash,
 	)
 	return i, err
 }
@@ -189,7 +221,7 @@ UPDATE users SET username = $2, email = $3, github = $4,
   google = $5, telegram = $6, 
   activate_assistant_id=$7, activate_thread_id=$8, status = $9
 WHERE uuid = $1
-RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at
+RETURNING id, uuid, username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status, created_at, updated_at, password_hash
 `
 
 type UpdateUserByIdParams struct {
@@ -230,6 +262,7 @@ func (q *Queries) UpdateUserById(ctx context.Context, db DBTX, arg UpdateUserByI
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PasswordHash,
 	)
 	return i, err
 }

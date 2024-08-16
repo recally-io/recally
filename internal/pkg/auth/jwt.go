@@ -6,46 +6,46 @@ import (
 	"vibrain/internal/pkg/config"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
-var signingMethod = jwt.SigningMethodHS256
+var jwtSigningMethod = jwt.SigningMethodHS256
 
 type JwtUser struct {
-	UserID        string    `json:"user_id"`
-	OAuthProvider string    `json:"oauth_provider,omitempty"`
-	AccessToken   string    `json:"access_token"`
-	TokenType     string    `json:"token_type,omitempty"`
-	Expiry        time.Time `json:"expiry,omitempty"`
+	ID          string    `json:"id"`
+	AccessToken string    `json:"access_token"`
+	Expiry      time.Time `json:"expiry"`
 }
 
-func getJWTSecret() []byte {
+func (s *Service) getJWTSecret() []byte {
 	return []byte(config.Settings.JWTSecret)
 }
 
-func GenerateJWT(user JwtUser) (string, error) {
-	token := jwt.NewWithClaims(signingMethod, jwt.MapClaims{
-		"exp":  time.Now().Add(time.Hour * 24).Unix(),
-		"user": user,
+func (s *Service) GenerateJWT(userId uuid.UUID) (string, error) {
+	token := jwt.NewWithClaims(jwtSigningMethod, jwt.MapClaims{
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"user_id": userId,
 	})
-	return token.SignedString(getJWTSecret())
+	return token.SignedString(s.getJWTSecret())
 }
 
-func ValidateJWT(tokenString string) (*JwtUser, error) {
+func (s *Service) ValidateJWT(tokenString string) (uuid.UUID, int64, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("jwt: unexpected signing method: %v", token.Header["alg"])
 		}
-		return getJWTSecret(), nil
+		return s.getJWTSecret(), nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("invalid jwt token: %w", err)
+		return uuid.Nil, 0, fmt.Errorf("jwt: invalid jwt token: %w", err)
 	}
 
 	claim := token.Claims.(jwt.MapClaims)
-	user, ok := claim["user"]
+	userId, ok := claim["user_id"]
 	if !ok {
-		return nil, fmt.Errorf("user claim not found")
+		return uuid.Nil, 0, fmt.Errorf("jwt: user claim not found")
 	}
+	exp := int64(claim["exp"].(float64))
 
-	return user.(*JwtUser), nil
+	return uuid.MustParse(userId.(string)), exp, nil
 }

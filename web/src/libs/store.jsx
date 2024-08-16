@@ -2,7 +2,10 @@ import { create } from "zustand";
 
 const useStore = create((set) => ({
   user: null,
+  isLogin: false,
   threads: [],
+
+  setIsLogin: (isLogin) => set(() => ({ isLogin })),
 
   // 更新 user 的操作
   setUser: (user) => set(() => ({ user })),

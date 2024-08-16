@@ -2,15 +2,16 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/github"
+	"golang.org/x/crypto/bcrypt"
 )
+
+var ErrUnAuthorized = errors.New("auth: password or token is invalid")
 
 type Service struct {
 	dao dto
@@ -20,42 +21,6 @@ func New() *Service {
 	return &Service{
 		dao: db.New(),
 	}
-}
-
-func getOAuth2Config(provider string) (*oauth2.Config, error) {
-	if provider == "github" {
-		oauth := config.Settings.OAuths.Github
-		return &oauth2.Config{
-			ClientID:     oauth.Key,
-			ClientSecret: oauth.Secret,
-			Endpoint:     github.Endpoint,
-			RedirectURL:  fmt.Sprintf("%s/oauth/github/callback", config.Settings.Service.Fqdn),
-			Scopes:       []string{"user:email"},
-		}, nil
-	}
-
-	return nil, fmt.Errorf("oauth provider '%s' not found", provider)
-}
-
-func (s *Service) GetOAuth2RedirectURL(ctx context.Context, provider string) (string, error) {
-	cfg, err := getOAuth2Config(provider)
-	if err != nil {
-		return "", fmt.Errorf("failed to get oauth config: %w", err)
-	}
-	authCodeUrl := cfg.AuthCodeURL("state:"+provider, oauth2.AccessTypeOnline)
-	return authCodeUrl, nil
-}
-
-func (s *Service) GetOAuth2Token(ctx context.Context, provider, code string) (*oauth2.Token, error) {
-	cfg, err := getOAuth2Config(provider)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get oauth config: %w", err)
-	}
-	token, err := cfg.Exchange(ctx, code)
-	if err != nil {
-		return nil, fmt.Errorf("failed to exchange oauth code: %w", err)
-	}
-	return token, nil
 }
 
 func (s *Service) GetUserById(ctx context.Context, tx db.DBTX, userId uuid.UUID) (*UserDTO, error) {
@@ -69,10 +34,18 @@ func (s *Service) GetUserById(ctx context.Context, tx db.DBTX, userId uuid.UUID)
 }
 
 func (s *Service) CreateUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*UserDTO, error) {
+	if user.Password != "" {
+		hashedPassword, err := s.hashPassword(user.Password)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+		user.Password = hashedPassword
+	}
 	dbUser := user.Dump()
 	params := db.CreateUserParams{
 		Username:            dbUser.Username,
 		Email:               dbUser.Email,
+		PasswordHash:        dbUser.PasswordHash,
 		Github:              dbUser.Github,
 		Google:              dbUser.Google,
 		Telegram:            dbUser.Telegram,
@@ -86,6 +59,20 @@ func (s *Service) CreateUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*U
 	}
 	user.Load(&userModel)
 	return user, nil
+}
+
+func (s *Service) AuthByPassword(ctx context.Context, tx db.DBTX, email string, password string) (*UserDTO, error) {
+	user, err := s.dao.GetUserByEmail(ctx, tx, pgtype.Text{String: email, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to load user: %w", err)
+	}
+	if err := s.validatePassword(password, user.PasswordHash.String); err != nil {
+		return nil, ErrUnAuthorized
+	}
+
+	u := new(UserDTO)
+	u.Load(&user)
+	return u, nil
 }
 
 func (s *Service) GetTelegramUser(ctx context.Context, tx db.DBTX, userID string) (*UserDTO, error) {
@@ -125,4 +112,20 @@ func (s *Service) UpdateTelegramUser(ctx context.Context, tx db.DBTX, user *User
 	}
 	user.Load(&userModel)
 	return user, nil
+}
+
+func (s *Service) hashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("auth: failed to hash password: %w", err)
+	}
+	return string(hashedPassword), nil
+}
+
+func (s *Service) validatePassword(password, hashedPassword string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		return ErrUnAuthorized
+	}
+	return nil
 }

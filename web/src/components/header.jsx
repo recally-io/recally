@@ -8,9 +8,13 @@ import {
   NavLink,
   useMantineColorScheme,
 } from "@mantine/core";
+import Cookie from "js-cookie";
 import avatarImgUrl from "../assets/avatar-1.png";
+import useStore from "../libs/store";
 
 export default function Header({ opened, toggle, showNavBurger }) {
+  const isLogin = useStore((state) => state.isLogin);
+  const setIsLogin = useStore((state) => state.setIsLogin);
   const { colorScheme, setColorScheme } = useMantineColorScheme();
   return (
     <>
@@ -25,35 +29,42 @@ export default function Header({ opened, toggle, showNavBurger }) {
         )}
         <NavLink href="/" label="Vibrain"></NavLink>
         <NavLink href="/assistants.html" label="Assistants"></NavLink>
-        <Flex direction="row" justify="space-around" align="center">
+        <Flex direction="row" justify="flex-end" align="center">
           <Button
             variant="transparent"
-            color="white"
+            size="sm"
             onClick={() => {
               setColorScheme(colorScheme === "dark" ? "light" : "dark");
             }}
           >
             {colorScheme === "dark" ? (
-              <Icon icon="tabler:sun" color="white" width={18} height={18} />
+              <Icon icon="tabler:sun" color="white" />
             ) : (
-              <Icon
-                icon="tabler:moon-filled"
-                color="black"
-                width={18}
-                height={18}
-              />
+              <Icon icon="tabler:moon-filled" color="black" />
             )}
           </Button>
-          <Menu
-            opened={opened}
-            onClose={toggle}
-            position="right"
-            shadow="xl"
-            transition="slide-up"
-            withArrow
-            control={<Burger opened={opened} size="sm" />}
-          >
-            <Avatar size="sm" radius="lg" src={avatarImgUrl} />
+          <Menu shadow="xl" trigger="hover" transition="slide-up" withArrow>
+            <Menu.Target>
+              <Button variant="transparent" size="sm">
+                <Avatar size="sm" radius="lg" src={avatarImgUrl} />
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>Vibrain</Menu.Label>
+              {isLogin && (
+                <Menu.Item
+                  color="red"
+                  leftSection={<Icon icon="tabler:logout" />}
+                  onClick={() => {
+                    setIsLogin(false);
+                    Cookie.remove("token");
+                    window.location.href = "/";
+                  }}
+                >
+                  Logout
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
           </Menu>
         </Flex>
       </Flex>

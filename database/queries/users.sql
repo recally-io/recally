@@ -17,6 +17,9 @@ DELETE FROM users WHERE telegram = $1;
 -- name: GetUserById :one
 SELECT * FROM users WHERE uuid = $1;
 
+-- name: GetUserByEmail :one
+SELECT * FROM users WHERE email = $1;
+
 -- name: UpdateUserById :one
 UPDATE users SET username = $2, email = $3, github = $4,
   google = $5, telegram = $6, 
@@ -25,6 +28,6 @@ WHERE uuid = $1
 RETURNING *;
 
 -- name: CreateUser :one
-INSERT INTO users (username, email, github, google, telegram, activate_assistant_id, activate_thread_id, status)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO users (username, email, password_hash, github, google, telegram, activate_assistant_id, activate_thread_id, status)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *;

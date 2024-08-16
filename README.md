@@ -27,3 +27,8 @@ go build -o bin/go-workers cmd/httpserver/main.go
 - /docs/ui - Swagger UI
 - /docs/json - Swagger JSON
 - /docs/redoc - Redoc UI
+
+## Usage
+
+email: a1@b.com
+password: 1234567

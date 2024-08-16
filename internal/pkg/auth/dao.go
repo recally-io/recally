@@ -10,6 +10,7 @@ import (
 
 type dto interface {
 	GetUserById(ctx context.Context, db db.DBTX, argUuid uuid.UUID) (db.User, error)
+	GetUserByEmail(ctx context.Context, db db.DBTX, email pgtype.Text) (db.User, error)
 	CreateUser(ctx context.Context, db db.DBTX, arg db.CreateUserParams) (db.User, error)
 	GetTelegramUser(ctx context.Context, db db.DBTX, telegram pgtype.Text) (db.User, error)
 	InserUser(ctx context.Context, db db.DBTX, arg db.InserUserParams) (db.User, error)

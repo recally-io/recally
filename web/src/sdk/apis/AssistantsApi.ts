@@ -12,144 +12,112 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
+
+import * as runtime from '../runtime';
 import type {
   AssistantsAssistantIdThreadsGet200Response,
   AssistantsAssistantIdThreadsThreadIdMessagesGet200Response,
   AssistantsGet200Response,
   AssistantsGet400Response,
-} from "../models/index";
+} from '../models/index';
 import {
-  AssistantsAssistantIdThreadsGet200ResponseFromJSON,
-  AssistantsAssistantIdThreadsGet200ResponseToJSON,
-  AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON,
-  AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseToJSON,
-  AssistantsGet200ResponseFromJSON,
-  AssistantsGet200ResponseToJSON,
-  AssistantsGet400ResponseFromJSON,
-  AssistantsGet400ResponseToJSON,
-} from "../models/index";
+    AssistantsAssistantIdThreadsGet200ResponseFromJSON,
+    AssistantsAssistantIdThreadsGet200ResponseToJSON,
+    AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON,
+    AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseToJSON,
+    AssistantsGet200ResponseFromJSON,
+    AssistantsGet200ResponseToJSON,
+    AssistantsGet400ResponseFromJSON,
+    AssistantsGet400ResponseToJSON,
+} from '../models/index';
 
 /**
- *
+ * 
  */
 export class AssistantsApi extends runtime.BaseAPI {
-  /**
-   * Lists the threads for an assistant
-   * List Threads
-   */
-  async assistantsAssistantIdThreadsGetRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsGet200Response>> {
-    const queryParameters: any = {};
 
-    const headerParameters: runtime.HTTPHeaders = {};
+    /**
+     * Lists the threads for an assistant
+     * List Threads
+     */
+    async assistantsAssistantIdThreadsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsGet200Response>> {
+        const queryParameters: any = {};
 
-    const response = await this.request(
-      {
-        path: `/assistants/{assistant-id}/threads`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsAssistantIdThreadsGet200ResponseFromJSON(jsonValue),
-    );
-  }
+        const response = await this.request({
+            path: `/assistants/{assistant-id}/threads`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
 
-  /**
-   * Lists the threads for an assistant
-   * List Threads
-   */
-  async assistantsAssistantIdThreadsGet(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsAssistantIdThreadsGet200Response> {
-    const response =
-      await this.assistantsAssistantIdThreadsGetRaw(initOverrides);
-    return await response.value();
-  }
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsAssistantIdThreadsGet200ResponseFromJSON(jsonValue));
+    }
 
-  /**
-   * Lists the messages for a thread
-   * List Thread Messages
-   */
-  async assistantsAssistantIdThreadsThreadIdMessagesGetRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<
-    runtime.ApiResponse<AssistantsAssistantIdThreadsThreadIdMessagesGet200Response>
-  > {
-    const queryParameters: any = {};
+    /**
+     * Lists the threads for an assistant
+     * List Threads
+     */
+    async assistantsAssistantIdThreadsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsAssistantIdThreadsGet200Response> {
+        const response = await this.assistantsAssistantIdThreadsGetRaw(initOverrides);
+        return await response.value();
+    }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+    /**
+     * Lists the messages for a thread
+     * List Thread Messages
+     */
+    async assistantsAssistantIdThreadsThreadIdMessagesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsThreadIdMessagesGet200Response>> {
+        const queryParameters: any = {};
 
-    const response = await this.request(
-      {
-        path: `/assistants/{assistant-id}/threads/{thread-id}/messages`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON(
-        jsonValue,
-      ),
-    );
-  }
+        const response = await this.request({
+            path: `/assistants/{assistant-id}/threads/{thread-id}/messages`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
 
-  /**
-   * Lists the messages for a thread
-   * List Thread Messages
-   */
-  async assistantsAssistantIdThreadsThreadIdMessagesGet(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsAssistantIdThreadsThreadIdMessagesGet200Response> {
-    const response =
-      await this.assistantsAssistantIdThreadsThreadIdMessagesGetRaw(
-        initOverrides,
-      );
-    return await response.value();
-  }
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON(jsonValue));
+    }
 
-  /**
-   * Lists the assistants for a user
-   * List Assistants
-   */
-  async assistantsGetRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AssistantsGet200Response>> {
-    const queryParameters: any = {};
+    /**
+     * Lists the messages for a thread
+     * List Thread Messages
+     */
+    async assistantsAssistantIdThreadsThreadIdMessagesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsAssistantIdThreadsThreadIdMessagesGet200Response> {
+        const response = await this.assistantsAssistantIdThreadsThreadIdMessagesGetRaw(initOverrides);
+        return await response.value();
+    }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+    /**
+     * Lists the assistants for a user
+     * List Assistants
+     */
+    async assistantsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsGet200Response>> {
+        const queryParameters: any = {};
 
-    const response = await this.request(
-      {
-        path: `/assistants`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsGet200ResponseFromJSON(jsonValue),
-    );
-  }
+        const response = await this.request({
+            path: `/assistants`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
 
-  /**
-   * Lists the assistants for a user
-   * List Assistants
-   */
-  async assistantsGet(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsGet200Response> {
-    const response = await this.assistantsGetRaw(initOverrides);
-    return await response.value();
-  }
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsGet200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Lists the assistants for a user
+     * List Assistants
+     */
+    async assistantsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsGet200Response> {
+        const response = await this.assistantsGetRaw(initOverrides);
+        return await response.value();
+    }
+
 }

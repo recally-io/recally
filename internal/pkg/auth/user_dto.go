@@ -12,6 +12,7 @@ type UserDTO struct {
 	ID                  uuid.UUID `json:"id"`
 	Username            string    `json:"username"`
 	Email               string    `json:"email"`
+	Password            string    `json:"password"`
 	Telegram            string    `json:"telegram"`
 	Github              string    `json:"github"`
 	Google              string    `json:"google"`
@@ -26,6 +27,7 @@ func (t *UserDTO) Load(d *db.User) {
 	t.ID = d.Uuid
 	t.Username = d.Username.String
 	t.Email = d.Email.String
+	t.Password = d.PasswordHash.String
 	t.Telegram = d.Telegram.String
 	t.Github = d.Github.String
 	t.Google = d.Google.String
@@ -41,6 +43,7 @@ func (t *UserDTO) Dump() *db.User {
 		Uuid:                t.ID,
 		Username:            pgtype.Text{String: t.Username, Valid: t.Username != ""},
 		Email:               pgtype.Text{String: t.Email, Valid: t.Email != ""},
+		PasswordHash:        pgtype.Text{String: t.Password, Valid: t.Password != ""},
 		Telegram:            pgtype.Text{String: t.Telegram, Valid: t.Telegram != ""},
 		Github:              pgtype.Text{String: t.Github, Valid: t.Github != ""},
 		Google:              pgtype.Text{String: t.Google, Valid: t.Google != ""},

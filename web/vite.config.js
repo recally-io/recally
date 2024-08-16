@@ -12,6 +12,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         assistants: resolve(__dirname, "assistants.html"),
         threads: resolve(__dirname, "threads.html"),
+        auth: resolve(__dirname, "auth.html"),
       },
     },
   },

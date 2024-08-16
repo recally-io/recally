@@ -7,7 +7,11 @@ import {
 } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { useDisclosure } from "@mantine/hooks";
-import React from "react";
+import { Notifications } from "@mantine/notifications";
+import "@mantine/notifications/styles.css";
+import React, { useEffect } from "react";
+import { checkIsLogin } from "../libs/auth";
+import useStore from "../libs/store";
 import Header from "./header";
 
 const theme = createTheme({});
@@ -16,8 +20,35 @@ export default function Layout({ main, nav = null }) {
   const [opened, { toggle }] = useDisclosure(true);
   let haveNav = nav !== null;
 
+  const setIsLogin = useStore((state) => state.setIsLogin);
+  const authPage = "/auth.html";
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const isLoggedIn = await checkIsLogin();
+      console.log("Checking login status: ", isLoggedIn);
+      if (isLoggedIn) {
+        setIsLogin(true);
+        console.log("User is logged in");
+        if (window.location.pathname === authPage) {
+          console.log("Redirecting to home page");
+          window.location.href = "/";
+        }
+      } else {
+        setIsLogin(false);
+        console.log("User is not logged in");
+        if (window.location.pathname !== authPage) {
+          console.log("Redirecting to login page");
+          window.location.href = "/auth.html";
+        }
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
+
   return (
     <MantineProvider theme={theme} defaultColorScheme="auto">
+      <Notifications />
       <AppShell
         header={{ height: "36" }}
         footer={{ height: "36" }}

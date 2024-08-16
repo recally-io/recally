@@ -2,20 +2,25 @@ include .env
 
 DATABASE_URL=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable
 
-lint: lint-web lint-go
+lint: lint-ui lint-go
 
 lint-go:
 	@echo "Linting..."
 	@go mod tidy
 	@golangci-lint run --fix ./...  --enable gofumpt
 
-lint-web:
+lint-ui:
 	@echo "Linting web..."
 	@prettier ./web --write
 
-generate:
-	@echo "Generating..."
+generate: generate-go generate-sql generate-spec
+
+generate-go:
+	@echo "Generating go..."
 	@go generate ./...
+
+generate-sql:
+	@echo "Generating sql..."
 	@go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
 	@sqlc generate
 
@@ -26,23 +31,27 @@ generate-spec:
 	@mkdir -p web/src/sdk && rm -rf web/src/sdk
 	@openapi-generator generate --skip-validate-spec -i docs/swagger.yaml -g typescript-fetch -o web/src/sdk
 
-build: generate-spec lint build-ui
-	@echo "Building..."
+build: build-ui build-go
+
+build-go:
+	@echo "Building go..."
 	@go build -o bin/app main.go
 
-build-ui: lint-web
+build-ui:
 	@echo "Building UI..."
 	@cd web && bun run build
 
-test: lint
+test:
 	@echo "Testing..."
 	@go test ./...
 
-run: build db-up
-	@echo "Running..."
-	@./bin/app
+run: run-go
 
-run-web:
+run-go:
+	@echo "Running go..."
+	@go run main.go
+
+run-ui:
 	@echo "Running web..."
 	@cd web && bun run dev
 
@@ -81,10 +90,6 @@ migrate-down:
 psql:
 	@echo "Connecting to database..."
 	@docker compose exec -it postgres psql -U ${DATABASE_USER} -d ${DATABASE_NAME}
-
-sqlc:
-	@echo "Generating sqlc..."
-	@sqlc generate
 
 help:
 	@echo "Available commands:"

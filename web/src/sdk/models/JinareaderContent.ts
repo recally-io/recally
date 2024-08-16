@@ -12,75 +12,73 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
+import { mapValues } from '../runtime';
 /**
- *
+ * 
  * @export
  * @interface JinareaderContent
  */
 export interface JinareaderContent {
-  /**
-   *
-   * @type {string}
-   * @memberof JinareaderContent
-   */
-  content?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof JinareaderContent
-   */
-  description?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof JinareaderContent
-   */
-  title?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof JinareaderContent
-   */
-  url?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof JinareaderContent
+     */
+    content?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof JinareaderContent
+     */
+    description?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof JinareaderContent
+     */
+    title?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof JinareaderContent
+     */
+    url?: string;
 }
 
 /**
  * Check if a given object implements the JinareaderContent interface.
  */
-export function instanceOfJinareaderContent(
-  value: object,
-): value is JinareaderContent {
-  return true;
+export function instanceOfJinareaderContent(value: object): value is JinareaderContent {
+    return true;
 }
 
 export function JinareaderContentFromJSON(json: any): JinareaderContent {
-  return JinareaderContentFromJSONTyped(json, false);
+    return JinareaderContentFromJSONTyped(json, false);
 }
 
-export function JinareaderContentFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): JinareaderContent {
-  if (json == null) {
-    return json;
-  }
-  return {
-    content: json["content"] == null ? undefined : json["content"],
-    description: json["description"] == null ? undefined : json["description"],
-    title: json["title"] == null ? undefined : json["title"],
-    url: json["url"] == null ? undefined : json["url"],
-  };
+export function JinareaderContentFromJSONTyped(json: any, ignoreDiscriminator: boolean): JinareaderContent {
+    if (json == null) {
+        return json;
+    }
+    return {
+        
+        'content': json['content'] == null ? undefined : json['content'],
+        'description': json['description'] == null ? undefined : json['description'],
+        'title': json['title'] == null ? undefined : json['title'],
+        'url': json['url'] == null ? undefined : json['url'],
+    };
 }
 
 export function JinareaderContentToJSON(value?: JinareaderContent | null): any {
-  if (value == null) {
-    return value;
-  }
-  return {
-    content: value["content"],
-    description: value["description"],
-    title: value["title"],
-    url: value["url"],
-  };
+    if (value == null) {
+        return value;
+    }
+    return {
+        
+        'content': value['content'],
+        'description': value['description'],
+        'title': value['title'],
+        'url': value['url'],
+    };
 }
+

@@ -12,100 +12,88 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
-import type { AssistantsAssistant } from "./AssistantsAssistant";
+import { mapValues } from '../runtime';
+import type { AssistantsAssistantDTO } from './AssistantsAssistantDTO';
 import {
-  AssistantsAssistantFromJSON,
-  AssistantsAssistantFromJSONTyped,
-  AssistantsAssistantToJSON,
-} from "./AssistantsAssistant";
+    AssistantsAssistantDTOFromJSON,
+    AssistantsAssistantDTOFromJSONTyped,
+    AssistantsAssistantDTOToJSON,
+} from './AssistantsAssistantDTO';
 
 /**
- *
+ * 
  * @export
  * @interface AssistantsGet200Response
  */
 export interface AssistantsGet200Response {
-  /**
-   * Code is an integer value that represents the HTTP status code.
-   * @type {number}
-   * @memberof AssistantsGet200Response
-   */
-  code?: number;
-  /**
-   *
-   * @type {Array<AssistantsAssistant>}
-   * @memberof AssistantsGet200Response
-   */
-  data?: Array<AssistantsAssistant>;
-  /**
-   * Error is an error value that represents the error of the response.
-   * @type {object}
-   * @memberof AssistantsGet200Response
-   */
-  error?: object;
-  /**
-   * Message is a string value that represents the message of the response.
-   * @type {string}
-   * @memberof AssistantsGet200Response
-   */
-  message?: string;
-  /**
-   * Success is a boolean value that indicates whether the request was successful.
-   * @type {boolean}
-   * @memberof AssistantsGet200Response
-   */
-  success?: boolean;
+    /**
+     * Code is an integer value that represents the HTTP status code.
+     * @type {number}
+     * @memberof AssistantsGet200Response
+     */
+    code?: number;
+    /**
+     * 
+     * @type {Array<AssistantsAssistantDTO>}
+     * @memberof AssistantsGet200Response
+     */
+    data?: Array<AssistantsAssistantDTO>;
+    /**
+     * Error is an error value that represents the error of the response.
+     * @type {object}
+     * @memberof AssistantsGet200Response
+     */
+    error?: object;
+    /**
+     * Message is a string value that represents the message of the response.
+     * @type {string}
+     * @memberof AssistantsGet200Response
+     */
+    message?: string;
+    /**
+     * Success is a boolean value that indicates whether the request was successful.
+     * @type {boolean}
+     * @memberof AssistantsGet200Response
+     */
+    success?: boolean;
 }
 
 /**
  * Check if a given object implements the AssistantsGet200Response interface.
  */
-export function instanceOfAssistantsGet200Response(
-  value: object,
-): value is AssistantsGet200Response {
-  return true;
+export function instanceOfAssistantsGet200Response(value: object): value is AssistantsGet200Response {
+    return true;
 }
 
-export function AssistantsGet200ResponseFromJSON(
-  json: any,
-): AssistantsGet200Response {
-  return AssistantsGet200ResponseFromJSONTyped(json, false);
+export function AssistantsGet200ResponseFromJSON(json: any): AssistantsGet200Response {
+    return AssistantsGet200ResponseFromJSONTyped(json, false);
 }
 
-export function AssistantsGet200ResponseFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AssistantsGet200Response {
-  if (json == null) {
-    return json;
-  }
-  return {
-    code: json["code"] == null ? undefined : json["code"],
-    data:
-      json["data"] == null
-        ? undefined
-        : (json["data"] as Array<any>).map(AssistantsAssistantFromJSON),
-    error: json["error"] == null ? undefined : json["error"],
-    message: json["message"] == null ? undefined : json["message"],
-    success: json["success"] == null ? undefined : json["success"],
-  };
+export function AssistantsGet200ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): AssistantsGet200Response {
+    if (json == null) {
+        return json;
+    }
+    return {
+        
+        'code': json['code'] == null ? undefined : json['code'],
+        'data': json['data'] == null ? undefined : ((json['data'] as Array<any>).map(AssistantsAssistantDTOFromJSON)),
+        'error': json['error'] == null ? undefined : json['error'],
+        'message': json['message'] == null ? undefined : json['message'],
+        'success': json['success'] == null ? undefined : json['success'],
+    };
 }
 
-export function AssistantsGet200ResponseToJSON(
-  value?: AssistantsGet200Response | null,
-): any {
-  if (value == null) {
-    return value;
-  }
-  return {
-    code: value["code"],
-    data:
-      value["data"] == null
-        ? undefined
-        : (value["data"] as Array<any>).map(AssistantsAssistantToJSON),
-    error: value["error"],
-    message: value["message"],
-    success: value["success"],
-  };
+export function AssistantsGet200ResponseToJSON(value?: AssistantsGet200Response | null): any {
+    if (value == null) {
+        return value;
+    }
+    return {
+        
+        'code': value['code'],
+        'data': value['data'] == null ? undefined : ((value['data'] as Array<any>).map(AssistantsAssistantDTOToJSON)),
+        'error': value['error'],
+        'message': value['message'],
+        'success': value['success'],
+    };
 }
+
