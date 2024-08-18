@@ -23,63 +23,63 @@ import {
 /**
  *
  * @export
- * @interface AssistantsAssistantIdThreadsThreadIdMessagesGet200Response
+ * @interface AssistantsAssistantIdThreadsThreadIdMessagesPost201Response
  */
-export interface AssistantsAssistantIdThreadsThreadIdMessagesGet200Response {
+export interface AssistantsAssistantIdThreadsThreadIdMessagesPost201Response {
   /**
    * Code is an integer value that represents the HTTP status code.
    * @type {number}
-   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesGet200Response
+   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesPost201Response
    */
   code?: number;
   /**
    *
-   * @type {Array<AssistantsThreadMessageDTO>}
-   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesGet200Response
+   * @type {AssistantsThreadMessageDTO}
+   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesPost201Response
    */
-  data?: Array<AssistantsThreadMessageDTO>;
+  data?: AssistantsThreadMessageDTO;
   /**
    * Error is an error value that represents the error of the response.
    * @type {object}
-   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesGet200Response
+   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesPost201Response
    */
   error?: object;
   /**
    * Message is a string value that represents the message of the response.
    * @type {string}
-   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesGet200Response
+   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesPost201Response
    */
   message?: string;
   /**
    * Success is a boolean value that indicates whether the request was successful.
    * @type {boolean}
-   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesGet200Response
+   * @memberof AssistantsAssistantIdThreadsThreadIdMessagesPost201Response
    */
   success?: boolean;
 }
 
 /**
- * Check if a given object implements the AssistantsAssistantIdThreadsThreadIdMessagesGet200Response interface.
+ * Check if a given object implements the AssistantsAssistantIdThreadsThreadIdMessagesPost201Response interface.
  */
-export function instanceOfAssistantsAssistantIdThreadsThreadIdMessagesGet200Response(
+export function instanceOfAssistantsAssistantIdThreadsThreadIdMessagesPost201Response(
   value: object,
-): value is AssistantsAssistantIdThreadsThreadIdMessagesGet200Response {
+): value is AssistantsAssistantIdThreadsThreadIdMessagesPost201Response {
   return true;
 }
 
-export function AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON(
+export function AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseFromJSON(
   json: any,
-): AssistantsAssistantIdThreadsThreadIdMessagesGet200Response {
-  return AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSONTyped(
+): AssistantsAssistantIdThreadsThreadIdMessagesPost201Response {
+  return AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseFromJSONTyped(
     json,
     false,
   );
 }
 
-export function AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSONTyped(
+export function AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): AssistantsAssistantIdThreadsThreadIdMessagesGet200Response {
+): AssistantsAssistantIdThreadsThreadIdMessagesPost201Response {
   if (json == null) {
     return json;
   }
@@ -88,25 +88,22 @@ export function AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJS
     data:
       json["data"] == null
         ? undefined
-        : (json["data"] as Array<any>).map(AssistantsThreadMessageDTOFromJSON),
+        : AssistantsThreadMessageDTOFromJSON(json["data"]),
     error: json["error"] == null ? undefined : json["error"],
     message: json["message"] == null ? undefined : json["message"],
     success: json["success"] == null ? undefined : json["success"],
   };
 }
 
-export function AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseToJSON(
-  value?: AssistantsAssistantIdThreadsThreadIdMessagesGet200Response | null,
+export function AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseToJSON(
+  value?: AssistantsAssistantIdThreadsThreadIdMessagesPost201Response | null,
 ): any {
   if (value == null) {
     return value;
   }
   return {
     code: value["code"],
-    data:
-      value["data"] == null
-        ? undefined
-        : (value["data"] as Array<any>).map(AssistantsThreadMessageDTOToJSON),
+    data: AssistantsThreadMessageDTOToJSON(value["data"]),
     error: value["error"],
     message: value["message"],
     success: value["success"],

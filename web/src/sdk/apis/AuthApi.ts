@@ -12,140 +12,174 @@
  * Do not edit the class manually.
  */
 
-
-import * as runtime from '../runtime';
+import * as runtime from "../runtime";
 import type {
   AssistantsGet400Response,
   AuthLoginPost200Response,
   HttpserverLoginRequest,
   HttpserverRegisterRequest,
-} from '../models/index';
+} from "../models/index";
 import {
-    AssistantsGet400ResponseFromJSON,
-    AssistantsGet400ResponseToJSON,
-    AuthLoginPost200ResponseFromJSON,
-    AuthLoginPost200ResponseToJSON,
-    HttpserverLoginRequestFromJSON,
-    HttpserverLoginRequestToJSON,
-    HttpserverRegisterRequestFromJSON,
-    HttpserverRegisterRequestToJSON,
-} from '../models/index';
+  AssistantsGet400ResponseFromJSON,
+  AssistantsGet400ResponseToJSON,
+  AuthLoginPost200ResponseFromJSON,
+  AuthLoginPost200ResponseToJSON,
+  HttpserverLoginRequestFromJSON,
+  HttpserverLoginRequestToJSON,
+  HttpserverRegisterRequestFromJSON,
+  HttpserverRegisterRequestToJSON,
+} from "../models/index";
 
 export interface AuthLoginPostRequest {
-    request: HttpserverLoginRequest;
+  request: HttpserverLoginRequest;
 }
 
 export interface AuthRegisterPostRequest {
-    request: HttpserverRegisterRequest;
+  request: HttpserverRegisterRequest;
 }
 
 /**
- * 
+ *
  */
 export class AuthApi extends runtime.BaseAPI {
-
-    /**
-     * Authenticate a user with email and password
-     * Login
-     */
-    async authLoginPostRaw(requestParameters: AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AuthLoginPost200Response>> {
-        if (requestParameters['request'] == null) {
-            throw new runtime.RequiredError(
-                'request',
-                'Required parameter "request" was null or undefined when calling authLoginPost().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-        const response = await this.request({
-            path: `/auth/login`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: HttpserverLoginRequestToJSON(requestParameters['request']),
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => AuthLoginPost200ResponseFromJSON(jsonValue));
+  /**
+   * Authenticate a user with email and password
+   * Login
+   */
+  async authLoginPostRaw(
+    requestParameters: AuthLoginPostRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AuthLoginPost200Response>> {
+    if (requestParameters["request"] == null) {
+      throw new runtime.RequiredError(
+        "request",
+        'Required parameter "request" was null or undefined when calling authLoginPost().',
+      );
     }
 
-    /**
-     * Authenticate a user with email and password
-     * Login
-     */
-    async authLoginPost(requestParameters: AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthLoginPost200Response> {
-        const response = await this.authLoginPostRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    const response = await this.request(
+      {
+        path: `/auth/login`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: HttpserverLoginRequestToJSON(requestParameters["request"]),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AuthLoginPost200ResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Authenticate a user with email and password
+   * Login
+   */
+  async authLoginPost(
+    requestParameters: AuthLoginPostRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AuthLoginPost200Response> {
+    const response = await this.authLoginPostRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   * Register a new user with the provided username, email, and password
+   * Register a new user
+   */
+  async authRegisterPostRaw(
+    requestParameters: AuthRegisterPostRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AuthLoginPost200Response>> {
+    if (requestParameters["request"] == null) {
+      throw new runtime.RequiredError(
+        "request",
+        'Required parameter "request" was null or undefined when calling authRegisterPost().',
+      );
     }
 
-    /**
-     * Register a new user with the provided username, email, and password
-     * Register a new user
-     */
-    async authRegisterPostRaw(requestParameters: AuthRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AuthLoginPost200Response>> {
-        if (requestParameters['request'] == null) {
-            throw new runtime.RequiredError(
-                'request',
-                'Required parameter "request" was null or undefined when calling authRegisterPost().'
-            );
-        }
+    const queryParameters: any = {};
 
-        const queryParameters: any = {};
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    headerParameters["Content-Type"] = "application/json";
 
-        headerParameters['Content-Type'] = 'application/json';
+    const response = await this.request(
+      {
+        path: `/auth/register`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: HttpserverRegisterRequestToJSON(requestParameters["request"]),
+      },
+      initOverrides,
+    );
 
-        const response = await this.request({
-            path: `/auth/register`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: HttpserverRegisterRequestToJSON(requestParameters['request']),
-        }, initOverrides);
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AuthLoginPost200ResponseFromJSON(jsonValue),
+    );
+  }
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => AuthLoginPost200ResponseFromJSON(jsonValue));
-    }
+  /**
+   * Register a new user with the provided username, email, and password
+   * Register a new user
+   */
+  async authRegisterPost(
+    requestParameters: AuthRegisterPostRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AuthLoginPost200Response> {
+    const response = await this.authRegisterPostRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
 
-    /**
-     * Register a new user with the provided username, email, and password
-     * Register a new user
-     */
-    async authRegisterPost(requestParameters: AuthRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthLoginPost200Response> {
-        const response = await this.authRegisterPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+  /**
+   * Validate the JWT token and return the user ID
+   * Validate JWT token
+   */
+  async authValidateJwtGetRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AuthLoginPost200Response>> {
+    const queryParameters: any = {};
 
-    /**
-     * Validate the JWT token and return the user ID
-     * Validate JWT token
-     */
-    async authValidateJwtGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AuthLoginPost200Response>> {
-        const queryParameters: any = {};
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    const response = await this.request(
+      {
+        path: `/auth/validate-jwt`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
 
-        const response = await this.request({
-            path: `/auth/validate-jwt`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AuthLoginPost200ResponseFromJSON(jsonValue),
+    );
+  }
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => AuthLoginPost200ResponseFromJSON(jsonValue));
-    }
-
-    /**
-     * Validate the JWT token and return the user ID
-     * Validate JWT token
-     */
-    async authValidateJwtGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthLoginPost200Response> {
-        const response = await this.authValidateJwtGetRaw(initOverrides);
-        return await response.value();
-    }
-
+  /**
+   * Validate the JWT token and return the user ID
+   * Validate JWT token
+   */
+  async authValidateJwtGet(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AuthLoginPost200Response> {
+    const response = await this.authValidateJwtGetRaw(initOverrides);
+    return await response.value();
+  }
 }

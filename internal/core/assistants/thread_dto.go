@@ -13,7 +13,7 @@ import (
 type ThreadMetadata struct{}
 
 type ThreadDTO struct {
-	Id           uuid.UUID          `json:"uuid"`
+	Id           uuid.UUID          `json:"id"`
 	UserId       uuid.UUID          `json:"user_id"`
 	AssistantId  uuid.UUID          `json:"assistant_id"`
 	SystemPrompt string             `json:"system_prompt"`
@@ -48,7 +48,7 @@ func (d *ThreadDTO) Dump() *db.AssistantThread {
 	metadata, _ := json.Marshal(d.Metadata)
 	return &db.AssistantThread{
 		UserID:       pgtype.UUID{Bytes: d.UserId, Valid: true},
-		AssistantID:  pgtype.UUID{Bytes: d.AssistantId},
+		AssistantID:  pgtype.UUID{Bytes: d.AssistantId, Valid: true},
 		SystemPrompt: pgtype.Text{String: d.SystemPrompt, Valid: d.SystemPrompt != ""},
 		Name:         d.Name,
 		Description:  pgtype.Text{String: d.Description, Valid: d.Description != ""},

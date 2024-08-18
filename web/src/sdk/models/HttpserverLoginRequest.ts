@@ -12,57 +12,63 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues } from "../runtime";
 /**
- * 
+ *
  * @export
  * @interface HttpserverLoginRequest
  */
 export interface HttpserverLoginRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof HttpserverLoginRequest
-     */
-    email?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof HttpserverLoginRequest
-     */
-    password?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof HttpserverLoginRequest
+   */
+  email?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof HttpserverLoginRequest
+   */
+  password?: string;
 }
 
 /**
  * Check if a given object implements the HttpserverLoginRequest interface.
  */
-export function instanceOfHttpserverLoginRequest(value: object): value is HttpserverLoginRequest {
-    return true;
+export function instanceOfHttpserverLoginRequest(
+  value: object,
+): value is HttpserverLoginRequest {
+  return true;
 }
 
-export function HttpserverLoginRequestFromJSON(json: any): HttpserverLoginRequest {
-    return HttpserverLoginRequestFromJSONTyped(json, false);
+export function HttpserverLoginRequestFromJSON(
+  json: any,
+): HttpserverLoginRequest {
+  return HttpserverLoginRequestFromJSONTyped(json, false);
 }
 
-export function HttpserverLoginRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): HttpserverLoginRequest {
-    if (json == null) {
-        return json;
-    }
-    return {
-        
-        'email': json['email'] == null ? undefined : json['email'],
-        'password': json['password'] == null ? undefined : json['password'],
-    };
+export function HttpserverLoginRequestFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): HttpserverLoginRequest {
+  if (json == null) {
+    return json;
+  }
+  return {
+    email: json["email"] == null ? undefined : json["email"],
+    password: json["password"] == null ? undefined : json["password"],
+  };
 }
 
-export function HttpserverLoginRequestToJSON(value?: HttpserverLoginRequest | null): any {
-    if (value == null) {
-        return value;
-    }
-    return {
-        
-        'email': value['email'],
-        'password': value['password'],
-    };
+export function HttpserverLoginRequestToJSON(
+  value?: HttpserverLoginRequest | null,
+): any {
+  if (value == null) {
+    return value;
+  }
+  return {
+    email: value["email"],
+    password: value["password"],
+  };
 }
-

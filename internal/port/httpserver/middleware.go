@@ -2,9 +2,11 @@ package httpserver
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
+	"vibrain/internal/pkg/auth"
 	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
@@ -33,6 +35,11 @@ func (s *Service) registerMiddlewares() {
 		ErrorMessage: "custom timeout error message returns to client",
 		Timeout:      30 * time.Second,
 	}))
+	// e.Use(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
+	// 	Skipper: func(c echo.Context) bool {
+	// 		return !strings.HasPrefix(c.Path(), "/api/")
+	// 	},
+	// }))
 	e.Use(contextMiddleWare())
 	e.Use(transactionMiddleWare(pool))
 	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
@@ -45,13 +52,12 @@ func (s *Service) registerMiddlewares() {
 }
 
 func authValidation(key string, c echo.Context) (bool, error) {
-	setContext(c, contexts.ContextKeyUserID, uuid.NewString())
 	// validate key
-	// user, err := auth.ValidateJWT(key)
-	// if err != nil {
-	// 	return false, fmt.Errorf("invalid token: %w", err)
-	// }
-	// setContext(c, contexts.ContextKeyUserID, user.UserID)
+	userId, _, err := auth.ValidateJWT(key)
+	if err != nil {
+		return false, fmt.Errorf("invalid token: %w", err)
+	}
+	setContext(c, contexts.ContextKeyUserID, userId)
 	return true, nil
 }
 

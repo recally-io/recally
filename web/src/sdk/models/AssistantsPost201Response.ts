@@ -13,82 +13,94 @@
  */
 
 import { mapValues } from "../runtime";
+import type { AssistantsAssistantDTO } from "./AssistantsAssistantDTO";
+import {
+  AssistantsAssistantDTOFromJSON,
+  AssistantsAssistantDTOFromJSONTyped,
+  AssistantsAssistantDTOToJSON,
+} from "./AssistantsAssistantDTO";
+
 /**
- * JSONResult represents the structure of the JSON response.
+ *
  * @export
- * @interface HttpserverJSONResult
+ * @interface AssistantsPost201Response
  */
-export interface HttpserverJSONResult {
+export interface AssistantsPost201Response {
   /**
    * Code is an integer value that represents the HTTP status code.
    * @type {number}
-   * @memberof HttpserverJSONResult
+   * @memberof AssistantsPost201Response
    */
   code?: number;
   /**
-   * Data is an interface value that represents the data of the response.
-   * @type {object}
-   * @memberof HttpserverJSONResult
+   *
+   * @type {AssistantsAssistantDTO}
+   * @memberof AssistantsPost201Response
    */
-  data?: object;
+  data?: AssistantsAssistantDTO;
   /**
    * Error is an error value that represents the error of the response.
    * @type {object}
-   * @memberof HttpserverJSONResult
+   * @memberof AssistantsPost201Response
    */
   error?: object;
   /**
    * Message is a string value that represents the message of the response.
    * @type {string}
-   * @memberof HttpserverJSONResult
+   * @memberof AssistantsPost201Response
    */
   message?: string;
   /**
    * Success is a boolean value that indicates whether the request was successful.
    * @type {boolean}
-   * @memberof HttpserverJSONResult
+   * @memberof AssistantsPost201Response
    */
   success?: boolean;
 }
 
 /**
- * Check if a given object implements the HttpserverJSONResult interface.
+ * Check if a given object implements the AssistantsPost201Response interface.
  */
-export function instanceOfHttpserverJSONResult(
+export function instanceOfAssistantsPost201Response(
   value: object,
-): value is HttpserverJSONResult {
+): value is AssistantsPost201Response {
   return true;
 }
 
-export function HttpserverJSONResultFromJSON(json: any): HttpserverJSONResult {
-  return HttpserverJSONResultFromJSONTyped(json, false);
+export function AssistantsPost201ResponseFromJSON(
+  json: any,
+): AssistantsPost201Response {
+  return AssistantsPost201ResponseFromJSONTyped(json, false);
 }
 
-export function HttpserverJSONResultFromJSONTyped(
+export function AssistantsPost201ResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): HttpserverJSONResult {
+): AssistantsPost201Response {
   if (json == null) {
     return json;
   }
   return {
     code: json["code"] == null ? undefined : json["code"],
-    data: json["data"] == null ? undefined : json["data"],
+    data:
+      json["data"] == null
+        ? undefined
+        : AssistantsAssistantDTOFromJSON(json["data"]),
     error: json["error"] == null ? undefined : json["error"],
     message: json["message"] == null ? undefined : json["message"],
     success: json["success"] == null ? undefined : json["success"],
   };
 }
 
-export function HttpserverJSONResultToJSON(
-  value?: HttpserverJSONResult | null,
+export function AssistantsPost201ResponseToJSON(
+  value?: AssistantsPost201Response | null,
 ): any {
   if (value == null) {
     return value;
   }
   return {
     code: value["code"],
-    data: value["data"],
+    data: AssistantsAssistantDTOToJSON(value["data"]),
     error: value["error"],
     message: value["message"],
     success: value["success"],

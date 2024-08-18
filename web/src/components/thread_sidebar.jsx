@@ -4,47 +4,101 @@ import {
   Button,
   Divider,
   Flex,
+  LoadingOverlay,
   ScrollArea,
   Space,
   Stack,
   useMantineTheme,
 } from "@mantine/core";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import useStore from "../libs/store";
+import { AssistantsApi } from "../sdk/index";
+
+const api = new AssistantsApi();
 
 export default function Sidebar() {
-  let url = new URL(window.location.href);
-  // path: /threads.html?thread-id=1&assistant-id=1
-  let params = new URLSearchParams(url.search);
-  let threadId = params.get("thread-id");
-  let assistantId = params.get("assistant-id");
-  if (!assistantId) {
-    // redirect to /assistants.html
-    window.location.href = "/assistants.html";
-  }
+  const queryClient = useQueryClient();
+  const [threadId, setThreadId] = useStore((state) => [
+    state.activateThreadId,
+    state.setActivateThreadId,
+  ]);
+
+  const [assistantId, setAssistantId] = useStore((state) => [
+    state.activateAssistantId,
+    state.setActivateAssistantId,
+  ]);
+
+  useEffect(() => {
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+    let assistantId = params.get("assistant-id");
+    console.log(`useEffect: assistantId ${assistantId}`);
+    if (!assistantId) {
+      setAssistantId("");
+      window.location.href = "/assistants.html";
+    }
+    setAssistantId(assistantId);
+    const threadId = params.get("thread-id");
+    console.log(`useEffect: threadId ${threadId}`);
+    if (threadId) {
+      setThreadId(threadId);
+    } else {
+      setThreadId("");
+    }
+    console.log(`useEffect: assistantId ${assistantId} , threadId ${threadId}`);
+  }, []);
+
+  const listThreads = useQuery({
+    queryKey: ["list-threads", assistantId],
+    queryFn: async () => {
+      console.log(`listThreads: assistantId ${assistantId}`);
+      const response = await api.assistantsAssistantIdThreadsGet({
+        assistantId: assistantId,
+      });
+      const data = response.data;
+      data.map((item) => {
+        console.log(`item`, JSON.stringify(item));
+        item["value"] =
+          item["name"] + " - " + item["description"] + " - " + item["id"];
+      });
+      return data;
+    },
+  });
+
+  const getAssistant = useQuery({
+    queryKey: ["get-assistant", assistantId],
+    queryFn: async () => {
+      const response = await api.assistantsAssistantIdGet({
+        assistantId: assistantId,
+      });
+      return response.data;
+    },
+  });
+
+  const createThread = useMutation({
+    mutationFn: async (data) => {
+      const response = await api.assistantsAssistantIdThreadsPost({
+        assistantId: assistantId,
+        thread: data,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["list-threads"]);
+    },
+  });
 
   const theme = useMantineTheme();
-  const data = [
-    { id: "1", value: "Thread 1" },
-    { id: "2", value: "Thread 2" },
-    { id: "3", value: "Thread 3" },
-    { id: "4", value: "Thread 4" },
-    { id: "5", value: "Thread 5" },
-    { id: "6", value: "Thread 6" },
-    { id: "7", value: "Thread 7" },
-    { id: "8", value: "Thread 8" },
-    { id: "9", value: "Thread 9" },
-    { id: "10", value: "Thread 10" },
-  ];
-  const [conversations, setConversations] = useState(data);
 
-  const addNewThread = () => {
-    console.log("Add new Thread", conversations);
-    const newThreadId = `${conversations.length + 1}`;
-    setConversations([
-      ...conversations,
-      { id: newThreadId, value: `Thread ${newThreadId}` },
-    ]);
-    window.location.href = `/threads.html?thread-id=${newThreadId}&assistant-id=${assistantId}`;
+  const addNewThread = async () => {
+    const newThread = await createThread.mutateAsync({
+      name: "Thread name",
+      description: "Thread description",
+      systemPrompt: getAssistant.data.systemPrompt,
+      model: getAssistant.data.model,
+    });
+    setThreadId(newThread.id);
   };
 
   return (
@@ -73,30 +127,35 @@ export default function Sidebar() {
             limit={10}
             leftSection={<Icon icon="tabler:search" />}
             radius="lg"
-            data={conversations}
+            data={listThreads.data}
             onChange={(item) => {
               var filteredItems = conversations.filter((i) => i.value == item);
               if (filteredItems.length > 0) {
-                setActivateThreadId(filteredItems[0].id);
+                setThreadId(filteredItems[0].id);
               }
             }}
           />
         </Stack>
         <Divider />
         <ScrollArea>
+          <LoadingOverlay visible={listThreads.isLoading} />
           <Stack align="stretch" justify="start" gap="sm">
-            {conversations.map((item) => (
-              <Button
-                radius="md"
-                w="100%"
-                variant={threadId == item.id ? "filled" : "subtle"}
-                onClick={() => {
-                  window.location.href = `/threads.html?thread-id=${item.id}&assistant-id=${assistantId}`;
-                }}
-              >
-                {item.value}
-              </Button>
-            ))}
+            {listThreads.data &&
+              listThreads.data.map((item) => (
+                <Button
+                  radius="md"
+                  w="100%"
+                  variant={threadId == item.id ? "filled" : "subtle"}
+                  onClick={() => {
+                    console.log(
+                      `assistantId ${assistantId}, threadId ${item.id}`,
+                    );
+                    setThreadId(item.id);
+                  }}
+                >
+                  {item.value}
+                </Button>
+              ))}
           </Stack>
         </ScrollArea>
       </Flex>

@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
+  ActionIcon,
   Avatar,
   Button,
   Container,
@@ -19,44 +20,17 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import Markdown from "react-markdown";
 import avatarImgUrl from "../assets/avatar-1.png";
+import useStore from "../libs/store";
+import { AssistantsApi } from "../sdk/index";
 
-const content = `
-# react-markdown
-React component to render markdown.
- 
-## Feature highlights
-
-* [x] **[safe][section-security] by default**
-  (no \'dangerouslySetInnerHTML\' or XSS attacks)
-* [x] **[components][section-components]**
-  (pass your own component to use instead of \'<h2>\' for \'## hi\')
-* [x] **[plugins][section-plugins]**
-  (many plugins you can pick and choose from)
-* [x] **[compliant][section-syntax]**
-  (100% to CommonMark, 100% to GFM with a plugin)
-
-## Contents
-
-* [What is this?](#what-is-this)
-* [When should I use this?](#when-should-i-use-this)
-* [Install](#install)
-* [Use](#use)
-
-## What is this?
-
-This package is a [React][] component that can be given a string of markdown
-that it’ll safely render to React elements.
-You can pass plugins to change how markdown is transformed and pass components
-that will be used instead of normal HTML elements.
-
-* to learn markdown, see this [cheatsheet and tutorial][commonmark-help]
-* to try out \'react-markdown\', see [our demo][demo]
-
-`;
+const api = new AssistantsApi();
 
 export default function ChatWindowsComponent() {
+  const queryClient = useQueryClient();
   const [settingsOpened, { open: openSettings, close: closeSettings }] =
     useDisclosure(false);
   const colorScheme = useComputedColorScheme("light");
@@ -64,13 +38,65 @@ export default function ChatWindowsComponent() {
     initialValues: {
       temperature: 0.7,
       maxToken: 4096,
+      model: "gpt-4o",
     },
   });
 
-  let url = new URL(window.location.href);
-  let params = new URLSearchParams(url.search);
-  let threadId = params.get("threadId");
-  const messageS = () => {
+  const assistantId = useStore((state) => state.activateAssistantId);
+  const threadId = useStore((state) => state.activateThreadId);
+  const [newText, setNewText] = useState("");
+
+  const getThread = useQuery({
+    queryKey: ["get-thread", threadId],
+    queryFn: async () => {
+      console.log(
+        `getThread: threadId ${threadId}, assistantId ${assistantId}`,
+      );
+      const response =
+        await api.AssistantsAssistantIdThreadsThreadIdMessagesGetRequest({
+          assistantId: assistantId,
+          threadId: threadId,
+        });
+      console.log(JSON.stringify(response));
+      return response.data;
+    },
+  });
+
+  const listMessages = useQuery({
+    queryKey: ["list-messages", threadId],
+    queryFn: async () => {
+      console.log(
+        `listMessages: threadId ${threadId}, assistantId ${assistantId}`,
+      );
+      const response =
+        await api.assistantsAssistantIdThreadsThreadIdMessagesGet({
+          assistantId: assistantId,
+          threadId: threadId,
+        });
+      return response.data;
+    },
+  });
+
+  const createMessage = useMutation({
+    mutationFn: async () => {
+      const response =
+        await api.assistantsAssistantIdThreadsThreadIdMessagesPost({
+          assistantId: assistantId,
+          threadId: threadId,
+          message: {
+            role: "user",
+            text: newText,
+            model: "gpt-4o",
+          },
+        });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["list-messages"]);
+    },
+  });
+
+  const messageS = (role, text) => {
     return (
       <Flex justify="flex-end" align="flex-start" direction="row" gap="sm">
         <Paper
@@ -80,14 +106,14 @@ export default function ChatWindowsComponent() {
           radius="lg"
           bg={colorScheme === "dark" ? "" : "blue.2"}
         >
-          <Markdown>{content}</Markdown>
+          <Markdown>{text}</Markdown>
         </Paper>
         <Avatar size="sm" radius="lg" src={avatarImgUrl} />
       </Flex>
     );
   };
 
-  const messageR = () => {
+  const messageR = (role, text) => {
     return (
       <Flex justify="flex-start" direction="row" gap="sm">
         <Avatar size="sm" radius="lg" src={avatarImgUrl} />
@@ -98,7 +124,7 @@ export default function ChatWindowsComponent() {
           radius="lg"
           bg={colorScheme === "dark" ? "" : "green.2"}
         >
-          <Markdown>{content}</Markdown>
+          <Markdown>{text}</Markdown>
         </Paper>
       </Flex>
     );
@@ -150,8 +176,14 @@ export default function ChatWindowsComponent() {
             }}
           >
             <Stack spacing="md" py="lg">
-              {messageS()}
-              {messageR()}
+              {listMessages.data &&
+                listMessages.data.map((item) => {
+                  if (item.role === "user") {
+                    return messageS(item.role, item.text);
+                  } else {
+                    return messageR(item.role, item.text);
+                  }
+                })}
             </Stack>
           </ScrollArea>
           <Container
@@ -167,6 +199,22 @@ export default function ChatWindowsComponent() {
               radius="lg"
               leftSection={menu()}
               leftSectionWidth={42}
+              disabled={createMessage.isLoading}
+              rightSection={
+                <ActionIcon
+                  variant="transparent"
+                  aria-label="Settings"
+                  disabled={createMessage.isLoading}
+                  onClick={async () => {
+                    await createMessage.mutateAsync();
+                    setNewText("");
+                  }}
+                >
+                  <Icon icon="tabler:send"></Icon>
+                </ActionIcon>
+              }
+              value={newText}
+              onChange={(e) => setNewText(e.currentTarget.value)}
             ></TextInput>
           </Container>
         </Flex>

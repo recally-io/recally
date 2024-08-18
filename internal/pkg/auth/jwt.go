@@ -17,7 +17,7 @@ type JwtUser struct {
 	Expiry      time.Time `json:"expiry"`
 }
 
-func (s *Service) getJWTSecret() []byte {
+func getJWTSecret() []byte {
 	return []byte(config.Settings.JWTSecret)
 }
 
@@ -26,15 +26,19 @@ func (s *Service) GenerateJWT(userId uuid.UUID) (string, error) {
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 		"user_id": userId,
 	})
-	return token.SignedString(s.getJWTSecret())
+	return token.SignedString(getJWTSecret())
 }
 
 func (s *Service) ValidateJWT(tokenString string) (uuid.UUID, int64, error) {
+	return ValidateJWT(tokenString)
+}
+
+func ValidateJWT(tokenString string) (uuid.UUID, int64, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("jwt: unexpected signing method: %v", token.Header["alg"])
 		}
-		return s.getJWTSecret(), nil
+		return getJWTSecret(), nil
 	})
 	if err != nil {
 		return uuid.Nil, 0, fmt.Errorf("jwt: invalid jwt token: %w", err)

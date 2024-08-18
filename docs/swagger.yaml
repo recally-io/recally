@@ -6,6 +6,8 @@ definitions:
         type: string
       description:
         type: string
+      id:
+        type: string
       metadata:
         $ref: '#/definitions/assistants.AssistantMetadata'
       model:
@@ -18,8 +20,6 @@ definitions:
         type: string
       user_id:
         type: string
-      uuid:
-        type: string
     type: object
   assistants.AssistantMetadata:
     type: object
@@ -30,6 +30,8 @@ definitions:
       created_at:
         type: string
       description:
+        type: string
+      id:
         type: string
       messages:
         items:
@@ -47,8 +49,6 @@ definitions:
         type: string
       user_id:
         type: string
-      uuid:
-        type: string
     type: object
   assistants.ThreadMessageDTO:
     properties:
@@ -57,6 +57,8 @@ definitions:
           type: string
         type: array
       created_at:
+        type: string
+      id:
         type: string
       metadata:
         $ref: '#/definitions/assistants.ThreadMessageMetadata'
@@ -73,8 +75,6 @@ definitions:
       updated_at:
         type: string
       user_id:
-        type: string
-      uuid:
         type: string
     type: object
   assistants.ThreadMessageMetadata:
@@ -101,6 +101,26 @@ definitions:
         description: Success is a boolean value that indicates whether the request
           was successful.
         type: boolean
+    type: object
+  httpserver.createAssistantRequest:
+    properties:
+      description:
+        type: string
+      model:
+        type: string
+      name:
+        type: string
+      system_prompt:
+        type: string
+    type: object
+  httpserver.createThreadMessageRequest:
+    properties:
+      model:
+        type: string
+      role:
+        type: string
+      text:
+        type: string
     type: object
   httpserver.loginRequest:
     properties:
@@ -188,6 +208,15 @@ paths:
                 data:
                   type: object
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
         "500":
           description: Internal Server Error
           schema:
@@ -200,11 +229,123 @@ paths:
       summary: List Assistants
       tags:
       - Assistants
+    post:
+      consumes:
+      - application/json
+      description: Creates a new assistant
+      parameters:
+      - description: Assistant
+        in: body
+        name: assistant
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.createAssistantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/assistants.AssistantDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Create Assistant
+      tags:
+      - Assistants
+  /assistants/{assistant-id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an assistant by ID
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/assistants.AssistantDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Get Assistant
+      tags:
+      - Assistants
   /assistants/{assistant-id}/threads:
     get:
       consumes:
       - application/json
       description: Lists the threads for an assistant
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -228,6 +369,15 @@ paths:
                 data:
                   type: object
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
         "500":
           description: Internal Server Error
           schema:
@@ -240,11 +390,133 @@ paths:
       summary: List Threads
       tags:
       - Assistants
+    post:
+      consumes:
+      - application/json
+      description: Creates a new thread under an assistant
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
+      - description: Thread
+        in: body
+        name: thread
+        required: true
+        schema:
+          $ref: '#/definitions/assistants.ThreadDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/assistants.ThreadDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Create Thread
+      tags:
+      - Assistants
+  /assistants/{assistant-id}/threads/{thread-id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a thread by ID
+      parameters:
+      - description: Thread ID
+        in: path
+        name: thread-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/assistants.ThreadDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Get Thread
+      tags:
+      - Assistants
   /assistants/{assistant-id}/threads/{thread-id}/messages:
     get:
       consumes:
       - application/json
       description: Lists the messages for a thread
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
+      - description: Thread ID
+        in: path
+        name: thread-id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -268,6 +540,15 @@ paths:
                 data:
                   type: object
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
         "500":
           description: Internal Server Error
           schema:
@@ -278,6 +559,69 @@ paths:
                   type: object
               type: object
       summary: List Thread Messages
+      tags:
+      - Assistants
+    post:
+      consumes:
+      - application/json
+      description: Creates a new message in a specified thread
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
+      - description: Thread ID
+        in: path
+        name: thread-id
+        required: true
+        type: string
+      - description: Thread Message
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.createThreadMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/assistants.ThreadMessageDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Create Thread Message
       tags:
       - Assistants
   /auth/login:

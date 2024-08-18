@@ -13,70 +13,70 @@
  */
 
 import { mapValues } from "../runtime";
-import type { HttpserverUserResponse } from "./HttpserverUserResponse";
+import type { AssistantsThreadDTO } from "./AssistantsThreadDTO";
 import {
-  HttpserverUserResponseFromJSON,
-  HttpserverUserResponseFromJSONTyped,
-  HttpserverUserResponseToJSON,
-} from "./HttpserverUserResponse";
+  AssistantsThreadDTOFromJSON,
+  AssistantsThreadDTOFromJSONTyped,
+  AssistantsThreadDTOToJSON,
+} from "./AssistantsThreadDTO";
 
 /**
  *
  * @export
- * @interface AuthLoginPost200Response
+ * @interface AssistantsAssistantIdThreadsPost201Response
  */
-export interface AuthLoginPost200Response {
+export interface AssistantsAssistantIdThreadsPost201Response {
   /**
    * Code is an integer value that represents the HTTP status code.
    * @type {number}
-   * @memberof AuthLoginPost200Response
+   * @memberof AssistantsAssistantIdThreadsPost201Response
    */
   code?: number;
   /**
    *
-   * @type {HttpserverUserResponse}
-   * @memberof AuthLoginPost200Response
+   * @type {AssistantsThreadDTO}
+   * @memberof AssistantsAssistantIdThreadsPost201Response
    */
-  data?: HttpserverUserResponse;
+  data?: AssistantsThreadDTO;
   /**
    * Error is an error value that represents the error of the response.
    * @type {object}
-   * @memberof AuthLoginPost200Response
+   * @memberof AssistantsAssistantIdThreadsPost201Response
    */
   error?: object;
   /**
    * Message is a string value that represents the message of the response.
    * @type {string}
-   * @memberof AuthLoginPost200Response
+   * @memberof AssistantsAssistantIdThreadsPost201Response
    */
   message?: string;
   /**
    * Success is a boolean value that indicates whether the request was successful.
    * @type {boolean}
-   * @memberof AuthLoginPost200Response
+   * @memberof AssistantsAssistantIdThreadsPost201Response
    */
   success?: boolean;
 }
 
 /**
- * Check if a given object implements the AuthLoginPost200Response interface.
+ * Check if a given object implements the AssistantsAssistantIdThreadsPost201Response interface.
  */
-export function instanceOfAuthLoginPost200Response(
+export function instanceOfAssistantsAssistantIdThreadsPost201Response(
   value: object,
-): value is AuthLoginPost200Response {
+): value is AssistantsAssistantIdThreadsPost201Response {
   return true;
 }
 
-export function AuthLoginPost200ResponseFromJSON(
+export function AssistantsAssistantIdThreadsPost201ResponseFromJSON(
   json: any,
-): AuthLoginPost200Response {
-  return AuthLoginPost200ResponseFromJSONTyped(json, false);
+): AssistantsAssistantIdThreadsPost201Response {
+  return AssistantsAssistantIdThreadsPost201ResponseFromJSONTyped(json, false);
 }
 
-export function AuthLoginPost200ResponseFromJSONTyped(
+export function AssistantsAssistantIdThreadsPost201ResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): AuthLoginPost200Response {
+): AssistantsAssistantIdThreadsPost201Response {
   if (json == null) {
     return json;
   }
@@ -85,22 +85,22 @@ export function AuthLoginPost200ResponseFromJSONTyped(
     data:
       json["data"] == null
         ? undefined
-        : HttpserverUserResponseFromJSON(json["data"]),
+        : AssistantsThreadDTOFromJSON(json["data"]),
     error: json["error"] == null ? undefined : json["error"],
     message: json["message"] == null ? undefined : json["message"],
     success: json["success"] == null ? undefined : json["success"],
   };
 }
 
-export function AuthLoginPost200ResponseToJSON(
-  value?: AuthLoginPost200Response | null,
+export function AssistantsAssistantIdThreadsPost201ResponseToJSON(
+  value?: AssistantsAssistantIdThreadsPost201Response | null,
 ): any {
   if (value == null) {
     return value;
   }
   return {
     code: value["code"],
-    data: HttpserverUserResponseToJSON(value["data"]),
+    data: AssistantsThreadDTOToJSON(value["data"]),
     error: value["error"],
     message: value["message"],
     success: value["success"],

@@ -13,7 +13,7 @@ import (
 type ThreadMessageMetadata struct{}
 
 type ThreadMessageDTO struct {
-	ID          uuid.UUID             `json:"uuid"`
+	ID          uuid.UUID             `json:"id"`
 	UserID      uuid.UUID             `json:"user_id"`
 	ThreadID    uuid.UUID             `json:"thread_id"`
 	Model       string                `json:"model"`

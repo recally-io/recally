@@ -6,12 +6,17 @@ apis/index.ts
 index.ts
 models/AssistantsAssistantDTO.ts
 models/AssistantsAssistantIdThreadsGet200Response.ts
+models/AssistantsAssistantIdThreadsPost201Response.ts
 models/AssistantsAssistantIdThreadsThreadIdMessagesGet200Response.ts
+models/AssistantsAssistantIdThreadsThreadIdMessagesPost201Response.ts
 models/AssistantsGet200Response.ts
 models/AssistantsGet400Response.ts
+models/AssistantsPost201Response.ts
 models/AssistantsThreadDTO.ts
 models/AssistantsThreadMessageDTO.ts
 models/AuthLoginPost200Response.ts
+models/HttpserverCreateAssistantRequest.ts
+models/HttpserverCreateThreadMessageRequest.ts
 models/HttpserverJSONResult.ts
 models/HttpserverLoginRequest.ts
 models/HttpserverRegisterRequest.ts
