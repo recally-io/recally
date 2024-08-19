@@ -40,10 +40,11 @@ func (s *Service) registerMiddlewares() {
 	// 		return !strings.HasPrefix(c.Path(), "/api/")
 	// 	},
 	// }))
+	e.Use(middleware.CORS())
 	e.Use(contextMiddleWare())
 	e.Use(transactionMiddleWare(pool))
 	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		KeyLookup: "cookie:token",
+		KeyLookup: "cookie:token,header:Authorization",
 		Validator: authValidation,
 		Skipper: func(c echo.Context) bool {
 			return strings.HasPrefix(c.Path(), "/api/v1/oauth/") || strings.HasPrefix(c.Path(), "/api/v1/auth/") || !strings.HasPrefix(c.Path(), "/api/")
