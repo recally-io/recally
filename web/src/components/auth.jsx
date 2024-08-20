@@ -15,8 +15,8 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { upperFirst, useToggle } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { useState } from "react";
+import { toastInfo } from "../libs/alert";
 import { AuthApi } from "../sdk/index";
 
 export function AuthenticationForm() {
@@ -47,13 +47,10 @@ export function AuthenticationForm() {
         request: form.values,
       });
       console.log(user);
-      notifications.show({
-        title: "Registration successful",
-        message: "You have successfully registered: " + user.email + "!",
-        color: "green",
-        positions: "top-right",
-        autoClose: 1000,
-      });
+      toastInfo(
+        "You have successfully registered: " + user.email + "!",
+        "Registration successful",
+      );
       // redirect to home page
       window.location.href = "/";
     } catch (error) {
@@ -64,13 +61,7 @@ export function AuthenticationForm() {
   const login = async () => {
     try {
       const user = await authApi.authLoginPost({ request: form.values });
-      notifications.show({
-        title: "Login successful",
-        message: "You have successfully logged in!",
-        color: "green",
-        positions: "top-right",
-        autoClose: 1000,
-      });
+      toastInfo("You have successfully logged in!", "Login successful");
       // redirect to home page after successful login and wait for 1 second
       setTimeout(() => {
         window.location.href = "/";
