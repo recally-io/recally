@@ -17,7 +17,7 @@ import { useForm } from "@mantine/form";
 import { upperFirst, useToggle } from "@mantine/hooks";
 import { useState } from "react";
 import { toastInfo } from "../libs/alert";
-import { request } from "../libs/api";
+import { post } from "../libs/api";
 
 const url = new URL(window.location.href);
 const redirect = url.searchParams.get("redirect");
@@ -44,12 +44,8 @@ export function AuthenticationForm() {
 
   const register = async () => {
     try {
-      const res = await request(
-        "/api/v1/auth/register",
-        "POST",
-        (body = form.values),
-      );
-      const user = await res.json().data;
+      const res = await post("/api/v1/auth/register", null, form.values);
+      const user = res.data;
       toastInfo(
         "You have successfully registered: " + user.email + "!",
         "Registration successful",
@@ -64,12 +60,8 @@ export function AuthenticationForm() {
 
   const login = async () => {
     try {
-      const res = await request(
-        "/api/v1/auth/login",
-        "POST",
-        (body = form.values),
-      );
-      const user = await res.json().data;
+      const res = await post("/api/v1/auth/login", null, form.values);
+      const user = res.data;
       toastInfo(
         `You have successfully logged in as ${user.email}`,
         "Login successful",

@@ -71,6 +71,10 @@ docker-build:
 	@echo "Building with docker"
 	@docker compose build
 
+docker-run:
+	@echo "Running with docker"
+	@docker compose up --build
+
 docker-up:
 	@echo "Running with docker"
 	@docker compose up --build -d

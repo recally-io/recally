@@ -51,8 +51,10 @@ func (s *Service) registerRouters() {
 	// web pages
 	if config.Settings.Env == "dev" {
 		// proxy to vite server localhost:5173
+		logger.Default.Debug("Using vite server as frontend")
 		e.GET("/*", reactReverseProxy)
 	} else {
+		logger.Default.Debug("Using static files as frontend")
 		e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
 	}
 }
@@ -68,8 +70,6 @@ func reactReverseProxy(c echo.Context) error {
 		req.URL.Scheme = remote.Scheme
 		req.URL.Host = remote.Host
 	}
-	logger.Default.Info("proxy request", "url", c.Request().URL.String())
-	// logger.SugaredLogger.Debugw("proxy request", "url", r.URL.String())
 	proxy.ServeHTTP(c.Response().Writer, c.Request())
 	return nil
 }
