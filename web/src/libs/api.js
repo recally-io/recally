@@ -4,7 +4,8 @@ import { AssistantsApi, AuthApi, Configuration, ToolsApi } from "../sdk/index";
 export const queryClient = new QueryClient();
 
 const config = new Configuration({
-    credentials: "include",
+  basePath: "/api/v1",
+  credentials: "include",
 });
 
 export const assistantAPI = new AssistantsApi(config);

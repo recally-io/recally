@@ -14,16 +14,17 @@ import {
   Slider,
   Stack,
   Text,
-  TextInput,
+  Textarea,
   Tooltip,
   useComputedColorScheme,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import avatarImgUrl from "../assets/avatar-1.png";
+import { toastError } from "../libs/alert";
 import useStore from "../libs/store";
 import { AssistantsApi } from "../sdk/index";
 
@@ -98,6 +99,9 @@ export default function ChatWindowsComponent() {
           id: data.id,
         },
       ]);
+    },
+    onError: (error) => {
+      toastError("Failed to send message: " + error.message);
     },
   });
 
@@ -221,15 +225,18 @@ export default function ChatWindowsComponent() {
               bottom: 0,
             }}
           >
-            <TextInput
-              placeholder="Send a message"
-              variant="filled"
+            <Textarea
+              placeholder="Send a message, use Shift + Enter to send."
               radius="lg"
               leftSection={menu()}
               leftSectionWidth={42}
-              disabled={createMessage.isLoading}
+              minRows={1}
+              maxRows={5}
+              autosize
+              disabled={createMessage.isPending}
               onKeyDown={async (e) => {
-                if (e.key === "Enter") {
+                // Shift + Enter to send
+                if (e.key === "Enter" && e.shiftKey === true) {
                   await sendMessage(e.currentTarget.value);
                 }
               }}
@@ -237,12 +244,13 @@ export default function ChatWindowsComponent() {
                 <ActionIcon
                   variant="transparent"
                   aria-label="Settings"
-                  disabled={createMessage.isLoading}
-                  onClick={async (e) => {
-                    await sendMessage(newText);
+                  onClick={async () => {
+                    const text = newText;
+                    setNewText("");
+                    await sendMessage(text);
                   }}
                 >
-                  {createMessage.isLoading ? (
+                  {createMessage.isPending ? (
                     <Icon icon="svg-spinners:180-ring" />
                   ) : (
                     <Icon icon="tabler:send"></Icon>
@@ -251,7 +259,7 @@ export default function ChatWindowsComponent() {
               }
               value={newText}
               onChange={(e) => setNewText(e.currentTarget.value)}
-            ></TextInput>
+            ></Textarea>
           </Container>
         </Flex>
 
