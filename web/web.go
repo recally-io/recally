@@ -9,16 +9,16 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//go:embed all:public
+//go:embed all:dist
 var StaticFiles embed.FS
 
 var StaticHttpFS http.FileSystem
 
 func init() {
 	if config.Settings.Debug {
-		StaticHttpFS = http.FS(os.DirFS("web/public"))
+		StaticHttpFS = http.FS(os.DirFS("web/dist"))
 	} else {
-		PublicDirFS := echo.MustSubFS(StaticFiles, "public")
+		PublicDirFS := echo.MustSubFS(StaticFiles, "dist")
 		StaticHttpFS = http.FS(PublicDirFS)
 	}
 }

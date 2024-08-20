@@ -24,7 +24,7 @@ func getOAuth2Config(provider string) (*oauth2.Config, error) {
 	return nil, fmt.Errorf("oauth provider '%s' not found", provider)
 }
 
-func GetOAuth2RedirectURL(ctx context.Context, provider string) (string, error) {
+func (s *Service) GetOAuth2RedirectURL(ctx context.Context, provider string) (string, error) {
 	cfg, err := getOAuth2Config(provider)
 	if err != nil {
 		return "", fmt.Errorf("failed to get oauth config: %w", err)
@@ -33,7 +33,7 @@ func GetOAuth2RedirectURL(ctx context.Context, provider string) (string, error) 
 	return authCodeUrl, nil
 }
 
-func GetOAuth2Token(ctx context.Context, provider, code string) (*oauth2.Token, error) {
+func (s *Service) GetOAuth2Token(ctx context.Context, provider, code string) (*oauth2.Token, error) {
 	cfg, err := getOAuth2Config(provider)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oauth config: %w", err)

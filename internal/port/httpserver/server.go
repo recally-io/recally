@@ -6,36 +6,43 @@ import (
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
-	"vibrain/internal/port/httpserver/handlers"
 
 	"github.com/labstack/echo/v4"
 )
 
 type Service struct {
-	Server  *echo.Echo
-	Handler *handlers.Handler
+	Server *echo.Echo
+	pool   *db.Pool
+	llm    *llms.LLM
+	cache  cache.Cache
 }
 
 type Option func(*Service)
 
 func WithCache(c cache.Cache) Option {
 	return func(s *Service) {
-		s.Handler.Cache = c
+		s.cache = c
 	}
 }
 
-func New(pool *db.Pool, opts ...Option) (*Service, error) {
-	handler := handlers.New(pool)
-
-	service := &Service{
-		Server:  newServer(handler, pool),
-		Handler: handler,
+func New(pool *db.Pool, llm *llms.LLM, opts ...Option) (*Service, error) {
+	s := &Service{
+		Server: echo.New(),
+		pool:   pool,
+		llm:    llm,
 	}
 	for _, opt := range opts {
-		opt(service)
+		opt(s)
 	}
-	return service, nil
+	if s.cache == nil {
+		s.cache = cache.MemCache
+	}
+
+	s.registerMiddlewares()
+	s.registerRouters()
+	return s, nil
 }
 
 func (s *Service) Start(ctx context.Context) {
@@ -54,11 +61,4 @@ func (s *Service) Stop(ctx context.Context) {
 
 func (s *Service) Name() string {
 	return "http server"
-}
-
-func newServer(handler *handlers.Handler, pool *db.Pool) *echo.Echo {
-	e := echo.New()
-	registerMiddlewares(e, pool)
-	registerRouters(e, handler)
-	return e
 }

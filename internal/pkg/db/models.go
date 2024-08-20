@@ -197,4 +197,5 @@ type User struct {
 	Status              string
 	CreatedAt           pgtype.Timestamptz
 	UpdatedAt           pgtype.Timestamptz
+	PasswordHash        pgtype.Text
 }

@@ -22,4 +22,3 @@ services:
 
 volumes:
   vibrain-data:
-

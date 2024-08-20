@@ -8,6 +8,8 @@
 // database/migrations/000003_create_pgvector_database.up.sql
 // database/migrations/000004_create_assistant_threads.down.sql
 // database/migrations/000004_create_assistant_threads.up.sql
+// database/migrations/000005_user_table_support_save_password.down.sql
+// database/migrations/000005_user_table_support_save_password.up.sql
 package migrations
 
 import (
@@ -239,7 +241,47 @@ func _000004_create_assistant_threadsUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000004_create_assistant_threads.up.sql", size: 3940, mode: os.FileMode(420), modTime: time.Unix(1721972363, 0)}
+	info := bindataFileInfo{name: "000004_create_assistant_threads.up.sql", size: 3940, mode: os.FileMode(420), modTime: time.Unix(1723729868, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000005_user_table_support_save_passwordDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\xf4\x09\x71\x0d\x52\x08\x71\x74\xf2\x71\x55\x28\x2d\x4e\x2d\x2a\xe6\x52\x50\x50\x50\x70\x09\xf2\x0f\x50\x70\xf6\xf7\x09\xf5\xf5\x53\xf0\x74\x53\x70\x8d\xf0\x0c\x0e\x09\x56\x28\x48\x2c\x2e\x2e\xcf\x2f\x4a\x89\xcf\x48\x2c\xce\xb0\xe6\x02\x04\x00\x00\xff\xff\xee\x0a\x96\xff\x3b\x00\x00\x00")
+
+func _000005_user_table_support_save_passwordDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000005_user_table_support_save_passwordDownSql,
+		"000005_user_table_support_save_password.down.sql",
+	)
+}
+
+func _000005_user_table_support_save_passwordDownSql() (*asset, error) {
+	bytes, err := _000005_user_table_support_save_passwordDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000005_user_table_support_save_password.down.sql", size: 59, mode: os.FileMode(420), modTime: time.Unix(1723729912, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000005_user_table_support_save_passwordUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\xf4\x09\x71\x0d\x52\x08\x71\x74\xf2\x71\x55\x28\x2d\x4e\x2d\x2a\x56\xe0\x52\x50\x50\x50\x70\x74\x71\x51\x70\xf6\xf7\x09\xf5\xf5\x53\xf0\x74\x53\xf0\xf3\x0f\x51\x70\x8d\xf0\x0c\x0e\x09\x56\x28\x48\x2c\x2e\x2e\xcf\x2f\x4a\x89\xcf\x48\x2c\xce\x50\x08\x71\x8d\x08\xb1\xe6\x02\x04\x00\x00\xff\xff\x01\x3a\x95\x7b\x44\x00\x00\x00")
+
+func _000005_user_table_support_save_passwordUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000005_user_table_support_save_passwordUpSql,
+		"000005_user_table_support_save_password.up.sql",
+	)
+}
+
+func _000005_user_table_support_save_passwordUpSql() (*asset, error) {
+	bytes, err := _000005_user_table_support_save_passwordUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000005_user_table_support_save_password.up.sql", size: 68, mode: os.FileMode(420), modTime: time.Unix(1723729897, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -296,14 +338,16 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"000001_new_cache_table.down.sql":          _000001_new_cache_tableDownSql,
-	"000001_new_cache_table.up.sql":            _000001_new_cache_tableUpSql,
-	"000002_river.down.sql":                    _000002_riverDownSql,
-	"000002_river.up.sql":                      _000002_riverUpSql,
-	"000003_create_pgvector_database.down.sql": _000003_create_pgvector_databaseDownSql,
-	"000003_create_pgvector_database.up.sql":   _000003_create_pgvector_databaseUpSql,
-	"000004_create_assistant_threads.down.sql": _000004_create_assistant_threadsDownSql,
-	"000004_create_assistant_threads.up.sql":   _000004_create_assistant_threadsUpSql,
+	"000001_new_cache_table.down.sql":                  _000001_new_cache_tableDownSql,
+	"000001_new_cache_table.up.sql":                    _000001_new_cache_tableUpSql,
+	"000002_river.down.sql":                            _000002_riverDownSql,
+	"000002_river.up.sql":                              _000002_riverUpSql,
+	"000003_create_pgvector_database.down.sql":         _000003_create_pgvector_databaseDownSql,
+	"000003_create_pgvector_database.up.sql":           _000003_create_pgvector_databaseUpSql,
+	"000004_create_assistant_threads.down.sql":         _000004_create_assistant_threadsDownSql,
+	"000004_create_assistant_threads.up.sql":           _000004_create_assistant_threadsUpSql,
+	"000005_user_table_support_save_password.down.sql": _000005_user_table_support_save_passwordDownSql,
+	"000005_user_table_support_save_password.up.sql":   _000005_user_table_support_save_passwordUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -347,14 +391,16 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"000001_new_cache_table.down.sql":          &bintree{_000001_new_cache_tableDownSql, map[string]*bintree{}},
-	"000001_new_cache_table.up.sql":            &bintree{_000001_new_cache_tableUpSql, map[string]*bintree{}},
-	"000002_river.down.sql":                    &bintree{_000002_riverDownSql, map[string]*bintree{}},
-	"000002_river.up.sql":                      &bintree{_000002_riverUpSql, map[string]*bintree{}},
-	"000003_create_pgvector_database.down.sql": &bintree{_000003_create_pgvector_databaseDownSql, map[string]*bintree{}},
-	"000003_create_pgvector_database.up.sql":   &bintree{_000003_create_pgvector_databaseUpSql, map[string]*bintree{}},
-	"000004_create_assistant_threads.down.sql": &bintree{_000004_create_assistant_threadsDownSql, map[string]*bintree{}},
-	"000004_create_assistant_threads.up.sql":   &bintree{_000004_create_assistant_threadsUpSql, map[string]*bintree{}},
+	"000001_new_cache_table.down.sql":                  &bintree{_000001_new_cache_tableDownSql, map[string]*bintree{}},
+	"000001_new_cache_table.up.sql":                    &bintree{_000001_new_cache_tableUpSql, map[string]*bintree{}},
+	"000002_river.down.sql":                            &bintree{_000002_riverDownSql, map[string]*bintree{}},
+	"000002_river.up.sql":                              &bintree{_000002_riverUpSql, map[string]*bintree{}},
+	"000003_create_pgvector_database.down.sql":         &bintree{_000003_create_pgvector_databaseDownSql, map[string]*bintree{}},
+	"000003_create_pgvector_database.up.sql":           &bintree{_000003_create_pgvector_databaseUpSql, map[string]*bintree{}},
+	"000004_create_assistant_threads.down.sql":         &bintree{_000004_create_assistant_threadsDownSql, map[string]*bintree{}},
+	"000004_create_assistant_threads.up.sql":           &bintree{_000004_create_assistant_threadsUpSql, map[string]*bintree{}},
+	"000005_user_table_support_save_password.down.sql": &bintree{_000005_user_table_support_save_passwordDownSql, map[string]*bintree{}},
+	"000005_user_table_support_save_password.up.sql":   &bintree{_000005_user_table_support_save_passwordUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory
