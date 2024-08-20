@@ -25,11 +25,10 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import avatarImgUrl from "../assets/avatar-1.png";
 import { toastError } from "../libs/alert";
+import { request } from "../libs/api";
 import useStore from "../libs/store";
-import { AssistantsApi } from "../sdk/index";
 
 const url = new URL(window.location.href);
-const api = new AssistantsApi();
 
 export default function ChatWindowsComponent() {
   const isLogin = useStore((state) => state.isLogin);
@@ -54,12 +53,11 @@ export default function ChatWindowsComponent() {
   const listMessages = useQuery({
     queryKey: ["list-messages", threadId],
     queryFn: async () => {
-      const response =
-        await api.assistantsAssistantIdThreadsThreadIdMessagesGet({
-          assistantId: assistantId,
-          threadId: threadId,
-        });
-      return response.data || [];
+      const res = await request(
+        `/assistants/${assistantId}/threads/${threadId}/messages`,
+      );
+      const data = await res.json();
+      return data.data || [];
     },
     enabled: isLogin && !!threadId && !!assistantId,
   });
@@ -78,16 +76,16 @@ export default function ChatWindowsComponent() {
 
   const createMessage = useMutation({
     mutationFn: async (text) => {
-      const response =
-        await api.assistantsAssistantIdThreadsThreadIdMessagesPost({
-          assistantId: assistantId,
-          threadId: threadId,
-          message: {
-            role: "user",
-            text: text,
-            model: "gpt-4o",
-          },
-        });
+      const res = await request(
+        `/assistants/${assistantId}/threads/${threadId}/messages`,
+        "POST",
+        (body = JSON.stringify({
+          role: "user",
+          text: text,
+          model: "gpt-4o",
+        })),
+      );
+      const response = await res.json();
       return response.data;
     },
     onSuccess: (data) => {

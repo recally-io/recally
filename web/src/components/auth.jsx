@@ -17,7 +17,10 @@ import { useForm } from "@mantine/form";
 import { upperFirst, useToggle } from "@mantine/hooks";
 import { useState } from "react";
 import { toastInfo } from "../libs/alert";
-import { AuthApi } from "../sdk/index";
+import { request } from "../libs/api";
+
+const url = new URL(window.location.href);
+const redirect = url.searchParams.get("redirect");
 
 export function AuthenticationForm() {
   const [type, toggle] = useToggle(["login", "register"]);
@@ -39,20 +42,21 @@ export function AuthenticationForm() {
     },
   });
 
-  const authApi = new AuthApi();
-
   const register = async () => {
     try {
-      const user = await authApi.authRegisterPost({
-        request: form.values,
-      });
-      console.log(user);
+      const res = await request(
+        "/api/v1/auth/register",
+        "POST",
+        (body = form.values),
+      );
+      const user = await res.json().data;
       toastInfo(
         "You have successfully registered: " + user.email + "!",
         "Registration successful",
       );
-      // redirect to home page
-      window.location.href = "/";
+      setTimeout(() => {
+        window.location.href = redirect || "/";
+      }, 1000);
     } catch (error) {
       setErrMessage(error.message);
     }
@@ -60,11 +64,19 @@ export function AuthenticationForm() {
 
   const login = async () => {
     try {
-      const user = await authApi.authLoginPost({ request: form.values });
-      toastInfo("You have successfully logged in!", "Login successful");
-      // redirect to home page after successful login and wait for 1 second
+      const res = await request(
+        "/api/v1/auth/login",
+        "POST",
+        (body = form.values),
+      );
+      const user = await res.json().data;
+      toastInfo(
+        `You have successfully logged in as ${user.email}`,
+        "Login successful",
+      );
+
       setTimeout(() => {
-        window.location.href = "/";
+        window.location.href = redirect || "/";
       }, 1000);
     } catch (error) {
       setErrMessage(error.message);
