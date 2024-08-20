@@ -11,7 +11,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { request } from "../libs/api";
+import { get, post } from "../libs/api";
 
 import useStore from "../libs/store";
 
@@ -31,44 +31,36 @@ export default function Sidebar() {
   };
 
   const listThreads = useQuery({
-      queryKey: ["list-threads", assistantId],
-      queryFn: async () => {
-          const res = await request(
-              `/api/v1/assistants/${assistantId}/threads`
-          );
-          const data = await res.json().data;
-          data.map((item) => {
-              item["value"] =
-                  item["name"] +
-                  " - " +
-                  item["description"] +
-                  " - " +
-                  item["id"];
-          });
-          return data;
-      },
-      enabled: isLogin,
+    queryKey: ["list-threads", assistantId],
+    queryFn: async () => {
+      const res = await get(`/api/v1/assistants/${assistantId}/threads`);
+      const data = res.data;
+      data.map((item) => {
+        item["value"] =
+          item["name"] + " - " + item["description"] + " - " + item["id"];
+      });
+      return data;
+    },
+    enabled: isLogin,
   });
 
   const getAssistant = useQuery({
-      queryKey: ["get-assistant", assistantId],
-      queryFn: async () => {
-          const res = await request(`/api/v1/assistants/${assistantId}`);
-          const data = await res.json().data;
-          return data;
-      },
-      enabled: isLogin,
+    queryKey: ["get-assistant", assistantId],
+    queryFn: async () => {
+      const res = await get(`/api/v1/assistants/${assistantId}`);
+      return res.data;
+    },
+    enabled: isLogin,
   });
 
   const createThread = useMutation({
     mutationFn: async (data) => {
-      const res = await request(
-          `/api/v1/assistants/${assistantId}/threads`,
-          (method = "POST"),
-          (body = JSON.stringify(data))
+      const res = await post(
+        `/api/v1/assistants/${assistantId}/threads`,
+        null,
+        data,
       );
-      const response = await res.json();
-      return response.data;
+      return res.data;
     },
     onSuccess: (data) => {
       setThreadId(data.id);

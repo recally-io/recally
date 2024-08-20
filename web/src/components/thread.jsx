@@ -25,7 +25,7 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import avatarImgUrl from "../assets/avatar-1.png";
 import { toastError } from "../libs/alert";
-import { request } from "../libs/api";
+import { get, post } from "../libs/api";
 import useStore from "../libs/store";
 
 const url = new URL(window.location.href);
@@ -53,11 +53,10 @@ export default function ChatWindowsComponent() {
   const listMessages = useQuery({
     queryKey: ["list-messages", threadId],
     queryFn: async () => {
-      const res = await request(
+      const res = await get(
         `/assistants/${assistantId}/threads/${threadId}/messages`,
       );
-      const data = await res.json();
-      return data.data || [];
+      return res.data || [];
     },
     enabled: isLogin && !!threadId && !!assistantId,
   });
@@ -76,14 +75,14 @@ export default function ChatWindowsComponent() {
 
   const createMessage = useMutation({
     mutationFn: async (text) => {
-      const res = await request(
+      const res = await post(
         `/assistants/${assistantId}/threads/${threadId}/messages`,
-        "POST",
-        (body = JSON.stringify({
+        null,
+        {
           role: "user",
           text: text,
           model: "gpt-4o",
-        })),
+        },
       );
       const response = await res.json();
       return response.data;
