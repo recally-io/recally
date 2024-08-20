@@ -1,10 +1,19 @@
 services:
   vibrain:
+    image: vaayne/vibrain:latest
     build: .
     ports:
       - "1323:1323"
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=1323
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_NAME=postgres
+    env_file:
+      - .env
     volumes:
       - .env:/app/.env
     depends_on:

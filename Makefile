@@ -69,7 +69,7 @@ db-up:
 
 docker-build:
 	@echo "Building with docker"
-	@docker compose --build
+	@docker compose build
 
 docker-up:
 	@echo "Running with docker"
@@ -102,7 +102,7 @@ help:
 	@echo "  buildd: Build the code with docker"
 	@echo "  run: Run the code"
 	@echo "  rund: Run the code with docker"
-	@echo "  migrate-new: Create a new migration, run with 'make migrate-new name=your_migration_name'" 
+	@echo "  migrate-new: Create a new migration, run with 'make migrate-new name=your_migration_name'"
 	@echo "  migrate-up: Migrate up"
 	@echo "  migrate-down: Migrate down"
 	@echo "  help: Show this help message"
