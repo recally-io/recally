@@ -33,7 +33,7 @@ func (s *Service) registerMiddlewares() {
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Skipper:      middleware.DefaultSkipper,
 		ErrorMessage: "custom timeout error message returns to client",
-		Timeout:      30 * time.Second,
+		Timeout:      10 * time.Minute,
 	}))
 	// e.Use(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
 	// 	Skipper: func(c echo.Context) bool {
