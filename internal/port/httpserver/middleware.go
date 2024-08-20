@@ -2,8 +2,11 @@ package httpserver
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"strings"
 	"time"
+	"vibrain/internal/pkg/auth"
 	"vibrain/internal/pkg/contexts"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
@@ -13,7 +16,9 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func registerMiddlewares(e *echo.Echo, pool *db.Pool) {
+func (s *Service) registerMiddlewares() {
+	e := s.Server
+	pool := s.pool
 	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
 			return uuid.Must(uuid.NewV7()).String()
@@ -30,8 +35,31 @@ func registerMiddlewares(e *echo.Echo, pool *db.Pool) {
 		ErrorMessage: "custom timeout error message returns to client",
 		Timeout:      30 * time.Second,
 	}))
+	// e.Use(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
+	// 	Skipper: func(c echo.Context) bool {
+	// 		return !strings.HasPrefix(c.Path(), "/api/")
+	// 	},
+	// }))
+	e.Use(middleware.CORS())
 	e.Use(contextMiddleWare())
 	e.Use(transactionMiddleWare(pool))
+	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		KeyLookup: "cookie:token,header:Authorization",
+		Validator: authValidation,
+		Skipper: func(c echo.Context) bool {
+			return strings.HasPrefix(c.Path(), "/api/v1/oauth/") || strings.HasPrefix(c.Path(), "/api/v1/auth/") || !strings.HasPrefix(c.Path(), "/api/")
+		},
+	}))
+}
+
+func authValidation(key string, c echo.Context) (bool, error) {
+	// validate key
+	userId, _, err := auth.ValidateJWT(key)
+	if err != nil {
+		return false, fmt.Errorf("invalid token: %w", err)
+	}
+	setContext(c, contexts.ContextKeyUserID, userId)
+	return true, nil
 }
 
 // contextMiddleWare is a middleware that sets logger and other context values to echo.Context
@@ -78,6 +106,9 @@ func requestLoggerMiddleware() echo.MiddlewareFunc {
 	}
 
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		Skipper: func(c echo.Context) bool {
+			return strings.HasPrefix(c.Request().RequestURI, "/assets/")
+		},
 		LogStatus:  true,
 		LogURI:     true,
 		LogError:   true,
@@ -115,7 +146,10 @@ func transactionMiddleWare(pool *db.Pool) echo.MiddlewareFunc {
 			}()
 
 			if err := next(c); err != nil {
-				return tx.Rollback(context.Background())
+				if err := tx.Rollback(context.Background()); err != nil {
+					logger.FromContext(ctx).Error("failed to rollback transaction", "err", err)
+				}
+				return err
 			}
 
 			return tx.Commit(context.Background())

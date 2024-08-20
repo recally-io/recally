@@ -10,11 +10,11 @@ sql:
         sql_package: "pgx/v5"
         emit_methods_with_db_argument: true
         overrides:
-            - db_type: "uuid"
-              go_type:
-                  import: "github.com/google/uuid"
-                  type: "UUID"
-            - column: "text_embeddings.metadata"
-              go_type:
-                  import: "vibrain/internal/pkg/db/types"
-                  type: "JSONB"
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+          - column: "text_embeddings.metadata"
+            go_type:
+              import: "vibrain/internal/pkg/db/types"
+              type: "JSONB"

@@ -56,6 +56,9 @@ type GoogleSearchConfig struct {
 }
 
 type Config struct {
+	// Env is the environment the service is running in
+	// such as dev, staging, production
+	Env     string        `env:"ENV" envDefault:"production"`
 	Debug   bool          `env:"DEBUG" envDefault:"false"`
 	Service ServiceConfig `envPrefix:"SERVICE_"`
 

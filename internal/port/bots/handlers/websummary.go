@@ -26,7 +26,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	if url == "" {
 		return c.Reply("Please provide a valid URL.")
 	}
-	reader, err := h.worker.WebSummaryStream(ctx, url)
+	reader, err := h.toolService.WebSummaryStream(ctx, url)
 	if err != nil {
 		return c.Reply(fmt.Sprintf("Failed to get summary:\n%s", err.Error()))
 	}
@@ -52,10 +52,8 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 			if err == io.EOF {
 				resp += chunk
 				resp = strings.ReplaceAll(resp, "\\n", "\n")
-				if h.Cache != nil {
-					cacheKey := cache.NewCacheKey(workers.WebSummaryCacheDomian, url)
-					h.Cache.SetWithContext(ctx, cacheKey, resp, 24*time.Hour)
-				}
+				cacheKey := cache.NewCacheKey(workers.WebSummaryCacheDomian, url)
+				h.cache.SetWithContext(ctx, cacheKey, resp, 24*time.Hour)
 				if _, err := c.Bot().Edit(msg, convertToTGMarkdown(resp), tele.ModeMarkdownV2); err != nil {
 					if strings.Contains(err.Error(), "message is not modified") {
 						return nil

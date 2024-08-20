@@ -2,38 +2,74 @@ package httpserver
 
 import (
 	"net/http"
-	"vibrain/internal/port/httpserver/handlers"
+	"net/http/httputil"
+	"net/url"
+	"vibrain/internal/pkg/config"
+	"vibrain/internal/pkg/logger"
 	"vibrain/web"
 
+	_ "vibrain/docs"
+
 	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-func registerRouters(e *echo.Echo, handler *handlers.Handler) {
+//	@title			Vibrain API
+//	@version		1.0
+//	@description	This is a simple API for Vibrain project.
+//	@termsOfService	https://vibrain.vaayne.com/terms/
+
+//	@contact.name	Vaayne
+//	@contact.url	https://vaayne.com
+//	@contact.email	vibrain@vaayne.com
+
+// @host		localhost:1323
+// @BasePath	/api/v1
+func (s *Service) registerRouters() {
+	e := s.Server
 	v1Api := e.Group("/api/v1")
 
-	tools := v1Api.Group("/tools")
-	tools.GET("/web/reader", handler.WebReaderHandler)
-	tools.POST("/web/reader", handler.WebReaderHandler)
-	tools.GET("/web/search", handler.WebSearchHandler)
-	tools.POST("/web/search", handler.WebSearchHandler)
-	tools.GET("/web/summary", handler.WebSummaryHandler)
-	tools.POST("/web/summary", handler.WebSummaryHandler)
-
-	oauth := e.Group("/oauth")
-	oauth.GET("/:provider/login", handler.OAuthLoginHandler)
-	oauth.GET("/:provider/callback", handler.OAuthCallbackHandler)
+	registerAuthHandlers(v1Api)
+	registerAssistantHandlers(v1Api, s)
+	registerToolsHandlers(v1Api, s)
 
 	// Health check
 	e.GET("/status", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
 
+	// Debug routes
 	debugApi := e.Group("/debug")
 	debugApi.GET("/routes", func(c echo.Context) error {
 		routes := e.Routes()
-		return handlers.JsonResponse(c, http.StatusOK, routes)
+		return JsonResponse(c, http.StatusOK, routes)
 	})
 
-	// static files
-	e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
+	// Swagger
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	// web pages
+	if config.Settings.Env == "dev" {
+		// proxy to vite server localhost:5173
+		e.GET("/*", reactReverseProxy)
+	} else {
+		e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
+	}
+}
+
+// reactReverseProxy is a reverse proxy for vite server
+func reactReverseProxy(c echo.Context) error {
+	remote, _ := url.Parse("http://localhost:5173")
+	proxy := httputil.NewSingleHostReverseProxy(remote)
+	proxy.Director = func(req *http.Request) {
+		req.Header = c.Request().Header
+		req.Host = remote.Host
+		req.URL = c.Request().URL
+		req.URL.Scheme = remote.Scheme
+		req.URL.Host = remote.Host
+	}
+	logger.Default.Info("proxy request", "url", c.Request().URL.String())
+	// logger.SugaredLogger.Debugw("proxy request", "url", r.URL.String())
+	proxy.ServeHTTP(c.Response().Writer, c.Request())
+	return nil
 }

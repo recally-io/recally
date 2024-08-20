@@ -5,6 +5,7 @@ import (
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/llms"
 
 	"github.com/labstack/echo/v4"
 )
@@ -13,13 +14,13 @@ type Service struct {
 	*Bot
 }
 
-func NewServer(botType BotType, cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache) (*Service, error) {
+func NewServer(botType BotType, cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache, llm *llms.LLM) (*Service, error) {
 	var b *Bot
 	var err error
 	if botType == ReaderBot {
-		b, err = NewReaderBot(cfg, pool, e, cacheService)
+		b, err = NewReaderBot(cfg, pool, e, cacheService, llm)
 	} else if botType == ChatBot {
-		b, err = NewChatBot(cfg, pool, e, cacheService)
+		b, err = NewChatBot(cfg, pool, e, cacheService, llm)
 	}
 	if err != nil {
 		return nil, err
