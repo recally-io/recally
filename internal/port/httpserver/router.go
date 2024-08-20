@@ -49,7 +49,7 @@ func (s *Service) registerRouters() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// web pages
-	if config.Settings.Env == "dev" {
+	if config.Settings.DebugUI {
 		// proxy to vite server localhost:5173
 		logger.Default.Debug("Using vite server as frontend")
 		e.GET("/*", reactReverseProxy)
@@ -70,6 +70,7 @@ func reactReverseProxy(c echo.Context) error {
 		req.URL.Scheme = remote.Scheme
 		req.URL.Host = remote.Host
 	}
+
 	proxy.ServeHTTP(c.Response().Writer, c.Request())
 	return nil
 }
