@@ -9,6 +9,7 @@ import {
   LoadingOverlay,
   Modal,
   NavLink,
+  Stack,
   Text,
   Textarea,
   TextInput,
@@ -99,16 +100,17 @@ export default function Assistants() {
       <Container size="xl" mih="100vh" py="md">
         <Flex justify="center" align="center" direction="column" gap="lg">
           <Title order={1}>All assistants</Title>
-          <Group justify="space-between" align="center">
+          <Stack justify="space-between" align="center">
             <TextInput
               size="md"
-              w="60%"
+              w="100%"
               radius="md"
               label="Search for assistants"
               description="search assistants by name or description"
               placeholder="Type to search"
             />
             <Button
+              w="100%"
               onClick={() => {
                 form.reset();
                 open();
@@ -116,12 +118,16 @@ export default function Assistants() {
             >
               Add assistant
             </Button>
-          </Group>
+          </Stack>
           <LoadingOverlay visible={listAssistants.isLoading} />
-          <Grid gutter="lg" justify="center" align="center">
+          <Grid gutter="lg" justify="center" align="center" w="100%">
             {listAssistants.data &&
               listAssistants.data.map((assistant) => (
-                <Grid.Col key={assistant.id} span={{ base: 6, md: 3 }} m="md">
+                <Grid.Col
+                  key={assistant.id}
+                  span={{ base: 12, md: 6, lg: 3 }}
+                  m="md"
+                >
                   <Card shadow="sm" padding="lg" radius="md" withBorder>
                     <Title order={3} c="cyan">
                       {assistant.name}
@@ -148,11 +154,6 @@ export default function Assistants() {
                         size="xs"
                         leftSection={<Icon icon="tabler:edit" />}
                         onClick={(e) => {
-                          setAssistant(
-                            listAssistants.data.find(
-                              (a) => a.id == assistant.id,
-                            ),
-                          );
                           form.initialize(assistant);
                           open();
                         }}
