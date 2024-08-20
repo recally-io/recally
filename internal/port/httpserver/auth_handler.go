@@ -166,8 +166,7 @@ func (h *authHandler) register(c echo.Context) error {
 	}
 
 	h.setCookieJwtToken(c, token)
-
-	return c.JSON(http.StatusOK, userResponse{
+	return JsonResponse(c, http.StatusOK, userResponse{
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,
@@ -212,8 +211,7 @@ func (h *authHandler) validateJwtToken(c echo.Context) error {
 		}
 		h.setCookieJwtToken(c, jwt)
 	}
-
-	return c.JSON(http.StatusOK, userResponse{
-		ID: userId,
+	return JsonResponse(c, http.StatusOK, userResponse{
+		ID:       userId,
 	})
 }
