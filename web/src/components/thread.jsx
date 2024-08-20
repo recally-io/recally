@@ -54,7 +54,7 @@ export default function ChatWindowsComponent() {
     queryKey: ["list-messages", threadId],
     queryFn: async () => {
       const res = await get(
-        `/assistants/${assistantId}/threads/${threadId}/messages`,
+        `/api/v1/assistants/${assistantId}/threads/${threadId}/messages`,
       );
       return res.data || [];
     },
@@ -76,7 +76,7 @@ export default function ChatWindowsComponent() {
   const createMessage = useMutation({
     mutationFn: async (text) => {
       const res = await post(
-        `/assistants/${assistantId}/threads/${threadId}/messages`,
+        `/api/v1/assistants/${assistantId}/threads/${threadId}/messages`,
         null,
         {
           role: "user",
@@ -84,8 +84,7 @@ export default function ChatWindowsComponent() {
           model: "gpt-4o",
         },
       );
-      const response = await res.json();
-      return response.data;
+      return res.data;
     },
     onSuccess: (data) => {
       setMessageList((prevMessageList) => [

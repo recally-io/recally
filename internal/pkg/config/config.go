@@ -60,6 +60,7 @@ type Config struct {
 	// such as dev, staging, production
 	Env     string        `env:"ENV" envDefault:"production"`
 	Debug   bool          `env:"DEBUG" envDefault:"false"`
+	DebugUI bool          `env:"DEBUG_UI" envDefault:"false"`
 	Service ServiceConfig `envPrefix:"SERVICE_"`
 
 	Database DatabaseConfig `envPrefix:"DATABASE_"`

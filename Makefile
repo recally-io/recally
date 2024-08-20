@@ -57,7 +57,7 @@ run-ui:
 
 run-dev:
 	@echo "Running dev..."
-	@ENV=dev go run main.go
+	@DEBUG_UI=true go run main.go
 
 ngrok:
 	@echo "Running ngrok..."
