@@ -1,13 +1,27 @@
 import { QueryClient } from "@tanstack/react-query";
-import { AssistantsApi, AuthApi, Configuration, ToolsApi } from "../sdk/index";
 
 export const queryClient = new QueryClient();
 
-const config = new Configuration({
-  basePath: "/api/v1",
-  credentials: "include",
-});
+export async function request(path, method = "GET", params = {}, body = {}) {
+  let options = {
+    method: method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
 
-export const assistantAPI = new AssistantsApi(config);
-export const authApi = new AuthApi(config);
-export const toolsApi = new ToolsApi(config);
+  if (!!params) {
+    options["query"] = params;
+  }
+  if (!!body) {
+    options["body"] = JSON.stringify(body);
+  }
+
+  const res = await fetch(path, options);
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch ${path}, response status: ${res.status} ${res.statusText}`,
+    );
+  }
+  return res.json();
+}
