@@ -12,7 +12,8 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
+
+import * as runtime from '../runtime';
 import type {
   AssistantsAssistantIdThreadsGet200Response,
   AssistantsAssistantIdThreadsPost201Response,
@@ -24,522 +25,375 @@ import type {
   AssistantsThreadDTO,
   HttpserverCreateAssistantRequest,
   HttpserverCreateThreadMessageRequest,
-} from "../models/index";
+} from '../models/index';
 import {
-  AssistantsAssistantIdThreadsGet200ResponseFromJSON,
-  AssistantsAssistantIdThreadsGet200ResponseToJSON,
-  AssistantsAssistantIdThreadsPost201ResponseFromJSON,
-  AssistantsAssistantIdThreadsPost201ResponseToJSON,
-  AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON,
-  AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseToJSON,
-  AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseFromJSON,
-  AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseToJSON,
-  AssistantsGet200ResponseFromJSON,
-  AssistantsGet200ResponseToJSON,
-  AssistantsGet400ResponseFromJSON,
-  AssistantsGet400ResponseToJSON,
-  AssistantsPost201ResponseFromJSON,
-  AssistantsPost201ResponseToJSON,
-  AssistantsThreadDTOFromJSON,
-  AssistantsThreadDTOToJSON,
-  HttpserverCreateAssistantRequestFromJSON,
-  HttpserverCreateAssistantRequestToJSON,
-  HttpserverCreateThreadMessageRequestFromJSON,
-  HttpserverCreateThreadMessageRequestToJSON,
-} from "../models/index";
+    AssistantsAssistantIdThreadsGet200ResponseFromJSON,
+    AssistantsAssistantIdThreadsGet200ResponseToJSON,
+    AssistantsAssistantIdThreadsPost201ResponseFromJSON,
+    AssistantsAssistantIdThreadsPost201ResponseToJSON,
+    AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON,
+    AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseToJSON,
+    AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseFromJSON,
+    AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseToJSON,
+    AssistantsGet200ResponseFromJSON,
+    AssistantsGet200ResponseToJSON,
+    AssistantsGet400ResponseFromJSON,
+    AssistantsGet400ResponseToJSON,
+    AssistantsPost201ResponseFromJSON,
+    AssistantsPost201ResponseToJSON,
+    AssistantsThreadDTOFromJSON,
+    AssistantsThreadDTOToJSON,
+    HttpserverCreateAssistantRequestFromJSON,
+    HttpserverCreateAssistantRequestToJSON,
+    HttpserverCreateThreadMessageRequestFromJSON,
+    HttpserverCreateThreadMessageRequestToJSON,
+} from '../models/index';
 
 export interface AssistantsAssistantIdGetRequest {
-  assistantId: string;
+    assistantId: string;
 }
 
 export interface AssistantsAssistantIdThreadsGetRequest {
-  assistantId: string;
+    assistantId: string;
 }
 
 export interface AssistantsAssistantIdThreadsPostRequest {
-  assistantId: string;
-  thread: AssistantsThreadDTO;
+    assistantId: string;
+    thread: AssistantsThreadDTO;
 }
 
 export interface AssistantsAssistantIdThreadsThreadIdGetRequest {
-  threadId: string;
+    threadId: string;
 }
 
 export interface AssistantsAssistantIdThreadsThreadIdMessagesGetRequest {
-  assistantId: string;
-  threadId: string;
+    assistantId: string;
+    threadId: string;
 }
 
 export interface AssistantsAssistantIdThreadsThreadIdMessagesPostRequest {
-  assistantId: string;
-  threadId: string;
-  message: HttpserverCreateThreadMessageRequest;
+    assistantId: string;
+    threadId: string;
+    message: HttpserverCreateThreadMessageRequest;
 }
 
 export interface AssistantsPostRequest {
-  assistant: HttpserverCreateAssistantRequest;
+    assistant: HttpserverCreateAssistantRequest;
 }
 
 /**
- *
+ * 
  */
 export class AssistantsApi extends runtime.BaseAPI {
-  /**
-   * Retrieves an assistant by ID
-   * Get Assistant
-   */
-  async assistantsAssistantIdGetRaw(
-    requestParameters: AssistantsAssistantIdGetRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AssistantsPost201Response>> {
-    if (requestParameters["assistantId"] == null) {
-      throw new runtime.RequiredError(
-        "assistantId",
-        'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdGet().',
-      );
+
+    /**
+     * Retrieves an assistant by ID
+     * Get Assistant
+     */
+    async assistantsAssistantIdGetRaw(requestParameters: AssistantsAssistantIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsPost201Response>> {
+        if (requestParameters['assistantId'] == null) {
+            throw new runtime.RequiredError(
+                'assistantId',
+                'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/assistants/{assistant-id}`.replace(`{${"assistant-id"}}`, encodeURIComponent(String(requestParameters['assistantId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsPost201ResponseFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    const response = await this.request(
-      {
-        path: `/assistants/{assistant-id}`.replace(
-          `{${"assistant-id"}}`,
-          encodeURIComponent(String(requestParameters["assistantId"])),
-        ),
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsPost201ResponseFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   * Retrieves an assistant by ID
-   * Get Assistant
-   */
-  async assistantsAssistantIdGet(
-    requestParameters: AssistantsAssistantIdGetRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsPost201Response> {
-    const response = await this.assistantsAssistantIdGetRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   * Lists the threads for an assistant
-   * List Threads
-   */
-  async assistantsAssistantIdThreadsGetRaw(
-    requestParameters: AssistantsAssistantIdThreadsGetRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsGet200Response>> {
-    if (requestParameters["assistantId"] == null) {
-      throw new runtime.RequiredError(
-        "assistantId",
-        'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdThreadsGet().',
-      );
+    /**
+     * Retrieves an assistant by ID
+     * Get Assistant
+     */
+    async assistantsAssistantIdGet(requestParameters: AssistantsAssistantIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsPost201Response> {
+        const response = await this.assistantsAssistantIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    const queryParameters: any = {};
+    /**
+     * Lists the threads for an assistant
+     * List Threads
+     */
+    async assistantsAssistantIdThreadsGetRaw(requestParameters: AssistantsAssistantIdThreadsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsGet200Response>> {
+        if (requestParameters['assistantId'] == null) {
+            throw new runtime.RequiredError(
+                'assistantId',
+                'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdThreadsGet().'
+            );
+        }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        const queryParameters: any = {};
 
-    const response = await this.request(
-      {
-        path: `/assistants/{assistant-id}/threads`.replace(
-          `{${"assistant-id"}}`,
-          encodeURIComponent(String(requestParameters["assistantId"])),
-        ),
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsAssistantIdThreadsGet200ResponseFromJSON(jsonValue),
-    );
-  }
+        const response = await this.request({
+            path: `/assistants/{assistant-id}/threads`.replace(`{${"assistant-id"}}`, encodeURIComponent(String(requestParameters['assistantId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
 
-  /**
-   * Lists the threads for an assistant
-   * List Threads
-   */
-  async assistantsAssistantIdThreadsGet(
-    requestParameters: AssistantsAssistantIdThreadsGetRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsAssistantIdThreadsGet200Response> {
-    const response = await this.assistantsAssistantIdThreadsGetRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   * Creates a new thread under an assistant
-   * Create Thread
-   */
-  async assistantsAssistantIdThreadsPostRaw(
-    requestParameters: AssistantsAssistantIdThreadsPostRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsPost201Response>> {
-    if (requestParameters["assistantId"] == null) {
-      throw new runtime.RequiredError(
-        "assistantId",
-        'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdThreadsPost().',
-      );
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsAssistantIdThreadsGet200ResponseFromJSON(jsonValue));
     }
 
-    if (requestParameters["thread"] == null) {
-      throw new runtime.RequiredError(
-        "thread",
-        'Required parameter "thread" was null or undefined when calling assistantsAssistantIdThreadsPost().',
-      );
+    /**
+     * Lists the threads for an assistant
+     * List Threads
+     */
+    async assistantsAssistantIdThreadsGet(requestParameters: AssistantsAssistantIdThreadsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsAssistantIdThreadsGet200Response> {
+        const response = await this.assistantsAssistantIdThreadsGetRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    const queryParameters: any = {};
+    /**
+     * Creates a new thread under an assistant
+     * Create Thread
+     */
+    async assistantsAssistantIdThreadsPostRaw(requestParameters: AssistantsAssistantIdThreadsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsPost201Response>> {
+        if (requestParameters['assistantId'] == null) {
+            throw new runtime.RequiredError(
+                'assistantId',
+                'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdThreadsPost().'
+            );
+        }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        if (requestParameters['thread'] == null) {
+            throw new runtime.RequiredError(
+                'thread',
+                'Required parameter "thread" was null or undefined when calling assistantsAssistantIdThreadsPost().'
+            );
+        }
 
-    headerParameters["Content-Type"] = "application/json";
+        const queryParameters: any = {};
 
-    const response = await this.request(
-      {
-        path: `/assistants/{assistant-id}/threads`.replace(
-          `{${"assistant-id"}}`,
-          encodeURIComponent(String(requestParameters["assistantId"])),
-        ),
-        method: "POST",
-        headers: headerParameters,
-        query: queryParameters,
-        body: AssistantsThreadDTOToJSON(requestParameters["thread"]),
-      },
-      initOverrides,
-    );
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsAssistantIdThreadsPost201ResponseFromJSON(jsonValue),
-    );
-  }
+        headerParameters['Content-Type'] = 'application/json';
 
-  /**
-   * Creates a new thread under an assistant
-   * Create Thread
-   */
-  async assistantsAssistantIdThreadsPost(
-    requestParameters: AssistantsAssistantIdThreadsPostRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsAssistantIdThreadsPost201Response> {
-    const response = await this.assistantsAssistantIdThreadsPostRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
+        const response = await this.request({
+            path: `/assistants/{assistant-id}/threads`.replace(`{${"assistant-id"}}`, encodeURIComponent(String(requestParameters['assistantId']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AssistantsThreadDTOToJSON(requestParameters['thread']),
+        }, initOverrides);
 
-  /**
-   * Retrieves a thread by ID
-   * Get Thread
-   */
-  async assistantsAssistantIdThreadsThreadIdGetRaw(
-    requestParameters: AssistantsAssistantIdThreadsThreadIdGetRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsPost201Response>> {
-    if (requestParameters["threadId"] == null) {
-      throw new runtime.RequiredError(
-        "threadId",
-        'Required parameter "threadId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdGet().',
-      );
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsAssistantIdThreadsPost201ResponseFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    const response = await this.request(
-      {
-        path: `/assistants/{assistant-id}/threads/{thread-id}`.replace(
-          `{${"thread-id"}}`,
-          encodeURIComponent(String(requestParameters["threadId"])),
-        ),
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsAssistantIdThreadsPost201ResponseFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   * Retrieves a thread by ID
-   * Get Thread
-   */
-  async assistantsAssistantIdThreadsThreadIdGet(
-    requestParameters: AssistantsAssistantIdThreadsThreadIdGetRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsAssistantIdThreadsPost201Response> {
-    const response = await this.assistantsAssistantIdThreadsThreadIdGetRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   * Lists the messages for a thread
-   * List Thread Messages
-   */
-  async assistantsAssistantIdThreadsThreadIdMessagesGetRaw(
-    requestParameters: AssistantsAssistantIdThreadsThreadIdMessagesGetRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<
-    runtime.ApiResponse<AssistantsAssistantIdThreadsThreadIdMessagesGet200Response>
-  > {
-    if (requestParameters["assistantId"] == null) {
-      throw new runtime.RequiredError(
-        "assistantId",
-        'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesGet().',
-      );
+    /**
+     * Creates a new thread under an assistant
+     * Create Thread
+     */
+    async assistantsAssistantIdThreadsPost(requestParameters: AssistantsAssistantIdThreadsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsAssistantIdThreadsPost201Response> {
+        const response = await this.assistantsAssistantIdThreadsPostRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    if (requestParameters["threadId"] == null) {
-      throw new runtime.RequiredError(
-        "threadId",
-        'Required parameter "threadId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesGet().',
-      );
+    /**
+     * Retrieves a thread by ID
+     * Get Thread
+     */
+    async assistantsAssistantIdThreadsThreadIdGetRaw(requestParameters: AssistantsAssistantIdThreadsThreadIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsPost201Response>> {
+        if (requestParameters['threadId'] == null) {
+            throw new runtime.RequiredError(
+                'threadId',
+                'Required parameter "threadId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/assistants/{assistant-id}/threads/{thread-id}`.replace(`{${"thread-id"}}`, encodeURIComponent(String(requestParameters['threadId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsAssistantIdThreadsPost201ResponseFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    const response = await this.request(
-      {
-        path: `/assistants/{assistant-id}/threads/{thread-id}/messages`
-          .replace(
-            `{${"assistant-id"}}`,
-            encodeURIComponent(String(requestParameters["assistantId"])),
-          )
-          .replace(
-            `{${"thread-id"}}`,
-            encodeURIComponent(String(requestParameters["threadId"])),
-          ),
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON(
-        jsonValue,
-      ),
-    );
-  }
-
-  /**
-   * Lists the messages for a thread
-   * List Thread Messages
-   */
-  async assistantsAssistantIdThreadsThreadIdMessagesGet(
-    requestParameters: AssistantsAssistantIdThreadsThreadIdMessagesGetRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsAssistantIdThreadsThreadIdMessagesGet200Response> {
-    const response =
-      await this.assistantsAssistantIdThreadsThreadIdMessagesGetRaw(
-        requestParameters,
-        initOverrides,
-      );
-    return await response.value();
-  }
-
-  /**
-   * Creates a new message in a specified thread
-   * Create Thread Message
-   */
-  async assistantsAssistantIdThreadsThreadIdMessagesPostRaw(
-    requestParameters: AssistantsAssistantIdThreadsThreadIdMessagesPostRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<
-    runtime.ApiResponse<AssistantsAssistantIdThreadsThreadIdMessagesPost201Response>
-  > {
-    if (requestParameters["assistantId"] == null) {
-      throw new runtime.RequiredError(
-        "assistantId",
-        'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesPost().',
-      );
+    /**
+     * Retrieves a thread by ID
+     * Get Thread
+     */
+    async assistantsAssistantIdThreadsThreadIdGet(requestParameters: AssistantsAssistantIdThreadsThreadIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsAssistantIdThreadsPost201Response> {
+        const response = await this.assistantsAssistantIdThreadsThreadIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    if (requestParameters["threadId"] == null) {
-      throw new runtime.RequiredError(
-        "threadId",
-        'Required parameter "threadId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesPost().',
-      );
+    /**
+     * Lists the messages for a thread
+     * List Thread Messages
+     */
+    async assistantsAssistantIdThreadsThreadIdMessagesGetRaw(requestParameters: AssistantsAssistantIdThreadsThreadIdMessagesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsThreadIdMessagesGet200Response>> {
+        if (requestParameters['assistantId'] == null) {
+            throw new runtime.RequiredError(
+                'assistantId',
+                'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesGet().'
+            );
+        }
+
+        if (requestParameters['threadId'] == null) {
+            throw new runtime.RequiredError(
+                'threadId',
+                'Required parameter "threadId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/assistants/{assistant-id}/threads/{thread-id}/messages`.replace(`{${"assistant-id"}}`, encodeURIComponent(String(requestParameters['assistantId']))).replace(`{${"thread-id"}}`, encodeURIComponent(String(requestParameters['threadId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsAssistantIdThreadsThreadIdMessagesGet200ResponseFromJSON(jsonValue));
     }
 
-    if (requestParameters["message"] == null) {
-      throw new runtime.RequiredError(
-        "message",
-        'Required parameter "message" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesPost().',
-      );
+    /**
+     * Lists the messages for a thread
+     * List Thread Messages
+     */
+    async assistantsAssistantIdThreadsThreadIdMessagesGet(requestParameters: AssistantsAssistantIdThreadsThreadIdMessagesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsAssistantIdThreadsThreadIdMessagesGet200Response> {
+        const response = await this.assistantsAssistantIdThreadsThreadIdMessagesGetRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    const queryParameters: any = {};
+    /**
+     * Creates a new message in a specified thread
+     * Create Thread Message
+     */
+    async assistantsAssistantIdThreadsThreadIdMessagesPostRaw(requestParameters: AssistantsAssistantIdThreadsThreadIdMessagesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsAssistantIdThreadsThreadIdMessagesPost201Response>> {
+        if (requestParameters['assistantId'] == null) {
+            throw new runtime.RequiredError(
+                'assistantId',
+                'Required parameter "assistantId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesPost().'
+            );
+        }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        if (requestParameters['threadId'] == null) {
+            throw new runtime.RequiredError(
+                'threadId',
+                'Required parameter "threadId" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesPost().'
+            );
+        }
 
-    headerParameters["Content-Type"] = "application/json";
+        if (requestParameters['message'] == null) {
+            throw new runtime.RequiredError(
+                'message',
+                'Required parameter "message" was null or undefined when calling assistantsAssistantIdThreadsThreadIdMessagesPost().'
+            );
+        }
 
-    const response = await this.request(
-      {
-        path: `/assistants/{assistant-id}/threads/{thread-id}/messages`
-          .replace(
-            `{${"assistant-id"}}`,
-            encodeURIComponent(String(requestParameters["assistantId"])),
-          )
-          .replace(
-            `{${"thread-id"}}`,
-            encodeURIComponent(String(requestParameters["threadId"])),
-          ),
-        method: "POST",
-        headers: headerParameters,
-        query: queryParameters,
-        body: HttpserverCreateThreadMessageRequestToJSON(
-          requestParameters["message"],
-        ),
-      },
-      initOverrides,
-    );
+        const queryParameters: any = {};
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseFromJSON(
-        jsonValue,
-      ),
-    );
-  }
+        const headerParameters: runtime.HTTPHeaders = {};
 
-  /**
-   * Creates a new message in a specified thread
-   * Create Thread Message
-   */
-  async assistantsAssistantIdThreadsThreadIdMessagesPost(
-    requestParameters: AssistantsAssistantIdThreadsThreadIdMessagesPostRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsAssistantIdThreadsThreadIdMessagesPost201Response> {
-    const response =
-      await this.assistantsAssistantIdThreadsThreadIdMessagesPostRaw(
-        requestParameters,
-        initOverrides,
-      );
-    return await response.value();
-  }
+        headerParameters['Content-Type'] = 'application/json';
 
-  /**
-   * Lists the assistants for a user
-   * List Assistants
-   */
-  async assistantsGetRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AssistantsGet200Response>> {
-    const queryParameters: any = {};
+        const response = await this.request({
+            path: `/assistants/{assistant-id}/threads/{thread-id}/messages`.replace(`{${"assistant-id"}}`, encodeURIComponent(String(requestParameters['assistantId']))).replace(`{${"thread-id"}}`, encodeURIComponent(String(requestParameters['threadId']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: HttpserverCreateThreadMessageRequestToJSON(requestParameters['message']),
+        }, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    const response = await this.request(
-      {
-        path: `/assistants`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsGet200ResponseFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   * Lists the assistants for a user
-   * List Assistants
-   */
-  async assistantsGet(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsGet200Response> {
-    const response = await this.assistantsGetRaw(initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates a new assistant
-   * Create Assistant
-   */
-  async assistantsPostRaw(
-    requestParameters: AssistantsPostRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AssistantsPost201Response>> {
-    if (requestParameters["assistant"] == null) {
-      throw new runtime.RequiredError(
-        "assistant",
-        'Required parameter "assistant" was null or undefined when calling assistantsPost().',
-      );
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsAssistantIdThreadsThreadIdMessagesPost201ResponseFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
+    /**
+     * Creates a new message in a specified thread
+     * Create Thread Message
+     */
+    async assistantsAssistantIdThreadsThreadIdMessagesPost(requestParameters: AssistantsAssistantIdThreadsThreadIdMessagesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsAssistantIdThreadsThreadIdMessagesPost201Response> {
+        const response = await this.assistantsAssistantIdThreadsThreadIdMessagesPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+    /**
+     * Lists the assistants for a user
+     * List Assistants
+     */
+    async assistantsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsGet200Response>> {
+        const queryParameters: any = {};
 
-    headerParameters["Content-Type"] = "application/json";
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    const response = await this.request(
-      {
-        path: `/assistants`,
-        method: "POST",
-        headers: headerParameters,
-        query: queryParameters,
-        body: HttpserverCreateAssistantRequestToJSON(
-          requestParameters["assistant"],
-        ),
-      },
-      initOverrides,
-    );
+        const response = await this.request({
+            path: `/assistants`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AssistantsPost201ResponseFromJSON(jsonValue),
-    );
-  }
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsGet200ResponseFromJSON(jsonValue));
+    }
 
-  /**
-   * Creates a new assistant
-   * Create Assistant
-   */
-  async assistantsPost(
-    requestParameters: AssistantsPostRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AssistantsPost201Response> {
-    const response = await this.assistantsPostRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
+    /**
+     * Lists the assistants for a user
+     * List Assistants
+     */
+    async assistantsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsGet200Response> {
+        const response = await this.assistantsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates a new assistant
+     * Create Assistant
+     */
+    async assistantsPostRaw(requestParameters: AssistantsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssistantsPost201Response>> {
+        if (requestParameters['assistant'] == null) {
+            throw new runtime.RequiredError(
+                'assistant',
+                'Required parameter "assistant" was null or undefined when calling assistantsPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/assistants`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: HttpserverCreateAssistantRequestToJSON(requestParameters['assistant']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AssistantsPost201ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Creates a new assistant
+     * Create Assistant
+     */
+    async assistantsPost(requestParameters: AssistantsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AssistantsPost201Response> {
+        const response = await this.assistantsPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
 }

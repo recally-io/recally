@@ -16,7 +16,8 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryClient } from "../libs/api";
 import { AssistantsApi } from "../sdk/index";
 
 const api = new AssistantsApi();
@@ -25,7 +26,6 @@ export default function Assistants() {
   // const params = new URLSearchParams(window.location.search);
   // let id = params.get("id");
 
-  const queryClient = useQueryClient();
   const listAssistants = useQuery({
     queryKey: ["list-asstants"],
     queryFn: async () => {

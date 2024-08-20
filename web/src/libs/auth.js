@@ -1,5 +1,5 @@
 import Cookies from "js-cookie";
-import { AuthApi } from "../sdk/index";
+import { authApi } from "./api";
 
 export async function checkIsLogin() {
   const token = Cookies.get("token");
@@ -7,10 +7,9 @@ export async function checkIsLogin() {
     console.log("No token found, redirecting to login page");
     return false;
   }
-  console.log("Checking token validity");
   try {
-    await new AuthApi().authValidateJwtGet({ token: token });
-    console.log("Token is valid");
+    await authApi.authValidateJwtGet({ token: token });
+    console.debug("Token is valid");
     return true;
   } catch (error) {
     console.debug("Token is invalid", error);

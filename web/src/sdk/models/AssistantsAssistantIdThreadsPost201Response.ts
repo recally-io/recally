@@ -12,97 +12,88 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
-import type { AssistantsThreadDTO } from "./AssistantsThreadDTO";
+import { mapValues } from '../runtime';
+import type { AssistantsThreadDTO } from './AssistantsThreadDTO';
 import {
-  AssistantsThreadDTOFromJSON,
-  AssistantsThreadDTOFromJSONTyped,
-  AssistantsThreadDTOToJSON,
-} from "./AssistantsThreadDTO";
+    AssistantsThreadDTOFromJSON,
+    AssistantsThreadDTOFromJSONTyped,
+    AssistantsThreadDTOToJSON,
+} from './AssistantsThreadDTO';
 
 /**
- *
+ * 
  * @export
  * @interface AssistantsAssistantIdThreadsPost201Response
  */
 export interface AssistantsAssistantIdThreadsPost201Response {
-  /**
-   * Code is an integer value that represents the HTTP status code.
-   * @type {number}
-   * @memberof AssistantsAssistantIdThreadsPost201Response
-   */
-  code?: number;
-  /**
-   *
-   * @type {AssistantsThreadDTO}
-   * @memberof AssistantsAssistantIdThreadsPost201Response
-   */
-  data?: AssistantsThreadDTO;
-  /**
-   * Error is an error value that represents the error of the response.
-   * @type {object}
-   * @memberof AssistantsAssistantIdThreadsPost201Response
-   */
-  error?: object;
-  /**
-   * Message is a string value that represents the message of the response.
-   * @type {string}
-   * @memberof AssistantsAssistantIdThreadsPost201Response
-   */
-  message?: string;
-  /**
-   * Success is a boolean value that indicates whether the request was successful.
-   * @type {boolean}
-   * @memberof AssistantsAssistantIdThreadsPost201Response
-   */
-  success?: boolean;
+    /**
+     * Code is an integer value that represents the HTTP status code.
+     * @type {number}
+     * @memberof AssistantsAssistantIdThreadsPost201Response
+     */
+    code?: number;
+    /**
+     * 
+     * @type {AssistantsThreadDTO}
+     * @memberof AssistantsAssistantIdThreadsPost201Response
+     */
+    data?: AssistantsThreadDTO;
+    /**
+     * Error is an error value that represents the error of the response.
+     * @type {object}
+     * @memberof AssistantsAssistantIdThreadsPost201Response
+     */
+    error?: object;
+    /**
+     * Message is a string value that represents the message of the response.
+     * @type {string}
+     * @memberof AssistantsAssistantIdThreadsPost201Response
+     */
+    message?: string;
+    /**
+     * Success is a boolean value that indicates whether the request was successful.
+     * @type {boolean}
+     * @memberof AssistantsAssistantIdThreadsPost201Response
+     */
+    success?: boolean;
 }
 
 /**
  * Check if a given object implements the AssistantsAssistantIdThreadsPost201Response interface.
  */
-export function instanceOfAssistantsAssistantIdThreadsPost201Response(
-  value: object,
-): value is AssistantsAssistantIdThreadsPost201Response {
-  return true;
+export function instanceOfAssistantsAssistantIdThreadsPost201Response(value: object): value is AssistantsAssistantIdThreadsPost201Response {
+    return true;
 }
 
-export function AssistantsAssistantIdThreadsPost201ResponseFromJSON(
-  json: any,
-): AssistantsAssistantIdThreadsPost201Response {
-  return AssistantsAssistantIdThreadsPost201ResponseFromJSONTyped(json, false);
+export function AssistantsAssistantIdThreadsPost201ResponseFromJSON(json: any): AssistantsAssistantIdThreadsPost201Response {
+    return AssistantsAssistantIdThreadsPost201ResponseFromJSONTyped(json, false);
 }
 
-export function AssistantsAssistantIdThreadsPost201ResponseFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AssistantsAssistantIdThreadsPost201Response {
-  if (json == null) {
-    return json;
-  }
-  return {
-    code: json["code"] == null ? undefined : json["code"],
-    data:
-      json["data"] == null
-        ? undefined
-        : AssistantsThreadDTOFromJSON(json["data"]),
-    error: json["error"] == null ? undefined : json["error"],
-    message: json["message"] == null ? undefined : json["message"],
-    success: json["success"] == null ? undefined : json["success"],
-  };
+export function AssistantsAssistantIdThreadsPost201ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): AssistantsAssistantIdThreadsPost201Response {
+    if (json == null) {
+        return json;
+    }
+    return {
+        
+        'code': json['code'] == null ? undefined : json['code'],
+        'data': json['data'] == null ? undefined : AssistantsThreadDTOFromJSON(json['data']),
+        'error': json['error'] == null ? undefined : json['error'],
+        'message': json['message'] == null ? undefined : json['message'],
+        'success': json['success'] == null ? undefined : json['success'],
+    };
 }
 
-export function AssistantsAssistantIdThreadsPost201ResponseToJSON(
-  value?: AssistantsAssistantIdThreadsPost201Response | null,
-): any {
-  if (value == null) {
-    return value;
-  }
-  return {
-    code: value["code"],
-    data: AssistantsThreadDTOToJSON(value["data"]),
-    error: value["error"],
-    message: value["message"],
-    success: value["success"],
-  };
+export function AssistantsAssistantIdThreadsPost201ResponseToJSON(value?: AssistantsAssistantIdThreadsPost201Response | null): any {
+    if (value == null) {
+        return value;
+    }
+    return {
+        
+        'code': value['code'],
+        'data': AssistantsThreadDTOToJSON(value['data']),
+        'error': value['error'],
+        'message': value['message'],
+        'success': value['success'],
+    };
 }
+

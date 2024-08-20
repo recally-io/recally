@@ -12,152 +12,136 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
-import type { AssistantsThreadMessageDTO } from "./AssistantsThreadMessageDTO";
+import { mapValues } from '../runtime';
+import type { AssistantsThreadMessageDTO } from './AssistantsThreadMessageDTO';
 import {
-  AssistantsThreadMessageDTOFromJSON,
-  AssistantsThreadMessageDTOFromJSONTyped,
-  AssistantsThreadMessageDTOToJSON,
-} from "./AssistantsThreadMessageDTO";
+    AssistantsThreadMessageDTOFromJSON,
+    AssistantsThreadMessageDTOFromJSONTyped,
+    AssistantsThreadMessageDTOToJSON,
+} from './AssistantsThreadMessageDTO';
 
 /**
- *
+ * 
  * @export
  * @interface AssistantsThreadDTO
  */
 export interface AssistantsThreadDTO {
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  assistantId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  createdAt?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  description?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  id?: string;
-  /**
-   *
-   * @type {Array<AssistantsThreadMessageDTO>}
-   * @memberof AssistantsThreadDTO
-   */
-  messages?: Array<AssistantsThreadMessageDTO>;
-  /**
-   *
-   * @type {object}
-   * @memberof AssistantsThreadDTO
-   */
-  metadata?: object;
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  model?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  name?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  systemPrompt?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  updatedAt?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssistantsThreadDTO
-   */
-  userId?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    assistantId?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    createdAt?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    description?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    id?: string;
+    /**
+     * 
+     * @type {Array<AssistantsThreadMessageDTO>}
+     * @memberof AssistantsThreadDTO
+     */
+    messages?: Array<AssistantsThreadMessageDTO>;
+    /**
+     * 
+     * @type {object}
+     * @memberof AssistantsThreadDTO
+     */
+    metadata?: object;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    model?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    name?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    systemPrompt?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    updatedAt?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AssistantsThreadDTO
+     */
+    userId?: string;
 }
 
 /**
  * Check if a given object implements the AssistantsThreadDTO interface.
  */
-export function instanceOfAssistantsThreadDTO(
-  value: object,
-): value is AssistantsThreadDTO {
-  return true;
+export function instanceOfAssistantsThreadDTO(value: object): value is AssistantsThreadDTO {
+    return true;
 }
 
 export function AssistantsThreadDTOFromJSON(json: any): AssistantsThreadDTO {
-  return AssistantsThreadDTOFromJSONTyped(json, false);
+    return AssistantsThreadDTOFromJSONTyped(json, false);
 }
 
-export function AssistantsThreadDTOFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AssistantsThreadDTO {
-  if (json == null) {
-    return json;
-  }
-  return {
-    assistantId:
-      json["assistant_id"] == null ? undefined : json["assistant_id"],
-    createdAt: json["created_at"] == null ? undefined : json["created_at"],
-    description: json["description"] == null ? undefined : json["description"],
-    id: json["id"] == null ? undefined : json["id"],
-    messages:
-      json["messages"] == null
-        ? undefined
-        : (json["messages"] as Array<any>).map(
-            AssistantsThreadMessageDTOFromJSON,
-          ),
-    metadata: json["metadata"] == null ? undefined : json["metadata"],
-    model: json["model"] == null ? undefined : json["model"],
-    name: json["name"] == null ? undefined : json["name"],
-    systemPrompt:
-      json["system_prompt"] == null ? undefined : json["system_prompt"],
-    updatedAt: json["updated_at"] == null ? undefined : json["updated_at"],
-    userId: json["user_id"] == null ? undefined : json["user_id"],
-  };
+export function AssistantsThreadDTOFromJSONTyped(json: any, ignoreDiscriminator: boolean): AssistantsThreadDTO {
+    if (json == null) {
+        return json;
+    }
+    return {
+        
+        'assistantId': json['assistant_id'] == null ? undefined : json['assistant_id'],
+        'createdAt': json['created_at'] == null ? undefined : json['created_at'],
+        'description': json['description'] == null ? undefined : json['description'],
+        'id': json['id'] == null ? undefined : json['id'],
+        'messages': json['messages'] == null ? undefined : ((json['messages'] as Array<any>).map(AssistantsThreadMessageDTOFromJSON)),
+        'metadata': json['metadata'] == null ? undefined : json['metadata'],
+        'model': json['model'] == null ? undefined : json['model'],
+        'name': json['name'] == null ? undefined : json['name'],
+        'systemPrompt': json['system_prompt'] == null ? undefined : json['system_prompt'],
+        'updatedAt': json['updated_at'] == null ? undefined : json['updated_at'],
+        'userId': json['user_id'] == null ? undefined : json['user_id'],
+    };
 }
 
-export function AssistantsThreadDTOToJSON(
-  value?: AssistantsThreadDTO | null,
-): any {
-  if (value == null) {
-    return value;
-  }
-  return {
-    assistant_id: value["assistantId"],
-    created_at: value["createdAt"],
-    description: value["description"],
-    id: value["id"],
-    messages:
-      value["messages"] == null
-        ? undefined
-        : (value["messages"] as Array<any>).map(
-            AssistantsThreadMessageDTOToJSON,
-          ),
-    metadata: value["metadata"],
-    model: value["model"],
-    name: value["name"],
-    system_prompt: value["systemPrompt"],
-    updated_at: value["updatedAt"],
-    user_id: value["userId"],
-  };
+export function AssistantsThreadDTOToJSON(value?: AssistantsThreadDTO | null): any {
+    if (value == null) {
+        return value;
+    }
+    return {
+        
+        'assistant_id': value['assistantId'],
+        'created_at': value['createdAt'],
+        'description': value['description'],
+        'id': value['id'],
+        'messages': value['messages'] == null ? undefined : ((value['messages'] as Array<any>).map(AssistantsThreadMessageDTOToJSON)),
+        'metadata': value['metadata'],
+        'model': value['model'],
+        'name': value['name'],
+        'system_prompt': value['systemPrompt'],
+        'updated_at': value['updatedAt'],
+        'user_id': value['userId'],
+    };
 }
+

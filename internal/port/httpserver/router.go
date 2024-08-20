@@ -49,7 +49,7 @@ func (s *Service) registerRouters() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// web pages
-	if config.Settings.Debug {
+	if config.Settings.Env == "dev" {
 		// proxy to vite server localhost:5173
 		e.GET("/*", reactReverseProxy)
 	} else {

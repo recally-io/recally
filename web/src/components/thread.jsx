@@ -20,17 +20,18 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useState, useRef } from "react";
 import Markdown from "react-markdown";
 import avatarImgUrl from "../assets/avatar-1.png";
 import useStore from "../libs/store";
 import { AssistantsApi } from "../sdk/index";
 
+const url = new URL(window.location.href);
 const api = new AssistantsApi();
 
 export default function ChatWindowsComponent() {
-  const queryClient = useQueryClient();
+  const isLogin = useStore((state) => state.isLogin);
   const [settingsOpened, { open: openSettings, close: closeSettings }] =
     useDisclosure(false);
   const colorScheme = useComputedColorScheme("light");
@@ -42,89 +43,104 @@ export default function ChatWindowsComponent() {
     },
   });
 
-  const assistantId = useStore((state) => state.activateAssistantId);
-  const threadId = useStore((state) => state.activateThreadId);
+  const assistantId = url.searchParams.get("assistant-id");
+  const threadId = url.searchParams.get("thread-id");
   const [newText, setNewText] = useState("");
 
-  const getThread = useQuery({
-    queryKey: ["get-thread", threadId],
-    queryFn: async () => {
-      console.log(
-        `getThread: threadId ${threadId}, assistantId ${assistantId}`,
-      );
-      const response =
-        await api.AssistantsAssistantIdThreadsThreadIdMessagesGetRequest({
-          assistantId: assistantId,
-          threadId: threadId,
-        });
-      console.log(JSON.stringify(response));
-      return response.data;
-    },
-  });
+  const [messageList, setMessageList] = useState([]);
+  const chatArea = useRef(null);
 
   const listMessages = useQuery({
     queryKey: ["list-messages", threadId],
     queryFn: async () => {
-      console.log(
-        `listMessages: threadId ${threadId}, assistantId ${assistantId}`,
-      );
       const response =
         await api.assistantsAssistantIdThreadsThreadIdMessagesGet({
           assistantId: assistantId,
           threadId: threadId,
         });
-      return response.data;
+      return response.data || [];
     },
+    enabled: isLogin && !!threadId && !!assistantId,
   });
 
+  useEffect(() => {
+    if (listMessages.data) {
+      setMessageList(listMessages.data);
+    }
+  }, [listMessages.isLoading, listMessages.data]);
+  useEffect(() => {
+    chatArea.current.scrollTo({
+      top: chatArea.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messageList]);
+
   const createMessage = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (text) => {
       const response =
         await api.assistantsAssistantIdThreadsThreadIdMessagesPost({
           assistantId: assistantId,
           threadId: threadId,
           message: {
             role: "user",
-            text: newText,
+            text: text,
             model: "gpt-4o",
           },
         });
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["list-messages"]);
+    onSuccess: (data) => {
+      setMessageList((prevMessageList) => [
+        ...prevMessageList,
+        {
+          role: data.role,
+          text: data.text,
+          id: data.id,
+        },
+      ]);
     },
   });
 
-  const messageS = (role, text) => {
+  const messageS = (id, role, text) => {
     return (
-      <Flex justify="flex-end" align="flex-start" direction="row" gap="sm">
+      <Flex
+        justify="flex-end"
+        align="flex-start"
+        direction="row"
+        gap="sm"
+        key={id}
+      >
         <Paper
           shadow="sm"
-          p="md"
+          px="sm"
           maw="90%"
           radius="lg"
           bg={colorScheme === "dark" ? "" : "blue.2"}
         >
-          <Markdown>{text}</Markdown>
+          <ScrollArea type="auto" scrollbars="x">
+            <Markdown>{text}</Markdown>
+          </ScrollArea>
         </Paper>
+
         <Avatar size="sm" radius="lg" src={avatarImgUrl} />
       </Flex>
     );
   };
 
-  const messageR = (role, text) => {
+  const messageR = (id, role, text) => {
     return (
-      <Flex justify="flex-start" direction="row" gap="sm">
+      <Flex justify="flex-start" direction="row" gap="sm" key={id}>
         <Avatar size="sm" radius="lg" src={avatarImgUrl} />
         <Paper
           shadow="sm"
-          p="md"
+          px="sm"
           maw="90%"
           radius="lg"
           bg={colorScheme === "dark" ? "" : "green.2"}
         >
-          <Markdown>{text}</Markdown>
+          <ScrollArea type="auto" scrollbars="x">
+            <Markdown>{text}</Markdown>
+          </ScrollArea>
         </Paper>
       </Flex>
     );
@@ -166,24 +182,36 @@ export default function ChatWindowsComponent() {
     );
   };
 
+  const sendMessage = async (text) => {
+    setNewText("");
+    setMessageList((prevMessageList) => [
+      ...prevMessageList,
+      { role: "user", text, id: Math.random() },
+    ]);
+    await createMessage.mutateAsync(text);
+  };
+
   return (
     <>
       <Container size="xl">
         <Flex direction="column" justify="space-between" h="89vh">
           <ScrollArea
+            viewportRef={chatArea}
+            type="auto"
+            offsetScrollbars
+            scrollbars="y"
             style={{
               flex: 1,
             }}
           >
             <Stack spacing="md" py="lg">
-              {listMessages.data &&
-                listMessages.data.map((item) => {
-                  if (item.role === "user") {
-                    return messageS(item.role, item.text);
-                  } else {
-                    return messageR(item.role, item.text);
-                  }
-                })}
+              {messageList.map((item) => {
+                if (item.role === "user") {
+                  return messageS(item.id, item.role, item.text);
+                } else {
+                  return messageR(item.id, item.role, item.text);
+                }
+              })}
             </Stack>
           </ScrollArea>
           <Container
@@ -200,17 +228,25 @@ export default function ChatWindowsComponent() {
               leftSection={menu()}
               leftSectionWidth={42}
               disabled={createMessage.isLoading}
+              onKeyDown={async (e) => {
+                if (e.key === "Enter") {
+                  await sendMessage(e.currentTarget.value);
+                }
+              }}
               rightSection={
                 <ActionIcon
                   variant="transparent"
                   aria-label="Settings"
                   disabled={createMessage.isLoading}
-                  onClick={async () => {
-                    await createMessage.mutateAsync();
-                    setNewText("");
+                  onClick={async (e) => {
+                    await sendMessage(newText);
                   }}
                 >
-                  <Icon icon="tabler:send"></Icon>
+                  {createMessage.isLoading ? (
+                    <Icon icon="svg-spinners:180-ring" />
+                  ) : (
+                    <Icon icon="tabler:send"></Icon>
+                  )}
                 </ActionIcon>
               }
               value={newText}

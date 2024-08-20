@@ -9,44 +9,16 @@ import "@mantine/core/styles.css";
 import { useDisclosure } from "@mantine/hooks";
 import { Notifications } from "@mantine/notifications";
 import "@mantine/notifications/styles.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React, { useEffect } from "react";
-import { checkIsLogin } from "../libs/auth";
-import useStore from "../libs/store";
+import { QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
+import { queryClient } from "../libs/api";
 import Header from "./header";
 
 const theme = createTheme({});
-const queryClient = new QueryClient();
 
 export default function Layout({ main, nav = null }) {
   const [opened, { toggle }] = useDisclosure(true);
   let haveNav = nav !== null;
-
-  const setIsLogin = useStore((state) => state.setIsLogin);
-  const authPage = "/auth.html";
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      const isLoggedIn = await checkIsLogin();
-      console.log("Checking login status: ", isLoggedIn);
-      if (isLoggedIn) {
-        setIsLogin(true);
-        console.log("User is logged in");
-        if (window.location.pathname === authPage) {
-          console.log("Redirecting to home page");
-          window.location.href = "/";
-        }
-      } else {
-        setIsLogin(false);
-        console.log("User is not logged in");
-        if (window.location.pathname !== authPage) {
-          console.log("Redirecting to login page");
-          window.location.href = "/auth.html";
-        }
-      }
-    };
-
-    checkLoginStatus();
-  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

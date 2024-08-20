@@ -55,6 +55,10 @@ run-ui:
 	@echo "Running web..."
 	@cd web && bun run dev
 
+run-dev:
+	@echo "Running dev..."
+	@ENV=dev go run main.go
+
 ngrok:
 	@echo "Running ngrok..."
 	@ngrok http 1323

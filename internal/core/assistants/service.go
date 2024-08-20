@@ -162,6 +162,16 @@ func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *Thre
 
 func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadMessageDTO, error) {
 	oaiMessages := make([]openai.ChatCompletionMessage, 0)
+	messages, err := s.ListThreadMessages(ctx, tx, thread.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get thread messages: %w", err)
+	}
+	for _, m := range messages {
+		oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
+			Role:    m.Role,
+			Content: m.Text,
+		})
+	}
 	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 		Role:    "system",
 		Content: thread.SystemPrompt,

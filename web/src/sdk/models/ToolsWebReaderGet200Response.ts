@@ -12,97 +12,88 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
-import type { JinareaderContent } from "./JinareaderContent";
+import { mapValues } from '../runtime';
+import type { JinareaderContent } from './JinareaderContent';
 import {
-  JinareaderContentFromJSON,
-  JinareaderContentFromJSONTyped,
-  JinareaderContentToJSON,
-} from "./JinareaderContent";
+    JinareaderContentFromJSON,
+    JinareaderContentFromJSONTyped,
+    JinareaderContentToJSON,
+} from './JinareaderContent';
 
 /**
- *
+ * 
  * @export
  * @interface ToolsWebReaderGet200Response
  */
 export interface ToolsWebReaderGet200Response {
-  /**
-   * Code is an integer value that represents the HTTP status code.
-   * @type {number}
-   * @memberof ToolsWebReaderGet200Response
-   */
-  code?: number;
-  /**
-   *
-   * @type {JinareaderContent}
-   * @memberof ToolsWebReaderGet200Response
-   */
-  data?: JinareaderContent;
-  /**
-   * Error is an error value that represents the error of the response.
-   * @type {object}
-   * @memberof ToolsWebReaderGet200Response
-   */
-  error?: object;
-  /**
-   * Message is a string value that represents the message of the response.
-   * @type {string}
-   * @memberof ToolsWebReaderGet200Response
-   */
-  message?: string;
-  /**
-   * Success is a boolean value that indicates whether the request was successful.
-   * @type {boolean}
-   * @memberof ToolsWebReaderGet200Response
-   */
-  success?: boolean;
+    /**
+     * Code is an integer value that represents the HTTP status code.
+     * @type {number}
+     * @memberof ToolsWebReaderGet200Response
+     */
+    code?: number;
+    /**
+     * 
+     * @type {JinareaderContent}
+     * @memberof ToolsWebReaderGet200Response
+     */
+    data?: JinareaderContent;
+    /**
+     * Error is an error value that represents the error of the response.
+     * @type {object}
+     * @memberof ToolsWebReaderGet200Response
+     */
+    error?: object;
+    /**
+     * Message is a string value that represents the message of the response.
+     * @type {string}
+     * @memberof ToolsWebReaderGet200Response
+     */
+    message?: string;
+    /**
+     * Success is a boolean value that indicates whether the request was successful.
+     * @type {boolean}
+     * @memberof ToolsWebReaderGet200Response
+     */
+    success?: boolean;
 }
 
 /**
  * Check if a given object implements the ToolsWebReaderGet200Response interface.
  */
-export function instanceOfToolsWebReaderGet200Response(
-  value: object,
-): value is ToolsWebReaderGet200Response {
-  return true;
+export function instanceOfToolsWebReaderGet200Response(value: object): value is ToolsWebReaderGet200Response {
+    return true;
 }
 
-export function ToolsWebReaderGet200ResponseFromJSON(
-  json: any,
-): ToolsWebReaderGet200Response {
-  return ToolsWebReaderGet200ResponseFromJSONTyped(json, false);
+export function ToolsWebReaderGet200ResponseFromJSON(json: any): ToolsWebReaderGet200Response {
+    return ToolsWebReaderGet200ResponseFromJSONTyped(json, false);
 }
 
-export function ToolsWebReaderGet200ResponseFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): ToolsWebReaderGet200Response {
-  if (json == null) {
-    return json;
-  }
-  return {
-    code: json["code"] == null ? undefined : json["code"],
-    data:
-      json["data"] == null
-        ? undefined
-        : JinareaderContentFromJSON(json["data"]),
-    error: json["error"] == null ? undefined : json["error"],
-    message: json["message"] == null ? undefined : json["message"],
-    success: json["success"] == null ? undefined : json["success"],
-  };
+export function ToolsWebReaderGet200ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): ToolsWebReaderGet200Response {
+    if (json == null) {
+        return json;
+    }
+    return {
+        
+        'code': json['code'] == null ? undefined : json['code'],
+        'data': json['data'] == null ? undefined : JinareaderContentFromJSON(json['data']),
+        'error': json['error'] == null ? undefined : json['error'],
+        'message': json['message'] == null ? undefined : json['message'],
+        'success': json['success'] == null ? undefined : json['success'],
+    };
 }
 
-export function ToolsWebReaderGet200ResponseToJSON(
-  value?: ToolsWebReaderGet200Response | null,
-): any {
-  if (value == null) {
-    return value;
-  }
-  return {
-    code: value["code"],
-    data: JinareaderContentToJSON(value["data"]),
-    error: value["error"],
-    message: value["message"],
-    success: value["success"],
-  };
+export function ToolsWebReaderGet200ResponseToJSON(value?: ToolsWebReaderGet200Response | null): any {
+    if (value == null) {
+        return value;
+    }
+    return {
+        
+        'code': value['code'],
+        'data': JinareaderContentToJSON(value['data']),
+        'error': value['error'],
+        'message': value['message'],
+        'success': value['success'],
+    };
 }
+

@@ -17,13 +17,11 @@ import { useForm } from "@mantine/form";
 import { upperFirst, useToggle } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { useState } from "react";
-import useStore from "../libs/store";
 import { AuthApi } from "../sdk/index";
 
 export function AuthenticationForm() {
   const [type, toggle] = useToggle(["login", "register"]);
   const [errMessage, setErrMessage] = useState("");
-  const setUser = useStore((state) => state.setUser);
   const form = useForm({
     initialValues: {
       email: "",
@@ -48,7 +46,6 @@ export function AuthenticationForm() {
       const user = await authApi.authRegisterPost({
         request: form.values,
       });
-      setUser(user);
       console.log(user);
       notifications.show({
         title: "Registration successful",
@@ -67,7 +64,6 @@ export function AuthenticationForm() {
   const login = async () => {
     try {
       const user = await authApi.authLoginPost({ request: form.values });
-      setUser(user);
       notifications.show({
         title: "Login successful",
         message: "You have successfully logged in!",
@@ -77,7 +73,6 @@ export function AuthenticationForm() {
       });
       // redirect to home page after successful login and wait for 1 second
       setTimeout(() => {
-        console.log("Redirecting to home page");
         window.location.href = "/";
       }, 1000);
     } catch (error) {

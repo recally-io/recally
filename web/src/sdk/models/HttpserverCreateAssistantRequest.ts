@@ -12,80 +12,73 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
+import { mapValues } from '../runtime';
 /**
- *
+ * 
  * @export
  * @interface HttpserverCreateAssistantRequest
  */
 export interface HttpserverCreateAssistantRequest {
-  /**
-   *
-   * @type {string}
-   * @memberof HttpserverCreateAssistantRequest
-   */
-  description?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof HttpserverCreateAssistantRequest
-   */
-  model?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof HttpserverCreateAssistantRequest
-   */
-  name?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof HttpserverCreateAssistantRequest
-   */
-  systemPrompt?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HttpserverCreateAssistantRequest
+     */
+    description?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HttpserverCreateAssistantRequest
+     */
+    model?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HttpserverCreateAssistantRequest
+     */
+    name?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HttpserverCreateAssistantRequest
+     */
+    systemPrompt?: string;
 }
 
 /**
  * Check if a given object implements the HttpserverCreateAssistantRequest interface.
  */
-export function instanceOfHttpserverCreateAssistantRequest(
-  value: object,
-): value is HttpserverCreateAssistantRequest {
-  return true;
+export function instanceOfHttpserverCreateAssistantRequest(value: object): value is HttpserverCreateAssistantRequest {
+    return true;
 }
 
-export function HttpserverCreateAssistantRequestFromJSON(
-  json: any,
-): HttpserverCreateAssistantRequest {
-  return HttpserverCreateAssistantRequestFromJSONTyped(json, false);
+export function HttpserverCreateAssistantRequestFromJSON(json: any): HttpserverCreateAssistantRequest {
+    return HttpserverCreateAssistantRequestFromJSONTyped(json, false);
 }
 
-export function HttpserverCreateAssistantRequestFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): HttpserverCreateAssistantRequest {
-  if (json == null) {
-    return json;
-  }
-  return {
-    description: json["description"] == null ? undefined : json["description"],
-    model: json["model"] == null ? undefined : json["model"],
-    name: json["name"] == null ? undefined : json["name"],
-    systemPrompt:
-      json["system_prompt"] == null ? undefined : json["system_prompt"],
-  };
+export function HttpserverCreateAssistantRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): HttpserverCreateAssistantRequest {
+    if (json == null) {
+        return json;
+    }
+    return {
+        
+        'description': json['description'] == null ? undefined : json['description'],
+        'model': json['model'] == null ? undefined : json['model'],
+        'name': json['name'] == null ? undefined : json['name'],
+        'systemPrompt': json['system_prompt'] == null ? undefined : json['system_prompt'],
+    };
 }
 
-export function HttpserverCreateAssistantRequestToJSON(
-  value?: HttpserverCreateAssistantRequest | null,
-): any {
-  if (value == null) {
-    return value;
-  }
-  return {
-    description: value["description"],
-    model: value["model"],
-    name: value["name"],
-    system_prompt: value["systemPrompt"],
-  };
+export function HttpserverCreateAssistantRequestToJSON(value?: HttpserverCreateAssistantRequest | null): any {
+    if (value == null) {
+        return value;
+    }
+    return {
+        
+        'description': value['description'],
+        'model': value['model'],
+        'name': value['name'],
+        'system_prompt': value['systemPrompt'],
+    };
 }
+
