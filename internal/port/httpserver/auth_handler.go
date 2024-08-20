@@ -212,6 +212,6 @@ func (h *authHandler) validateJwtToken(c echo.Context) error {
 		h.setCookieJwtToken(c, jwt)
 	}
 	return JsonResponse(c, http.StatusOK, userResponse{
-		ID:       userId,
+		ID: userId,
 	})
 }
