@@ -9,6 +9,7 @@ import {
   Group,
   Menu,
   Modal,
+  NativeSelect,
   Paper,
   ScrollArea,
   Slider,
@@ -59,6 +60,33 @@ export default function ChatWindowsComponent() {
       return res.data || [];
     },
     enabled: isLogin && !!threadId && !!assistantId,
+  });
+
+  const getThread = useQuery({
+    queryKey: ["get-thread", threadId],
+    queryFn: async () => {
+      const res = await get(
+        `/api/v1/assistants/${assistantId}/threads/${threadId}`,
+      );
+      return res.data || {};
+    },
+    enabled: isLogin && !!threadId && !!assistantId,
+    onSuccess: (data) => {
+      settingsForm.setValues(data);
+    },
+  });
+  // set page title
+  useEffect(() => {
+    document.title = `Chat with ${getThread.data?.name || "Assistant"}`;
+  }, [getThread.data]);
+
+  const listModels = useQuery({
+    queryKey: ["list-assistants-models"],
+    queryFn: async () => {
+      const res = await get("/api/v1/assistants/models");
+      return res.data || [];
+    },
+    enabled: isLogin,
   });
 
   useEffect(() => {
@@ -292,6 +320,15 @@ export default function ChatWindowsComponent() {
                   labelAlwaysOn
                 />
               </Stack>
+              <NativeSelect
+                label="Model"
+                key={settingsForm.key("model")}
+                {...settingsForm.getInputProps("model")}
+                onChange={(e) => {
+                  settingsForm.setFieldValue("model", e.target.value);
+                }}
+                data={listModels.data}
+              />
             </Stack>
             <Group justify="flex-end" mt="md">
               <Button type="submit">Submit</Button>
