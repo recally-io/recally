@@ -3,6 +3,8 @@ package assistants
 import (
 	"context"
 	"fmt"
+	"time"
+	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
 
@@ -49,6 +51,24 @@ func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *As
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create assistant: %w", err)
+	}
+	assistant.Load(&ast)
+	return assistant, nil
+}
+
+func (s *Service) UpdateAssistant(ctx context.Context, tx db.DBTX, assistant *AssistantDTO) (*AssistantDTO, error) {
+	model := assistant.Dump()
+
+	ast, err := s.dao.UpdateAssistant(ctx, tx, db.UpdateAssistantParams{
+		Uuid:         assistant.Id,
+		Name:         model.Name,
+		Description:  model.Description,
+		SystemPrompt: model.SystemPrompt,
+		Model:        model.Model,
+		Metadata:     model.Metadata,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update assistant: %w", err)
 	}
 	assistant.Load(&ast)
 	return assistant, nil
@@ -201,4 +221,17 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) 
 		return nil, fmt.Errorf("failed to save thread message: %w", err)
 	}
 	return message, err
+}
+
+func (s *Service) ListModels(ctx context.Context) ([]string, error) {
+	cacheKey := cache.NewCacheKey("list-models", "")
+	if models, ok := cache.Get[[]string](ctx, cache.MemCache, cacheKey); ok {
+		return *models, nil
+	}
+	models, err := s.llm.ListModels(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list models error: %w", err)
+	}
+	cache.MemCache.Set(cacheKey, &models, time.Hour)
+	return models, nil
 }

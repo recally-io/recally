@@ -8,9 +8,10 @@ RETURNING *;
 -- name: GetAssistant :one
 SELECT * FROM assistants WHERE uuid = $1;
 
--- name: UpdateAssistant :exec
+-- name: UpdateAssistant :one
 UPDATE assistants SET name = $2, description = $3, system_prompt = $4, model = $5, metadata = $6
-WHERE uuid = $1;
+WHERE uuid = $1
+RETURNING *;
 
 -- name: DeleteAssistant :exec
 DELETE FROM assistants WHERE uuid = $1;

@@ -27,6 +27,18 @@ func New(baseUrl, apiKey string) *LLM {
 	}
 }
 
+func (l *LLM) ListModels(ctx context.Context) ([]string, error) {
+	models, err := l.client.ListModels(ctx)
+	if err != nil {
+		return nil, err
+	}
+	data := make([]string, 0, len(models.Models))
+	for _, m := range models.Models {
+		data = append(data, m.ID)
+	}
+	return data, nil
+}
+
 func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, options ...Option) (openai.ChatCompletionChoice, openai.Usage, error) {
 	opts := &Options{}
 	for _, o := range options {
