@@ -24,7 +24,6 @@ export default function Sidebar() {
     window.location.href = "/assistants.html";
   }
   const threadId = url.searchParams.get("thread-id");
-
   const setThreadId = (id) => {
     url.searchParams.set("thread-id", id);
     window.location.href = url;
@@ -85,8 +84,9 @@ export default function Sidebar() {
         align="stretch"
         justify="start"
         gap="md"
-        padding="md"
+        p="sm"
         h="100%"
+        radius="md"
       >
         <Stack align="stretch" justify="start" gap="md">
           <Button

@@ -17,7 +17,7 @@ import Header from "./header";
 const theme = createTheme({});
 
 export default function Layout({ main, nav = null }) {
-  const [opened, { toggle }] = useDisclosure(true);
+  const [opened, { toggle }] = useDisclosure(false);
   let haveNav = nav !== null;
 
   return (
@@ -36,7 +36,7 @@ export default function Layout({ main, nav = null }) {
             },
           }}
           padding="md"
-          withBorder={false}
+          withBorder={true}
         >
           <AppShell.Header>
             <Header opened={opened} toggle={toggle} showNavBurger={haveNav} />
