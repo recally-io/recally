@@ -9,6 +9,7 @@ import {
   LoadingOverlay,
   Modal,
   NativeSelect,
+  NavLink,
   Stack,
   Text,
   Textarea,
@@ -190,9 +191,11 @@ export default function Assistants() {
                   <Group mt="xs" mb="1" justify="flex-end">
                     <Tooltip label="Chat">
                       <Button variant="outline" size="xs" w={60}>
-                        <a href={`/threads.html?assistant-id=${assistant.id}`}>
-                          <Icon icon="tabler:message-2" />
-                        </a>
+                        <NavLink
+                          px="0"
+                          href={`/threads.html?assistant-id=${assistant.id}`}
+                          label={<Icon icon="tabler:message-2" />}
+                        ></NavLink>
                       </Button>
                     </Tooltip>
                     <Tooltip label="Edit">
