@@ -25,15 +25,15 @@ func (m *memCache) SetWithContext(ctx context.Context, key CacheKey, value inter
 	m.Set(key, value, expiration)
 }
 
-func (m *memCache) Get(key CacheKey) ([]byte, bool) {
+func (m *memCache) Get(key CacheKey) (any, bool) {
 	value, ok := m.c.Get(key.String())
 	if !ok {
 		return nil, false
 	}
-	return value.([]byte), true
+	return value, true
 }
 
-func (m *memCache) GetWithContext(ctx context.Context, key CacheKey) ([]byte, bool) {
+func (m *memCache) GetWithContext(ctx context.Context, key CacheKey) (any, bool) {
 	return m.Get(key)
 }
 

@@ -8,19 +8,26 @@ import {
   Group,
   LoadingOverlay,
   Modal,
-  NavLink,
+  NativeSelect,
   Stack,
   Text,
   Textarea,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { get, post, queryClient } from "../libs/api";
+import { useEffect, useState } from "react";
+import { toastError } from "../libs/alert";
+import { get, post, put, queryClient } from "../libs/api";
 
 export default function Assistants() {
+  const [assistantId, setAssistantId] = useState("");
+  const [filteredAssistants, setFilteredAssistants] = useState([]);
+  const [searchValue, setSearchValue] = useState("");
+
   const listAssistants = useQuery({
     queryKey: ["list-asstants"],
     queryFn: async () => {
@@ -29,13 +36,41 @@ export default function Assistants() {
     },
   });
 
-  const createAssistant = useMutation({
+  useEffect(() => {
+    if (listAssistants.data) {
+      setFilteredAssistants(listAssistants.data);
+    }
+  }, [listAssistants.data]);
+
+  const listModels = useQuery({
+    queryKey: ["list-assistants-models"],
+    queryFn: async () => {
+      const res = await get("/api/v1/assistants/models");
+      return res.data || [];
+    },
+  });
+
+  const upsertAssistant = useMutation({
     mutationFn: async (data) => {
-      const res = await post("/api/v1/assistants", null, data);
-      return res.data;
+      if (assistantId) {
+        console.log(
+          `update assistant ${assistantId}, data: ${JSON.stringify(data)}`,
+        );
+        const res = await put(`/api/v1/assistants/${assistantId}`, null, data);
+        return res.data;
+      } else {
+        console.log(`create assistant: ${JSON.stringify(data)}`);
+        const res = await post("/api/v1/assistants", null, data);
+        return res.data;
+      }
     },
     onSuccess: async () => {
       queryClient.invalidateQueries("list-asstants");
+    },
+    onError: (error) => {
+      toastError(
+        `Failed to upsert assistant ${assistantId} : ${error.message}`,
+      );
     },
   });
 
@@ -45,14 +80,11 @@ export default function Assistants() {
       name: "Assistant name",
       description: "Assistant description",
       systemPrompt: "You are a helpful assistant.",
+      model: "gpt-4o",
     },
 
     validate: {},
   });
-
-  if (listAssistants.error) {
-    return <div>Error: {listAssistants.error.message}</div>;
-  }
 
   return (
     <>
@@ -62,7 +94,7 @@ export default function Assistants() {
             console.log(
               `start createAssistant.mutate: ${JSON.stringify(values)}`,
             );
-            await createAssistant.mutateAsync(values);
+            await upsertAssistant.mutateAsync(values);
           })}
         >
           <TextInput
@@ -86,6 +118,15 @@ export default function Assistants() {
             key={form.key("systemPrompt")}
             {...form.getInputProps("systemPrompt")}
           />
+          <NativeSelect
+            label="Model"
+            key={form.key("model")}
+            {...form.getInputProps("model")}
+            onChange={(e) => {
+              form.setFieldValue("model", e.target.value);
+            }}
+            data={listModels.data}
+          />
 
           <Group justify="flex-end" mt="md">
             <Button type="summit" onClick={close}>
@@ -99,15 +140,26 @@ export default function Assistants() {
       </Modal>
       <Container size="xl" mih="100vh" py="md">
         <Flex justify="center" align="center" direction="column" gap="lg">
-          <Title order={1}>All assistants</Title>
+          <Title order={1}>Assistants Hub</Title>
           <Stack justify="space-between" align="center">
             <TextInput
               size="md"
               w="100%"
               radius="md"
-              label="Search for assistants"
+              // label="Search for assistants"
               description="search assistants by name or description"
               placeholder="Type to search"
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.currentTarget.value);
+                setFilteredAssistants(
+                  listAssistants.data.filter((assistant) =>
+                    (assistant.name + assistant.description)
+                      .toLowerCase()
+                      .includes(e.currentTarget.value.toLowerCase()),
+                  ),
+                );
+              }}
             />
             <Button
               w="100%"
@@ -121,49 +173,46 @@ export default function Assistants() {
           </Stack>
           <LoadingOverlay visible={listAssistants.isLoading} />
           <Grid gutter="lg" justify="center" align="center" w="100%">
-            {listAssistants.data &&
-              listAssistants.data.map((assistant) => (
-                <Grid.Col
-                  key={assistant.id}
-                  span={{ base: 12, md: 6, lg: 3 }}
-                  m="md"
-                >
-                  <Card shadow="sm" padding="lg" radius="md" withBorder>
-                    <Title order={3} c="cyan">
-                      {assistant.name}
-                    </Title>
-                    <Text order={4} c="grape">
-                      {assistant.description}{" "}
-                    </Text>
+            {filteredAssistants.map((assistant) => (
+              <Grid.Col
+                key={assistant.id}
+                span={{ base: 12, md: 6, lg: 3 }}
+                m="md"
+              >
+                <Card shadow="sm" padding="lg" radius="md" withBorder>
+                  <Title order={3} c="cyan">
+                    {assistant.name}
+                  </Title>
+                  <Text order={4} c="grape">
+                    {assistant.description}{" "}
+                  </Text>
 
-                    <Group mt="xs" justify="flex-end">
-                      <Button
-                        variant="outline"
-                        size="xs"
-                        leftSection={<Icon icon="tabler:message-2" />}
-                      >
-                        <NavLink
-                          href={`/threads.html?assistant-id=${assistant.id}`}
-                          label="Chat"
-                          p="0"
-                          size="xs"
-                        ></NavLink>
+                  <Group mt="xs" mb="1" justify="flex-end">
+                    <Tooltip label="Chat">
+                      <Button variant="outline" size="xs" w={60}>
+                        <a href={`/threads.html?assistant-id=${assistant.id}`}>
+                          <Icon icon="tabler:message-2" />
+                        </a>
                       </Button>
+                    </Tooltip>
+                    <Tooltip label="Edit">
                       <Button
                         variant="outline"
                         size="xs"
-                        leftSection={<Icon icon="tabler:edit" />}
+                        w={60}
                         onClick={(e) => {
-                          form.initialize(assistant);
+                          setAssistantId(assistant.id);
+                          form.setValues(assistant);
                           open();
                         }}
                       >
-                        Edit
+                        <Icon icon="tabler:edit" />
                       </Button>
-                    </Group>
-                  </Card>
-                </Grid.Col>
-              ))}
+                    </Tooltip>
+                  </Group>
+                </Card>
+              </Grid.Col>
+            ))}
           </Grid>
         </Flex>
       </Container>

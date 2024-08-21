@@ -624,6 +624,46 @@ paths:
       summary: Create Thread Message
       tags:
       - Assistants
+  /assistants/models:
+    get:
+      consumes:
+      - application/json
+      description: Lists available language models
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Models
+      tags:
+      - Assistants
   /auth/login:
     post:
       consumes:

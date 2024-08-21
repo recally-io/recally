@@ -16,6 +16,7 @@ import (
 type assistantService interface {
 	ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UUID) ([]assistants.AssistantDTO, error)
 	CreateAssistant(ctx context.Context, tx db.DBTX, assistant *assistants.AssistantDTO) (*assistants.AssistantDTO, error)
+	UpdateAssistant(ctx context.Context, tx db.DBTX, assistant *assistants.AssistantDTO) (*assistants.AssistantDTO, error)
 	GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.AssistantDTO, error)
 	ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]assistants.ThreadDTO, error)
 	CreateThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadDTO, error)
@@ -24,6 +25,7 @@ type assistantService interface {
 	CreateThreadMessage(ctx context.Context, tx db.DBTX, threadId uuid.UUID, message *assistants.ThreadMessageDTO) (*assistants.ThreadMessageDTO, error)
 	AddThreadMessage(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO, role, text string) (*assistants.ThreadMessageDTO, error)
 	RunThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadMessageDTO, error)
+	ListModels(ctx context.Context) ([]string, error)
 }
 
 type assistantHandler struct {
@@ -35,12 +37,17 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 	g := e.Group("/assistants")
 	g.GET("", h.listAssistants)
 	g.POST("", h.createAssistant)
-	g.GET("/:assistant-id", h.GetAssistant)
+	g.GET("/:assistant-id", h.getAssistant)
+	g.PUT("/:assistant-id", h.updateAssistant)
+
 	g.GET("/:assistant-id/threads", h.listThreads)
 	g.GET("/:assistant-id/threads/:thread-id", h.getThread)
 	g.POST("/:assistant-id/threads", h.createThread)
+
 	g.GET("/:assistant-id/threads/:thread-id/messages", h.listThreadMessages)
 	g.POST("/:assistant-id/threads/:thread-id/messages", h.createThreadMessage)
+
+	g.GET("/models", h.listModels)
 }
 
 // listAssistants is a handler function that lists the assistants for a user.
@@ -89,7 +96,7 @@ func (h *assistantHandler) listAssistants(c echo.Context) error {
 // @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
 // @Failure 500 {object} JSONResult{data=nil} "Internal
 // @Router /assistants/{assistant-id} [get]
-func (h *assistantHandler) GetAssistant(c echo.Context) error {
+func (h *assistantHandler) getAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
 	assistantId, err := uuid.Parse(c.Param("assistant-id"))
 	if err != nil {
@@ -151,6 +158,38 @@ func (h *assistantHandler) createAssistant(c echo.Context) error {
 	}
 
 	assistant, err := h.service.CreateAssistant(ctx, tx, &assistantDTO)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusCreated, assistant)
+}
+
+func (h *assistantHandler) updateAssistant(c echo.Context) error {
+	assistantId, err := uuid.Parse(c.Param("assistant-id"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid assistant-id: %s", c.Param("assistant-id")))
+	}
+	ctx := c.Request().Context()
+	tx, user, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	var req createAssistantRequest
+	if err := c.Bind(&req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	assistantDTO := assistants.AssistantDTO{
+		Id:           assistantId,
+		Name:         req.Name,
+		Description:  req.Description,
+		SystemPrompt: req.SystemPrompt,
+		UserId:       user.ID,
+		Model:        req.Model,
+	}
+
+	assistant, err := h.service.UpdateAssistant(ctx, tx, &assistantDTO)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
@@ -398,4 +437,21 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 	}
 
 	return JsonResponse(c, http.StatusCreated, resp)
+}
+
+// @Summary List Models
+// @Description Lists available language models
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Success 200 {object} JSONResult{data=[]string} "Success"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/models [get]
+func (h *assistantHandler) listModels(c echo.Context) error {
+	models, err := h.service.ListModels(c.Request().Context())
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	return JsonResponse(c, http.StatusOK, models)
 }

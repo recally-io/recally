@@ -82,11 +82,11 @@ func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value interf
 	}
 }
 
-func (c *DbCache) Get(key CacheKey) ([]byte, bool) {
+func (c *DbCache) Get(key CacheKey) (any, bool) {
 	return c.GetWithContext(context.Background(), key)
 }
 
-func (c *DbCache) GetWithContext(ctx context.Context, key CacheKey) ([]byte, bool) {
+func (c *DbCache) GetWithContext(ctx context.Context, key CacheKey) (any, bool) {
 	item, err := c.db.GetCacheByKey(ctx, c.tx, db.GetCacheByKeyParams{
 		Domain: key.Domain,
 		Key:    key.Key,

@@ -30,7 +30,7 @@ export async function request(method, path, params = null, body = null) {
   const res = await fetch(path, options);
   if (!res.ok) {
     throw new Error(
-      `Failed to fetch ${path}, response status: ${res.status} ${res.statusText}`,
+      `Error ${method} ${path}. Response status: ${res.status} ${res.statusText}`,
     );
   }
   return await res.json();
@@ -57,4 +57,16 @@ export async function get(path, params = null) {
  */
 export async function post(path, params = null, body = null) {
   return await request("POST", path, params, body);
+}
+
+/**
+ * Sends a PUT request to the specified path with the given body.
+ * @param {string} path - The path to send the POST request to.
+ * @param {Object} [params=null] - The query parameters to include in the request.
+ * @param {object} [body=null] - The request body to send.
+ * @returns {Promise<Object>} - A promise that resolves to the JSON response from the server.
+ * @throws {Error} - If the request fails or the response status is not OK.
+ */
+export async function put(path, params = null, body = null) {
+  return await request("PUT", path, params, body);
 }

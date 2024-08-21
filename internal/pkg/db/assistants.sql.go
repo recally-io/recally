@@ -648,9 +648,10 @@ func (q *Queries) SimilaritySearchForThreadByCosineDistance(ctx context.Context,
 	return items, nil
 }
 
-const updateAssistant = `-- name: UpdateAssistant :exec
+const updateAssistant = `-- name: UpdateAssistant :one
 UPDATE assistants SET name = $2, description = $3, system_prompt = $4, model = $5, metadata = $6
 WHERE uuid = $1
+RETURNING id, uuid, user_id, name, description, system_prompt, model, metadata, created_at, updated_at
 `
 
 type UpdateAssistantParams struct {
@@ -662,8 +663,8 @@ type UpdateAssistantParams struct {
 	Metadata     []byte
 }
 
-func (q *Queries) UpdateAssistant(ctx context.Context, db DBTX, arg UpdateAssistantParams) error {
-	_, err := db.Exec(ctx, updateAssistant,
+func (q *Queries) UpdateAssistant(ctx context.Context, db DBTX, arg UpdateAssistantParams) (Assistant, error) {
+	row := db.QueryRow(ctx, updateAssistant,
 		arg.Uuid,
 		arg.Name,
 		arg.Description,
@@ -671,7 +672,20 @@ func (q *Queries) UpdateAssistant(ctx context.Context, db DBTX, arg UpdateAssist
 		arg.Model,
 		arg.Metadata,
 	)
-	return err
+	var i Assistant
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.UserID,
+		&i.Name,
+		&i.Description,
+		&i.SystemPrompt,
+		&i.Model,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateAssistantThread = `-- name: UpdateAssistantThread :exec
