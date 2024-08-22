@@ -25,8 +25,7 @@ export default function Layout({ main, nav = null }) {
       <MantineProvider theme={theme} defaultColorScheme="auto">
         <Notifications />
         <AppShell
-          header={{ height: "36" }}
-          footer={{ height: "36" }}
+          header={{ height: "4dvh" }}
           navbar={{
             width: "300",
             breakpoint: "sm",
@@ -35,7 +34,7 @@ export default function Layout({ main, nav = null }) {
               desktop: !haveNav || !opened,
             },
           }}
-          padding="md"
+          padding="0"
           withBorder={true}
         >
           <AppShell.Header>
@@ -43,13 +42,6 @@ export default function Layout({ main, nav = null }) {
           </AppShell.Header>
           <AppShell.Navbar p="md">{nav}</AppShell.Navbar>
           <AppShell.Main>{main}</AppShell.Main>
-          <AppShell.Footer>
-            <Container py="sm">
-              <Text align="center" size="xs">
-                © 2024 Vibrain Inc.
-              </Text>
-            </Container>
-          </AppShell.Footer>
         </AppShell>
       </MantineProvider>
     </QueryClientProvider>
