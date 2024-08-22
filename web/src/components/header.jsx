@@ -137,14 +137,14 @@ export default function Header({ opened, toggle, showNavBurger }) {
         justify="space-between"
         align="center"
         gap="lg"
-        bg={colorScheme === "dark" ? "gray.8" : "gray.3"}
+        p="0"
+        bg={colorScheme === "dark" ? "dark.8" : "gray.3"}
       >
         {showNavBurger && (
           <Burger
             opened={opened}
             onClick={toggle}
             size="sm"
-            pl="lg"
             aria-label="Toggle navigation"
           />
         )}
@@ -157,6 +157,7 @@ export default function Header({ opened, toggle, showNavBurger }) {
         </Flex>
         <Menu
           shadow="xl"
+          px="2"
           trigger="click"
           transition="slide-up"
           withArrow
