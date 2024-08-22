@@ -103,6 +103,7 @@ func (s *Service) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.
 func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadDTO, error) {
 	model := thread.Dump()
 	th, err := s.dao.CreateAssistantThread(ctx, tx, db.CreateAssistantThreadParams{
+		Uuid:        model.Uuid,
 		UserID:      model.UserID,
 		AssistantID: model.AssistantID,
 		Name:        model.Name,
@@ -112,6 +113,22 @@ func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDT
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create thread: %w", err)
+	}
+	thread.Load(&th)
+	return thread, nil
+}
+
+func (s *Service) UpdateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadDTO, error) {
+	model := thread.Dump()
+	th, err := s.dao.UpdateAssistantThread(ctx, tx, db.UpdateAssistantThreadParams{
+		Uuid:        thread.Id,
+		Name:        model.Name,
+		Description: model.Description,
+		Model:       model.Model,
+		Metadata:    model.Metadata,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update thread: %w", err)
 	}
 	thread.Load(&th)
 	return thread, nil

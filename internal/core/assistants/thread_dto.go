@@ -46,7 +46,11 @@ func (t *ThreadDTO) Load(dbo *db.AssistantThread) {
 
 func (d *ThreadDTO) Dump() *db.AssistantThread {
 	metadata, _ := json.Marshal(d.Metadata)
+	if d.Id == uuid.Nil {
+		d.Id = uuid.New()
+	}
 	return &db.AssistantThread{
+		Uuid:         d.Id,
 		UserID:       pgtype.UUID{Bytes: d.UserId, Valid: true},
 		AssistantID:  pgtype.UUID{Bytes: d.AssistantId, Valid: true},
 		SystemPrompt: pgtype.Text{String: d.SystemPrompt, Valid: d.SystemPrompt != ""},

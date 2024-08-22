@@ -21,16 +21,17 @@ SELECT * FROM assistants WHERE user_id = $1 ORDER BY created_at DESC;
 
 -- CRUD for assistant_threads
 -- name: CreateAssistantThread :one
-INSERT INTO assistant_threads (user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO assistant_threads (uuid, user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *;
 
 -- name: GetAssistantThread :one
 SELECT * FROM assistant_threads WHERE uuid = $1;
 
--- name: UpdateAssistantThread :exec
-UPDATE assistant_threads SET name = $2, description = $3, model = $4, is_long_term_memory = $5, metadata = $6, system_prompt = $7 
-WHERE uuid = $1;
+-- name: UpdateAssistantThread :one
+UPDATE assistant_threads SET name = $2, description = $3, model = $4, is_long_term_memory = $5, metadata = $6, system_prompt = $7
+WHERE uuid = $1
+RETURNING *;
 
 -- name: DeleteAssistantThread :exec
 DELETE FROM assistant_threads WHERE uuid = $1;
@@ -90,11 +91,11 @@ RETURNING *;
 DELETE FROM assistant_embedddings WHERE id = $1;
 
 -- It need combine all these results to get the final result:
--- 1. assistants -> assistant_attachments -> assistant_message_embedddings 
--- 2. assistant_threads -> assistant_attachments -> assistant_message_embedddings 
+-- 1. assistants -> assistant_attachments -> assistant_message_embedddings
+-- 2. assistant_threads -> assistant_attachments -> assistant_message_embedddings
 -- 3. assistant_threads -> assistant_messages -> assistant_attachments -> assistant_message_embedddings
 -- name: SimilaritySearchForThreadByCosineDistance :many
-SELECT ae.id, ae.text, 1 - (embeddings <=> $2) AS score  
+SELECT ae.id, ae.text, 1 - (embeddings <=> $2) AS score
 FROM assistant_embedddings ae
 JOIN assistant_attachments aa ON ae.attachment_id = aa.uuid
 WHERE ae.attachment_id IN (

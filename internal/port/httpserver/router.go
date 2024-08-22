@@ -2,8 +2,6 @@ package httpserver
 
 import (
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/logger"
 	"vibrain/web"
@@ -57,20 +55,4 @@ func (s *Service) registerRouters() {
 		logger.Default.Debug("Using static files as frontend")
 		e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
 	}
-}
-
-// reactReverseProxy is a reverse proxy for vite server
-func reactReverseProxy(c echo.Context) error {
-	remote, _ := url.Parse("http://localhost:5173")
-	proxy := httputil.NewSingleHostReverseProxy(remote)
-	proxy.Director = func(req *http.Request) {
-		req.Header = c.Request().Header
-		req.Host = remote.Host
-		req.URL = c.Request().URL
-		req.URL.Scheme = remote.Scheme
-		req.URL.Host = remote.Host
-	}
-
-	proxy.ServeHTTP(c.Response().Writer, c.Request())
-	return nil
 }
