@@ -208,6 +208,78 @@ func (h *assistantHandler) getThread(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, thread)
 }
 
+// deleteThread is a handler function that deletes a thread by ID.
+// It retrieves the thread ID from the request parameters and uses it to delete the thread.
+// If the thread ID is not found in the parameters, it returns an error with status code 400 (Bad Request).
+// If there is an error while deleting the thread, it returns an error with status code 500 (Internal Server Error).
+// Otherwise, it returns a JSON response with status code 204 (No Content).
+
+// @Summary Delete Thread
+// @Description Deletes a thread by ID
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Param thread-id path string true "Thread ID"
+// @success 204 {object} JSONResult{data=nil} "No Content"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id}/threads/{thread-id} [delete]
+func (h *assistantHandler) deleteThread(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(getThreadRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	err = h.service.DeleteThread(ctx, tx, req.ThreadId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	return JsonResponse(c, http.StatusNoContent, nil)
+}
+
+// generateThreadTitle is a handler function that generates a title for a thread.
+// It retrieves the thread ID from the request parameters and uses it to generate the title.
+// If the thread ID is not found in the parameters, it returns an error with status code 400 (Bad Request).
+// If there is an error while generating the title, it returns an error with status code 500 (Internal Server Error).
+// Otherwise, it returns a JSON response with status code 200 (OK) and the generated title.
+
+// @Summary Generate Thread Title
+// @Description Generates a title for a thread based on the conversation
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Param thread-id path string true "Thread ID"
+// @success 200 {object} JSONResult{data=string} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id}/threads/{thread-id}/generate-title [post]
+func (h *assistantHandler) generateThreadTitle(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(getThreadRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	title, err := h.service.GenerateThreadTitle(ctx, tx, req.ThreadId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, title)
+}
+
 // listThreadMessages is a handler function that lists the messages for a thread.
 // It retrieves the thread ID from the request parameters and uses it to fetch the messages.
 // If the thread ID is not found in the parameters, it returns an error with status code 400 (Bad Request).

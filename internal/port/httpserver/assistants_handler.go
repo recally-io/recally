@@ -21,6 +21,8 @@ type assistantService interface {
 	UpdateThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadDTO, error)
 	GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.ThreadDTO, error)
 	RunThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadMessageDTO, error)
+	DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error
+	GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.UUID) (string, error)
 
 	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]assistants.ThreadMessageDTO, error)
 	CreateThreadMessage(ctx context.Context, tx db.DBTX, threadId uuid.UUID, message *assistants.ThreadMessageDTO) (*assistants.ThreadMessageDTO, error)
@@ -42,9 +44,11 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 	g.PUT("/:assistant-id", h.updateAssistant)
 
 	g.GET("/:assistant-id/threads", h.listThreads)
-	g.GET("/:assistant-id/threads/:thread-id", h.getThread)
 	g.POST("/:assistant-id/threads", h.createThread)
+	g.GET("/:assistant-id/threads/:thread-id", h.getThread)
 	g.PUT("/:assistant-id/threads/:thread-id", h.updateThread)
+	g.DELETE("/:assistant-id/threads/:thread-id", h.deleteThread)
+	g.POST("/:assistant-id/threads/:thread-id/generate-title", h.generateThreadTitle)
 
 	g.GET("/:assistant-id/threads/:thread-id/messages", h.listThreadMessages)
 	g.POST("/:assistant-id/threads/:thread-id/messages", h.createThreadMessage)

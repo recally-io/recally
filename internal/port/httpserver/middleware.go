@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strings"
 	"time"
 	"vibrain/internal/pkg/auth"
@@ -31,15 +32,16 @@ func (s *Service) registerMiddlewares() {
 	e.Use(recoverMiddleware())
 	e.Use(middleware.CORS())
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
-		Skipper:      middleware.DefaultSkipper,
+		Skipper: func(c echo.Context) bool {
+			// skip for path like POST /api/v1/assistants/:assistant-id/threads/:thread-id/messages
+			if strings.HasPrefix(c.Path(), "/api/v1/assistants/") && strings.HasSuffix(c.Path(), "/messages") && c.Request().Method == http.MethodPost {
+				return true
+			}
+			return false
+		},
 		ErrorMessage: "custom timeout error message returns to client",
-		Timeout:      10 * time.Minute,
+		Timeout:      60 * time.Second,
 	}))
-	// e.Use(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
-	// 	Skipper: func(c echo.Context) bool {
-	// 		return !strings.HasPrefix(c.Path(), "/api/")
-	// 	},
-	// }))
 	e.Use(middleware.CORS())
 	e.Use(contextMiddleWare())
 	e.Use(transactionMiddleWare(pool))

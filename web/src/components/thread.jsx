@@ -7,6 +7,7 @@ import {
   FileButton,
   Flex,
   Group,
+  LoadingOverlay,
   Modal,
   NativeSelect,
   Paper,
@@ -26,7 +27,7 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import avatarImgUrl from "../assets/avatar-1.png";
 import { toastError } from "../libs/alert";
-import { get, post } from "../libs/api";
+import { get, post, queryClient } from "../libs/api";
 import useStore from "../libs/store";
 
 const url = new URL(window.location.href);
@@ -57,17 +58,6 @@ export default function ChatWindowsComponent() {
 
   const [fileContent, setFileContent] = useState("");
 
-  const listMessages = useQuery({
-    queryKey: ["list-messages", threadId],
-    queryFn: async () => {
-      const res = await get(
-        `/api/v1/assistants/${assistantId}/threads/${threadId}/messages`,
-      );
-      return res.data || [];
-    },
-    enabled: isLogin && !!threadId && !!assistantId,
-  });
-
   const getAssistant = useQuery({
     queryKey: ["get-assistant", assistantId],
     queryFn: async () => {
@@ -86,24 +76,23 @@ export default function ChatWindowsComponent() {
       return res.data || {};
     },
     enabled: isLogin && !!threadId && !!assistantId,
-    onSuccess: (data) => {
-      settingsForm.setValues(data);
-    },
   });
-  // set page title
+
   useEffect(() => {
-    document.title = `Chat with ${getThread.data?.name || "Assistant"}`;
+    if (getThread.data) {
+      settingsForm.setValues(getThread.data);
+      setMessageList(getThread.data.messages);
+      window.document.title = `Chat with ${getThread.data.name}`;
+    }
   }, [getThread.data]);
 
   const createThread = useMutation({
     mutationFn: async (data) => {
-      console.log(`createThread: ${JSON.stringify(data)}`);
       const res = await post(
         `/api/v1/assistants/${assistantId}/threads`,
         null,
         data,
       );
-      console.log(`createThread success: ${JSON.stringify(res)}`);
       return res.data;
     },
   });
@@ -118,15 +107,26 @@ export default function ChatWindowsComponent() {
   });
 
   useEffect(() => {
-    if (listMessages.data) {
-      setMessageList(listMessages.data);
-    }
-  }, [listMessages.isLoading, listMessages.data]);
-  useEffect(() => {
     chatArea.current.scrollTo({
       top: chatArea.current.scrollHeight,
       behavior: "smooth",
     });
+    console.log("message list: ", messageList);
+    console.log(getThread.data);
+
+    const generate = async () => {
+      await generateTitle.mutateAsync();
+    };
+
+    if (getThread.data) {
+      if (
+        messageList.length >= 4 &&
+        !getThread.data.metadata.is_generated_title
+      ) {
+        console.log("Generate title");
+        generate();
+      }
+    }
   }, [messageList]);
 
   const createMessage = useMutation({
@@ -167,6 +167,21 @@ export default function ChatWindowsComponent() {
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);
+    },
+  });
+
+  const generateTitle = useMutation({
+    mutationFn: async () => {
+      const res = await post(
+        `/api/v1/assistants/${assistantId}/threads/${threadId}/generate-title`,
+        null,
+        {},
+      );
+      return res.data;
+    },
+    onSuccess: (data) => {
+      settingsForm.setFieldValue("name", data.name);
+      queryClient.invalidateQueries(["get-thread", threadId]);
     },
   });
 
@@ -368,6 +383,7 @@ export default function ChatWindowsComponent() {
   return (
     <>
       <Container px="xs" h="95svh">
+        <LoadingOverlay visible={getThread.isLoading} />
         <Flex direction="column" justify="space-between" h="100%">
           <ScrollArea
             viewportRef={chatArea}

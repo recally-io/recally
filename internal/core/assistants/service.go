@@ -3,6 +3,7 @@ package assistants
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/db"
@@ -150,6 +151,14 @@ func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 	return &t, nil
 }
 
+func (s *Service) DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error {
+	err := s.dao.DeleteAssistantThread(ctx, tx, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete thread: %w", err)
+	}
+	return nil
+}
+
 func (s *Service) ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]ThreadMessageDTO, error) {
 	messages, err := s.dao.ListThreadMessages(ctx, tx, pgtype.UUID{Bytes: threadID, Valid: true})
 	if err != nil {
@@ -251,4 +260,47 @@ func (s *Service) ListModels(ctx context.Context) ([]string, error) {
 	}
 	cache.MemCache.Set(cacheKey, &models, time.Hour)
 	return models, nil
+}
+
+// GenerateThreadTitle generates a title for the thread based on the conversation.
+// It uses the last 4 messages in the thread to generate a title.
+// It uses the LLM to generate the title.
+// It updates the thread with the generated title.
+func (s *Service) GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.UUID) (string, error) {
+	thread, err := s.GetThread(ctx, tx, id)
+	if err != nil {
+		return "", fmt.Errorf("failed to get thread: %w", err)
+	}
+	messages, err := s.ListThreadMessages(ctx, tx, id)
+	if err != nil {
+		return "", fmt.Errorf("failed to get thread messages: %w", err)
+	}
+	if len(messages) < 4 {
+		return "", fmt.Errorf("not enough messages to generate title")
+	}
+
+	conversationStr := strings.Builder{}
+	for _, m := range messages[:4] {
+		conversationStr.WriteString(fmt.Sprintf("%s: %s\n", m.Role, m.Text))
+		conversationStr.WriteString("\n")
+	}
+
+	prompt, err := getTitleGenerationPrompt(conversationStr.String())
+	if err != nil {
+		return "", fmt.Errorf("failed to get title generation prompt: %w", err)
+	}
+
+	title, err := s.llm.TextCompletion(ctx, prompt)
+	if err != nil {
+		return "", fmt.Errorf("GenerateThreadTitle: %w", err)
+	}
+	thread.Name = title
+	thread.Metadata.IsGeneratedTitle = true
+
+	_, err = s.UpdateThread(ctx, tx, thread)
+	if err != nil {
+		return "", fmt.Errorf("failed to update thread: %w", err)
+	}
+
+	return title, nil
 }
