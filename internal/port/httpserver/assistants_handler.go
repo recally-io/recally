@@ -20,7 +20,7 @@ type assistantService interface {
 	CreateThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadDTO, error)
 	UpdateThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadDTO, error)
 	GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.ThreadDTO, error)
-	RunThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadMessageDTO, error)
+	RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.ThreadMessageDTO, error)
 	DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 	GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.UUID) (string, error)
 

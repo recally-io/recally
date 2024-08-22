@@ -63,7 +63,19 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 	}
 	req := opts.ToChatCompletionRequest()
 	req.Messages = messages
-	req.Tools = llmTools(l.toolMappings)
+
+	// dynamically add tools to the request
+	if len(opts.ToolNames) > 0 {
+		mapping := make(map[string]tools.Tool)
+		for _, name := range opts.ToolNames {
+			tool, ok := l.toolMappings[name]
+			if ok {
+				mapping[name] = tool
+			}
+			req.Tools = llmTools(mapping)
+		}
+	}
+
 	choice, usage, err := l.generateContent(ctx, req)
 	if err != nil {
 		return choice, usage, err

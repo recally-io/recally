@@ -35,7 +35,7 @@ func (h *Handler) LLMChatHandler(c telebot.Context) error {
 		return err
 	}
 
-	message, err := h.assistantService.RunThread(ctx, tx, thread)
+	message, err := h.assistantService.RunThread(ctx, tx, thread.Id)
 	if err != nil {
 		logger.FromContext(ctx).Error("Failed to run thread", "err", err)
 		_ = c.Reply("Failed to run thread " + err.Error())
