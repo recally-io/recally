@@ -328,16 +328,17 @@ export default function ChatWindowsComponent() {
 
   return (
     <>
-      <Container size="xl">
-        <Flex direction="column" justify="space-between" h="89vh">
+      <Container px="xs" h="calc(100dvh - 110px)">
+        <Flex direction="column" justify="space-between" h="100%">
           <ScrollArea
             viewportRef={chatArea}
             type="scroll"
             offsetScrollbars
+            scrollbarSize="4"
             scrollbars="y"
-            style={{
-              flex: 1,
-            }}
+            // style={{
+            //     flex: 1,
+            // }}
           >
             <Stack spacing="md" py="lg">
               {messageList.map((item) => {

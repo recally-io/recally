@@ -157,7 +157,7 @@ export default function Header({ opened, toggle, showNavBurger }) {
         </Flex>
         <Menu
           shadow="xl"
-          trigger="hover"
+          trigger="click"
           transition="slide-up"
           withArrow
           hiddenFrom="md"
