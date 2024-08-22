@@ -1,11 +1,13 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   ActionIcon,
+  Autocomplete,
   Avatar,
   Button,
   Container,
   FileButton,
   Flex,
+  FocusTrap,
   Group,
   LoadingOverlay,
   Modal,
@@ -31,6 +33,7 @@ import { get, post, queryClient } from "../libs/api";
 import useStore from "../libs/store";
 
 const url = new URL(window.location.href);
+const defaultModel = "gpt-4o";
 
 export default function ChatWindowsComponent() {
   const isLogin = useStore((state) => state.isLogin);
@@ -38,6 +41,9 @@ export default function ChatWindowsComponent() {
 
   const [settingsOpened, { open: openSettings, close: closeSettings }] =
     useDisclosure(false);
+  const [isShowModelSelecter, setIsShowModelSelecter] = useState(false);
+  const [chatModel, setChatModel] = useState(defaultModel);
+  const [modelSelecterValue, setModelSelecterValue] = useState("");
   const settingsForm = useForm({
     initialValues: {
       name: "New Thread",
@@ -45,7 +51,7 @@ export default function ChatWindowsComponent() {
       systemPrompt: "",
       temperature: 0.7,
       maxToken: 4096,
-      model: "gpt-4o",
+      model: defaultModel,
     },
   });
 
@@ -82,7 +88,10 @@ export default function ChatWindowsComponent() {
     if (getThread.data) {
       settingsForm.setValues(getThread.data);
       setMessageList(getThread.data.messages);
-      window.document.title = `Chat with ${getThread.data.name}`;
+      if (getThread.data.model != "") {
+        setChatModel(getThread.data.model);
+      }
+      window.document.title = getThread.data.name;
     }
   }, [getThread.data]);
 
@@ -129,9 +138,18 @@ export default function ChatWindowsComponent() {
     }
   }, [messageList]);
 
-  const createMessage = useMutation({
+  useEffect(() => {
+    if (newText === "@") {
+      setIsShowModelSelecter(true);
+    }
+  }, [newText]);
+
+  const sendMessage = useMutation({
     mutationFn: async () => {
-      const text = newText;
+      let text = newText;
+      if (text.startsWith("@")) {
+        text = text.replace(/^@[^ ]+\s*/, "");
+      }
       setNewText("");
       setMessageList((prevMessageList) => [
         ...prevMessageList,
@@ -152,7 +170,7 @@ export default function ChatWindowsComponent() {
         {
           role: "user",
           text: text,
-          model: "gpt-4o",
+          model: chatModel,
         },
       );
 
@@ -323,7 +341,7 @@ export default function ChatWindowsComponent() {
         onChange={handleFileChange}
         // accept="image/png,image/jpeg"
         // multiple
-        disabled={createMessage.isPending}
+        disabled={sendMessage.isPending}
       >
         {(props) => (
           <ActionIcon {...props} variant="subtle" radius="lg">
@@ -343,39 +361,61 @@ export default function ChatWindowsComponent() {
           bottom: 0,
         }}
       >
-        <Textarea
-          placeholder="Shift + Enter to send"
-          radius="lg"
-          leftSection={fileInputButton()}
-          minRows={1}
-          maxRows={5}
-          autosize
-          disabled={createMessage.isPending}
-          onKeyDown={async (e) => {
-            // Shift + Enter to send
-            if (e.key === "Enter" && e.shiftKey === true) {
-              await createMessage.mutateAsync();
-            }
-          }}
-          rightSection={
-            <ActionIcon
-              variant="transparent"
-              aria-label="Settings"
-              disabled={newText === "" || createMessage.isPending}
-              onClick={async () => {
-                await createMessage.mutateAsync();
+        {isShowModelSelecter && (
+          <FocusTrap active={isShowModelSelecter}>
+            <Autocomplete
+              label="Talk to model"
+              placeholder="Type to select model"
+              data={[...new Set(listModels.data)]}
+              dropdownOpened={isShowModelSelecter}
+              radius="lg"
+              leftSectionPointerEvents="none"
+              leftSection={<Icon icon="tabler:robot" />}
+              value={modelSelecterValue}
+              onChange={setModelSelecterValue}
+              onOptionSubmit={(v) => {
+                setChatModel(v);
+                setNewText(`@${v} `);
+                setIsShowModelSelecter(false);
               }}
-            >
-              {createMessage.isPending ? (
-                <Icon icon="svg-spinners:180-ring" />
-              ) : (
-                <Icon icon="tabler:arrow-up"></Icon>
-              )}
-            </ActionIcon>
-          }
-          value={newText}
-          onChange={(e) => setNewText(e.currentTarget.value)}
-        ></Textarea>
+            />
+          </FocusTrap>
+        )}
+        <FocusTrap active={!isShowModelSelecter}>
+          <Textarea
+            placeholder="Shift + Enter to send"
+            radius="lg"
+            leftSection={fileInputButton()}
+            minRows={1}
+            maxRows={5}
+            autosize
+            disabled={sendMessage.isPending}
+            onKeyDown={async (e) => {
+              // Shift + Enter to send
+              if (e.key === "Enter" && e.shiftKey === true) {
+                await sendMessage.mutateAsync();
+              }
+            }}
+            rightSection={
+              <ActionIcon
+                variant="transparent"
+                aria-label="Settings"
+                disabled={newText === "" || sendMessage.isPending}
+                onClick={async () => {
+                  await sendMessage.mutateAsync();
+                }}
+              >
+                {sendMessage.isPending ? (
+                  <Icon icon="svg-spinners:180-ring" />
+                ) : (
+                  <Icon icon="tabler:arrow-up"></Icon>
+                )}
+              </ActionIcon>
+            }
+            value={newText}
+            onChange={(e) => setNewText(e.currentTarget.value)}
+          ></Textarea>
+        </FocusTrap>
       </Container>
     );
   };

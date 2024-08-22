@@ -53,7 +53,8 @@ type Options struct {
 	JSONMode bool `json:"json"`
 
 	// Tools is a list of tools to use. Each tool can be a specific tool or a function.
-	Tools []Tool `json:"tools,omitempty"`
+	Tools     []Tool   `json:"tools,omitempty"`
+	ToolNames []string `json:"tool_names,omitempty"`
 	// ToolChoice is the choice of tool to use, it can either be "none", "auto" (the default behavior), or a specific tool as described in the ToolChoice type.
 	ToolChoice any `json:"tool_choice"`
 
@@ -245,35 +246,10 @@ func WithPresencePenalty(presencePenalty float64) Option {
 	}
 }
 
-// WithFunctionCallBehavior will add an option to set the behavior to use when calling functions.
-// Deprecated: Use WithToolChoice instead.
-func WithFunctionCallBehavior(behavior FunctionCallBehavior) Option {
-	return func(o *Options) {
-		o.FunctionCallBehavior = behavior
-	}
-}
-
-// WithFunctions will add an option to set the functions to include in the request.
-// Deprecated: Use WithTools instead.
-func WithFunctions(functions []FunctionDefinition) Option {
-	return func(o *Options) {
-		o.Functions = functions
-	}
-}
-
-// WithToolChoice will add an option to set the choice of tool to use.
-// It can either be "none", "auto" (the default behavior), or a specific tool as described in the ToolChoice type.
-func WithToolChoice(choice any) Option {
-	// TODO: Add type validation for choice.
-	return func(o *Options) {
-		o.ToolChoice = choice
-	}
-}
-
 // WithTools will add an option to set the tools to use.
-func WithTools(tools []Tool) Option {
+func WithToolNames(names []string) Option {
 	return func(o *Options) {
-		o.Tools = tools
+		o.ToolNames = names
 	}
 }
 
@@ -282,13 +258,5 @@ func WithTools(tools []Tool) Option {
 func WithJSONMode() Option {
 	return func(o *Options) {
 		o.JSONMode = true
-	}
-}
-
-// WithMetadata will add an option to set metadata to include in the request.
-// The meaning of this field is specific to the backend in use.
-func WithMetadata(metadata map[string]interface{}) Option {
-	return func(o *Options) {
-		o.Metadata = metadata
 	}
 }

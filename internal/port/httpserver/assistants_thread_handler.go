@@ -205,6 +205,12 @@ func (h *assistantHandler) getThread(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
+	messages, err := h.service.ListThreadMessages(ctx, tx, req.ThreadId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	thread.Messages = messages
 	return JsonResponse(c, http.StatusOK, thread)
 }
 
@@ -376,7 +382,7 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	resp, err := h.service.RunThread(ctx, tx, thread)
+	resp, err := h.service.RunThread(ctx, tx, thread.Id)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}

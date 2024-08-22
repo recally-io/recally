@@ -143,11 +143,11 @@ func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 	var t ThreadDTO
 	t.Load(&th)
 
-	messages, err := s.ListThreadMessages(ctx, tx, th.Uuid)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get thread messages: %w", err)
-	}
-	t.Messages = messages
+	// messages, err := s.ListThreadMessages(ctx, tx, th.Uuid)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to get thread messages: %w", err)
+	// }
+	// t.Messages = messages
 	return &t, nil
 }
 
@@ -206,29 +206,32 @@ func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *Thre
 	return s.CreateThreadMessage(ctx, tx, thread.Id, message)
 }
 
-func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadMessageDTO, error) {
+func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*ThreadMessageDTO, error) {
+	thread, err := s.GetThread(ctx, tx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get thread: %w", err)
+	}
 	oaiMessages := make([]openai.ChatCompletionMessage, 0)
-	messages, err := s.ListThreadMessages(ctx, tx, thread.Id)
+	messages, err := s.ListThreadMessages(ctx, tx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thread messages: %w", err)
-	}
-	for _, m := range messages {
-		oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
-			Role:    m.Role,
-			Content: m.Text,
-		})
 	}
 	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 		Role:    "system",
 		Content: thread.SystemPrompt,
 	})
-	for _, m := range thread.Messages {
+	model := thread.Model
+	for _, m := range messages {
 		oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 			Role:    m.Role,
 			Content: m.Text,
 		})
+		// Use the model from the last message
+		if m.Model != "" {
+			model = m.Model
+		}
 	}
-	resp, usage, err := s.llm.GenerateContent(ctx, oaiMessages)
+	resp, usage, err := s.llm.GenerateContent(ctx, oaiMessages, llms.WithModel(model))
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +239,7 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) 
 	message := &ThreadMessageDTO{
 		UserID:   thread.UserId,
 		ThreadID: thread.Id,
-		Model:    thread.Model,
+		Model:    model,
 		Role:     resp.Message.Role,
 		Text:     resp.Message.Content,
 		Token:    usage.TotalTokens,
