@@ -1,6 +1,10 @@
 package httpserver
 
-import "github.com/labstack/echo/v4"
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+)
 
 // @Description JSONResult represents the structure of the JSON response.
 type JSONResult struct {
@@ -30,4 +34,23 @@ func ErrorResponse(c echo.Context, code int, err error) error {
 		Code:    code,
 		Message: err.Error(),
 	})
+}
+
+// bindAndValidate binds the request data to the provided struct and validates it.
+// It returns an error if either binding or validation fails.
+//
+// Parameters:
+//   - c: The echo.Context object representing the current HTTP request context.
+//   - req: A pointer to the struct where the request data will be bound.
+//
+// Returns:
+//   - An error if binding or validation fails, nil otherwise.
+func bindAndValidate(c echo.Context, req any) error {
+	if err := c.Bind(req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+	if err := c.Validate(req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+	return nil
 }

@@ -112,15 +112,26 @@ definitions:
         type: string
       system_prompt:
         type: string
+    required:
+    - name
     type: object
   httpserver.createThreadMessageRequest:
     properties:
+      assistantId:
+        type: string
       model:
         type: string
       role:
         type: string
       text:
         type: string
+      threadId:
+        type: string
+    required:
+    - assistantId
+    - role
+    - text
+    - threadId
     type: object
   httpserver.loginRequest:
     properties:
@@ -137,6 +148,25 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  httpserver.updateAssistantRequest:
+    properties:
+      assistantId:
+        type: string
+      description:
+        type: string
+      model:
+        type: string
+      name:
+        type: string
+      system_prompt:
+        type: string
+      threadId:
+        type: string
+    required:
+    - assistantId
+    - name
+    - threadId
     type: object
   httpserver.userResponse:
     properties:
@@ -335,6 +365,64 @@ paths:
       summary: Get Assistant
       tags:
       - Assistants
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing assistant
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
+      - description: Assistant
+        in: body
+        name: assistant
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.updateAssistantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/assistants.AssistantDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Update Assistant
+      tags:
+      - Assistants
   /assistants/{assistant-id}/threads:
     get:
       consumes:
@@ -499,6 +587,69 @@ paths:
                   type: object
               type: object
       summary: Get Thread
+      tags:
+      - Assistants
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing thread under an assistant
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
+      - description: Thread ID
+        in: path
+        name: thread-id
+        required: true
+        type: string
+      - description: Thread
+        in: body
+        name: thread
+        required: true
+        schema:
+          $ref: '#/definitions/assistants.ThreadDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/assistants.ThreadDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Update Thread
       tags:
       - Assistants
   /assistants/{assistant-id}/threads/{thread-id}/messages:

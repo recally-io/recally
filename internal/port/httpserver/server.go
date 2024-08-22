@@ -12,6 +12,7 @@ import (
 	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,6 +22,18 @@ type Service struct {
 	llm    *llms.LLM
 	cache  cache.Cache
 	uiCmd  *exec.Cmd
+}
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	if err := cv.validator.Struct(i); err != nil {
+		// Optionally, you could return the error to give each route more control over the status code
+		return fmt.Errorf("validation error: %w", err)
+	}
+	return nil
 }
 
 type Option func(*Service)
@@ -37,6 +50,7 @@ func New(pool *db.Pool, llm *llms.LLM, opts ...Option) (*Service, error) {
 		pool:   pool,
 		llm:    llm,
 	}
+	s.Server.Validator = &CustomValidator{validator: validator.New()}
 	if config.Settings.DebugUI {
 		logger.Default.Info("debug ui enabled")
 		s.uiCmd = exec.Command("bun", "run", "dev")

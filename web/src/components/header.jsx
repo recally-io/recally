@@ -165,7 +165,7 @@ export default function Header({ opened, toggle, showNavBurger }) {
         >
           <Menu.Target>
             <Button variant="transparent" size="sm">
-              <Avatar size="sm" radius="lg" src={avatarImgUrl} />
+              <Avatar size="sm" radius="lg" />
             </Button>
           </Menu.Target>
           <Menu.Dropdown>

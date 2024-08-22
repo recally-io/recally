@@ -91,12 +91,13 @@ func (q *Queries) CreateAssistantEmbedding(ctx context.Context, db DBTX, arg Cre
 }
 
 const createAssistantThread = `-- name: CreateAssistantThread :one
-INSERT INTO assistant_threads (user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO assistant_threads (uuid, user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id, uuid, user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata, created_at, updated_at
 `
 
 type CreateAssistantThreadParams struct {
+	Uuid             uuid.UUID
 	UserID           pgtype.UUID
 	AssistantID      pgtype.UUID
 	Name             string
@@ -110,6 +111,7 @@ type CreateAssistantThreadParams struct {
 // CRUD for assistant_threads
 func (q *Queries) CreateAssistantThread(ctx context.Context, db DBTX, arg CreateAssistantThreadParams) (AssistantThread, error) {
 	row := db.QueryRow(ctx, createAssistantThread,
+		arg.Uuid,
 		arg.UserID,
 		arg.AssistantID,
 		arg.Name,
@@ -590,7 +592,7 @@ func (q *Queries) ListThreadMessages(ctx context.Context, db DBTX, threadID pgty
 }
 
 const similaritySearchForThreadByCosineDistance = `-- name: SimilaritySearchForThreadByCosineDistance :many
-SELECT ae.id, ae.text, 1 - (embeddings <=> $2) AS score  
+SELECT ae.id, ae.text, 1 - (embeddings <=> $2) AS score
 FROM assistant_embedddings ae
 JOIN assistant_attachments aa ON ae.attachment_id = aa.uuid
 WHERE ae.attachment_id IN (
@@ -688,9 +690,10 @@ func (q *Queries) UpdateAssistant(ctx context.Context, db DBTX, arg UpdateAssist
 	return i, err
 }
 
-const updateAssistantThread = `-- name: UpdateAssistantThread :exec
-UPDATE assistant_threads SET name = $2, description = $3, model = $4, is_long_term_memory = $5, metadata = $6, system_prompt = $7 
+const updateAssistantThread = `-- name: UpdateAssistantThread :one
+UPDATE assistant_threads SET name = $2, description = $3, model = $4, is_long_term_memory = $5, metadata = $6, system_prompt = $7
 WHERE uuid = $1
+RETURNING id, uuid, user_id, assistant_id, name, description, system_prompt, model, is_long_term_memory, metadata, created_at, updated_at
 `
 
 type UpdateAssistantThreadParams struct {
@@ -703,8 +706,8 @@ type UpdateAssistantThreadParams struct {
 	SystemPrompt     pgtype.Text
 }
 
-func (q *Queries) UpdateAssistantThread(ctx context.Context, db DBTX, arg UpdateAssistantThreadParams) error {
-	_, err := db.Exec(ctx, updateAssistantThread,
+func (q *Queries) UpdateAssistantThread(ctx context.Context, db DBTX, arg UpdateAssistantThreadParams) (AssistantThread, error) {
+	row := db.QueryRow(ctx, updateAssistantThread,
 		arg.Uuid,
 		arg.Name,
 		arg.Description,
@@ -713,7 +716,22 @@ func (q *Queries) UpdateAssistantThread(ctx context.Context, db DBTX, arg Update
 		arg.Metadata,
 		arg.SystemPrompt,
 	)
-	return err
+	var i AssistantThread
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.UserID,
+		&i.AssistantID,
+		&i.Name,
+		&i.Description,
+		&i.SystemPrompt,
+		&i.Model,
+		&i.IsLongTermMemory,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateAttachment = `-- name: UpdateAttachment :exec

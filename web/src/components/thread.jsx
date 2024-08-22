@@ -39,6 +39,9 @@ export default function ChatWindowsComponent() {
     useDisclosure(false);
   const settingsForm = useForm({
     initialValues: {
+      name: "New Thread",
+      description: "",
+      systemPrompt: "",
       temperature: 0.7,
       maxToken: 4096,
       model: "gpt-4o",
@@ -46,7 +49,7 @@ export default function ChatWindowsComponent() {
   });
 
   const assistantId = url.searchParams.get("assistant-id");
-  const threadId = url.searchParams.get("thread-id");
+  let threadId = url.searchParams.get("thread-id");
   const [newText, setNewText] = useState("");
 
   const [messageList, setMessageList] = useState([]);
@@ -63,6 +66,15 @@ export default function ChatWindowsComponent() {
       return res.data || [];
     },
     enabled: isLogin && !!threadId && !!assistantId,
+  });
+
+  const getAssistant = useQuery({
+    queryKey: ["get-assistant", assistantId],
+    queryFn: async () => {
+      const res = await get(`/api/v1/assistants/${assistantId}`);
+      return res.data;
+    },
+    enabled: isLogin && !!assistantId,
   });
 
   const getThread = useQuery({
@@ -82,6 +94,19 @@ export default function ChatWindowsComponent() {
   useEffect(() => {
     document.title = `Chat with ${getThread.data?.name || "Assistant"}`;
   }, [getThread.data]);
+
+  const createThread = useMutation({
+    mutationFn: async (data) => {
+      console.log(`createThread: ${JSON.stringify(data)}`);
+      const res = await post(
+        `/api/v1/assistants/${assistantId}/threads`,
+        null,
+        data,
+      );
+      console.log(`createThread success: ${JSON.stringify(res)}`);
+      return res.data;
+    },
+  });
 
   const listModels = useQuery({
     queryKey: ["list-assistants-models"],
@@ -105,7 +130,22 @@ export default function ChatWindowsComponent() {
   }, [messageList]);
 
   const createMessage = useMutation({
-    mutationFn: async (text) => {
+    mutationFn: async () => {
+      const text = newText;
+      setNewText("");
+      setMessageList((prevMessageList) => [
+        ...prevMessageList,
+        { role: "user", text, id: Math.random() },
+      ]);
+
+      const isNewThread = threadId === null;
+      if (isNewThread) {
+        threadId = crypto.randomUUID();
+        let data = settingsForm.getValues();
+        data.id = threadId;
+        await createThread.mutateAsync(data);
+      }
+
       const res = await post(
         `/api/v1/assistants/${assistantId}/threads/${threadId}/messages`,
         null,
@@ -115,75 +155,76 @@ export default function ChatWindowsComponent() {
           model: "gpt-4o",
         },
       );
+
+      if (isNewThread) {
+        window.location.href = `/threads.html?assistant-id=${assistantId}&thread-id=${threadId}`;
+      }
+
       return res.data;
     },
     onSuccess: (data) => {
-      setMessageList((prevMessageList) => [
-        ...prevMessageList,
-        {
-          role: data.role,
-          text: data.text,
-          id: data.id,
-        },
-      ]);
+      setMessageList((prevMessageList) => [...prevMessageList, data]);
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);
     },
   });
 
-  const messageS = (id, role, text) => {
+  const messageS = (message) => {
     return (
       <Flex
         justify="flex-end"
         align="flex-start"
         direction="row"
         gap="sm"
-        key={id}
+        key={message.id}
       >
-        <Paper
-          shadow="sm"
-          px="sm"
-          maw="90%"
-          radius="lg"
-          bg={colorScheme === "dark" ? "" : "blue.2"}
-        >
-          <ScrollArea type="auto" scrollbars="x">
-            <Markdown>{text}</Markdown>
-          </ScrollArea>
-        </Paper>
+        <Flex align="flex-end" direction="column" maw="90%">
+          <Text size="lg" variant="gradient">
+            You
+          </Text>
+          <Paper
+            shadow="sm"
+            px="sm"
+            w="100%"
+            radius="lg"
+            bg={colorScheme === "dark" ? "" : "blue.2"}
+          >
+            <ScrollArea type="auto" scrollbars="x">
+              <Markdown>{message.text}</Markdown>
+            </ScrollArea>
+          </Paper>
+        </Flex>
 
         <Avatar size="sm" radius="lg" src={avatarImgUrl} />
       </Flex>
     );
   };
 
-  const messageR = (id, role, text) => {
+  const messageR = (message) => {
     return (
-      <Flex justify="flex-start" direction="row" gap="sm" key={id}>
-        <Avatar size="sm" radius="lg" src={avatarImgUrl} />
-        <Paper
-          shadow="sm"
-          px="sm"
-          maw="90%"
-          radius="lg"
-          bg={colorScheme === "dark" ? "" : "green.2"}
-        >
-          <ScrollArea type="auto" scrollbars="x">
-            <Markdown>{text}</Markdown>
-          </ScrollArea>
-        </Paper>
+      <Flex justify="flex-start" direction="row" gap="sm" key={message.id}>
+        <Avatar size="sm" radius="lg" color="cyan" variant="filled">
+          <Icon icon="tabler:robot" />
+        </Avatar>
+        <Flex align="flex-start" direction="column" maw="90%">
+          <Text size="lg" variant="gradient">
+            {message.model}
+          </Text>
+          <Paper
+            shadow="sm"
+            px="sm"
+            w="100%"
+            radius="lg"
+            bg={colorScheme === "dark" ? "" : "green.2"}
+          >
+            <ScrollArea type="auto" scrollbars="x">
+              <Markdown>{message.text}</Markdown>
+            </ScrollArea>
+          </Paper>
+        </Flex>
       </Flex>
     );
-  };
-
-  const sendMessage = async (text) => {
-    setNewText("");
-    setMessageList((prevMessageList) => [
-      ...prevMessageList,
-      { role: "user", text, id: Math.random() },
-    ]);
-    await createMessage.mutateAsync(text);
   };
 
   const modalSettings = () => {
@@ -298,7 +339,7 @@ export default function ChatWindowsComponent() {
           onKeyDown={async (e) => {
             // Shift + Enter to send
             if (e.key === "Enter" && e.shiftKey === true) {
-              await sendMessage(e.currentTarget.value);
+              await createMessage.mutateAsync();
             }
           }}
           rightSection={
@@ -307,9 +348,7 @@ export default function ChatWindowsComponent() {
               aria-label="Settings"
               disabled={newText === "" || createMessage.isPending}
               onClick={async () => {
-                const text = newText;
-                setNewText("");
-                await sendMessage(text);
+                await createMessage.mutateAsync();
               }}
             >
               {createMessage.isPending ? (
@@ -340,9 +379,9 @@ export default function ChatWindowsComponent() {
             <Stack spacing="md" py="lg">
               {messageList.map((item) => {
                 if (item.role === "user") {
-                  return messageS(item.id, item.role, item.text);
+                  return messageS(item);
                 } else {
-                  return messageR(item.id, item.role, item.text);
+                  return messageR(item);
                 }
               })}
             </Stack>
