@@ -18,6 +18,7 @@ type dao interface {
 	ListAssistantThreads(ctx context.Context, db db.DBTX, assistantID pgtype.UUID) ([]db.AssistantThread, error)
 	GetAssistantThread(ctx context.Context, db db.DBTX, argUuid uuid.UUID) (db.AssistantThread, error)
 	UpdateAssistantThread(ctx context.Context, db db.DBTX, arg db.UpdateAssistantThreadParams) (db.AssistantThread, error)
+	DeleteAssistantThread(ctx context.Context, db db.DBTX, argUuid uuid.UUID) error
 
 	ListThreadMessages(ctx context.Context, db db.DBTX, threadID pgtype.UUID) ([]db.AssistantMessage, error)
 	CreateThreadMessage(ctx context.Context, db db.DBTX, arg db.CreateThreadMessageParams) (db.AssistantMessage, error)

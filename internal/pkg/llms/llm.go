@@ -39,6 +39,23 @@ func (l *LLM) ListModels(ctx context.Context) ([]string, error) {
 	return data, nil
 }
 
+func (l *LLM) TextCompletion(ctx context.Context, prompt string, options ...Option) (string, error) {
+	opts := &Options{}
+	for _, o := range options {
+		o(opts)
+	}
+	req := opts.ToChatCompletionRequest()
+	req.Messages = []openai.ChatCompletionMessage{{
+		Role:    openai.ChatMessageRoleUser,
+		Content: prompt,
+	}}
+	choice, _, err := l.generateContent(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate text: %w", err)
+	}
+	return choice.Message.Content, nil
+}
+
 func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, options ...Option) (openai.ChatCompletionChoice, openai.Usage, error) {
 	opts := &Options{}
 	for _, o := range options {

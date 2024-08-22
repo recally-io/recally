@@ -10,7 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type ThreadMetadata struct{}
+type ThreadMetadata struct {
+	IsGeneratedTitle bool `json:"is_generated_title"`
+}
 
 type ThreadDTO struct {
 	Id           uuid.UUID          `json:"id"`
