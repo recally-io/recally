@@ -26,11 +26,12 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import Markdown from "react-markdown";
 import avatarImgUrl from "../assets/avatar-1.png";
 import { toastError } from "../libs/alert";
 import { get, post, queryClient } from "../libs/api";
 import useStore from "../libs/store";
+import { CopyBtn } from "./CopyButton";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 const url = new URL(window.location.href);
 const defaultModel = "gpt-4o";
@@ -87,7 +88,7 @@ export default function ChatWindowsComponent() {
   useEffect(() => {
     if (getThread.data) {
       settingsForm.setValues(getThread.data);
-      setMessageList(getThread.data.messages);
+      setMessageList(getThread.data.messages || []);
       if (getThread.data.model != "") {
         setChatModel(getThread.data.model);
       }
@@ -212,7 +213,7 @@ export default function ChatWindowsComponent() {
         gap="sm"
         key={message.id}
       >
-        <Flex align="flex-end" direction="column" maw="90%">
+        <Flex align="flex-end" direction="column">
           <Text size="lg" variant="gradient">
             You
           </Text>
@@ -224,9 +225,11 @@ export default function ChatWindowsComponent() {
             bg={colorScheme === "dark" ? "" : "blue.2"}
           >
             <ScrollArea type="auto" scrollbars="x">
-              <Markdown>{message.text}</Markdown>
+              <MarkdownRenderer content={message.text} />
+              {/* <Markdown>{message.text}</Markdown> */}
             </ScrollArea>
           </Paper>
+          {CopyBtn({ data: message.text })}
         </Flex>
 
         <Avatar size="sm" radius="lg" src={avatarImgUrl} />
@@ -249,12 +252,13 @@ export default function ChatWindowsComponent() {
             px="sm"
             w="100%"
             radius="lg"
-            bg={colorScheme === "dark" ? "" : "green.2"}
+            bg={colorScheme === "dark" ? "" : "green.1"}
           >
             <ScrollArea type="auto" scrollbars="x">
-              <Markdown>{message.text}</Markdown>
+              <MarkdownRenderer content={message.text} />
             </ScrollArea>
           </Paper>
+          {CopyBtn({ data: message.text })}
         </Flex>
       </Flex>
     );
@@ -422,7 +426,7 @@ export default function ChatWindowsComponent() {
 
   return (
     <>
-      <Container px="xs" h="95svh">
+      <Container px="xs" h="95svh" fluid>
         <LoadingOverlay visible={getThread.isLoading} />
         <Flex direction="column" justify="space-between" h="100%">
           <ScrollArea
