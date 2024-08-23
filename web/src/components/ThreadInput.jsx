@@ -173,6 +173,7 @@ export function ThreadChatInput({ settingsForm }) {
               data={[...new Set(listModels.data)]}
               dropdownOpened={isShowModelSelecter}
               radius="lg"
+              fz="16px"
               leftSectionPointerEvents="none"
               leftSection={<Icon icon="tabler:robot" />}
               value={modelSelecterValue}
@@ -194,6 +195,7 @@ export function ThreadChatInput({ settingsForm }) {
             maxRows={5}
             autosize
             w="100%"
+            fz="16px"
             disabled={sendMessage.isPending}
             onKeyDown={async (e) => {
               // Shift + Enter to send
