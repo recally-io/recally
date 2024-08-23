@@ -7,6 +7,15 @@ const useStore = create((set) => ({
   isDarkMode: false,
   setIsDarkMode: (isDarkMode) => set(() => ({ isDarkMode: isDarkMode })),
 
+  isSidebarOpen: false,
+  setIsSidebarOpen: (isSidebarOpen) =>
+    set(() => ({ isSidebarOpen: isSidebarOpen })),
+
+  assistantId: "",
+  setAssistantId: (id) => set(() => ({ assistantId: id })),
+  threadId: "",
+  setThreadId: (id) => set(() => ({ threadId: id })),
+
   threadIsOpenSettings: false,
   setThreadIsOpenSettings: (isOpen) =>
     set(() => ({ threadIsOpenSettings: isOpen })),
@@ -20,6 +29,10 @@ const useStore = create((set) => ({
   setThreadChatModel: (model) => set(() => ({ threadChatModel: model })),
   threadMessageList: [],
   setThreadMessageList: (list) => set(() => ({ threadMessageList: list })),
+  addThreadMessage: (message) =>
+    set((state) => ({
+      threadMessageList: [...state.threadMessageList, message],
+    })),
   threadNewText: "",
   setThreadNewText: (text) => set(() => ({ threadNewText: text })),
   threadFileContent: "",

@@ -1,19 +1,16 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
 import { Avatar, Flex, Paper, ScrollArea, Stack, Text } from "@mantine/core";
 
+import { Icon } from "@iconify/react/dist/iconify.js";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import avatarImgUrl from "../assets/avatar-1.png";
 import { post, queryClient } from "../libs/api";
 import useStore from "../libs/store";
 import { CopyBtn } from "./CopyButton";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
-const url = new URL(window.location.href);
-
 export function ThreadChatWindows({ settingsForm }) {
-  const assistantId = url.searchParams.get("assistant-id");
-  let threadId = url.searchParams.get("thread-id");
+  const threadId = useStore((state) => state.threadId);
+  const assistantId = useStore((state) => state.assistantId);
 
   const isDarkMode = useStore((state) => state.isDarkMode);
   const messageList = useStore((state) => state.threadMessageList);
@@ -24,6 +21,7 @@ export function ThreadChatWindows({ settingsForm }) {
   const chatArea = useRef(null);
 
   useEffect(() => {
+    console.log("ThreadChatWindows useEffect: messageList", messageList);
     chatArea.current.scrollTo({
       top: chatArea.current.scrollHeight,
       behavior: "smooth",
@@ -57,61 +55,45 @@ export function ThreadChatWindows({ settingsForm }) {
     },
   });
 
-  const messageS = (message) => {
+  const messagePaper = (message) => {
+    const isSender = message.role === "user";
+    const bgColor = isSender ? "blue.2" : "green.1";
     return (
       <Flex
-        justify="flex-end"
+        justify={isSender ? "flex-end" : "flex-start"}
         align="flex-start"
         direction="row"
-        gap="sm"
+        gap="2"
         key={message.id}
       >
-        <Flex align="flex-end" direction="column">
+        {!isSender && (
+          <Avatar size="sm" radius="lg" color="cyan" variant="filled">
+            <Icon icon="tabler:robot" />
+          </Avatar>
+        )}
+        <Flex align={isSender ? "flex-end" : "flex-start"} direction="column">
           <Text size="lg" variant="gradient">
-            You
+            {isSender ? "You" : message.model}
           </Text>
+
           <Paper
             shadow="sm"
-            px="sm"
-            w="100%"
+            px="xs"
             radius="lg"
-            bg={isDarkMode ? "" : "blue.2"}
+            withBorder
+            maw={{ base: "85vw", lg: "60vw" }}
+            bg={isDarkMode ? "" : bgColor}
           >
-            <ScrollArea type="auto" scrollbars="x">
-              <MarkdownRenderer content={message.text} />
-            </ScrollArea>
+            <MarkdownRenderer content={message.text} />
           </Paper>
+
           {CopyBtn({ data: message.text })}
         </Flex>
-
-        <Avatar size="sm" radius="lg" src={avatarImgUrl} />
-      </Flex>
-    );
-  };
-
-  const messageR = (message) => {
-    return (
-      <Flex justify="flex-start" direction="row" gap="sm" key={message.id}>
-        <Avatar size="sm" radius="lg" color="cyan" variant="filled">
-          <Icon icon="tabler:robot" />
-        </Avatar>
-        <Flex align="flex-start" direction="column" maw="90%">
-          <Text size="lg" variant="gradient">
-            {message.model}
-          </Text>
-          <Paper
-            shadow="sm"
-            px="sm"
-            w="100%"
-            radius="lg"
-            bg={isDarkMode ? "" : "green.1"}
-          >
-            <ScrollArea type="auto" scrollbars="x">
-              <MarkdownRenderer content={message.text} />
-            </ScrollArea>
-          </Paper>
-          {CopyBtn({ data: message.text })}
-        </Flex>
+        {isSender && (
+          <Avatar size="sm" radius="lg" color="cyan" variant="filled">
+            <Icon icon="tabler:mood-crazy-happy" />
+          </Avatar>
+        )}
       </Flex>
     );
   };
@@ -124,15 +106,13 @@ export function ThreadChatWindows({ settingsForm }) {
         offsetScrollbars
         scrollbarSize="4"
         scrollbars="y"
+        py="xs"
       >
-        <Stack spacing="md" py="lg">
-          {messageList.map((item) => {
-            if (item.role === "user") {
-              return messageS(item);
-            } else {
-              return messageR(item);
-            }
-          })}
+        <Stack gap="md" align="stretch" justify="flex-start">
+          {Array.isArray(messageList) &&
+            messageList.map((item) => {
+              return messagePaper(item);
+            })}
         </Stack>
       </ScrollArea>
     </>
