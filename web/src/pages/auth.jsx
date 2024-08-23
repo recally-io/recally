@@ -1,8 +1,8 @@
 import "@mantine/core/styles.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import Layout from "../components/layout";
-import { AuthenticationForm } from "../components/auth";
+import Layout from "../components/Layout";
+import { AuthenticationForm } from "../components/Auth";
 
 function App() {
   return <Layout main={<AuthenticationForm />} />;

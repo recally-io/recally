@@ -11,7 +11,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import Cookie from "js-cookie";
 import React, { useEffect } from "react";
-import avatarImgUrl from "../assets/avatar-1.png";
 import { checkIsLogin } from "../libs/auth";
 import useStore from "../libs/store";
 
@@ -22,6 +21,16 @@ export default function Header({ opened, toggle, showNavBurger }) {
   const setIsLogin = useStore((state) => state.setIsLogin);
   const { colorScheme, setColorScheme } = useMantineColorScheme();
   const authPage = "/auth.html";
+
+  const [isDarkMode, setIsDarkMode] = useStore((state) => [
+    state.isDarkMode,
+    state.setIsDarkMode,
+  ]);
+
+  useEffect(() => {
+    setIsDarkMode(colorScheme === "dark" ? true : false);
+  }, [colorScheme]);
+
   const checkLogin = useQuery({
     queryKey: ["check-login"],
     queryFn: async () => {
@@ -36,7 +45,6 @@ export default function Header({ opened, toggle, showNavBurger }) {
       return;
     }
     if (checkLogin.data) {
-      console.log(`current path: ${window.location}`);
       setIsLogin(true);
       console.log("User is logged in");
       if (window.location.pathname === authPage) {
@@ -115,17 +123,17 @@ export default function Header({ opened, toggle, showNavBurger }) {
         variant="transparent"
         size="sm"
         onClick={() => {
-          setColorScheme(colorScheme === "dark" ? "light" : "dark");
+          setColorScheme(isDarkMode ? "light" : "dark");
         }}
         leftSection={
-          colorScheme === "dark" ? (
+          isDarkMode ? (
             <Icon icon="tabler:sun" color="white" />
           ) : (
             <Icon icon="tabler:moon-filled" color="black" />
           )
         }
       >
-        {colorScheme === "dark" ? "Light" : "Dark"}
+        {isDarkMode ? "Light" : "Dark"}
       </Button>
     );
   };
@@ -138,7 +146,7 @@ export default function Header({ opened, toggle, showNavBurger }) {
         align="center"
         gap="lg"
         p="0"
-        bg={colorScheme === "dark" ? "dark.8" : "gray.3"}
+        bg={isDarkMode ? "dark.8" : "gray.3"}
       >
         {showNavBurger && (
           <Burger

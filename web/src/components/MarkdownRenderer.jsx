@@ -7,39 +7,34 @@ import remarkGfm from "remark-gfm";
 import { CopyBtn } from "./CopyButton";
 
 export function MarkdownRenderer({ content }) {
-    return (
-        <Markdown
-            children={content}
-            remarkPlugins={[remarkGfm]}
-            components={{
-                code({ node, inline, className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || "");
-                    const code = String(children).replace(/\n$/, "");
-                    return !inline && match ? (
-                        <Box pos="relative">
-                            <CodeHighlight
-                                code={code}
-                                language={match[1]}
-                                withCopyButton={false}
-                                {...props}
-                            />
-                            <Group
-                                pos="absolute"
-                                right="10px"
-                                top="10px"
-                                size="xs"
-                            >
-                                <Badge>{match[1]}</Badge>
-                                <CopyBtn data={code} />
-                            </Group>
-                        </Box>
-                    ) : (
-                        <code className={className} {...props}>
-                            {children}
-                        </code>
-                    );
-                },
-            }}
-        />
-    );
+  return (
+    <Markdown
+      children={content}
+      remarkPlugins={[remarkGfm]}
+      components={{
+        code({ children, className, node, ...rest }) {
+          const match = /language-(\w+)/.exec(className || "");
+          const code = String(children).replace(/\n$/, "");
+          return match ? (
+            <Box pos="relative">
+              <CodeHighlight
+                code={code}
+                language={match[1]}
+                withCopyButton={false}
+                {...rest}
+              />
+              <Group pos="absolute" right="10px" top="10px" size="xs">
+                <Badge>{match[1]}</Badge>
+                <CopyBtn data={code} />
+              </Group>
+            </Box>
+          ) : (
+            <code className={className} {...rest}>
+              {children}
+            </code>
+          );
+        },
+      }}
+    />
+  );
 }

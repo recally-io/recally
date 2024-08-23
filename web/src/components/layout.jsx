@@ -1,10 +1,4 @@
-import {
-  AppShell,
-  Container,
-  MantineProvider,
-  Text,
-  createTheme,
-} from "@mantine/core";
+import { AppShell, createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { useDisclosure } from "@mantine/hooks";
 import { Notifications } from "@mantine/notifications";
@@ -12,7 +6,7 @@ import "@mantine/notifications/styles.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { queryClient } from "../libs/api";
-import Header from "./header";
+import Header from "./Header";
 
 const theme = createTheme({});
 
