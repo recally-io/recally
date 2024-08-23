@@ -12,11 +12,18 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toastError } from "../libs/alert";
-import { post, get } from "../libs/api";
+import { get, post } from "../libs/api";
 import useStore from "../libs/store";
 
-export function ThreadChatInput({}) {
+export function ThreadChatInput({ settingsForm }) {
   const isLogin = useStore((state) => state.isLogin);
+
+  const assistantId = useStore((state) => state.assistantId);
+  const [threadId, setThreadId] = useStore((state) => [
+    state.threadId,
+    state.setThreadId,
+  ]);
+
   const [isShowModelSelecter, setIsShowModelSelecter] = useStore((state) => [
     state.threadIsOpenModelSelecter,
     state.setThreadIsOpenModelSelecter,
@@ -29,6 +36,7 @@ export function ThreadChatInput({}) {
     state.threadNewText,
     state.setThreadNewText,
   ]);
+  const addThreadMessage = useStore((state) => state.addThreadMessage);
 
   const setModels = useStore((state) => state.setThreadModels);
 
@@ -77,19 +85,15 @@ export function ThreadChatInput({}) {
         text = text.replace(/^@[^ ]+\s*/, "");
       }
       setNewText("");
-      setMessageList((prevMessageList) => [
-        ...prevMessageList,
-        { role: "user", text, id: Math.random() },
-      ]);
-
-      const isNewThread = threadId === null;
+      addThreadMessage({ role: "user", text, id: Math.random() });
+      const isNewThread = !!!threadId;
       if (isNewThread) {
-        threadId = crypto.randomUUID();
+        const newThreadId = crypto.randomUUID();
+        setThreadId(newThreadId);
         let data = settingsForm.getValues();
         data.id = threadId;
         await createThread.mutateAsync(data);
       }
-
       const res = await post(
         `/api/v1/assistants/${assistantId}/threads/${threadId}/messages`,
         null,
@@ -101,13 +105,13 @@ export function ThreadChatInput({}) {
       );
 
       if (isNewThread) {
-        window.location.href = `/threads.html?assistant-id=${assistantId}&thread-id=${threadId}`;
+        window.location.href = `/threads.html?assistant-id=${assistantId}&thread-id=${tid}`;
       }
 
       return res.data;
     },
     onSuccess: (data) => {
-      setMessageList((prevMessageList) => [...prevMessageList, data]);
+      addThreadMessage(data);
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);
@@ -142,25 +146,25 @@ export function ThreadChatInput({}) {
   };
 
   return (
-    <Flex align="center">
-      <Tooltip label="Settings">
-        <ActionIcon
-          size="lg"
-          variant="subtle"
-          radius="lg"
-          onClick={() => setThreadIsOpenSettings(true)}
-        >
-          <Icon icon="tabler:settings"></Icon>
-        </ActionIcon>
-      </Tooltip>
+    <Container
+      w="100%"
+      style={{
+        position: "sticky",
+        bottom: 0,
+      }}
+    >
+      <Flex align="flex-end" gap="xs">
+        <Tooltip label="Settings">
+          <ActionIcon
+            size="lg"
+            variant="subtle"
+            radius="lg"
+            onClick={() => setThreadIsOpenSettings(true)}
+          >
+            <Icon icon="tabler:settings"></Icon>
+          </ActionIcon>
+        </Tooltip>
 
-      <Container
-        w="100%"
-        style={{
-          position: "sticky",
-          bottom: 0,
-        }}
-      >
         {isShowModelSelecter && (
           <FocusTrap active={isShowModelSelecter}>
             <Autocomplete
@@ -189,6 +193,7 @@ export function ThreadChatInput({}) {
             minRows={1}
             maxRows={5}
             autosize
+            w="100%"
             disabled={sendMessage.isPending}
             onKeyDown={async (e) => {
               // Shift + Enter to send
@@ -198,7 +203,8 @@ export function ThreadChatInput({}) {
             }}
             rightSection={
               <ActionIcon
-                variant="transparent"
+                variant="filled"
+                radius="lg"
                 aria-label="Settings"
                 disabled={newText === "" || sendMessage.isPending}
                 onClick={async () => {
@@ -216,7 +222,7 @@ export function ThreadChatInput({}) {
             onChange={(e) => setNewText(e.currentTarget.value)}
           ></Textarea>
         </FocusTrap>
-      </Container>
-    </Flex>
+      </Flex>
+    </Container>
   );
 }

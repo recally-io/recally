@@ -15,11 +15,24 @@ import { ThreadSettingsModal } from "../components/ThreadSettings";
 import { get } from "../libs/api";
 import useStore from "../libs/store";
 
-const url = new URL(window.location.href);
-
 function ThreadApp() {
-  const assistantId = url.searchParams.get("assistant-id");
-  let threadId = url.searchParams.get("thread-id");
+  const [threadId, setThreadId] = useStore((state) => [
+    state.threadId,
+    state.setThreadId,
+  ]);
+  const [assistantId, setAssistantId] = useStore((state) => [
+    state.assistantId,
+    state.setAssistantId,
+  ]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.get("assistant-id")) {
+      window.location.href = "/assistants.html";
+    }
+    setAssistantId(url.searchParams.get("assistant-id"));
+    setThreadId(url.searchParams.get("thread-id"));
+  }, []);
 
   const isLogin = useStore((state) => state.isLogin);
   const [chatModel, setChatModel] = useStore((state) => [
@@ -65,10 +78,10 @@ function ThreadApp() {
   }, [getThread.data]);
   return (
     <>
-      <Container px="xs" h="95svh">
+      <Container px="xs" h="95svh" fluid>
         <LoadingOverlay visible={getThread.isLoading} />
         <Flex direction="column" justify="space-between" h="100%">
-          <ThreadChatWindows />
+          <ThreadChatWindows settingsForm={settingsForm} />
           <ThreadChatInput />
         </Flex>
         <ThreadSettingsModal settingsForm={settingsForm} />

@@ -1,7 +1,6 @@
 import { Icon } from "@iconify/react";
 import {
   Avatar,
-  Burger,
   Button,
   Flex,
   Menu,
@@ -16,7 +15,11 @@ import useStore from "../libs/store";
 
 const url = new URL(window.location.href);
 
-export default function Header({ opened, toggle, showNavBurger }) {
+export default function Header({ showNavBurger }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useStore((state) => [
+    state.isSidebarOpen,
+    state.setIsSidebarOpen,
+  ]);
   const isLogin = useStore((state) => state.isLogin);
   const setIsLogin = useStore((state) => state.setIsLogin);
   const { colorScheme, setColorScheme } = useMantineColorScheme();
@@ -145,18 +148,19 @@ export default function Header({ opened, toggle, showNavBurger }) {
         justify="space-between"
         align="center"
         gap="lg"
-        p="0"
-        bg={isDarkMode ? "dark.8" : "gray.3"}
+        // p="0"
       >
-        {showNavBurger && (
-          <Burger
-            opened={opened}
-            onClick={toggle}
-            size="sm"
-            aria-label="Toggle navigation"
-          />
+        {isSidebarOpen && (
+          <Button
+            opened={isSidebarOpen}
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            variant="transparent"
+            size="md"
+          >
+            <Icon icon="tabler:layout-sidebar" />
+          </Button>
         )}
-        {!showNavBurger && <div></div>}
+        <div></div>
         <Flex visibleFrom="md" gap="1">
           {navHome()}
           {navAssistants()}

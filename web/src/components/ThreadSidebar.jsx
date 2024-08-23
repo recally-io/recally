@@ -13,21 +13,29 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { get, post } from "../libs/api";
 
+import { useEffect } from "react";
 import useStore from "../libs/store";
-
-const url = new URL(window.location.href);
 
 export default function Sidebar() {
   const isLogin = useStore((state) => state.isLogin);
-  const assistantId = url.searchParams.get("assistant-id");
-  if (!assistantId) {
-    window.location.href = "/assistants.html";
-  }
-  const threadId = url.searchParams.get("thread-id");
-  const setThreadId = (id) => {
-    url.searchParams.set("thread-id", id);
-    window.location.href = url;
-  };
+  const [threadId, setThreadId] = useStore((state) => [
+    state.threadId,
+    state.setThreadId,
+  ]);
+  const [isSidebarOpen, setIsSidebarOpen] = useStore((state) => [
+    state.isSidebarOpen,
+    state.setIsSidebarOpen,
+  ]);
+  const assistantId = useStore((state) => state.assistantId);
+
+  useEffect(() => {
+    if (threadId) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("thread-id", threadId);
+      window.history.pushState({}, "", url);
+      // window.location.href = url;
+    }
+  }, [threadId]);
 
   const listThreads = useQuery({
     queryKey: ["list-threads", assistantId],
@@ -89,16 +97,27 @@ export default function Sidebar() {
         radius="md"
       >
         <Stack align="stretch" justify="start" gap="md">
-          <Button
-            variant="subtle"
-            radius="lg"
-            color={theme.primaryColor}
-            onClick={addNewThread}
-          >
-            <Icon icon="tabler:message-circle" width={18} height={18} />
-            <Space w="xs" />
-            <span>New Thread</span>
-          </Button>
+          <Flex justify="space-evenly" align="center">
+            <Button
+              variant="subtle"
+              radius="lg"
+              color={theme.primaryColor}
+              onClick={addNewThread}
+            >
+              <Icon icon="tabler:message-circle" width={18} height={18} />
+              <Space w="xs" />
+              <span>New Thread</span>
+            </Button>
+            <Button
+              opened={isSidebarOpen}
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              variant="transparent"
+              size="lg"
+            >
+              <Icon icon="tabler:layout-sidebar" />
+            </Button>
+          </Flex>
+
           <Autocomplete
             placeholder="Search Threads ... "
             limit={10}
