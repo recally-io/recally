@@ -31,11 +31,12 @@ func JsonResponse(c echo.Context, code int, data interface{}) error {
 
 func ErrorResponse(c echo.Context, code int, err error) error {
 	logger.FromContext(c.Request().Context()).Error("error response", "err", err)
-	return c.JSON(code, JSONResult{
+	_ = c.JSON(code, JSONResult{
 		Success: false,
 		Code:    code,
 		Message: err.Error(),
 	})
+	return err
 }
 
 // bindAndValidate binds the request data to the provided struct and validates it.
