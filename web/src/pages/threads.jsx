@@ -6,7 +6,6 @@ import Sidebar from "../components/thread-sidebar";
 
 import { Container, Flex, LoadingOverlay } from "@mantine/core";
 
-import { useForm } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { ThreadChatWindows } from "../components/thread-chat-windows";
@@ -43,18 +42,7 @@ function ThreadApp() {
     (state) => state.setThreadIsTitleGenerated,
   );
   const setMessageList = useStore((state) => state.setThreadMessageList);
-
-  const settingsForm = useForm({
-    initialValues: {
-      name: "New Thread",
-      description: "",
-      systemPrompt: "",
-      temperature: 0.7,
-      maxToken: 4096,
-      model: chatModel,
-    },
-  });
-
+  const setThreadSettings = useStore((state) => state.setThreadSettings);
   const getThread = useQuery({
     queryKey: ["get-thread", threadId],
     queryFn: async () => {
@@ -67,7 +55,7 @@ function ThreadApp() {
   });
   useEffect(() => {
     if (getThread.data) {
-      settingsForm.setValues(getThread.data);
+      setThreadSettings(getThread.data);
       setMessageList(getThread.data.messages || []);
       if (getThread.data.model != "") {
         setChatModel(getThread.data.model);
@@ -81,10 +69,10 @@ function ThreadApp() {
       <Container px="xs" h="95svh" fluid>
         <LoadingOverlay visible={getThread.isLoading} />
         <Flex direction="column" justify="space-between" h="100%">
-          <ThreadChatWindows settingsForm={settingsForm} />
+          <ThreadChatWindows />
           <ThreadChatInput />
         </Flex>
-        <ThreadSettingsModal settingsForm={settingsForm} />
+        <ThreadSettingsModal />
       </Container>
     </>
   );

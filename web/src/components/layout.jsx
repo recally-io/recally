@@ -19,7 +19,7 @@ export default function Layout({ main, nav = null }) {
       <MantineProvider theme={theme} defaultColorScheme="auto">
         <Notifications />
         <AppShell
-          header={{ height: "4dvh" }}
+          header={{ height: 40 }}
           navbar={{
             width: "300",
             breakpoint: "sm",

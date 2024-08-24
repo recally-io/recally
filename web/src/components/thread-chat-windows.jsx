@@ -21,7 +21,6 @@ export function ThreadChatWindows({ settingsForm }) {
   const chatArea = useRef(null);
 
   useEffect(() => {
-    console.log("ThreadChatWindows useEffect: messageList", messageList);
     chatArea.current.scrollTo({
       top: chatArea.current.scrollHeight,
       behavior: "smooth",
