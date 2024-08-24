@@ -1,47 +1,46 @@
-# use the official Bun image
-# see all versions at https://hub.docker.com/r/oven/bun/tags
+# Use the official Bun image
+# See all versions at https://hub.docker.com/r/oven/bun/tags
 FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
-# install dependencies into temp directory
-# this will cache them and speed up future builds
-FROM base AS install
-RUN mkdir -p /temp/dev
-COPY web/package.json web/bun.lockb /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
+# Install dependencies into temp directory
+# This will cache them and speed up future builds
+COPY web/package.json web/bun.lockb /temp/
+RUN cd /temp && bun install --frozen-lockfile && \
+    mkdir -p /usr/src/app/node_modules && \
+    cp -r /temp/node_modules /usr/src/app/ && \
+    rm -rf /temp
 
-# install with --production (exclude devDependencies)
-RUN mkdir -p /temp/prod
-COPY web/package.json web/bun.lockb /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
-
-# copy node_modules from temp directory
-# then copy all (non-ignored) project files into the image
-FROM base AS prerelease
-COPY --from=install /temp/dev/node_modules node_modules
+# Then copy all (non-ignored) project files into the image
 COPY web .
 
-# [optional] tests & build
+# Run tests and build
 ENV NODE_ENV=production
-RUN bun run build
+RUN bun test && bun run build
 
-# Build go binary
-FROM golang:1.22 AS build
-
+# Build Go binary
+FROM golang:1.22-alpine AS build
 WORKDIR /go/src/app
 
-COPY go.mod go.mod
-COPY go.sum go.sum
+COPY go.mod go.sum ./
 RUN go mod download
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=0 GOOS=linux
 
 COPY . .
-COPY --from=prerelease /usr/src/app/dist web/dist
-RUN ls web/dist && go build -ldflags="-s -w" -o /go/bin/app main.go
+COPY --from=base /usr/src/app/dist web/dist
+RUN go build -ldflags="-s -w" -o /go/bin/app main.go
 
-FROM gcr.io/distroless/base-debian12
-WORKDIR /service/
+# Final stage
+FROM gcr.io/distroless/static-debian12:nonroot
+WORKDIR /service
 
 COPY --from=build /go/bin/app .
+
+# Use non-root user for better security
+USER nonroot:nonroot
+
+# Expose the port the app runs on
+# Expose the port specified by the PORT environment variable, defaulting to 1323
+EXPOSE ${PORT:-1323}
 
 CMD ["./app"]
