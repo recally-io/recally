@@ -1,17 +1,17 @@
 import "@mantine/core/styles.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import Layout from "../components/Layout";
-import Sidebar from "../components/ThreadSidebar";
+import Layout from "../components/layout";
+import Sidebar from "../components/thread-sidebar";
 
 import { Container, Flex, LoadingOverlay } from "@mantine/core";
 
 import { useForm } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { ThreadChatWindows } from "../components/ThreadChatWindows";
-import { ThreadChatInput } from "../components/ThreadInput";
-import { ThreadSettingsModal } from "../components/ThreadSettings";
+import { ThreadChatWindows } from "../components/thread-chat-windows";
+import { ThreadChatInput } from "../components/thread-input";
+import { ThreadSettingsModal } from "../components/thread-settings";
 import { get } from "../libs/api";
 import useStore from "../libs/store";
 

@@ -6,7 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { queryClient } from "../libs/api";
 import useStore from "../libs/store";
-import Header from "./Header";
+import Header from "./header";
 
 const theme = createTheme({});
 

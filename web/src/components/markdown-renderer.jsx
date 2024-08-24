@@ -4,7 +4,7 @@ import { Badge, Box, Group } from "@mantine/core";
 import React from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { CopyBtn } from "./CopyButton";
+import { CopyBtn } from "./copy-button";
 
 export function MarkdownRenderer({ content }) {
   return (

@@ -5,8 +5,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { post, queryClient } from "../libs/api";
 import useStore from "../libs/store";
-import { CopyBtn } from "./CopyButton";
-import { MarkdownRenderer } from "./MarkdownRenderer";
+import { CopyBtn } from "./copy-button";
+import { MarkdownRenderer } from "./markdown-renderer";
 
 export function ThreadChatWindows({ settingsForm }) {
   const threadId = useStore((state) => state.threadId);
