@@ -23,11 +23,12 @@ export default function Sidebar() {
     state.threadId,
     state.setThreadId,
   ]);
-  const [isSidebarOpen, setIsSidebarOpen] = useStore((state) => [
+  const [isSidebarOpen, toggleSidebar] = useStore((state) => [
     state.isSidebarOpen,
-    state.setIsSidebarOpen,
+    state.toggleSidebar,
   ]);
   const assistantId = useStore((state) => state.assistantId);
+  const setMessageList = useStore((state) => state.setThreadMessageList);
 
   useEffect(() => {
     if (threadId) {
@@ -85,8 +86,12 @@ export default function Sidebar() {
         queryKey: ["list-threads", assistantId],
       });
       setThreadId(null);
+      toggleSidebar();
       // reload the page
-      window.location.href = `/threads.html?assistant-id=${assistantId}`;
+      setMessageList([]);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("thread-id");
+      window.history.pushState({}, "", url);
     },
   });
 
@@ -126,7 +131,7 @@ export default function Sidebar() {
             </Button>
             <Button
               opened={isSidebarOpen}
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              onClick={toggleSidebar}
               variant="transparent"
               size="lg"
             >
@@ -151,15 +156,19 @@ export default function Sidebar() {
           />
         </Stack>
         <Divider />
-        <ScrollArea scrollbarSize="4">
+        <ScrollArea scrollbarSize="4" scrollbars="y">
           <LoadingOverlay visible={listThreads.isLoading} />
           <Stack align="stretch" justify="start" gap="sm">
             {listThreads.data &&
               listThreads.data.map((item) => (
-                <Flex key={item.id} align="center">
+                <Flex
+                  key={item.id}
+                  align="center"
+                  w={{ xs: "95%", sm: "90%" }}
+                  justify="space-between"
+                >
                   <Button
                     radius="md"
-                    w="80%"
                     variant={threadId == item.id ? "filled" : "subtle"}
                     onClick={() => {
                       setThreadId(item.id);
