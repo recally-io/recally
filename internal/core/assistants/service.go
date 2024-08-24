@@ -152,8 +152,10 @@ func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 }
 
 func (s *Service) DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error {
-	err := s.dao.DeleteAssistantThread(ctx, tx, id)
-	if err != nil {
+	if err := s.dao.DeleteThreadMessagesByThread(ctx, tx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
+		return fmt.Errorf("failed to delete thread messages: %w", err)
+	}
+	if err := s.dao.DeleteAssistantThread(ctx, tx, id); err != nil {
 		return fmt.Errorf("failed to delete thread: %w", err)
 	}
 	return nil
@@ -194,6 +196,16 @@ func (s *Service) CreateThreadMessage(ctx context.Context, tx db.DBTX, threadId 
 	return message, nil
 }
 
+func (s *Service) GetThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) (*ThreadMessageDTO, error) {
+	msg, err := s.dao.GetThreadMessage(ctx, tx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get thread message: %w", err)
+	}
+	var m ThreadMessageDTO
+	m.Load(&msg)
+	return &m, nil
+}
+
 func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *ThreadDTO, role, text string) (*ThreadMessageDTO, error) {
 	thread.AddMessage(role, text)
 	message := &ThreadMessageDTO{
@@ -204,6 +216,20 @@ func (s *Service) AddThreadMessage(ctx context.Context, tx db.DBTX, thread *Thre
 		Text:     text,
 	}
 	return s.CreateThreadMessage(ctx, tx, thread.Id, message)
+}
+
+func (s *Service) DeleteThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) error {
+	msg, err := s.dao.GetThreadMessage(ctx, tx, id)
+	if err != nil {
+		return fmt.Errorf("failed to get thread message: %w", err)
+	}
+	if err := s.dao.DeleteThreadMessageByThreadAndCreatedAt(ctx, tx, db.DeleteThreadMessageByThreadAndCreatedAtParams{
+		ThreadID:  msg.ThreadID,
+		CreatedAt: msg.CreatedAt,
+	}); err != nil {
+		return fmt.Errorf("failed to delete thread message: %w", err)
+	}
+	return nil
 }
 
 func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*ThreadMessageDTO, error) {

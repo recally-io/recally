@@ -257,6 +257,15 @@ func (q *Queries) DeleteAssistantThread(ctx context.Context, db DBTX, argUuid uu
 	return err
 }
 
+const deleteAssistantThreadsByAssistant = `-- name: DeleteAssistantThreadsByAssistant :exec
+DELETE FROM assistant_threads WHERE assistant_id = $1
+`
+
+func (q *Queries) DeleteAssistantThreadsByAssistant(ctx context.Context, db DBTX, assistantID pgtype.UUID) error {
+	_, err := db.Exec(ctx, deleteAssistantThreadsByAssistant, assistantID)
+	return err
+}
+
 const deleteAttachment = `-- name: DeleteAttachment :exec
 DELETE FROM assistant_attachments WHERE uuid = $1
 `
@@ -272,6 +281,38 @@ DELETE FROM assistant_messages WHERE uuid = $1
 
 func (q *Queries) DeleteThreadMessage(ctx context.Context, db DBTX, argUuid uuid.UUID) error {
 	_, err := db.Exec(ctx, deleteThreadMessage, argUuid)
+	return err
+}
+
+const deleteThreadMessageByThreadAndCreatedAt = `-- name: DeleteThreadMessageByThreadAndCreatedAt :exec
+DELETE FROM assistant_messages WHERE thread_id = $1 AND created_at >= $2
+`
+
+type DeleteThreadMessageByThreadAndCreatedAtParams struct {
+	ThreadID  pgtype.UUID
+	CreatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) DeleteThreadMessageByThreadAndCreatedAt(ctx context.Context, db DBTX, arg DeleteThreadMessageByThreadAndCreatedAtParams) error {
+	_, err := db.Exec(ctx, deleteThreadMessageByThreadAndCreatedAt, arg.ThreadID, arg.CreatedAt)
+	return err
+}
+
+const deleteThreadMessagesByAssistant = `-- name: DeleteThreadMessagesByAssistant :exec
+DELETE FROM assistant_messages WHERE thread_id IN (SELECT uuid FROM assistant_threads WHERE assistant_id = $1)
+`
+
+func (q *Queries) DeleteThreadMessagesByAssistant(ctx context.Context, db DBTX, assistantID pgtype.UUID) error {
+	_, err := db.Exec(ctx, deleteThreadMessagesByAssistant, assistantID)
+	return err
+}
+
+const deleteThreadMessagesByThread = `-- name: DeleteThreadMessagesByThread :exec
+DELETE FROM assistant_messages WHERE thread_id = $1
+`
+
+func (q *Queries) DeleteThreadMessagesByThread(ctx context.Context, db DBTX, threadID pgtype.UUID) error {
+	_, err := db.Exec(ctx, deleteThreadMessagesByThread, threadID)
 	return err
 }
 

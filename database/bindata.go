@@ -261,7 +261,7 @@ func _000005_user_table_support_save_passwordDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000005_user_table_support_save_password.down.sql", size: 59, mode: os.FileMode(420), modTime: time.Unix(1723729912, 0)}
+	info := bindataFileInfo{name: "000005_user_table_support_save_password.down.sql", size: 59, mode: os.FileMode(420), modTime: time.Unix(1724123569, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -281,7 +281,7 @@ func _000005_user_table_support_save_passwordUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000005_user_table_support_save_password.up.sql", size: 68, mode: os.FileMode(420), modTime: time.Unix(1723729897, 0)}
+	info := bindataFileInfo{name: "000005_user_table_support_save_password.up.sql", size: 68, mode: os.FileMode(420), modTime: time.Unix(1724123569, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

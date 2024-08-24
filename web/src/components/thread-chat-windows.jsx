@@ -1,4 +1,12 @@
-import { Avatar, Flex, Paper, ScrollArea, Stack, Text } from "@mantine/core";
+import {
+  Avatar,
+  Container,
+  Flex,
+  Paper,
+  ScrollArea,
+  Stack,
+  Text,
+} from "@mantine/core";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useMutation } from "@tanstack/react-query";
@@ -17,6 +25,10 @@ export function ThreadChatWindows({ settingsForm }) {
   const [isTitleGenerated, setIsTitleGenerated] = useStore((state) => [
     state.threadIsTitleGenerated,
     state.setThreadIsTitleGenerated,
+  ]);
+  const [threadSettings, setThreadSettings] = useStore((state) => [
+    state.threadSettings,
+    state.setThreadSettings,
   ]);
   const chatArea = useRef(null);
 
@@ -49,8 +61,9 @@ export function ThreadChatWindows({ settingsForm }) {
       return res.data;
     },
     onSuccess: (data) => {
-      settingsForm.setFieldValue("name", data.name);
+      setThreadSettings({ ...threadSettings, name: data.name });
       queryClient.invalidateQueries(["get-thread", threadId]);
+      queryClient.invalidateQueries(["list-threads", assistantId]);
     },
   });
 

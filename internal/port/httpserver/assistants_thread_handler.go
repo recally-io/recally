@@ -389,3 +389,131 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 
 	return JsonResponse(c, http.StatusCreated, resp)
 }
+
+type getThreadMessageRequest struct {
+	AssistantId uuid.UUID `param:"assistant-id" validate:"required,uuid4"`
+	ThreadId    uuid.UUID `param:"thread-id" validate:"required,uuid4"`
+	MessageId   uuid.UUID `param:"message-id" validate:"required,uuid4"`
+}
+
+// deleteThreadMessage is a handler function that deletes a thread message by ID.
+// It retrieves the thread message ID from the request parameters and uses it to delete the thread message.
+// If the thread message ID is not found in the parameters, it returns an error with status code 400 (Bad Request).
+// If there is an error while deleting the thread message, it returns an error with status code 500 (Internal Server Error).
+// Otherwise, it returns a JSON response with status code 204 (No Content).
+
+// @Summary Delete Thread Message
+// @Description Deletes a thread message by ID
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Param thread-id path string true "Thread ID"
+// @Param message-id path string true "Message ID"
+// @success 204 {object} JSONResult{data=nil} "No Content"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [delete]
+func (h *assistantHandler) deleteThreadMessage(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(getThreadMessageRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	err = h.service.DeleteThreadMessage(ctx, tx, req.MessageId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	return JsonResponse(c, http.StatusNoContent, nil)
+}
+
+type updateThreadMessageRequest struct {
+	AssistantId uuid.UUID `param:"assistant-id" validate:"required,uuid4"`
+	ThreadId    uuid.UUID `param:"thread-id" validate:"required,uuid4"`
+	MessageId   uuid.UUID `param:"message-id" validate:"required,uuid4"`
+	Model       string    `json:"model,omitempty"`
+	Text        string    `json:"text" validate:"required"`
+}
+
+// update Thread Message
+// updateThreadMessage is a handler function that updates a thread message by ID.
+// It retrieves the thread message ID from the request parameters and the updated message data from the request body.
+// If the thread message ID is not found in the parameters or the request body is invalid, it returns an error with status code 400 (Bad Request).
+// If there is an error while updating the thread message, it returns an error with status code 500 (Internal Server Error).
+// Otherwise, it returns a JSON response with status code 200 (OK) and the updated thread message.
+
+// @Summary Update Thread Message
+// @Description Updates a thread message by ID
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Param thread-id path string true "Thread ID"
+// @Param message-id path string true "Message ID"
+// @Param message body assistants.ThreadMessageDTO true "Updated Message"
+// @Success 200 {object} JSONResult{data=assistants.ThreadMessageDTO} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [put]
+func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(updateThreadMessageRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+
+	var updatedMessage assistants.ThreadMessageDTO
+	if err := c.Bind(&updatedMessage); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	tx, user, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	message, err := h.service.GetThreadMessage(ctx, tx, req.MessageId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	err = h.service.DeleteThreadMessage(ctx, tx, req.MessageId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	thread, err := h.service.GetThread(ctx, tx, req.ThreadId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	messageDTO := assistants.ThreadMessageDTO{
+		UserID:   user.ID,
+		ThreadID: thread.Id,
+		Model:    message.Model,
+		Role:     message.Role,
+		Text:     req.Text,
+	}
+
+	if req.Model != "" {
+		messageDTO.Model = req.Model
+	}
+
+	// Create Thread Message
+	if _, err := h.service.CreateThreadMessage(ctx, tx, thread.Id, &messageDTO); err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	resp, err := h.service.RunThread(ctx, tx, thread.Id)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, resp)
+}

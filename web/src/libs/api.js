@@ -33,6 +33,9 @@ export async function request(method, path, params = null, body = null) {
       `Error ${method} ${path}. Response status: ${res.status} ${res.statusText}`,
     );
   }
+  if (res.status === 204) {
+    return {};
+  }
   return await res.json();
 }
 
@@ -69,4 +72,15 @@ export async function post(path, params = null, body = null) {
  */
 export async function put(path, params = null, body = null) {
   return await request("PUT", path, params, body);
+}
+
+/**
+ * Sends a DELETE request to the specified path.
+ * @param {string} path - The path to send the DELETE request to.
+ * @param {Object} [params=null] - The query parameters to include in the request.
+ * @returns {Promise<Object>} - A promise that resolves to the JSON response from the server.
+ * @throws {Error} - If the request fails or the response status is not OK.
+ */
+export async function del(path, params = null) {
+  return await request("DELETE", path, params);
 }
