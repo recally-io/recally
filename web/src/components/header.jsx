@@ -16,9 +16,9 @@ import useStore from "../libs/store";
 const url = new URL(window.location.href);
 
 export default function Header({ showNavBurger }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useStore((state) => [
+  const [isSidebarOpen, toggleSidebar] = useStore((state) => [
     state.isSidebarOpen,
-    state.setIsSidebarOpen,
+    state.toggleSidebar,
   ]);
   const isLogin = useStore((state) => state.isLogin);
   const setIsLogin = useStore((state) => state.setIsLogin);
@@ -153,7 +153,7 @@ export default function Header({ showNavBurger }) {
         {isSidebarOpen && (
           <Button
             opened={isSidebarOpen}
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            onClick={toggleSidebar}
             variant="transparent"
             size="md"
           >

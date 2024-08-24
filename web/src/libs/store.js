@@ -8,8 +8,8 @@ const useStore = create((set) => ({
   setIsDarkMode: (isDarkMode) => set(() => ({ isDarkMode: isDarkMode })),
 
   isSidebarOpen: false,
-  setIsSidebarOpen: (isSidebarOpen) =>
-    set(() => ({ isSidebarOpen: isSidebarOpen })),
+  toggleSidebar: () =>
+    set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 
   assistantId: "",
   setAssistantId: (id) => set(() => ({ assistantId: id })),
