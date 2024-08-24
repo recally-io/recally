@@ -1,8 +1,8 @@
 import "@mantine/core/styles.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import Assistants from "../components/Assistants";
-import Layout from "../components/Layout";
+import Assistants from "../components/assistants";
+import Layout from "../components/layout";
 
 function App() {
   return <Layout main={<Assistants />} />;
