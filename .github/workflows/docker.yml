@@ -1,26 +1,107 @@
-name: Build Docker Image
+name: Build and Push Docker Image
 
 on:
-  push:
-    branches: [main]
-    # Publish semver tags as releases.
-    tags: ["v*.*.*"]
-  pull_request:
-    branches: [main]
+    push:
+        branches: [main]
+        # Publish semver tags as releases.
+        tags: ["v*.*.*"]
+    pull_request:
+        branches: [main]
 
 env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
-
-permissions:
-  contents: read
-  packages: write
+    # Use docker.io for Docker Hub if empty
+    REGISTRY: ghcr.io
+    # github.repository as <account>/<repo>
+    IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  docker:
-    uses: Vaayne/github-workflows/.github/workflows/docker.yml@v0.1.4
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    build:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Cache Docker layers
+              uses: actions/cache@v3
+              with:
+                  path: /tmp/.buildx-cache
+                  key: ${{ runner.os }}-buildx-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-buildx-
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            # Login against a Docker registry except on PR
+            # https://github.com/docker/login-action
+            - name: Log into registry ${{ env.REGISTRY }}
+              if: github.event_name != 'pull_request'
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Login to DockerHub
+              if: github.event_name != 'pull_request'
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            # Extract metadata (tags, labels) for Docker
+            # https://github.com/docker/metadata-action
+            - name: Extract Docker metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: |
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+                      ${{ env.IMAGE_NAME }}
+                  tags: |
+                      # https://github.com/docker/metadata-action#tags-input
+                      # set latest tag for master or main branch
+                      type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
+                      type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+                      # branch event
+                      type=ref,event=branch
+                      # pull request event
+                      type=ref,event=pr
+
+                      # raw version like v1.2.0
+                      type=semver,pattern={{raw}}
+
+            # Build and push Docker image with Buildx (don't push on PR)
+            # https://github.com/docker/build-push-action
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  push: ${{ github.event_name != 'pull_request' }}
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  platforms: linux/amd64,linux/arm64
+                  cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+                  cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+            # # Notify team on Slack
+            # - name: Notify Slack
+            #   if: always()
+            #   uses: slackapi/slack-github-action@v1.23.0
+            #   with:
+            #       payload: |
+            #           {
+            #               "channel": "#build-notifications",
+            #               "text": "Build and push for ${{ github.repository }} completed successfully."
+            #           }
+            #   env:
+            #       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

@@ -1,0 +1,35 @@
+name: golangci-lint and test
+
+on: push
+
+jobs:
+    golangci:
+        name: lint and test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/setup-go@v5
+              with:
+                  go-version: 1.22
+            - uses: actions/checkout@v4
+            - name: Cache Go Modules
+              uses: actions/cache@v3
+              with:
+                  path: |
+                    ~/.cache/go-build
+                    ~/go/pkg/mod
+                  key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+                  restore-keys: |
+                    ${{ runner.os }}-go-
+            - name: golangci-lint
+              uses: golangci/golangci-lint-action@v6
+              with:
+                  version: v1.54
+                  args: --timeout 10m0s
+                  only-new-issues: true
+            - name: Test
+              run: go test -v ./... | tee test-results.txt
+            - name: Upload Test Results
+              uses: actions/upload-artifact@v3
+              with:
+                  name: test-results
+                  path: test-results.txt
