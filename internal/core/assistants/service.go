@@ -333,3 +333,21 @@ func (s *Service) GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.U
 
 	return title, nil
 }
+
+func (s *Service) DeleteAssistant(ctx context.Context, tx db.DBTX, assistantId uuid.UUID) error {
+	// Delete associated threads and messages
+	if err := s.dao.DeleteThreadMessagesByAssistant(ctx, tx, pgtype.UUID{Bytes: assistantId, Valid: true}); err != nil {
+		return fmt.Errorf("failed to delete thread messages by assistant: %w", err)
+	}
+
+	if err := s.dao.DeleteAssistantThreadsByAssistant(ctx, tx, pgtype.UUID{Bytes: assistantId, Valid: true}); err != nil {
+		return fmt.Errorf("failed to delete assistant threads: %w", err)
+	}
+
+	// Delete the assistant
+	if err := s.dao.DeleteAssistant(ctx, tx, assistantId); err != nil {
+		return fmt.Errorf("failed to delete assistant: %w", err)
+	}
+
+	return nil
+}

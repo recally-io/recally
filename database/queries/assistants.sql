@@ -67,7 +67,10 @@ DELETE FROM assistant_messages WHERE thread_id = $1 AND created_at >= $2;
 DELETE FROM assistant_messages WHERE thread_id = $1;
 
 -- name: DeleteThreadMessagesByAssistant :exec
-DELETE FROM assistant_messages WHERE thread_id IN (SELECT uuid FROM assistant_threads WHERE assistant_id = $1);
+DELETE FROM assistant_messages
+USING assistant_threads
+WHERE assistant_messages.thread_id = assistant_threads.uuid
+  AND assistant_threads.assistant_id = $1;
 
 -- name: ListThreadMessages :many
 SELECT * FROM assistant_messages WHERE thread_id = $1 ORDER BY created_at ASC;

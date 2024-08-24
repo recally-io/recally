@@ -22,7 +22,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toastError } from "../libs/alert";
-import { get, post, put, queryClient } from "../libs/api";
+import { get, post, put, del, queryClient } from "../libs/api";
+import { modals } from "@mantine/modals";
 
 export default function Assistants() {
   const [assistantId, setAssistantId] = useState("");
@@ -75,6 +76,21 @@ export default function Assistants() {
     },
   });
 
+  const deleteAssistant = useMutation({
+    mutationFn: async (id) => {
+      const res = await del(`/api/v1/assistants/${id}`);
+      return res.data;
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries("list-asstants");
+    },
+    onError: (error) => {
+      toastError(
+        `Failed to delete assistant ${assistantId} : ${error.message}`,
+      );
+    },
+  });
+
   const [opened, { open, close }] = useDisclosure(false);
   const form = useForm({
     initialValues: {
@@ -87,6 +103,22 @@ export default function Assistants() {
     validate: {},
   });
 
+  const deleteConfirmModal = () =>
+    modals.openConfirmModal({
+      title: "Delete assistant",
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete assistant? It will delete all threads
+          and messages associated with it.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onCancel: close,
+      onConfirm: async () => {
+        await deleteAssistant.mutateAsync(assistantId);
+        close();
+      },
+    });
   return (
     <>
       <Modal opened={opened} onClose={close} title="Assistant details" centered>
@@ -129,13 +161,23 @@ export default function Assistants() {
             data={listModels.data}
           />
 
-          <Group justify="flex-end" mt="md">
-            <Button type="summit" onClick={close}>
-              Submit
+          <Group justify="space-between" mt="md">
+            <Button
+              type="button"
+              onClick={deleteConfirmModal}
+              color="red"
+              variant="filled"
+            >
+              Delete
             </Button>
-            <Button type="reset" onClick={close}>
-              Cancel
-            </Button>
+            <Group>
+              <Button type="summit" onClick={close}>
+                Submit
+              </Button>
+              <Button type="reset" onClick={close}>
+                Cancel
+              </Button>
+            </Group>
           </Group>
         </form>
       </Modal>
