@@ -8,6 +8,7 @@ import (
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
+	"vibrain/internal/pkg/tools"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -102,6 +103,20 @@ func (s *Service) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.
 }
 
 func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadDTO, error) {
+	ass, err := s.GetAssistant(ctx, tx, thread.AssistantId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get assistant: %w", err)
+	}
+	if thread.Model == "" {
+		thread.Model = ass.Model
+	}
+	if thread.Metadata.Tools == nil {
+		thread.Metadata.Tools = ass.Metadata.Tools
+	}
+	if thread.SystemPrompt == "" {
+		thread.SystemPrompt = ass.SystemPrompt
+	}
+
 	model := thread.Dump()
 	th, err := s.dao.CreateAssistantThread(ctx, tx, db.CreateAssistantThreadParams{
 		Uuid:        model.Uuid,
@@ -247,6 +262,7 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 		Content: thread.SystemPrompt,
 	})
 	model := thread.Model
+	toolNames := thread.Metadata.Tools
 	for _, m := range messages {
 		oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 			Role:    m.Role,
@@ -256,8 +272,16 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 		if m.Model != "" {
 			model = m.Model
 		}
+		if m.Metadata.Tools != nil {
+			toolNames = m.Metadata.Tools
+		}
 	}
-	resp, usage, err := s.llm.GenerateContent(ctx, oaiMessages, llms.WithModel(model))
+	opts := []llms.Option{
+		llms.WithModel(model),
+		llms.WithToolNames(toolNames),
+	}
+
+	resp, usage, err := s.llm.GenerateContent(ctx, oaiMessages, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -350,4 +374,16 @@ func (s *Service) DeleteAssistant(ctx context.Context, tx db.DBTX, assistantId u
 	}
 
 	return nil
+}
+
+func (s *Service) ListTools(ctx context.Context) ([]tools.BaseTool, error) {
+	toolMappings := llms.AllToolMappings
+	availableTools := make([]tools.BaseTool, 0, len(toolMappings))
+	for _, tool := range toolMappings {
+		availableTools = append(availableTools, tools.BaseTool{
+			Name:        tool.LLMName(),
+			Description: tool.LLMDescription(),
+		})
+	}
+	return availableTools, nil
 }

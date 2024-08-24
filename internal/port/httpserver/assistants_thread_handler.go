@@ -53,6 +53,9 @@ type createThreadRequest struct {
 	Description  string    `json:"description,omitempty"`
 	Model        string    `json:"model,omitempty"`
 	SystemPrompt string    `json:"system_prompt,omitempty"`
+	Metadata     struct {
+		Tools []string `json:"tools,omitempty"`
+	} `json:"metadata,omitempty"`
 }
 
 // createThread is a handler function that creates a new thread for an assistant.
@@ -94,6 +97,9 @@ func (h *assistantHandler) createThread(c echo.Context) error {
 		SystemPrompt: req.SystemPrompt,
 		AssistantId:  req.AssistantId,
 		UserId:       user.ID,
+		Metadata: assistants.ThreadMetadata{
+			Tools: req.Metadata.Tools,
+		},
 	}
 
 	thread, err := h.service.CreateThread(ctx, tx, &threadDTO)
@@ -111,6 +117,9 @@ type updateThreadRequest struct {
 	Description  string    `json:"description,omitempty"`
 	Model        string    `json:"model,omitempty"`
 	SystemPrompt string    `json:"system_prompt,omitempty"`
+	Metadata     struct {
+		Tools []string `json:"tools,omitempty"`
+	} `json:"metadata,omitempty"`
 }
 
 // updateThread is a handler function that updates an existing thread for an assistant.
@@ -158,6 +167,9 @@ func (h *assistantHandler) updateThread(c echo.Context) error {
 	}
 	if req.SystemPrompt == "" {
 		req.SystemPrompt = thread.SystemPrompt
+	}
+	if req.Metadata.Tools != nil {
+		thread.Metadata.Tools = req.Metadata.Tools
 	}
 
 	thread, err = h.service.UpdateThread(ctx, tx, thread)
@@ -328,6 +340,9 @@ type createThreadMessageRequest struct {
 	Role        string    `json:"role" validate:"required"`
 	Text        string    `json:"text" validate:"required"`
 	Model       string    `json:"model,omitempty"`
+	Metadata    struct {
+		Tools []string `json:"tools,omitempty"`
+	} `json:"metadata,omitempty"`
 }
 
 // createThreadMessage is a handler function that creates a new message for a thread.
@@ -371,6 +386,9 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 		Model:    thread.Model,
 		Role:     req.Role,
 		Text:     req.Text,
+		Metadata: assistants.ThreadMessageMetadata{
+			Tools: req.Metadata.Tools,
+		},
 	}
 
 	if req.Model != "" {
@@ -438,6 +456,9 @@ type updateThreadMessageRequest struct {
 	MessageId   uuid.UUID `param:"message-id" validate:"required,uuid4"`
 	Model       string    `json:"model,omitempty"`
 	Text        string    `json:"text" validate:"required"`
+	Metadata    struct {
+		Tools []string `json:"tools,omitempty"`
+	} `json:"metadata,omitempty"`
 }
 
 // update Thread Message
@@ -499,6 +520,9 @@ func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
 		Model:    message.Model,
 		Role:     message.Role,
 		Text:     req.Text,
+		Metadata: assistants.ThreadMessageMetadata{
+			Tools: req.Metadata.Tools,
+		},
 	}
 
 	if req.Model != "" {

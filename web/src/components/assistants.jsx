@@ -8,6 +8,7 @@ import {
   Group,
   LoadingOverlay,
   Modal,
+  MultiSelect,
   NativeSelect,
   NavLink,
   Stack,
@@ -19,11 +20,11 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toastError } from "../libs/alert";
-import { get, post, put, del, queryClient } from "../libs/api";
-import { modals } from "@mantine/modals";
+import { del, get, post, put, queryClient } from "../libs/api";
 
 export default function Assistants() {
   const [assistantId, setAssistantId] = useState("");
@@ -49,6 +50,17 @@ export default function Assistants() {
     queryFn: async () => {
       const res = await get("/api/v1/assistants/models");
       return res.data || [];
+    },
+  });
+
+  const listTools = useQuery({
+    queryKey: ["list-assistants-tools"],
+    queryFn: async () => {
+      const res = await get("/api/v1/assistants/tools");
+      let data = res.data || [];
+      data = data.map((tool) => tool.name);
+      console.log(`listTools: ${JSON.stringify(data)}`);
+      return data;
     },
   });
 
@@ -96,8 +108,11 @@ export default function Assistants() {
     initialValues: {
       name: "Assistant name",
       description: "Assistant description",
-      systemPrompt: "You are a helpful assistant.",
+      system_prompt: "You are a helpful assistant.",
       model: "gpt-4o",
+      metadata: {
+        tools: [],
+      },
     },
 
     validate: {},
@@ -148,8 +163,8 @@ export default function Assistants() {
             withAsterisk
             label="SystemPrompt"
             placeholder="your@email.com"
-            key={form.key("systemPrompt")}
-            {...form.getInputProps("systemPrompt")}
+            key={form.key("system_prompt")}
+            {...form.getInputProps("system_prompt")}
           />
           <NativeSelect
             label="Model"
@@ -159,6 +174,16 @@ export default function Assistants() {
               form.setFieldValue("model", e.target.value);
             }}
             data={listModels.data}
+          />
+          <MultiSelect
+            label="Tools"
+            key={form.key("metadata.tools")}
+            defaultValue={form.values.metadata.tools}
+            {...form.getInputProps("metadata.tools", {
+              type: "checkbox",
+            })}
+            data={listTools.data}
+            searchable
           />
 
           <Group justify="space-between" mt="md">

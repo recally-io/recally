@@ -13,16 +13,21 @@ type Tool interface {
 	Invoke(ctx context.Context, args string) (string, error)
 	Schema() *openai.FunctionDefinition
 	LLMName() string
+	LLMDescription() string
 }
 
 type BaseTool struct {
-	Name        string
-	Description string
-	Parameters  any
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Parameters  any    `json:"parameters"`
 }
 
 func (t *BaseTool) LLMName() string {
 	return t.Name
+}
+
+func (t *BaseTool) LLMDescription() string {
+	return t.Description
 }
 
 func (t *BaseTool) Schema() *openai.FunctionDefinition {

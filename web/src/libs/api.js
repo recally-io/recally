@@ -84,3 +84,12 @@ export async function put(path, params = null, body = null) {
 export async function del(path, params = null) {
   return await request("DELETE", path, params);
 }
+
+export const listToolsKey = "list-assistant-tools";
+export async function listTools() {
+  const res = await get("/api/v1/assistants/tools");
+  let data = res.data || [];
+  data = data.map((tool) => tool.name);
+  console.log(`listTools: ${JSON.stringify(data)}`);
+  return data;
+}

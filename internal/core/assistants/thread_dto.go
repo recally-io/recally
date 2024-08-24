@@ -11,7 +11,8 @@ import (
 )
 
 type ThreadMetadata struct {
-	IsGeneratedTitle bool `json:"is_generated_title"`
+	IsGeneratedTitle bool     `json:"is_generated_title"`
+	Tools            []string `json:"tools"`
 }
 
 type ThreadDTO struct {

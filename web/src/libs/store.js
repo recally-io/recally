@@ -42,13 +42,19 @@ const useStore = create((set) => ({
   threadModels: [],
   setThreadModels: (models) => set(() => ({ threadModels: models })),
 
+  threadTools: [],
+  setThreadTools: (tools) => set(() => ({ threadTools: tools })),
+
   threadSettings: {
     name: "New Thread",
     description: "",
-    systemPrompt: "",
+    system_prompt: "",
     temperature: 0.7,
-    maxToken: 4096,
+    max_token: 4096,
     model: (state) => state.threadChatModel,
+    metadata: {
+      tools: [],
+    },
   },
   setThreadSettings: (settings) => set(() => ({ threadSettings: settings })),
 }));

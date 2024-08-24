@@ -11,7 +11,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toastError } from "../libs/alert";
-import { get, post } from "../libs/api";
+import { get, listTools, listToolsKey, post } from "../libs/api";
 import useStore from "../libs/store";
 
 export function ThreadChatInput() {
@@ -38,11 +38,7 @@ export function ThreadChatInput() {
   const addThreadMessage = useStore((state) => state.addThreadMessage);
 
   const setModels = useStore((state) => state.setThreadModels);
-
-  const setThreadIsOpenSettings = useStore(
-    (state) => state.setThreadIsOpenSettings,
-  );
-
+  const setTools = useStore((state) => state.setThreadTools);
   const [modelSelecterValue, setModelSelecterValue] = useState("");
   const threadSettings = useStore((state) => state.threadSettings);
 
@@ -71,12 +67,21 @@ export function ThreadChatInput() {
     },
     enabled: isLogin,
   });
-
   useEffect(() => {
     if (listModels.data) {
       setModels(listModels.data);
     }
   }, [listModels.data]);
+
+  const listToolsQuery = useQuery({
+    queryKey: [listToolsKey],
+    queryFn: listTools,
+  });
+  useEffect(() => {
+    if (listToolsQuery.data) {
+      setTools(listToolsQuery.data);
+    }
+  }, [listToolsQuery.data]);
 
   const sendMessage = useMutation({
     mutationFn: async () => {

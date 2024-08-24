@@ -10,7 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type ThreadMessageMetadata struct{}
+type ThreadMessageMetadata struct {
+	Tools []string `json:"tools"`
+}
 
 type ThreadMessageDTO struct {
 	ID          uuid.UUID             `json:"id"`
