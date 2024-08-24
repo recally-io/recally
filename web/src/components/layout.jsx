@@ -1,4 +1,4 @@
-import { AppShell, createTheme, MantineProvider } from "@mantine/core";
+import { AppShell, createTheme, Input, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
@@ -10,7 +10,17 @@ import { queryClient } from "../libs/api";
 import useStore from "../libs/store";
 import Header from "./header";
 
-const theme = createTheme({});
+const theme = createTheme({
+  components: {
+    Input: Input.extend({
+      styles: {
+        input: {
+          fontSize: "16px",
+        },
+      },
+    }),
+  },
+});
 
 export default function Layout({ main, nav = null, header = null }) {
   let haveNav = nav !== null;

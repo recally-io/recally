@@ -181,7 +181,6 @@ export function ThreadChatInput() {
             maxRows={5}
             autosize
             w="100%"
-            styles={{ input: { fontSize: "16px" } }} // Prevent auto-zoom on iPhone
             disabled={sendMessage.isPending}
             onKeyDown={async (e) => {
               // Shift + Enter to send
