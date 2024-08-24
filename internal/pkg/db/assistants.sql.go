@@ -299,7 +299,10 @@ func (q *Queries) DeleteThreadMessageByThreadAndCreatedAt(ctx context.Context, d
 }
 
 const deleteThreadMessagesByAssistant = `-- name: DeleteThreadMessagesByAssistant :exec
-DELETE FROM assistant_messages WHERE thread_id IN (SELECT uuid FROM assistant_threads WHERE assistant_id = $1)
+DELETE FROM assistant_messages
+USING assistant_threads
+WHERE assistant_messages.thread_id = assistant_threads.uuid
+  AND assistant_threads.assistant_id = $1
 `
 
 func (q *Queries) DeleteThreadMessagesByAssistant(ctx context.Context, db DBTX, assistantID pgtype.UUID) error {

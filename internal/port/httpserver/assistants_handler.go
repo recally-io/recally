@@ -15,6 +15,7 @@ type assistantService interface {
 	CreateAssistant(ctx context.Context, tx db.DBTX, assistant *assistants.AssistantDTO) (*assistants.AssistantDTO, error)
 	UpdateAssistant(ctx context.Context, tx db.DBTX, assistant *assistants.AssistantDTO) (*assistants.AssistantDTO, error)
 	GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.AssistantDTO, error)
+	DeleteAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 
 	ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.UUID) ([]assistants.ThreadDTO, error)
 	CreateThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadDTO, error)
@@ -44,6 +45,7 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 	g.POST("", h.createAssistant)
 	g.GET("/:assistant-id", h.getAssistant)
 	g.PUT("/:assistant-id", h.updateAssistant)
+	g.DELETE("/:assistant-id", h.deleteAssistant)
 
 	g.GET("/:assistant-id/threads", h.listThreads)
 	g.POST("/:assistant-id/threads", h.createThread)
@@ -241,6 +243,40 @@ func (h *assistantHandler) updateAssistant(c echo.Context) error {
 	}
 
 	return JsonResponse(c, http.StatusCreated, assistant)
+}
+
+// deleteAssistant is a handler function that deletes an existing assistant.
+// @Summary Delete Assistant
+// @Description Deletes an existing assistant
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Success 204 {object} JSONResult{data=nil} "No Content"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id} [delete]
+func (h *assistantHandler) deleteAssistant(c echo.Context) error {
+	ctx := c.Request().Context()
+	assistantId := c.Param("assistant-id")
+
+	uuid, err := uuid.Parse(assistantId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	err = h.service.DeleteAssistant(ctx, tx, uuid)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusNoContent, nil)
 }
 
 // @Summary List Models
