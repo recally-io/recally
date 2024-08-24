@@ -9,15 +9,25 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
 
+import { useEffect } from "react";
 import useStore from "../libs/store";
 
-export function ThreadSettingsModal({ settingsForm }) {
+export function ThreadSettingsModal() {
   const [isOpen, setIsOpen] = useStore((state) => [
     state.threadIsOpenSettings,
     state.setThreadIsOpenSettings,
   ]);
   const models = useStore((state) => state.threadModels);
+  const threadSettings = useStore((state) => state.threadSettings);
+
+  const settingsForm = useForm({
+    initialValues: threadSettings,
+  });
+  useEffect(() => {
+    settingsForm.setValues(threadSettings);
+  }, [threadSettings]);
 
   return (
     <Modal

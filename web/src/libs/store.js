@@ -41,6 +41,16 @@ const useStore = create((set) => ({
 
   threadModels: [],
   setThreadModels: (models) => set(() => ({ threadModels: models })),
+
+  threadSettings: {
+    name: "New Thread",
+    description: "",
+    systemPrompt: "",
+    temperature: 0.7,
+    maxToken: 4096,
+    model: (state) => state.threadChatModel,
+  },
+  setThreadSettings: (settings) => set(() => ({ threadSettings: settings })),
 }));
 
 export default useStore;

@@ -15,7 +15,7 @@ import { toastError } from "../libs/alert";
 import { get, post } from "../libs/api";
 import useStore from "../libs/store";
 
-export function ThreadChatInput({ settingsForm }) {
+export function ThreadChatInput() {
   const isLogin = useStore((state) => state.isLogin);
 
   const assistantId = useStore((state) => state.assistantId);
@@ -45,6 +45,7 @@ export function ThreadChatInput({ settingsForm }) {
   );
 
   const [modelSelecterValue, setModelSelecterValue] = useState("");
+  const threadSettings = useStore((state) => state.threadSettings);
 
   useEffect(() => {
     if (newText === "@") {
@@ -87,15 +88,16 @@ export function ThreadChatInput({ settingsForm }) {
       setNewText("");
       addThreadMessage({ role: "user", text, id: Math.random() });
       const isNewThread = !!!threadId;
+      let newThreadId = threadId;
       if (isNewThread) {
-        const newThreadId = crypto.randomUUID();
+        newThreadId = crypto.randomUUID();
         setThreadId(newThreadId);
-        let data = settingsForm.getValues();
-        data.id = threadId;
+        let data = threadSettings;
+        data.id = newThreadId;
         await createThread.mutateAsync(data);
       }
       const res = await post(
-        `/api/v1/assistants/${assistantId}/threads/${threadId}/messages`,
+        `/api/v1/assistants/${assistantId}/threads/${newThreadId}/messages`,
         null,
         {
           role: "user",
@@ -103,10 +105,6 @@ export function ThreadChatInput({ settingsForm }) {
           model: chatModel,
         },
       );
-
-      if (isNewThread) {
-        window.location.href = `/threads.html?assistant-id=${assistantId}&thread-id=${tid}`;
-      }
 
       return res.data;
     },
