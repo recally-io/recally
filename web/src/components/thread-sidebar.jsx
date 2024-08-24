@@ -7,15 +7,14 @@ import {
   Flex,
   LoadingOverlay,
   ScrollArea,
-  Space,
   Stack,
-  useMantineTheme,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { del, get, post, queryClient } from "../libs/api";
+import { del, get, queryClient } from "../libs/api";
 
 import { useEffect } from "react";
 import useStore from "../libs/store";
+import { ThreadAddButton } from "./thread-add-button";
 
 export default function Sidebar() {
   const isLogin = useStore((state) => state.isLogin);
@@ -23,7 +22,10 @@ export default function Sidebar() {
     state.threadId,
     state.setThreadId,
   ]);
-  const toggleSidebar = useStore((state) => state.toggleSidebar);
+  const [isSidebarOpen, toggleSidebar] = useStore((state) => [
+    state.isSidebarOpen,
+    state.toggleSidebar,
+  ]);
   const assistantId = useStore((state) => state.assistantId);
   const setMessageList = useStore((state) => state.setThreadMessageList);
 
@@ -49,29 +51,6 @@ export default function Sidebar() {
     enabled: isLogin,
   });
 
-  const getAssistant = useQuery({
-    queryKey: ["get-assistant", assistantId],
-    queryFn: async () => {
-      const res = await get(`/api/v1/assistants/${assistantId}`);
-      return res.data;
-    },
-    enabled: isLogin,
-  });
-
-  const createThread = useMutation({
-    mutationFn: async (data) => {
-      const res = await post(
-        `/api/v1/assistants/${assistantId}/threads`,
-        null,
-        data,
-      );
-      return res.data;
-    },
-    onSuccess: (data) => {
-      setThreadId(data.id);
-    },
-  });
-
   const deleteThread = useMutation({
     mutationFn: async (threadId) => {
       await del(`/api/v1/assistants/${assistantId}/threads/${threadId}`);
@@ -83,7 +62,7 @@ export default function Sidebar() {
         queryKey: ["list-threads", assistantId],
       });
       setThreadId(null);
-      toggleSidebar();
+      // toggleSidebar();
       // reload the page
       setMessageList([]);
       const url = new URL(window.location.href);
@@ -91,17 +70,6 @@ export default function Sidebar() {
       window.history.pushState({}, "", url);
     },
   });
-
-  const theme = useMantineTheme();
-
-  const addNewThread = async () => {
-    await createThread.mutateAsync({
-      name: "Thread name",
-      description: "Thread description",
-      systemPrompt: getAssistant.data.systemPrompt,
-      model: getAssistant.data.model,
-    });
-  };
 
   return (
     <>
@@ -116,18 +84,18 @@ export default function Sidebar() {
       >
         <Stack align="stretch" justify="start" gap="md">
           <Flex justify="space-evenly" align="center">
+            <ThreadAddButton />
             <Button
+              onClick={toggleSidebar}
               variant="subtle"
-              radius="lg"
-              color={theme.primaryColor}
-              onClick={addNewThread}
+              size="lg"
+              hiddenFrom="sm"
             >
-              <Icon icon="tabler:message-circle" width={18} height={18} />
-              <Space w="xs" />
-              <span>New Thread</span>
-            </Button>
-            <Button onClick={toggleSidebar} variant="transparent" size="lg">
-              <Icon icon="tabler:layout-sidebar" />
+              {isSidebarOpen ? (
+                <Icon icon="tabler:chevron-right" />
+              ) : (
+                <Icon icon="tabler:chevron-left" />
+              )}
             </Button>
           </Flex>
 

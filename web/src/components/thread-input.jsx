@@ -7,7 +7,6 @@ import {
   Flex,
   FocusTrap,
   Textarea,
-  Tooltip,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -152,17 +151,6 @@ export function ThreadChatInput() {
       }}
     >
       <Flex align="flex-end" gap="xs">
-        <Tooltip label="Settings">
-          <ActionIcon
-            size="lg"
-            variant="subtle"
-            radius="lg"
-            onClick={() => setThreadIsOpenSettings(true)}
-          >
-            <Icon icon="tabler:settings"></Icon>
-          </ActionIcon>
-        </Tooltip>
-
         {isShowModelSelecter && (
           <FocusTrap active={isShowModelSelecter}>
             <Autocomplete
@@ -193,7 +181,7 @@ export function ThreadChatInput() {
             maxRows={5}
             autosize
             w="100%"
-            fz="16px"
+            styles={{ input: { fontSize: "16px" } }} // Prevent auto-zoom on iPhone
             disabled={sendMessage.isPending}
             onKeyDown={async (e) => {
               // Shift + Enter to send

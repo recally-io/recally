@@ -12,7 +12,7 @@ import Header from "./header";
 
 const theme = createTheme({});
 
-export default function Layout({ main, nav = null }) {
+export default function Layout({ main, nav = null, header = null }) {
   let haveNav = nav !== null;
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
 
@@ -36,7 +36,7 @@ export default function Layout({ main, nav = null }) {
             layout="alt"
           >
             <AppShell.Header>
-              <Header showNavBurger={haveNav} />
+              {header ? header : <Header showNavBurger={haveNav} />}
             </AppShell.Header>
             <AppShell.Navbar p="md">{nav}</AppShell.Navbar>
             <AppShell.Main>{main}</AppShell.Main>

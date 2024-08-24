@@ -9,6 +9,7 @@ import { Container, Flex, LoadingOverlay } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { ThreadChatWindows } from "../components/thread-chat-windows";
+import ThreadHeader from "../components/thread-header";
 import { ThreadChatInput } from "../components/thread-input";
 import { ThreadSettingsModal } from "../components/thread-settings";
 import { get } from "../libs/api";
@@ -80,6 +81,6 @@ function ThreadApp() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Layout main={<ThreadApp />} nav={<Sidebar />} showNavBurger={true} />
+    <Layout main={<ThreadApp />} nav={<Sidebar />} header={<ThreadHeader />} />
   </React.StrictMode>,
 );
