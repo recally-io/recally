@@ -35,10 +35,7 @@ function ThreadApp() {
   }, []);
 
   const isLogin = useStore((state) => state.isLogin);
-  const [chatModel, setChatModel] = useStore((state) => [
-    state.setThreadChatModel,
-    state.setThreadChatModel,
-  ]);
+  const setChatModel = useStore((state) => state.setThreadChatModel);
   const setIsTitleGenerated = useStore(
     (state) => state.setThreadIsTitleGenerated,
   );

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"vibrain/internal/core/assistants"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/tools"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -32,6 +33,7 @@ type assistantService interface {
 	DeleteThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 
 	ListModels(ctx context.Context) ([]string, error)
+	ListTools(ctx context.Context) ([]tools.BaseTool, error)
 }
 
 type assistantHandler struct {
@@ -60,6 +62,7 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 	g.DELETE("/:assistant-id/threads/:thread-id/messages/:message-id", h.deleteThreadMessage)
 
 	g.GET("/models", h.listModels)
+	g.GET("/tools", h.listTools)
 }
 
 // listAssistants is a handler function that lists the assistants for a user.
@@ -134,6 +137,9 @@ type createAssistantRequest struct {
 	Description  string `json:"description,omitempty"`
 	SystemPrompt string `json:"system_prompt,omitempty"`
 	Model        string `json:"model,omitempty"`
+	Metadata     struct {
+		Tools []string `json:"tools,omitempty"`
+	} `json:"metadata,omitempty"`
 }
 
 // createAssistant is a handler function that creates a new assistant.
@@ -171,6 +177,9 @@ func (h *assistantHandler) createAssistant(c echo.Context) error {
 		Description:  req.Description,
 		SystemPrompt: req.SystemPrompt,
 		Model:        req.Model,
+		Metadata: assistants.AssistantMetadata{
+			Tools: req.Metadata.Tools,
+		},
 	}
 
 	assistant, err := h.service.CreateAssistant(ctx, tx, &assistantDTO)
@@ -187,6 +196,9 @@ type updateAssistantRequest struct {
 	Description  string    `json:"description,omitempty"`
 	SystemPrompt string    `json:"system_prompt,omitempty"`
 	Model        string    `json:"model,omitempty"`
+	Metadata     struct {
+		Tools []string `json:"tools,omitempty"`
+	} `json:"metadata,omitempty"`
 }
 
 // updateAssistant is a handler function that updates an existing assistant.
@@ -235,6 +247,9 @@ func (h *assistantHandler) updateAssistant(c echo.Context) error {
 	}
 	if req.Model != "" {
 		assistant.Model = req.Model
+	}
+	if req.Metadata.Tools != nil {
+		assistant.Metadata.Tools = req.Metadata.Tools
 	}
 
 	assistant, err = h.service.UpdateAssistant(ctx, tx, assistant)
@@ -294,4 +309,13 @@ func (h *assistantHandler) listModels(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 	return JsonResponse(c, http.StatusOK, models)
+}
+
+// add an api to list all available tools
+func (h *assistantHandler) listTools(c echo.Context) error {
+	tools, err := h.service.ListTools(c.Request().Context())
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	return JsonResponse(c, http.StatusOK, tools)
 }

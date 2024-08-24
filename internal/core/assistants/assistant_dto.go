@@ -11,7 +11,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type AssistantMetadata struct{}
+type AssistantMetadata struct {
+	// Tools is a list of tools that the assistant can use
+	Tools []string `json:"tools"`
+}
 
 type AssistantDTO struct {
 	Id           uuid.UUID         `json:"id"`

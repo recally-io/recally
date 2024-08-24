@@ -10,7 +10,13 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-func DefaultLLMToolMappings() map[string]tools.Tool {
+var AllToolMappings map[string]tools.Tool
+
+func init() {
+	AllToolMappings = defaultLLMToolMappings()
+}
+
+func defaultLLMToolMappings() map[string]tools.Tool {
 	allTools := []tools.Tool{
 		jinareader.New(),
 		jinasearcher.New(),
