@@ -23,10 +23,7 @@ export default function Sidebar() {
     state.threadId,
     state.setThreadId,
   ]);
-  const [isSidebarOpen, toggleSidebar] = useStore((state) => [
-    state.isSidebarOpen,
-    state.toggleSidebar,
-  ]);
+  const toggleSidebar = useStore((state) => state.toggleSidebar);
   const assistantId = useStore((state) => state.assistantId);
   const setMessageList = useStore((state) => state.setThreadMessageList);
 
@@ -129,12 +126,7 @@ export default function Sidebar() {
               <Space w="xs" />
               <span>New Thread</span>
             </Button>
-            <Button
-              opened={isSidebarOpen}
-              onClick={toggleSidebar}
-              variant="transparent"
-              size="lg"
-            >
+            <Button onClick={toggleSidebar} variant="transparent" size="lg">
               <Icon icon="tabler:layout-sidebar" />
             </Button>
           </Flex>
