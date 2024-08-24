@@ -36,6 +36,9 @@ RETURNING *;
 -- name: DeleteAssistantThread :exec
 DELETE FROM assistant_threads WHERE uuid = $1;
 
+-- name: DeleteAssistantThreadsByAssistant :exec
+DELETE FROM assistant_threads WHERE assistant_id = $1;
+
 -- name: ListAssistantThreadsByUser :many
 SELECT * FROM assistant_threads WHERE user_id = $1 ORDER BY created_at DESC;
 
@@ -56,6 +59,15 @@ UPDATE assistant_messages SET text = $2, attachments = $3, metadata = $4 WHERE u
 
 -- name: DeleteThreadMessage :exec
 DELETE FROM assistant_messages WHERE uuid = $1;
+
+-- name: DeleteThreadMessageByThreadAndCreatedAt :exec
+DELETE FROM assistant_messages WHERE thread_id = $1 AND created_at >= $2;
+
+-- name: DeleteThreadMessagesByThread :exec
+DELETE FROM assistant_messages WHERE thread_id = $1;
+
+-- name: DeleteThreadMessagesByAssistant :exec
+DELETE FROM assistant_messages WHERE thread_id IN (SELECT uuid FROM assistant_threads WHERE assistant_id = $1);
 
 -- name: ListThreadMessages :many
 SELECT * FROM assistant_messages WHERE thread_id = $1 ORDER BY created_at ASC;

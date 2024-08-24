@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
+  ActionIcon,
   Autocomplete,
   Button,
   Divider,
@@ -11,7 +12,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { get, post } from "../libs/api";
+import { del, get, post, queryClient } from "../libs/api";
 
 import { useEffect } from "react";
 import useStore from "../libs/store";
@@ -33,7 +34,6 @@ export default function Sidebar() {
       const url = new URL(window.location.href);
       url.searchParams.set("thread-id", threadId);
       window.history.pushState({}, "", url);
-      // window.location.href = url;
     }
   }, [threadId]);
 
@@ -71,6 +71,22 @@ export default function Sidebar() {
     },
     onSuccess: (data) => {
       setThreadId(data.id);
+    },
+  });
+
+  const deleteThread = useMutation({
+    mutationFn: async (threadId) => {
+      await del(`/api/v1/assistants/${assistantId}/threads/${threadId}`);
+      console.log("delete thread success");
+    },
+    onSuccess: () => {
+      console.log("onSuccess: delete thread success");
+      queryClient.invalidateQueries({
+        queryKey: ["list-threads", assistantId],
+      });
+      setThreadId(null);
+      // reload the page
+      window.location.href = `/threads.html?assistant-id=${assistantId}`;
     },
   });
 
@@ -135,22 +151,34 @@ export default function Sidebar() {
           />
         </Stack>
         <Divider />
-        <ScrollArea>
+        <ScrollArea scrollbarSize="4">
           <LoadingOverlay visible={listThreads.isLoading} />
           <Stack align="stretch" justify="start" gap="sm">
             {listThreads.data &&
               listThreads.data.map((item) => (
-                <Button
-                  radius="md"
-                  w="100%"
-                  key={item.id}
-                  variant={threadId == item.id ? "filled" : "subtle"}
-                  onClick={() => {
-                    setThreadId(item.id);
-                  }}
-                >
-                  {item.name}
-                </Button>
+                <Flex key={item.id} align="center">
+                  <Button
+                    radius="md"
+                    w="80%"
+                    variant={threadId == item.id ? "filled" : "subtle"}
+                    onClick={() => {
+                      setThreadId(item.id);
+                    }}
+                  >
+                    {item.name}
+                  </Button>
+                  {threadId == item.id && (
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      onClick={async () => {
+                        await deleteThread.mutateAsync(item.id);
+                      }}
+                    >
+                      <Icon icon="tabler:trash" width={18} height={18} />
+                    </ActionIcon>
+                  )}
+                </Flex>
               ))}
           </Stack>
         </ScrollArea>

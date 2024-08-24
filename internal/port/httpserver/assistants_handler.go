@@ -26,7 +26,9 @@ type assistantService interface {
 
 	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]assistants.ThreadMessageDTO, error)
 	CreateThreadMessage(ctx context.Context, tx db.DBTX, threadId uuid.UUID, message *assistants.ThreadMessageDTO) (*assistants.ThreadMessageDTO, error)
+	GetThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.ThreadMessageDTO, error)
 	AddThreadMessage(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO, role, text string) (*assistants.ThreadMessageDTO, error)
+	DeleteThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 
 	ListModels(ctx context.Context) ([]string, error)
 }
@@ -52,6 +54,8 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 
 	g.GET("/:assistant-id/threads/:thread-id/messages", h.listThreadMessages)
 	g.POST("/:assistant-id/threads/:thread-id/messages", h.createThreadMessage)
+	g.PUT("/:assistant-id/threads/:thread-id/messages/:message-id", h.updateThreadMessage)
+	g.DELETE("/:assistant-id/threads/:thread-id/messages/:message-id", h.deleteThreadMessage)
 
 	g.GET("/models", h.listModels)
 }
