@@ -7,9 +7,13 @@ const useStore = create((set) => ({
   isDarkMode: false,
   setIsDarkMode: (isDarkMode) => set(() => ({ isDarkMode: isDarkMode })),
 
-  isSidebarOpen: false,
-  toggleSidebar: () =>
-    set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  mobileSidebarOpen: false,
+  toggleMobileSidebar: () =>
+    set((state) => ({ mobileSidebarOpen: !state.mobileSidebarOpen })),
+
+  desktopSidebarOpen: true,
+  toggleDesktopSidebar: () =>
+    set((state) => ({ desktopSidebarOpen: !state.desktopSidebarOpen })),
 
   assistantId: "",
   setAssistantId: (id) => set(() => ({ assistantId: id })),

@@ -3,35 +3,25 @@ import { ActionIcon, Flex, Group, Tooltip } from "@mantine/core";
 import React from "react";
 import useStore from "../libs/store";
 import { HeaderMenu } from "./header-menu";
+import { ShowNavbarButton } from "./header-show-navbar-button";
 import { ThreadAddButton } from "./thread-add-button";
 
 export default function ThreadHeader() {
-  const [isSidebarOpen, toggleSidebar] = useStore((state) => [
-    state.isSidebarOpen,
-    state.toggleSidebar,
-  ]);
   const setThreadIsOpenSettings = useStore(
     (state) => state.setThreadIsOpenSettings,
   );
 
   return (
     <>
-      <Flex direction="row" justify="space-between" align="center" gap="lg">
-        <Group gap="xs">
-          <Tooltip label="Toggle Sidebar">
-            <ActionIcon
-              onClick={toggleSidebar}
-              variant="subtle"
-              radius="lg"
-              size="lg"
-            >
-              {isSidebarOpen ? (
-                <Icon icon="tabler:chevron-right" />
-              ) : (
-                <Icon icon="tabler:chevron-left" />
-              )}
-            </ActionIcon>
-          </Tooltip>
+      <Flex
+        direction="row"
+        justify="space-between"
+        align="center"
+        gap="lg"
+        mx="sm"
+      >
+        <Group gap="2" align="center">
+          <ShowNavbarButton hasNavBar={true} />
           <ThreadAddButton />
           <Tooltip label="Settings">
             <ActionIcon

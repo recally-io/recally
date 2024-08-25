@@ -1,22 +1,20 @@
-import { Icon } from "@iconify/react";
-import { Button, Flex } from "@mantine/core";
+import { Flex } from "@mantine/core";
 import React from "react";
-import useStore from "../libs/store";
 import { HeaderMenu } from "./header-menu";
+import { ShowNavbarButton } from "./header-show-navbar-button";
 
-export default function Header({ showNavBurger }) {
-  const toggleSidebar = useStore((state) => state.toggleSidebar);
-
+export default function Header({ hasNavBar }) {
   return (
     <>
-      <Flex direction="row" justify="space-between" align="center" gap="lg">
-        {showNavBurger ? (
-          <Button onClick={toggleSidebar} variant="transparent" size="md">
-            <Icon icon="tabler:layout-sidebar" />
-          </Button>
-        ) : (
-          <div></div>
-        )}
+      <Flex
+        direction="row"
+        justify="space-between"
+        align="center"
+        gap="lg"
+        px="sm"
+        m="0"
+      >
+        <ShowNavbarButton hasNavBar={hasNavBar} />
 
         <HeaderMenu />
       </Flex>

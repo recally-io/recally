@@ -1,12 +1,4 @@
-import {
-  Avatar,
-  Container,
-  Flex,
-  Paper,
-  ScrollArea,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Avatar, Flex, Paper, ScrollArea, Stack, Text } from "@mantine/core";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useMutation } from "@tanstack/react-query";
@@ -69,7 +61,7 @@ export function ThreadChatWindows({ settingsForm }) {
 
   const messagePaper = (message) => {
     const isSender = message.role === "user";
-    const bgColor = isSender ? "blue.2" : "green.1";
+    const bgColor = isSender ? "primary.2" : "secondary.2";
     return (
       <Flex
         justify={isSender ? "flex-end" : "flex-start"}
@@ -89,7 +81,7 @@ export function ThreadChatWindows({ settingsForm }) {
           </Text>
 
           <Paper
-            shadow="sm"
+            shadow="md"
             px="xs"
             radius="lg"
             withBorder
