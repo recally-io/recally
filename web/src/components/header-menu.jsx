@@ -78,7 +78,7 @@ export function HeaderMenu() {
             leftSection={<Icon icon="tabler:home" />}
             component="a"
             href="/"
-            target="_blank"
+            // target="_blank"
           >
             Home
           </Menu.Item>
@@ -86,7 +86,7 @@ export function HeaderMenu() {
             leftSection={<Icon icon="tabler:augmented-reality" />}
             component="a"
             href="/assistants.html"
-            target="_blank"
+            // target="_blank"
           >
             Assistants
           </Menu.Item>

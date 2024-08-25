@@ -8,6 +8,8 @@ import {
   LoadingOverlay,
   ScrollArea,
   Stack,
+  Text,
+  Tooltip,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { del, get, queryClient } from "../libs/api";
@@ -22,10 +24,7 @@ export default function Sidebar() {
     state.threadId,
     state.setThreadId,
   ]);
-  const [isSidebarOpen, toggleSidebar] = useStore((state) => [
-    state.isSidebarOpen,
-    state.toggleSidebar,
-  ]);
+  const toggleMobileSidebar = useStore((state) => state.toggleMobileSidebar);
   const assistantId = useStore((state) => state.assistantId);
   const setMessageList = useStore((state) => state.setThreadMessageList);
 
@@ -85,18 +84,17 @@ export default function Sidebar() {
         <Stack align="stretch" justify="start" gap="md">
           <Flex justify="space-evenly" align="center">
             <ThreadAddButton />
-            <Button
-              onClick={toggleSidebar}
-              variant="subtle"
-              size="lg"
-              hiddenFrom="sm"
-            >
-              {isSidebarOpen ? (
-                <Icon icon="tabler:chevron-right" />
-              ) : (
-                <Icon icon="tabler:chevron-left" />
-              )}
-            </Button>
+            <Tooltip label="Toggle Sidebar" hiddenFrom="sm">
+              <ActionIcon
+                onClick={toggleMobileSidebar}
+                variant="subtle"
+                radius="lg"
+                size="lg"
+                hiddenFrom="sm"
+              >
+                <Icon icon="tabler:menu-3" />
+              </ActionIcon>
+            </Tooltip>
           </Flex>
 
           <Autocomplete
@@ -111,6 +109,7 @@ export default function Sidebar() {
               );
               if (filteredItems.length > 0) {
                 setThreadId(filteredItems[0].id);
+                toggleMobileSidebar();
               }
             }}
           />
@@ -124,27 +123,45 @@ export default function Sidebar() {
                 <Flex
                   key={item.id}
                   align="center"
-                  w={{ xs: "95%", sm: "90%" }}
+                  w="95%"
                   justify="space-between"
                 >
                   <Button
                     radius="md"
+                    color={threadId == item.id ? "accent" : "default"}
                     variant={threadId == item.id ? "filled" : "subtle"}
                     onClick={() => {
                       setThreadId(item.id);
+                      toggleMobileSidebar();
+                    }}
+                    styles={{
+                      inner: {
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                      },
                     }}
                   >
-                    {item.name}
+                    <Text
+                      size="sm"
+                      lineClamp={2}
+                      style={{
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                      }}
+                    >
+                      {item.name}
+                    </Text>
                   </Button>
                   {threadId == item.id && (
                     <ActionIcon
                       variant="subtle"
-                      color="red"
+                      color="danger"
                       onClick={async () => {
                         await deleteThread.mutateAsync(item.id);
                       }}
                     >
-                      <Icon icon="tabler:trash" width={18} height={18} />
+                      <Icon icon="tabler:trash" />
                     </ActionIcon>
                   )}
                 </Flex>

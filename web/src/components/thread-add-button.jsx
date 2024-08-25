@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { Button, Tooltip } from "@mantine/core";
+import { ActionIcon, Tooltip } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { get, post } from "../libs/api";
+import { get, post, queryClient } from "../libs/api";
 import useStore from "../libs/store";
 
 export function ThreadAddButton() {
@@ -28,6 +28,9 @@ export function ThreadAddButton() {
     },
     onSuccess: (data) => {
       setThreadId(data.id);
+      queryClient.invalidateQueries({
+        queryKey: ["list-threads", assistantId],
+      });
     },
   });
 
@@ -42,9 +45,9 @@ export function ThreadAddButton() {
 
   return (
     <Tooltip label="New Thread">
-      <Button variant="subtle" radius="lg" onClick={addNewThread}>
-        <Icon icon="tabler:plus" />
-      </Button>
+      <ActionIcon size="lg" variant="subtle" radius="lg" onClick={addNewThread}>
+        <Icon icon="tabler:message-circle-plus" />
+      </ActionIcon>
     </Tooltip>
   );
 }
