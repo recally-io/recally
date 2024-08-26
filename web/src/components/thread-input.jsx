@@ -17,7 +17,6 @@ import {
   listTools,
   listToolsKey,
   post,
-  queryClient,
 } from "../libs/api";
 import useStore from "../libs/store";
 
@@ -63,7 +62,7 @@ export function ThreadChatInput() {
     },
   });
 
-  useQuery({
+  const listModelsQuery = useQuery({
     queryKey: listModelsKey,
     queryFn: async () => {
       const res = await listModels();
@@ -120,9 +119,6 @@ export function ThreadChatInput() {
     },
     onSuccess: (data) => {
       addThreadMessage(data);
-      queryClient.invalidateQueries({
-        queryKey: ["list-threads", assistant.id],
-      });
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);
@@ -170,7 +166,7 @@ export function ThreadChatInput() {
             <Autocomplete
               label="Talk to model"
               placeholder="Type to select model"
-              data={[...new Set(listModels.data)]}
+              data={[...new Set(listModelsQuery.data)]}
               dropdownOpened={isShowModelSelecter}
               radius="lg"
               fz="16px"
