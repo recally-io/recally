@@ -9,18 +9,14 @@ import { CopyBtn } from "./copy-button";
 import { MarkdownRenderer } from "./markdown-renderer";
 
 export function ThreadChatWindows() {
-  const threadId = useStore((state) => state.threadId);
-  const assistantId = useStore((state) => state.assistantId);
+  const assistant = useStore((state) => state.assistant);
+  const thread = useStore((state) => state.thread);
 
   const isDarkMode = useStore((state) => state.isDarkMode);
   const messageList = useStore((state) => state.threadMessageList);
   const [isTitleGenerated, setIsTitleGenerated] = useStore((state) => [
     state.threadIsTitleGenerated,
     state.setThreadIsTitleGenerated,
-  ]);
-  const [threadSettings, setThreadSettings] = useStore((state) => [
-    state.threadSettings,
-    state.setThreadSettings,
   ]);
   const chatArea = useRef(null);
 
@@ -46,16 +42,15 @@ export function ThreadChatWindows() {
   const generateTitle = useMutation({
     mutationFn: async () => {
       const res = await post(
-        `/api/v1/assistants/${assistantId}/threads/${threadId}/generate-title`,
+        `/api/v1/assistants/${assistant.id}/threads/${thread.id}/generate-title`,
         null,
         {},
       );
       return res.data;
     },
-    onSuccess: (data) => {
-      setThreadSettings({ ...threadSettings, name: data.name });
-      queryClient.invalidateQueries(["get-thread", threadId]);
-      queryClient.invalidateQueries(["list-threads", assistantId]);
+    onSuccess: () => {
+      queryClient.invalidateQueries(["get-thread", thread.id]);
+      queryClient.invalidateQueries(["list-threads", assistant.id]);
     },
   });
 

@@ -21,26 +21,25 @@ import { ThreadAddButton } from "./thread-add-button";
 
 export default function Sidebar() {
   const isLogin = useStore((state) => state.isLogin);
-  const [threadId, setThreadId] = useStore((state) => [
-    state.threadId,
-    state.setThreadId,
-  ]);
+  const assistant = useStore((state) => state.assistant);
+  const thread = useStore((state) => state.thread);
+  const setThread = useStore((state) => state.setThread);
+
   const toggleMobileSidebar = useStore((state) => state.toggleMobileSidebar);
-  const assistantId = useStore((state) => state.assistantId);
   const setMessageList = useStore((state) => state.setThreadMessageList);
 
   useEffect(() => {
-    if (threadId) {
+    if (thread?.id) {
       const url = new URL(window.location.href);
-      url.searchParams.set("thread-id", threadId);
+      url.searchParams.set("thread-id", thread.id);
       window.history.pushState({}, "", url);
     }
-  }, [threadId]);
+  }, [thread]);
 
   const listThreads = useQuery({
-    queryKey: ["list-threads", assistantId],
+    queryKey: ["list-threads", assistant.id],
     queryFn: async () => {
-      const res = await get(`/api/v1/assistants/${assistantId}/threads`);
+      const res = await get(`/api/v1/assistants/${assistant.id}/threads`);
       const data = res.data;
       data.map((item) => {
         item["value"] =
@@ -48,22 +47,20 @@ export default function Sidebar() {
       });
       return data;
     },
-    enabled: isLogin,
+    enabled: isLogin && !!assistant,
   });
 
   const deleteThread = useMutation({
-    mutationFn: async (threadId) => {
-      await del(`/api/v1/assistants/${assistantId}/threads/${threadId}`);
+    mutationFn: async () => {
+      await del(`/api/v1/assistants/${assistant.id}/threads/${thread.id}`);
       console.log("delete thread success");
     },
     onSuccess: () => {
       console.log("onSuccess: delete thread success");
       queryClient.invalidateQueries({
-        queryKey: ["list-threads", assistantId],
+        queryKey: ["list-threads", assistant.id],
       });
-      setThreadId(null);
-      // toggleSidebar();
-      // reload the page
+      setThread(null);
       setMessageList([]);
       const url = new URL(window.location.href);
       url.searchParams.delete("thread-id");
@@ -86,7 +83,7 @@ export default function Sidebar() {
           <Flex justify="center" align="center" gap="md">
             <Button variant="outline" radius="lg" size="sm">
               <Anchor
-                href={`/assistants.html?id=${assistantId}`}
+                href={`/assistants.html?id=${assistant.id}`}
                 variant="gradient"
                 gradient={{ from: "pink", to: "yellow" }}
                 underline="always"
@@ -120,7 +117,7 @@ export default function Sidebar() {
                 (i) => i.value == item,
               );
               if (filteredItems.length > 0) {
-                setThreadId(filteredItems[0].id);
+                setThread(filteredItems[0]);
                 toggleMobileSidebar();
               }
             }}
@@ -140,10 +137,10 @@ export default function Sidebar() {
                 >
                   <Button
                     radius="md"
-                    color={threadId == item.id ? "accent" : "default"}
-                    variant={threadId == item.id ? "filled" : "subtle"}
+                    color={thread?.id == item.id ? "accent" : "default"}
+                    variant={thread?.id == item.id ? "filled" : "subtle"}
                     onClick={() => {
-                      setThreadId(item.id);
+                      setThread(item);
                       toggleMobileSidebar();
                     }}
                     styles={{
@@ -165,7 +162,7 @@ export default function Sidebar() {
                       {item.name}
                     </Text>
                   </Button>
-                  {threadId == item.id && (
+                  {thread?.id == item.id && (
                     <ActionIcon
                       variant="subtle"
                       color="danger"

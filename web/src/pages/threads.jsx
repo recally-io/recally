@@ -16,23 +16,17 @@ import { get } from "../libs/api";
 import useStore from "../libs/store";
 
 function ThreadApp() {
-  const [threadId, setThreadId] = useStore((state) => [
-    state.threadId,
-    state.setThreadId,
-  ]);
-  const [assistantId, setAssistantId] = useStore((state) => [
-    state.assistantId,
-    state.setAssistantId,
-  ]);
+  const url = new URL(window.location.href);
+
+  const assistantId = url.searchParams.get("assistant-id");
+  const threadId = url.searchParams.get("thread-id");
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    if (!url.searchParams.get("assistant-id")) {
+    if (!assistantId) {
+      console.log("no assistant id");
       window.location.href = "/assistants.html";
     }
-    setAssistantId(url.searchParams.get("assistant-id"));
-    setThreadId(url.searchParams.get("thread-id"));
-  }, []);
+  }, [assistantId]);
 
   const isLogin = useStore((state) => state.isLogin);
   const setChatModel = useStore((state) => state.setThreadChatModel);
@@ -40,7 +34,6 @@ function ThreadApp() {
     (state) => state.setThreadIsTitleGenerated,
   );
   const setMessageList = useStore((state) => state.setThreadMessageList);
-  const setThreadSettings = useStore((state) => state.setThreadSettings);
 
   const setThread = useStore((state) => state.setThread);
   const setAssistant = useStore((state) => state.setAssistant);
@@ -59,7 +52,6 @@ function ThreadApp() {
   useEffect(() => {
     if (getThread.data) {
       setThread(getThread.data);
-      setThreadSettings(getThread.data);
       setMessageList(getThread.data.messages || []);
       if (getThread.data.model != "") {
         setChatModel(getThread.data.model);
@@ -80,7 +72,6 @@ function ThreadApp() {
 
   useEffect(() => {
     if (getAssistant.data) {
-      setThreadSettings(getAssistant.data);
       setAssistant(getAssistant.data);
     }
   }, [getAssistant.data]);
