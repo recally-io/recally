@@ -41,6 +41,10 @@ function ThreadApp() {
   );
   const setMessageList = useStore((state) => state.setThreadMessageList);
   const setThreadSettings = useStore((state) => state.setThreadSettings);
+
+  const setThread = useStore((state) => state.setThread);
+  const setAssistant = useStore((state) => state.setAssistant);
+
   const getThread = useQuery({
     queryKey: ["get-thread", threadId],
     queryFn: async () => {
@@ -51,8 +55,10 @@ function ThreadApp() {
     },
     enabled: isLogin && !!threadId && !!assistantId,
   });
+
   useEffect(() => {
     if (getThread.data) {
+      setThread(getThread.data);
       setThreadSettings(getThread.data);
       setMessageList(getThread.data.messages || []);
       if (getThread.data.model != "") {
@@ -62,6 +68,23 @@ function ThreadApp() {
       window.document.title = getThread.data.name;
     }
   }, [getThread.data]);
+
+  const getAssistant = useQuery({
+    queryKey: ["get-assistant", assistantId],
+    queryFn: async () => {
+      const res = await get(`/api/v1/assistants/${assistantId}`);
+      return res.data;
+    },
+    enabled: isLogin && !!assistantId,
+  });
+
+  useEffect(() => {
+    if (getAssistant.data) {
+      setThreadSettings(getAssistant.data);
+      setAssistant(getAssistant.data);
+    }
+  }, [getAssistant.data]);
+
   return (
     <>
       <Container px="xs" h="95svh">
