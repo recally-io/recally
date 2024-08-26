@@ -341,7 +341,8 @@ type createThreadMessageRequest struct {
 	Text        string    `json:"text" validate:"required"`
 	Model       string    `json:"model,omitempty"`
 	Metadata    struct {
-		Tools []string `json:"tools,omitempty"`
+		Tools  []string `json:"tools,omitempty"`
+		Images []string `json:"images,omitempty"`
 	} `json:"metadata,omitempty"`
 }
 
@@ -387,7 +388,8 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 		Role:     req.Role,
 		Text:     req.Text,
 		Metadata: assistants.ThreadMessageMetadata{
-			Tools: req.Metadata.Tools,
+			Tools:  req.Metadata.Tools,
+			Images: req.Metadata.Images,
 		},
 	}
 

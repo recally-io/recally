@@ -12,6 +12,7 @@ import (
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
+	"vibrain/internal/pkg/s3"
 	"vibrain/internal/port/bots"
 	"vibrain/internal/port/httpserver"
 )
@@ -44,7 +45,11 @@ func main() {
 
 	// start http service
 	llm := llms.New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
-	httpService, err := httpserver.New(pool, llm, httpserver.WithCache(cacheService))
+	s3Client, err := s3.New(config.Settings.S3)
+	if err != nil {
+		logger.Default.Fatal("failed to create new s3 client", "error", err)
+	}
+	httpService, err := httpserver.New(pool, llm, httpserver.WithCache(cacheService), httpserver.WithS3(s3Client))
 	if err != nil {
 		logger.Default.Fatal("failed to create new http service", "error", err)
 	}

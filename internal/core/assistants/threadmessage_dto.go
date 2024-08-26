@@ -11,7 +11,8 @@ import (
 )
 
 type ThreadMessageMetadata struct {
-	Tools []string `json:"tools"`
+	Tools  []string `json:"tools"`
+	Images []string `json:"images"`
 }
 
 type ThreadMessageDTO struct {

@@ -55,6 +55,14 @@ type GoogleSearchConfig struct {
 	EngineID string `env:"ENGINE_ID"`
 }
 
+type S3Config struct {
+	Endpoint        string `env:"ENDPOINT"`
+	AccessKeyID     string `env:"ACCESS_KEY_ID"`
+	SecretAccessKey string `env:"SECRET_ACCESS_KEY"`
+	BucketName      string `env:"BUCKET_NAME"`
+	PublicURL       string `env:"PUBLIC_URL"`
+}
+
 type Config struct {
 	// Env is the environment the service is running in
 	// such as dev, staging, production
@@ -76,6 +84,7 @@ type Config struct {
 	} `envPrefix:"OAUTH_"`
 	OpenAI       OpenAIConfig       `envPrefix:"OPENAI_"`
 	GoogleSearch GoogleSearchConfig `envPrefix:"GOOGLE_SEARCH_"`
+	S3           S3Config           `envPrefix:"S3_"`
 }
 
 func init() {
