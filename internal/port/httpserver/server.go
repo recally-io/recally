@@ -11,6 +11,7 @@ import (
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
+	"vibrain/internal/pkg/s3"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -22,6 +23,7 @@ type Service struct {
 	llm    *llms.LLM
 	cache  cache.Cache
 	uiCmd  *exec.Cmd
+	s3     *s3.Client
 }
 
 type CustomValidator struct {
@@ -41,6 +43,12 @@ type Option func(*Service)
 func WithCache(c cache.Cache) Option {
 	return func(s *Service) {
 		s.cache = c
+	}
+}
+
+func WithS3(s3 *s3.Client) Option {
+	return func(s *Service) {
+		s.s3 = s3
 	}
 }
 

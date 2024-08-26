@@ -270,14 +270,41 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 			Role:    m.Role,
 			Content: m.Text,
 		})
-		// Use the model from the last message
-		if m.Model != "" {
-			model = m.Model
+	}
+	lastMessage := messages[len(messages)-1]
+	// Use the model from the last message
+	if lastMessage.Model != "" {
+		model = lastMessage.Model
+	}
+	if lastMessage.Metadata.Tools != nil {
+		toolNames = lastMessage.Metadata.Tools
+	}
+
+	if len(lastMessage.Metadata.Images) > 0 {
+		multiContent := make([]openai.ChatMessagePart, 0)
+
+		if lastMessage.Text != "" {
+			multiContent = append(multiContent, openai.ChatMessagePart{
+				Type: openai.ChatMessagePartTypeText,
+				Text: lastMessage.Text,
+			})
 		}
-		if m.Metadata.Tools != nil {
-			toolNames = m.Metadata.Tools
+		for _, img := range lastMessage.Metadata.Images {
+			multiContent = append(multiContent, openai.ChatMessagePart{
+				Type: openai.ChatMessagePartTypeImageURL,
+				ImageURL: &openai.ChatMessageImageURL{
+					URL: img,
+				},
+			})
+		}
+		oaiMessages[len(oaiMessages)-1] = openai.ChatCompletionMessage{
+			Role:         "user",
+			MultiContent: multiContent,
 		}
 	}
+
+	fmt.Println(oaiMessages)
+
 	opts := []llms.Option{
 		llms.WithModel(model),
 		llms.WithToolNames(toolNames),

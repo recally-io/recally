@@ -44,6 +44,8 @@ export function ThreadChatInput() {
   const setTools = useStore((state) => state.setThreadTools);
   const [modelSelecterValue, setModelSelecterValue] = useState("");
 
+  const [images, setImages] = useState([]);
+
   useEffect(() => {
     if (newText === "@") {
       setIsShowModelSelecter(true);
@@ -89,7 +91,12 @@ export function ThreadChatInput() {
         text = text.replace(/^@[^ ]+\s*/, "");
       }
       setNewText("");
-      addThreadMessage({ role: "user", text, id: Math.random() });
+      addThreadMessage({
+        role: "user",
+        text,
+        id: Math.random(),
+        metadata: { images: images },
+      });
       const isNewThread = !thread.id;
       let newThreadId = thread.id;
       if (isNewThread) {
@@ -106,42 +113,126 @@ export function ThreadChatInput() {
           },
         });
       }
+
+      let payload = {
+        role: "user",
+        text: text,
+        model: chatModel,
+      };
+
+      if (images.length > 0) {
+        payload["metadata"] = { images: images };
+      }
+
       const res = await post(
         `/api/v1/assistants/${assistant.id}/threads/${newThreadId}/messages`,
         null,
-        {
-          role: "user",
-          text: text,
-          model: chatModel,
-        },
+        payload,
       );
       return res.data;
     },
     onSuccess: (data) => {
       addThreadMessage(data);
+      setImages([]);
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);
     },
   });
 
-  const handleFileChange = async (file) => {
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFileContent(e.target.result);
-      };
-      reader.readAsText(file);
+  const getPresignedUrl = async ({
+    assistantId,
+    threadId,
+    fileName,
+    fileType,
+    action,
+    expiration,
+  }) => {
+    const params = new URLSearchParams({
+      assistant_id: assistantId,
+      thread_id: threadId,
+      file_name: fileName,
+      file_type: fileType,
+      action: action,
+      expiration: expiration,
+    });
+    console.log(`params: ${params}`);
+    const response = await fetch(`/api/v1/files/presigned-urls?${params}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) throw new Error("Failed to get presigned URL");
+    const res = await response.json();
+    console.log(`res: ${JSON.stringify(res)}`);
+    return res.data;
+  };
+
+  const uploadFile = async ({ presignedUrl, file, publicUrl }) => {
+    const response = await fetch(presignedUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+    if (!response.ok) throw new Error("Failed to upload file");
+    return publicUrl;
+  };
+
+  const getPresignedUrlMutation = useMutation({
+    mutationFn: getPresignedUrl,
+    onSuccess: (data, variables) => handleUpload(data, variables.file),
+    onError: (error) => {
+      console.error("Error getting presigned URL:", error);
+      toastError("Failed to get upload URL: " + error.message);
+    },
+  });
+
+  const uploadFileMutation = useMutation({
+    mutationFn: uploadFile,
+    onSuccess: (data) => {
+      setImages((prevImages) => [...prevImages, data]);
+      console.log("Updated images:", [...images, data]);
+    },
+    onError: (error) => {
+      console.error("Error uploading file:", error);
+      toastError("Failed to upload file: " + error.message);
+    },
+  });
+
+  const handleFileChange = async (files) => {
+    if (!files) return;
+    for (const file of files) {
+      getPresignedUrlMutation.mutate({
+        assistantId: assistant.id,
+        threadId: thread.id,
+        fileName: file.name,
+        fileType: file.type,
+        action: "put",
+        expiration: 3600,
+        file, // Pass the file to be used in onSuccess
+      });
     }
+  };
+
+  const handleUpload = async (data, file) => {
+    console.log(`uploading file: ${JSON.stringify(data)}`);
+    uploadFileMutation.mutate({
+      presignedUrl: data.presigned_url,
+      file,
+      publicUrl: data.public_url,
+    });
   };
 
   const fileInputButton = () => {
     return (
       <FileButton
         onChange={handleFileChange}
-        // accept="image/png,image/jpeg"
-        // multiple
-        disabled={sendMessage.isPending}
+        accept="image/*"
+        multiple
+        disabled={
+          sendMessage.isPending ||
+          getPresignedUrlMutation.isPending ||
+          uploadFileMutation.isPending
+        }
       >
         {(props) => (
           <ActionIcon {...props} variant="subtle" radius="lg">

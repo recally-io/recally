@@ -1,8 +1,19 @@
-import { Avatar, Flex, Paper, ScrollArea, Stack, Text } from "@mantine/core";
+import {
+  Avatar,
+  Box,
+  Flex,
+  Image,
+  Modal,
+  Paper,
+  ScrollArea,
+  SimpleGrid,
+  Stack,
+  Text,
+} from "@mantine/core";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { post, queryClient } from "../libs/api";
 import useStore from "../libs/store";
 import { CopyBtn } from "./copy-button";
@@ -19,7 +30,7 @@ export function ThreadChatWindows() {
     state.setThreadIsTitleGenerated,
   ]);
   const chatArea = useRef(null);
-
+  const [openedImage, setOpenedImage] = useState(null);
   useEffect(() => {
     chatArea.current.scrollTo({
       top: chatArea.current.scrollHeight,
@@ -83,6 +94,35 @@ export function ThreadChatWindows() {
             maw={{ base: "85vw", lg: "60vw" }}
             bg={isDarkMode ? "" : bgColor}
           >
+            {message.metadata?.images && message.metadata.images.length > 0 && (
+              <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xs" mb="xs">
+                {message.metadata.images.map((imgurl, index) => (
+                  <Box key={index}>
+                    <Image
+                      src={imgurl}
+                      radius="md"
+                      alt={`Image ${imgurl.split("/").pop()}`}
+                      fit="contain"
+                      style={{
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setOpenedImage(imgurl)}
+                    />
+                    <Modal
+                      opened={openedImage === imgurl}
+                      onClose={() => setOpenedImage(null)}
+                      size="xl"
+                    >
+                      <Image
+                        src={imgurl}
+                        alt={`Full size image ${index + 1}`}
+                        fit="contain"
+                      />
+                    </Modal>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            )}
             <MarkdownRenderer content={message.text} />
           </Paper>
 
