@@ -25,16 +25,21 @@ export default function Sidebar() {
   const thread = useStore((state) => state.thread);
   const setThread = useStore((state) => state.setThread);
 
+  const [threadId, setThreadId] = useStore((state) => [
+    state.threadId,
+    state.setThreadId,
+  ]);
+
   const toggleMobileSidebar = useStore((state) => state.toggleMobileSidebar);
   const setMessageList = useStore((state) => state.setThreadMessageList);
 
   useEffect(() => {
-    if (thread?.id) {
+    if (threadId) {
       const url = new URL(window.location.href);
-      url.searchParams.set("thread-id", thread.id);
+      url.searchParams.set("thread-id", threadId);
       window.history.pushState({}, "", url);
     }
-  }, [thread]);
+  }, [threadId]);
 
   const listThreads = useQuery({
     queryKey: ["list-threads", assistant.id],
@@ -117,7 +122,7 @@ export default function Sidebar() {
                 (i) => i.value == item,
               );
               if (filteredItems.length > 0) {
-                setThread(filteredItems[0]);
+                setThreadId(filteredItems[0].id);
                 toggleMobileSidebar();
               }
             }}
@@ -140,7 +145,7 @@ export default function Sidebar() {
                     color={thread?.id == item.id ? "accent" : "default"}
                     variant={thread?.id == item.id ? "filled" : "subtle"}
                     onClick={() => {
-                      setThread(item);
+                      setThreadId(item.id);
                       toggleMobileSidebar();
                     }}
                     styles={{

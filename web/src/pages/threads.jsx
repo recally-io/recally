@@ -19,7 +19,11 @@ function ThreadApp() {
   const url = new URL(window.location.href);
 
   const assistantId = url.searchParams.get("assistant-id");
-  const threadId = url.searchParams.get("thread-id");
+  const urlThreadId = url.searchParams.get("thread-id");
+  const [threadId, setThreadId] = useStore((state) => [
+    state.threadId,
+    state.setThreadId,
+  ]);
 
   useEffect(() => {
     if (!assistantId) {
@@ -27,6 +31,10 @@ function ThreadApp() {
       window.location.href = "/assistants.html";
     }
   }, [assistantId]);
+
+  useEffect(() => {
+    setThreadId(urlThreadId);
+  }, [urlThreadId]);
 
   const isLogin = useStore((state) => state.isLogin);
   const setChatModel = useStore((state) => state.setThreadChatModel);
@@ -44,37 +52,31 @@ function ThreadApp() {
       const res = await get(
         `/api/v1/assistants/${assistantId}/threads/${threadId}`,
       );
+
       return res.data || {};
     },
     enabled: isLogin && !!threadId && !!assistantId,
   });
 
   useEffect(() => {
-    if (getThread.data) {
+    if (getThread.data && threadId) {
       setThread(getThread.data);
       setMessageList(getThread.data.messages || []);
-      if (getThread.data.model != "") {
-        setChatModel(getThread.data.model);
-      }
+      setChatModel(getThread.data.model);
       setIsTitleGenerated(!!getThread.data.metadata.is_generated_title);
       window.document.title = getThread.data.name;
     }
-  }, [getThread.data]);
+  }, [getThread.data, threadId]);
 
-  const getAssistant = useQuery({
+  useQuery({
     queryKey: ["get-assistant", assistantId],
     queryFn: async () => {
       const res = await get(`/api/v1/assistants/${assistantId}`);
+      setAssistant(res.data);
       return res.data;
     },
     enabled: isLogin && !!assistantId,
   });
-
-  useEffect(() => {
-    if (getAssistant.data) {
-      setAssistant(getAssistant.data);
-    }
-  }, [getAssistant.data]);
 
   return (
     <>

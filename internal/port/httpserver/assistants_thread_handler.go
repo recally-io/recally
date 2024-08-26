@@ -156,17 +156,17 @@ func (h *assistantHandler) updateThread(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	if req.Name == "" {
-		req.Name = thread.Name
+	if req.Name != "" {
+		thread.Name = req.Name
 	}
-	if req.Description == "" {
-		req.Description = thread.Description
+	if req.Description != "" {
+		thread.Description = req.Description
 	}
-	if req.Model == "" {
-		req.Model = thread.Model
+	if req.Model != "" {
+		thread.Model = req.Model
 	}
-	if req.SystemPrompt == "" {
-		req.SystemPrompt = thread.SystemPrompt
+	if req.SystemPrompt != "" {
+		thread.SystemPrompt = req.SystemPrompt
 	}
 	if req.Metadata.Tools != nil {
 		thread.Metadata.Tools = req.Metadata.Tools

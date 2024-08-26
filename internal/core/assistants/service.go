@@ -138,11 +138,12 @@ func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDT
 func (s *Service) UpdateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadDTO, error) {
 	model := thread.Dump()
 	th, err := s.dao.UpdateAssistantThread(ctx, tx, db.UpdateAssistantThreadParams{
-		Uuid:        thread.Id,
-		Name:        model.Name,
-		Description: model.Description,
-		Model:       model.Model,
-		Metadata:    model.Metadata,
+		Uuid:         thread.Id,
+		Name:         model.Name,
+		Description:  model.Description,
+		Model:        model.Model,
+		Metadata:     model.Metadata,
+		SystemPrompt: model.SystemPrompt,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update thread: %w", err)
