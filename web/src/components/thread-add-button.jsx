@@ -6,26 +6,25 @@ import useStore from "../libs/store";
 
 export function ThreadAddButton() {
   const isLogin = useStore((state) => state.isLogin);
-  const assistantId = useStore((state) => state.assistantId);
-  const setThreadId = useStore((state) => state.setThreadId);
   const assistant = useStore((state) => state.assistant);
+  const setThread = useStore((state) => state.setThread);
 
   const createThread = useMutation({
     mutationFn: async (data) => {
       const res = await post(
-        `/api/v1/assistants/${assistantId}/threads`,
+        `/api/v1/assistants/${assistant.id}/threads`,
         null,
         data,
       );
       return res.data;
     },
     onSuccess: (data) => {
-      setThreadId(data.id);
+      setThread(data);
       queryClient.invalidateQueries({
-        queryKey: ["list-threads", assistantId],
+        queryKey: ["list-threads", assistant.id],
       });
     },
-    enabled: isLogin && !!assistantId,
+    enabled: isLogin && !!assistant,
   });
 
   const addNewThread = async () => {

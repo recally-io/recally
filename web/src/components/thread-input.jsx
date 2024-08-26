@@ -11,18 +11,22 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toastError } from "../libs/alert";
-import { get, listTools, listToolsKey, post } from "../libs/api";
+import {
+  listModels,
+  listModelsKey,
+  listTools,
+  listToolsKey,
+  post,
+  queryClient,
+} from "../libs/api";
 import useStore from "../libs/store";
 
 export function ThreadChatInput() {
   const isLogin = useStore((state) => state.isLogin);
 
-  const assistantId = useStore((state) => state.assistantId);
   const assistant = useStore((state) => state.assistant);
-  const [threadId, setThreadId] = useStore((state) => [
-    state.threadId,
-    state.setThreadId,
-  ]);
+  const thread = useStore((state) => state.thread);
+  const setThread = useStore((state) => state.setThread);
 
   const [isShowModelSelecter, setIsShowModelSelecter] = useStore((state) => [
     state.threadIsOpenModelSelecter,
@@ -37,7 +41,6 @@ export function ThreadChatInput() {
     state.setThreadNewText,
   ]);
   const addThreadMessage = useStore((state) => state.addThreadMessage);
-
   const setModels = useStore((state) => state.setThreadModels);
   const setTools = useStore((state) => state.setThreadTools);
   const [modelSelecterValue, setModelSelecterValue] = useState("");
@@ -51,37 +54,34 @@ export function ThreadChatInput() {
   const createThread = useMutation({
     mutationFn: async (data) => {
       const res = await post(
-        `/api/v1/assistants/${assistantId}/threads`,
+        `/api/v1/assistants/${assistant.id}/threads`,
         null,
         data,
       );
+      setThread(res.data);
       return res.data;
     },
   });
 
-  const listModels = useQuery({
-    queryKey: ["list-assistants-models"],
+  useQuery({
+    queryKey: listModelsKey,
     queryFn: async () => {
-      const res = await get("/api/v1/assistants/models");
-      return res.data || [];
+      const res = await listModels();
+      setModels(res);
+      return res;
     },
     enabled: isLogin,
   });
-  useEffect(() => {
-    if (listModels.data) {
-      setModels(listModels.data);
-    }
-  }, [listModels.data]);
 
-  const listToolsQuery = useQuery({
+  useQuery({
     queryKey: [listToolsKey],
-    queryFn: listTools,
+    queryFn: async () => {
+      const res = await listTools();
+      setTools(res);
+      return res;
+    },
+    enabled: isLogin,
   });
-  useEffect(() => {
-    if (listToolsQuery.data) {
-      setTools(listToolsQuery.data);
-    }
-  }, [listToolsQuery.data]);
 
   const sendMessage = useMutation({
     mutationFn: async () => {
@@ -91,11 +91,10 @@ export function ThreadChatInput() {
       }
       setNewText("");
       addThreadMessage({ role: "user", text, id: Math.random() });
-      const isNewThread = !!!threadId;
-      let newThreadId = threadId;
+      const isNewThread = !thread.id;
+      let newThreadId = thread.id;
       if (isNewThread) {
         newThreadId = crypto.randomUUID();
-        setThreadId(newThreadId);
         await createThread.mutateAsync({
           id: newThreadId,
           name: "New Thread",
@@ -109,7 +108,7 @@ export function ThreadChatInput() {
         });
       }
       const res = await post(
-        `/api/v1/assistants/${assistantId}/threads/${newThreadId}/messages`,
+        `/api/v1/assistants/${assistant.id}/threads/${newThreadId}/messages`,
         null,
         {
           role: "user",
@@ -117,11 +116,13 @@ export function ThreadChatInput() {
           model: chatModel,
         },
       );
-
       return res.data;
     },
     onSuccess: (data) => {
       addThreadMessage(data);
+      queryClient.invalidateQueries({
+        queryKey: ["list-threads", assistant.id],
+      });
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);

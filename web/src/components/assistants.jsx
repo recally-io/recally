@@ -26,10 +26,12 @@ import { useEffect, useState } from "react";
 import { toastError } from "../libs/alert";
 import { del, get, post, put, queryClient } from "../libs/api";
 
+const url = new URL(window.location.href);
+
 export default function Assistants() {
   const [assistantId, setAssistantId] = useState("");
   const [filteredAssistants, setFilteredAssistants] = useState([]);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState(url.searchParams.get("id"));
 
   const listAssistants = useQuery({
     queryKey: ["list-asstants"],
@@ -59,7 +61,6 @@ export default function Assistants() {
       const res = await get("/api/v1/assistants/tools");
       let data = res.data || [];
       data = data.map((tool) => tool.name);
-      console.log(`listTools: ${JSON.stringify(data)}`);
       return data;
     },
   });
@@ -67,13 +68,9 @@ export default function Assistants() {
   const upsertAssistant = useMutation({
     mutationFn: async (data) => {
       if (assistantId) {
-        console.log(
-          `update assistant ${assistantId}, data: ${JSON.stringify(data)}`,
-        );
         const res = await put(`/api/v1/assistants/${assistantId}`, null, data);
         return res.data;
       } else {
-        console.log(`create assistant: ${JSON.stringify(data)}`);
         const res = await post("/api/v1/assistants", null, data);
         return res.data;
       }
@@ -222,7 +219,7 @@ export default function Assistants() {
                 setSearchValue(e.currentTarget.value);
                 setFilteredAssistants(
                   listAssistants.data.filter((assistant) =>
-                    (assistant.name + assistant.description)
+                    (assistant.name + assistant.description + assistant.id)
                       .toLowerCase()
                       .includes(e.currentTarget.value.toLowerCase()),
                   ),
@@ -257,13 +254,13 @@ export default function Assistants() {
 
                   <Group mt="xs" mb="1" justify="flex-end">
                     <Tooltip label="Chat">
-                      <Button variant="outline" size="xs" w={60}>
-                        <Anchor
-                          href={`/threads.html?assistant-id=${assistant.id}`}
-                        >
+                      <Anchor
+                        href={`/threads.html?assistant-id=${assistant.id}`}
+                      >
+                        <Button variant="outline" size="xs" w={60}>
                           <Icon icon="tabler:message-2" />
-                        </Anchor>
-                      </Button>
+                        </Button>
+                      </Anchor>
                     </Tooltip>
                     <Tooltip label="Edit">
                       <Button
