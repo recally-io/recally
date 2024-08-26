@@ -8,7 +8,7 @@ import useStore from "../libs/store";
 import { CopyBtn } from "./copy-button";
 import { MarkdownRenderer } from "./markdown-renderer";
 
-export function ThreadChatWindows({ settingsForm }) {
+export function ThreadChatWindows() {
   const threadId = useStore((state) => state.threadId);
   const assistantId = useStore((state) => state.assistantId);
 

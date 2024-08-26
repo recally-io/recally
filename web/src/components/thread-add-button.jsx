@@ -1,21 +1,14 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { ActionIcon, Tooltip } from "@mantine/core";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { get, post, queryClient } from "../libs/api";
+import { useMutation } from "@tanstack/react-query";
+import { post, queryClient } from "../libs/api";
 import useStore from "../libs/store";
 
 export function ThreadAddButton() {
   const isLogin = useStore((state) => state.isLogin);
   const assistantId = useStore((state) => state.assistantId);
   const setThreadId = useStore((state) => state.setThreadId);
-  const getAssistant = useQuery({
-    queryKey: ["get-assistant", assistantId],
-    queryFn: async () => {
-      const res = await get(`/api/v1/assistants/${assistantId}`);
-      return res.data;
-    },
-    enabled: isLogin && !!assistantId,
-  });
+  const assistant = useStore((state) => state.assistant);
 
   const createThread = useMutation({
     mutationFn: async (data) => {
@@ -32,15 +25,22 @@ export function ThreadAddButton() {
         queryKey: ["list-threads", assistantId],
       });
     },
+    enabled: isLogin && !!assistantId,
   });
 
   const addNewThread = async () => {
-    await createThread.mutateAsync({
-      name: "Thread name",
-      description: "Thread description",
-      systemPrompt: getAssistant.data.systemPrompt,
-      model: getAssistant.data.model,
-    });
+    const data = {
+      id: crypto.randomUUID(),
+      name: "New Thread",
+      description: assistant.description,
+      system_prompt: assistant.system_prompt,
+      model: assistant.model,
+      metadata: {
+        is_generated_title: false,
+        tools: assistant.metadata.tools,
+      },
+    };
+    await createThread.mutateAsync(data);
   };
 
   return (

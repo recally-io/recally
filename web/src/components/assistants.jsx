@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
+  Anchor,
   Button,
   Card,
   Container,
@@ -10,7 +11,6 @@ import {
   Modal,
   MultiSelect,
   NativeSelect,
-  NavLink,
   Stack,
   Text,
   Textarea,
@@ -258,11 +258,11 @@ export default function Assistants() {
                   <Group mt="xs" mb="1" justify="flex-end">
                     <Tooltip label="Chat">
                       <Button variant="outline" size="xs" w={60}>
-                        <NavLink
-                          px="0"
+                        <Anchor
                           href={`/threads.html?assistant-id=${assistant.id}`}
-                          label={<Icon icon="tabler:message-2" />}
-                        ></NavLink>
+                        >
+                          <Icon icon="tabler:message-2" />
+                        </Anchor>
                       </Button>
                     </Tooltip>
                     <Tooltip label="Edit">
@@ -270,7 +270,7 @@ export default function Assistants() {
                         variant="outline"
                         size="xs"
                         w={60}
-                        onClick={(e) => {
+                        onClick={() => {
                           setAssistantId(assistant.id);
                           form.setValues(assistant);
                           open();

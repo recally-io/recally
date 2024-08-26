@@ -119,13 +119,14 @@ func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDT
 
 	model := thread.Dump()
 	th, err := s.dao.CreateAssistantThread(ctx, tx, db.CreateAssistantThreadParams{
-		Uuid:        model.Uuid,
-		UserID:      model.UserID,
-		AssistantID: model.AssistantID,
-		Name:        model.Name,
-		Description: model.Description,
-		Model:       model.Model,
-		Metadata:    model.Metadata,
+		Uuid:         model.Uuid,
+		UserID:       model.UserID,
+		AssistantID:  model.AssistantID,
+		Name:         model.Name,
+		Description:  model.Description,
+		SystemPrompt: model.SystemPrompt,
+		Model:        model.Model,
+		Metadata:     model.Metadata,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create thread: %w", err)

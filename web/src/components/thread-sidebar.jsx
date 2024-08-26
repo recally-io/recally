@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   ActionIcon,
+  Anchor,
   Autocomplete,
   Button,
   Divider,
@@ -82,7 +83,18 @@ export default function Sidebar() {
         radius="md"
       >
         <Stack align="stretch" justify="start" gap="md">
-          <Flex justify="space-evenly" align="center">
+          <Flex justify="center" align="center" gap="md">
+            <Button variant="outline" radius="lg" size="sm">
+              <Anchor
+                href={`/assistants.html?id=${assistantId}`}
+                variant="gradient"
+                gradient={{ from: "pink", to: "yellow" }}
+                underline="always"
+              >
+                <Text size="sm">Assistant</Text>
+              </Anchor>
+            </Button>
+
             <ThreadAddButton />
             <Tooltip label="Toggle Sidebar" hiddenFrom="sm">
               <ActionIcon

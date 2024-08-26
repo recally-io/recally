@@ -17,8 +17,12 @@ const useStore = create((set) => ({
 
   assistantId: "",
   setAssistantId: (id) => set(() => ({ assistantId: id })),
+  assistant: {},
+  setAssistant: (assistant) => set(() => ({ assistant: assistant })),
   threadId: "",
   setThreadId: (id) => set(() => ({ threadId: id })),
+  thread: {},
+  setThread: (thread) => set(() => ({ thread: thread })),
 
   threadIsOpenSettings: false,
   setThreadIsOpenSettings: (isOpen) =>

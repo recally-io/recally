@@ -18,6 +18,7 @@ export function ThreadChatInput() {
   const isLogin = useStore((state) => state.isLogin);
 
   const assistantId = useStore((state) => state.assistantId);
+  const assistant = useStore((state) => state.assistant);
   const [threadId, setThreadId] = useStore((state) => [
     state.threadId,
     state.setThreadId,
@@ -40,7 +41,6 @@ export function ThreadChatInput() {
   const setModels = useStore((state) => state.setThreadModels);
   const setTools = useStore((state) => state.setThreadTools);
   const [modelSelecterValue, setModelSelecterValue] = useState("");
-  const threadSettings = useStore((state) => state.threadSettings);
 
   useEffect(() => {
     if (newText === "@") {
@@ -96,9 +96,17 @@ export function ThreadChatInput() {
       if (isNewThread) {
         newThreadId = crypto.randomUUID();
         setThreadId(newThreadId);
-        let data = threadSettings;
-        data.id = newThreadId;
-        await createThread.mutateAsync(data);
+        await createThread.mutateAsync({
+          id: newThreadId,
+          name: "New Thread",
+          description: assistant.description,
+          system_prompt: assistant.systemPrompt,
+          model: assistant.model,
+          metadata: {
+            is_generated_title: false,
+            tools: assistant.metadata.tools,
+          },
+        });
       }
       const res = await post(
         `/api/v1/assistants/${assistantId}/threads/${newThreadId}/messages`,
