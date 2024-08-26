@@ -303,8 +303,6 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 		}
 	}
 
-	fmt.Println(oaiMessages)
-
 	opts := []llms.Option{
 		llms.WithModel(model),
 		llms.WithToolNames(toolNames),
