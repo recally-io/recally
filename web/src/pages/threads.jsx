@@ -80,7 +80,7 @@ function ThreadApp() {
 
   return (
     <>
-      <Container px="xs" h="95svh">
+      <Container px="xs" h="95svh" fluid>
         <LoadingOverlay visible={getThread.isLoading} />
         <Flex direction="column" justify="space-between" h="100%">
           <ThreadChatWindows />

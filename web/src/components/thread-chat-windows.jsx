@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Container,
   Flex,
   Image,
   Modal,
@@ -91,8 +92,7 @@ export function ThreadChatWindows() {
             px="xs"
             radius="lg"
             withBorder
-            maw={{ base: "85vw", lg: "60vw" }}
-            bg={isDarkMode ? "" : bgColor}
+            bg={isDarkMode ? "dark.6" : bgColor}
           >
             {message.metadata?.images && message.metadata.images.length > 0 && (
               <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xs" mb="xs">
@@ -147,12 +147,14 @@ export function ThreadChatWindows() {
         scrollbars="y"
         py="xs"
       >
-        <Stack gap="md" align="stretch" justify="flex-start">
-          {Array.isArray(messageList) &&
-            messageList.map((item) => {
-              return messagePaper(item);
-            })}
-        </Stack>
+        <Container size="lg">
+          <Stack gap="md" align="stretch" justify="flex-start">
+            {Array.isArray(messageList) &&
+              messageList.map((item) => {
+                return messagePaper(item);
+              })}
+          </Stack>
+        </Container>
       </ScrollArea>
     </>
   );

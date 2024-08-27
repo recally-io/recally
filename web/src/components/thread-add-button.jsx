@@ -8,6 +8,8 @@ export function ThreadAddButton() {
   const isLogin = useStore((state) => state.isLogin);
   const assistant = useStore((state) => state.assistant);
   const setThread = useStore((state) => state.setThread);
+  const setThreadId = useStore((state) => state.setThreadId);
+  const setMessageList = useStore((state) => state.setThreadMessageList);
 
   const createThread = useMutation({
     mutationFn: async (data) => {
@@ -20,9 +22,11 @@ export function ThreadAddButton() {
     },
     onSuccess: (data) => {
       setThread(data);
+      setThreadId(data.id);
       queryClient.invalidateQueries({
         queryKey: ["list-threads", assistant.id],
       });
+      setMessageList([]);
     },
     enabled: isLogin && !!assistant,
   });
