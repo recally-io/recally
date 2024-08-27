@@ -26,6 +26,7 @@ const theme = createTheme({
       },
     }),
   },
+  // autoContrast: true,
   primaryColor: "primary",
   colors: {
     // Default: For neutral, non-emphasized UI elements
@@ -171,7 +172,7 @@ export default function Layout({ main, nav = null, header = null }) {
             <AppShell.Header>
               {header ? header : <Header hasNavBar={hasNavBar} />}
             </AppShell.Header>
-            <AppShell.Navbar p="md">{nav}</AppShell.Navbar>
+            <AppShell.Navbar>{nav}</AppShell.Navbar>
             <AppShell.Main>{main}</AppShell.Main>
           </AppShell>
         </ModalsProvider>

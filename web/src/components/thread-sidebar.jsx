@@ -20,6 +20,7 @@ import useStore from "../libs/store";
 import { ThreadAddButton } from "./thread-add-button";
 
 export default function Sidebar() {
+  const isDarkMode = useStore((state) => state.isDarkMode);
   const isLogin = useStore((state) => state.isLogin);
   const assistant = useStore((state) => state.assistant);
   const thread = useStore((state) => state.thread);
@@ -82,7 +83,9 @@ export default function Sidebar() {
         gap="md"
         p="sm"
         h="100%"
+        m="0"
         radius="md"
+        bg={isDarkMode ? "dark.6" : "gray.2"}
       >
         <Stack align="stretch" justify="start" gap="md">
           <Flex justify="center" align="center" gap="md">
