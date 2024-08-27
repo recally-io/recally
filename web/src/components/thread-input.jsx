@@ -2,11 +2,16 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   ActionIcon,
   Autocomplete,
+  Box,
   Container,
   FileButton,
   Flex,
   FocusTrap,
+  Group,
+  Image,
+  Modal,
   Textarea,
+  Tooltip,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -45,6 +50,8 @@ export function ThreadChatInput() {
   const [modelSelecterValue, setModelSelecterValue] = useState("");
 
   const [images, setImages] = useState([]);
+
+  const [openedImage, setOpenedImage] = useState(null);
 
   useEffect(() => {
     if (newText === "@") {
@@ -243,6 +250,73 @@ export function ThreadChatInput() {
     );
   };
 
+  const renderAttachmentTextArea = (children) => {
+    return (
+      <Flex
+        direction="column"
+        gap="2"
+        bd="1px solid primary"
+        p="2"
+        style={{
+          borderRadius: "20px",
+        }}
+      >
+        {images.length > 0 && (
+          <Group px="md">
+            {images.map((imgUrl, index) => (
+              <Box key={index} style={{ position: "relative" }}>
+                <Image
+                  src={imgUrl}
+                  width={30}
+                  height={30}
+                  fit="contain"
+                  onClick={() => {
+                    // Function to show large image
+                    console.log("Show large image:", imgUrl);
+                    setOpenedImage(imgUrl);
+                  }}
+                  style={{ cursor: "pointer" }}
+                />
+                <Modal
+                  opened={openedImage === imgUrl}
+                  onClose={() => setOpenedImage(null)}
+                  size="xl"
+                >
+                  <Image
+                    src={imgUrl}
+                    alt={imgUrl.split("/").pop()}
+                    fit="contain"
+                  />
+                </Modal>
+                <Tooltip label="Remove image">
+                  <ActionIcon
+                    size="xs"
+                    color="danger"
+                    variant="subtle"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                    }}
+                    onClick={() => {
+                      // Function to remove image
+                      setImages((prevImages) =>
+                        prevImages.filter((image) => image !== imgUrl),
+                      );
+                    }}
+                  >
+                    <Icon icon="tabler:x" size={10} />
+                  </ActionIcon>
+                </Tooltip>
+              </Box>
+            ))}
+          </Group>
+        )}
+        <div>{children}</div>
+      </Flex>
+    );
+  };
+
   return (
     <Container
       w="100%"
@@ -289,6 +363,11 @@ export function ThreadChatInput() {
                 await sendMessage.mutateAsync();
               }
             }}
+            styles={{
+              input: {
+                border: "none",
+              },
+            }}
             rightSection={
               <ActionIcon
                 variant="filled"
@@ -308,6 +387,7 @@ export function ThreadChatInput() {
             }
             value={newText}
             onChange={(e) => setNewText(e.currentTarget.value)}
+            inputContainer={renderAttachmentTextArea}
           ></Textarea>
         </FocusTrap>
       </Flex>
