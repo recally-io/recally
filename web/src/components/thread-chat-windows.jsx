@@ -10,8 +10,9 @@ import {
   SimpleGrid,
   Stack,
   Text,
+  em,
 } from "@mantine/core";
-
+import { useMediaQuery } from "@mantine/hooks";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -23,7 +24,8 @@ import { MarkdownRenderer } from "./markdown-renderer";
 export function ThreadChatWindows() {
   const assistant = useStore((state) => state.assistant);
   const thread = useStore((state) => state.thread);
-
+  const desktopSidebarOpen = useStore((state) => state.desktopSidebarOpen);
+  const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
   const isDarkMode = useStore((state) => state.isDarkMode);
   const messageList = useStore((state) => state.threadMessageList);
   const [isTitleGenerated, setIsTitleGenerated] = useStore((state) => [
@@ -93,6 +95,13 @@ export function ThreadChatWindows() {
             radius="lg"
             withBorder
             bg={isDarkMode ? "dark.6" : bgColor}
+            maw={{
+              base: "calc(100vw - 80px)",
+              sm:
+                !isMobile && desktopSidebarOpen
+                  ? "calc(100vw - 380px)"
+                  : "calc(100vw - 80px)",
+            }}
           >
             {message.metadata?.images && message.metadata.images.length > 0 && (
               <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xs" mb="xs">
@@ -147,7 +156,7 @@ export function ThreadChatWindows() {
         scrollbars="y"
         py="xs"
       >
-        <Container size="lg">
+        <Container size="md">
           <Stack gap="md" align="stretch" justify="flex-start">
             {Array.isArray(messageList) &&
               messageList.map((item) => {
