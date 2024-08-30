@@ -94,8 +94,10 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 // @Tags files
 // @Produce json
 // @Param id path string true "File ID"
-// @Success 200 {object} nil
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} JSONResult{data=nil} "Created"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
 // @Router /files/{id} [delete]
 func (h *fileHandler) deleteFile(c echo.Context) error {
 	id := c.Param("id")

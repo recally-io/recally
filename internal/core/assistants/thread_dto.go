@@ -16,17 +16,17 @@ type ThreadMetadata struct {
 }
 
 type ThreadDTO struct {
-	Id           uuid.UUID          `json:"id"`
-	UserId       uuid.UUID          `json:"user_id"`
-	AssistantId  uuid.UUID          `json:"assistant_id"`
-	SystemPrompt string             `json:"system_prompt"`
-	Name         string             `json:"name"`
-	Description  string             `json:"description"`
-	Model        string             `json:"model"`
-	Metadata     ThreadMetadata     `json:"metadata"`
-	Messages     []ThreadMessageDTO `json:"messages"`
-	CreatedAt    time.Time          `json:"created_at"`
-	UpdatedAt    time.Time          `json:"updated_at"`
+	Id           uuid.UUID      `json:"id"`
+	UserId       uuid.UUID      `json:"user_id"`
+	AssistantId  uuid.UUID      `json:"assistant_id"`
+	SystemPrompt string         `json:"system_prompt"`
+	Name         string         `json:"name"`
+	Description  string         `json:"description"`
+	Model        string         `json:"model"`
+	Metadata     ThreadMetadata `json:"metadata"`
+	Messages     []MessageDTO   `json:"messages"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
 }
 
 func (t *ThreadDTO) Load(dbo *db.AssistantThread) {
@@ -65,7 +65,7 @@ func (d *ThreadDTO) Dump() *db.AssistantThread {
 }
 
 func (t *ThreadDTO) AddMessage(role, text string) {
-	t.Messages = append(t.Messages, ThreadMessageDTO{
+	t.Messages = append(t.Messages, MessageDTO{
 		Role: role,
 		Text: text,
 	})
@@ -113,13 +113,13 @@ func WithThreadMetaData(metaData ThreadMetadata) ThreadOption {
 	}
 }
 
-func AddThreadMessage(message ThreadMessageDTO) ThreadOption {
+func AddThreadMessage(message MessageDTO) ThreadOption {
 	return func(t *ThreadDTO) {
 		t.Messages = append(t.Messages, message)
 	}
 }
 
-func WithThreadMessages(messages []ThreadMessageDTO) ThreadOption {
+func WithThreadMessages(messages []MessageDTO) ThreadOption {
 	return func(t *ThreadDTO) {
 		t.Messages = messages
 	}

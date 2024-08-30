@@ -98,3 +98,91 @@ export async function listModels() {
   const res = await get("/api/v1/assistants/models");
   return res.data || [];
 }
+
+/**
+ * Retrieves a presigned URL for file operations.
+ * @param {Object} options - The options for getting the presigned URL.
+ * @param {string} options.assistantId - The ID of the assistant.
+ * @param {string} options.threadId - The ID of the thread.
+ * @param {string} options.fileName - The name of the file.
+ * @param {string} options.fileType - The type of the file.
+ * @param {string} options.action - The action to be performed (e.g., 'read', 'write').
+ * @param {number} options.expiration - The expiration time for the presigned URL.
+ * @returns {Promise<Object>} - A promise that resolves to an object containing the public URL and presigned URL.
+ */
+export async function getPresignedUrl({
+  assistantId,
+  threadId,
+  fileName,
+  fileType,
+  action = "PUT",
+  expiration = 3600,
+}) {
+  const params = new URLSearchParams({
+    assistant_id: assistantId,
+    thread_id: threadId,
+    file_name: fileName,
+    file_type: fileType,
+    action: action,
+    expiration: expiration,
+  });
+  const res = await get(`/api/v1/files/presigned-urls`, params);
+  return {
+    publicUrl: res.data.public_url,
+    preSignedURL: res.data.presigned_url,
+  };
+}
+
+/**
+ * Uploads a file using a presigned URL.
+ * @param {Object} options - The options for uploading the file.
+ * @param {string} options.preSignedURL - The presigned URL for uploading.
+ * @param {File} options.file - The file to be uploaded.
+ * @param {string} options.publicUrl - The public URL of the file after upload.
+ * @returns {Promise<string>} - A promise that resolves to the public URL of the uploaded file.
+ * @throws {Error} If the file upload fails.
+ */
+export async function uploadFile({ preSignedURL, file, publicUrl }) {
+  const response = await fetch(preSignedURL, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type },
+  });
+  if (!response.ok) throw new Error("Failed to upload file");
+  return publicUrl;
+}
+
+/** * Posts an attachment to an assistant or a thread.
+ * @async
+ * @param {Object} options - The options for posting the attachment.
+ * @param {string} options.assistantId - The ID of the assistant.
+ * @param {string} [options.threadId] - The ID of the thread (optional).
+ * @param {string} options.type - The type of the attachment.
+ * @param {string} options.name - The name of the attachment.
+ * @param {string} options.publicUrl - The public URL of the attachment.
+ * @param {Object} options.docs - Additional documentation for the attachment.
+ * @returns {Promise<Object>} The data returned from the server after posting the attachment.
+ */
+export async function postAttachment({
+  assistantId,
+  threadId,
+  type,
+  name,
+  publicUrl,
+  docs,
+}) {
+  let url = "";
+  if (threadId) {
+    url = `/api/v1/assistants/${assistantId}/threads/${threadId}/attachments`;
+  } else {
+    url = `/api/v1/assistants/${assistantId}/attachments`;
+  }
+
+  const res = await post(url, null, {
+    type: type,
+    name: name,
+    url: publicUrl,
+    docs: docs,
+  });
+  return res.data;
+}

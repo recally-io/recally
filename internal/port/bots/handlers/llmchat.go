@@ -29,7 +29,7 @@ func (h *Handler) LLMChatHandler(c telebot.Context) error {
 		return err
 	}
 
-	if _, err := h.assistantService.AddThreadMessage(ctx, tx, thread, "user", strings.TrimSpace(c.Text())); err != nil {
+	if _, err := h.assistantService.AddThreadMessage(ctx, tx, thread, "user", strings.TrimSpace(c.Text()), assistants.MessageMetadata{}); err != nil {
 		logger.FromContext(ctx).Error("Failed to add message to thread", "err", err)
 		_ = c.Reply("Failed to add message to thread " + err.Error())
 		return err

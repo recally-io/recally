@@ -39,6 +39,17 @@ func (l *LLM) ListModels(ctx context.Context) ([]string, error) {
 	return data, nil
 }
 
+func (l *LLM) CreateEmbeddings(ctx context.Context, text string) ([]float32, error) {
+	embeddings, err := l.client.CreateEmbeddings(ctx, openai.EmbeddingRequestStrings{
+		Input: []string{text},
+		Model: openai.SmallEmbedding3,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return embeddings.Data[0].Embedding, nil
+}
+
 func (l *LLM) TextCompletion(ctx context.Context, prompt string, options ...Option) (string, error) {
 	opts := &Options{}
 	for _, o := range options {

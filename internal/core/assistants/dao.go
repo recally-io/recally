@@ -25,8 +25,26 @@ type dao interface {
 	ListThreadMessages(ctx context.Context, db db.DBTX, threadID pgtype.UUID) ([]db.AssistantMessage, error)
 	CreateThreadMessage(ctx context.Context, db db.DBTX, arg db.CreateThreadMessageParams) (db.AssistantMessage, error)
 	GetThreadMessage(ctx context.Context, db db.DBTX, argUuid uuid.UUID) (db.AssistantMessage, error)
+	UpdateThreadMessage(ctx context.Context, db db.DBTX, arg db.UpdateThreadMessageParams) error
 	DeleteThreadMessage(ctx context.Context, db db.DBTX, argUuid uuid.UUID) error
 	DeleteThreadMessagesByThread(ctx context.Context, db db.DBTX, threadID pgtype.UUID) error
 	DeleteThreadMessageByThreadAndCreatedAt(ctx context.Context, db db.DBTX, arg db.DeleteThreadMessageByThreadAndCreatedAtParams) error
 	DeleteThreadMessagesByAssistant(ctx context.Context, db db.DBTX, assistantID pgtype.UUID) error
+	SimilaritySearchMessages(ctx context.Context, db db.DBTX, arg db.SimilaritySearchMessagesParams) ([]db.AssistantMessage, error)
+
+	CreateAssistantAttachment(ctx context.Context, db db.DBTX, arg db.CreateAssistantAttachmentParams) (db.AssistantAttachment, error)
+	DeleteAssistantAttachment(ctx context.Context, db db.DBTX, argUuid uuid.UUID) error
+	DeleteAssistantAttachmentsByAssistantId(ctx context.Context, db db.DBTX, assistantID pgtype.UUID) error
+	DeleteAssistantAttachmentsByThreadId(ctx context.Context, db db.DBTX, threadID pgtype.UUID) error
+	GetAssistantAttachmentById(ctx context.Context, db db.DBTX, argUuid uuid.UUID) (db.AssistantAttachment, error)
+	ListAssistantAttachmentsByAssistantId(ctx context.Context, db db.DBTX, assistantID pgtype.UUID) ([]db.AssistantAttachment, error)
+	ListAssistantAttachmentsByThreadId(ctx context.Context, db db.DBTX, threadID pgtype.UUID) ([]db.AssistantAttachment, error)
+	UpdateAssistantAttachment(ctx context.Context, db db.DBTX, arg db.UpdateAssistantAttachmentParams) error
+
+	CreateAssistantEmbedding(ctx context.Context, db db.DBTX, arg db.CreateAssistantEmbeddingParams) error
+	DeleteAssistantEmbeddings(ctx context.Context, db db.DBTX, id int32) error
+	DeleteAssistantEmbeddingsByAssistantId(ctx context.Context, db db.DBTX, assistantID pgtype.UUID) error
+	DeleteAssistantEmbeddingsByAttachmentId(ctx context.Context, db db.DBTX, attachmentID pgtype.UUID) error
+	DeleteAssistantEmbeddingsByThreadId(ctx context.Context, db db.DBTX, threadID pgtype.UUID) error
+	SimilaritySearchByThreadId(ctx context.Context, db db.DBTX, arg db.SimilaritySearchByThreadIdParams) ([]db.SimilaritySearchByThreadIdRow, error)
 }
