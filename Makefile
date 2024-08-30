@@ -95,6 +95,10 @@ migrate-down:
 	@echo "Migrating down..."
 	@migrate -path database/migrations -database "$(DATABASE_URL)" down
 
+migrate-drop:
+	@echo "Migrating drop..."
+	@migrate -path database/migrations -database "$(DATABASE_URL)" drop
+
 psql:
 	@echo "Connecting to database..."
 	@docker compose exec -it postgres psql -U ${DATABASE_USER} -d ${DATABASE_NAME}

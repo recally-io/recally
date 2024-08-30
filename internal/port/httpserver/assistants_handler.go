@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"vibrain/internal/core/assistants"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/rag/document"
 	"vibrain/internal/pkg/tools"
 
 	"github.com/google/uuid"
@@ -22,15 +23,17 @@ type assistantService interface {
 	CreateThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadDTO, error)
 	UpdateThread(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO) (*assistants.ThreadDTO, error)
 	GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.ThreadDTO, error)
-	RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.ThreadMessageDTO, error)
+	RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.MessageDTO, error)
 	DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 	GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.UUID) (string, error)
 
-	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]assistants.ThreadMessageDTO, error)
-	CreateThreadMessage(ctx context.Context, tx db.DBTX, threadId uuid.UUID, message *assistants.ThreadMessageDTO) (*assistants.ThreadMessageDTO, error)
-	GetThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.ThreadMessageDTO, error)
-	AddThreadMessage(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO, role, text string) (*assistants.ThreadMessageDTO, error)
+	ListThreadMessages(ctx context.Context, tx db.DBTX, threadID uuid.UUID) ([]assistants.MessageDTO, error)
+	CreateThreadMessage(ctx context.Context, tx db.DBTX, threadId uuid.UUID, message *assistants.MessageDTO) (*assistants.MessageDTO, error)
+	GetThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) (*assistants.MessageDTO, error)
+	AddThreadMessage(ctx context.Context, tx db.DBTX, thread *assistants.ThreadDTO, role, text string, metadata assistants.MessageMetadata) (*assistants.MessageDTO, error)
 	DeleteThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) error
+
+	CreateAttachment(ctx context.Context, tx db.DBTX, attachment *assistants.AttachmentDTO, docs []document.Document) (*assistants.AttachmentDTO, error)
 
 	ListModels(ctx context.Context) ([]string, error)
 	ListTools(ctx context.Context) ([]tools.BaseTool, error)
@@ -60,6 +63,9 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 	g.POST("/:assistant-id/threads/:thread-id/messages", h.createThreadMessage)
 	g.PUT("/:assistant-id/threads/:thread-id/messages/:message-id", h.updateThreadMessage)
 	g.DELETE("/:assistant-id/threads/:thread-id/messages/:message-id", h.deleteThreadMessage)
+
+	g.POST("/:assistant-id/attachments", h.uploadAssistantAttachment)
+	g.POST("/:assistant-id/threads/:thread-id/attachments", h.uploadThreadAttachment)
 
 	g.GET("/models", h.listModels)
 	g.GET("/tools", h.listTools)
@@ -292,6 +298,107 @@ func (h *assistantHandler) deleteAssistant(c echo.Context) error {
 	}
 
 	return JsonResponse(c, http.StatusNoContent, nil)
+}
+
+type uploadAssistantAttachmentRequest struct {
+	AssistantId uuid.UUID           `param:"assistant-id" validate:"required,uuid4"`
+	Type        string              `json:"type" validate:"required"`
+	Name        string              `json:"name" validate:"required"`
+	URL         string              `json:"url" validate:"required,url"`
+	Docs        []document.Document `json:"docs,omitempty"`
+}
+
+// uploadAssistantAttachment is a handler function that uploads an attachment to an assistant.
+// @Summary Upload Assistant Attachment
+// @Description Uploads an attachment to an assistant
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Success 201 {object} JSONResult{data=assistants.AttachmentDTO} "Created"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id}/attachments [post]
+func (h *assistantHandler) uploadAssistantAttachment(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	req := new(uploadAssistantAttachmentRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+
+	tx, user, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	attachment := &assistants.AttachmentDTO{
+		UserId:      user.ID,
+		AssistantId: req.AssistantId,
+		Type:        req.Type,
+		Name:        req.Name,
+		URL:         req.URL,
+	}
+
+	attachment, err = h.service.CreateAttachment(ctx, tx, attachment, req.Docs)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusCreated, attachment)
+}
+
+type uploadThreadAttachmentRequest struct {
+	AssistantId uuid.UUID           `param:"assistant-id" validate:"required,uuid4"`
+	ThreadId    uuid.UUID           `param:"thread-id" validate:"required,uuid4"`
+	Type        string              `json:"type" validate:"required"`
+	Name        string              `json:"name" validate:"required"`
+	URL         string              `json:"url" validate:"required,url"`
+	Docs        []document.Document `json:"docs,omitempty"`
+}
+
+// uploadThreadAttachment is a handler function that uploads an attachment to a thread.
+// @Summary Upload Thread Attachment
+// @Description Uploads an attachment to a thread
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Param thread-id path string true "Thread ID"
+// @Success 201 {object} JSONResult{data=assistants.AttachmentDTO} "Created"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id}/threads/{thread-id}/attachments [post]
+func (h *assistantHandler) uploadThreadAttachment(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	req := new(uploadThreadAttachmentRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+
+	tx, user, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	attachment := &assistants.AttachmentDTO{
+		UserId:      user.ID,
+		AssistantId: req.AssistantId,
+		ThreadId:    req.ThreadId,
+		Type:        req.Type,
+		Name:        req.Name,
+		URL:         req.URL,
+	}
+
+	attachment, err = h.service.CreateAttachment(ctx, tx, attachment, req.Docs)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusCreated, attachment)
 }
 
 // @Summary List Models

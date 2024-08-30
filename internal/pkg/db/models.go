@@ -5,62 +5,10 @@
 package db
 
 import (
-	"database/sql/driver"
-	"fmt"
-
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pgvector/pgvector-go"
-	"vibrain/internal/pkg/db/types"
 )
-
-type RiverJobState string
-
-const (
-	RiverJobStateAvailable RiverJobState = "available"
-	RiverJobStateCancelled RiverJobState = "cancelled"
-	RiverJobStateCompleted RiverJobState = "completed"
-	RiverJobStateDiscarded RiverJobState = "discarded"
-	RiverJobStatePending   RiverJobState = "pending"
-	RiverJobStateRetryable RiverJobState = "retryable"
-	RiverJobStateRunning   RiverJobState = "running"
-	RiverJobStateScheduled RiverJobState = "scheduled"
-)
-
-func (e *RiverJobState) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = RiverJobState(s)
-	case string:
-		*e = RiverJobState(s)
-	default:
-		return fmt.Errorf("unsupported scan type for RiverJobState: %T", src)
-	}
-	return nil
-}
-
-type NullRiverJobState struct {
-	RiverJobState RiverJobState
-	Valid         bool // Valid is true if RiverJobState is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullRiverJobState) Scan(value interface{}) error {
-	if value == nil {
-		ns.RiverJobState, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.RiverJobState.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullRiverJobState) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.RiverJobState), nil
-}
 
 type Assistant struct {
 	ID           int32
@@ -76,58 +24,60 @@ type Assistant struct {
 }
 
 type AssistantAttachment struct {
-	ID        int32
-	Uuid      uuid.UUID
-	UserID    pgtype.UUID
-	Entity    string
-	EntityID  pgtype.UUID
-	FileType  pgtype.Text
-	FileUrl   pgtype.Text
-	Size      pgtype.Int4
-	Metadata  []byte
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-}
-
-type AssistantEmbeddding struct {
-	ID           int32
-	UserID       pgtype.UUID
-	MessageID    pgtype.UUID
-	AttachmentID pgtype.UUID
-	Text         string
-	Embeddings   pgvector.Vector
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-}
-
-type AssistantMessage struct {
 	ID          int32
 	Uuid        uuid.UUID
 	UserID      pgtype.UUID
+	AssistantID pgtype.UUID
 	ThreadID    pgtype.UUID
-	Model       pgtype.Text
-	Token       pgtype.Int4
-	Role        string
-	Text        pgtype.Text
-	Attachments []uuid.UUID
+	Name        pgtype.Text
+	Type        pgtype.Text
+	Url         pgtype.Text
+	Size        pgtype.Int4
 	Metadata    []byte
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }
 
+type AssistantEmbeddding struct {
+	ID           int32
+	UserID       pgtype.UUID
+	AttachmentID pgtype.UUID
+	Text         string
+	Embeddings   pgvector.Vector
+	Metadata     []byte
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type AssistantMessage struct {
+	ID              int32
+	Uuid            uuid.UUID
+	UserID          pgtype.UUID
+	AssistantID     pgtype.UUID
+	ThreadID        pgtype.UUID
+	Model           pgtype.Text
+	Role            string
+	Text            pgtype.Text
+	PromptToken     pgtype.Int4
+	CompletionToken pgtype.Int4
+	Embeddings      pgvector.Vector
+	Metadata        []byte
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+}
+
 type AssistantThread struct {
-	ID               int32
-	Uuid             uuid.UUID
-	UserID           pgtype.UUID
-	AssistantID      pgtype.UUID
-	Name             string
-	Description      pgtype.Text
-	SystemPrompt     pgtype.Text
-	Model            string
-	IsLongTermMemory pgtype.Bool
-	Metadata         []byte
-	CreatedAt        pgtype.Timestamptz
-	UpdatedAt        pgtype.Timestamptz
+	ID           int32
+	Uuid         uuid.UUID
+	UserID       pgtype.UUID
+	AssistantID  pgtype.UUID
+	Name         string
+	Description  pgtype.Text
+	SystemPrompt pgtype.Text
+	Model        string
+	Metadata     []byte
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }
 
 type Cache struct {
@@ -140,54 +90,11 @@ type Cache struct {
 	UpdatedAt pgtype.Timestamp
 }
 
-type RiverJob struct {
-	ID          int64
-	State       RiverJobState
-	Attempt     int16
-	MaxAttempts int16
-	AttemptedAt pgtype.Timestamptz
-	CreatedAt   pgtype.Timestamptz
-	FinalizedAt pgtype.Timestamptz
-	ScheduledAt pgtype.Timestamptz
-	Priority    int16
-	Args        []byte
-	AttemptedBy []string
-	Errors      [][]byte
-	Kind        string
-	Metadata    []byte
-	Queue       string
-	Tags        []string
-}
-
-type RiverLeader struct {
-	ElectedAt pgtype.Timestamptz
-	ExpiresAt pgtype.Timestamptz
-	LeaderID  string
-	Name      string
-}
-
-type RiverQueue struct {
-	Name      string
-	CreatedAt pgtype.Timestamptz
-	Metadata  []byte
-	PausedAt  pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-}
-
-type TextEmbedding struct {
-	ID         int64
-	Metadata   types.JSONB
-	UserID     string
-	Text       string
-	Embeddings pgvector.Vector
-	CreatedAt  pgtype.Timestamp
-	UpdatedAt  pgtype.Timestamp
-}
-
 type User struct {
 	ID                  int32
 	Uuid                uuid.UUID
 	Username            pgtype.Text
+	PasswordHash        pgtype.Text
 	Email               pgtype.Text
 	Github              pgtype.Text
 	Google              pgtype.Text
@@ -197,5 +104,4 @@ type User struct {
 	Status              string
 	CreatedAt           pgtype.Timestamptz
 	UpdatedAt           pgtype.Timestamptz
-	PasswordHash        pgtype.Text
 }

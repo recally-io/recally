@@ -311,7 +311,7 @@ func (h *assistantHandler) generateThreadTitle(c echo.Context) error {
 // @Produce json
 // @Param assistant-id path string true "Assistant ID"
 // @Param thread-id path string true "Thread ID"
-// @success 200 {object} JSONResult{data=[]assistants.ThreadMessageDTO} "Success"
+// @success 200 {object} JSONResult{data=[]assistants.MessageDTO} "Success"
 // @Failure 400 {object} JSONResult{data=nil} "Bad Request"
 // @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
 // @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
@@ -360,7 +360,7 @@ type createThreadMessageRequest struct {
 // @Param assistant-id path string true "Assistant ID"
 // @Param thread-id path string true "Thread ID"
 // @Param message body createThreadMessageRequest true "Thread Message"
-// @Success 201 {object} JSONResult{data=assistants.ThreadMessageDTO} "Created"
+// @Success 201 {object} JSONResult{data=assistants.MessageDTO} "Created"
 // @Failure 400 {object} JSONResult{data=nil} "Bad Request"
 // @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
 // @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
@@ -381,13 +381,13 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	messageDTO := assistants.ThreadMessageDTO{
+	messageDTO := assistants.MessageDTO{
 		UserID:   user.ID,
 		ThreadID: thread.Id,
 		Model:    thread.Model,
 		Role:     req.Role,
 		Text:     req.Text,
-		Metadata: assistants.ThreadMessageMetadata{
+		Metadata: assistants.MessageMetadata{
 			Tools:  req.Metadata.Tools,
 			Images: req.Metadata.Images,
 		},
@@ -478,8 +478,8 @@ type updateThreadMessageRequest struct {
 // @Param assistant-id path string true "Assistant ID"
 // @Param thread-id path string true "Thread ID"
 // @Param message-id path string true "Message ID"
-// @Param message body assistants.ThreadMessageDTO true "Updated Message"
-// @Success 200 {object} JSONResult{data=assistants.ThreadMessageDTO} "Success"
+// @Param message body assistants.MessageDTO true "Updated Message"
+// @Success 200 {object} JSONResult{data=assistants.MessageDTO} "Success"
 // @Failure 400 {object} JSONResult{data=nil} "Bad Request"
 // @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
 // @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
@@ -491,7 +491,7 @@ func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
 		return err
 	}
 
-	var updatedMessage assistants.ThreadMessageDTO
+	var updatedMessage assistants.MessageDTO
 	if err := c.Bind(&updatedMessage); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
@@ -516,13 +516,13 @@ func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	messageDTO := assistants.ThreadMessageDTO{
+	messageDTO := assistants.MessageDTO{
 		UserID:   user.ID,
 		ThreadID: thread.Id,
 		Model:    message.Model,
 		Role:     message.Role,
 		Text:     req.Text,
-		Metadata: assistants.ThreadMessageMetadata{
+		Metadata: assistants.MessageMetadata{
 			Tools: req.Metadata.Tools,
 		},
 	}

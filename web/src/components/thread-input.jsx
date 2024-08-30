@@ -4,7 +4,6 @@ import {
   Autocomplete,
   Box,
   Container,
-  FileButton,
   Flex,
   FocusTrap,
   Group,
@@ -24,6 +23,7 @@ import {
   post,
 } from "../libs/api";
 import useStore from "../libs/store";
+import { UploadButton } from "./upload-button";
 
 export function ThreadChatInput() {
   const isLogin = useStore((state) => state.isLogin);
@@ -49,7 +49,9 @@ export function ThreadChatInput() {
   const setTools = useStore((state) => state.setThreadTools);
   const [modelSelecterValue, setModelSelecterValue] = useState("");
 
-  const [images, setImages] = useState([]);
+  const [files, setFiles] = useStore((state) => [state.files, state.setFiles]);
+  const threadChatImages = useStore((state) => state.threadChatImages);
+  const setThreadChatImages = useStore((state) => state.setThreadChatImages);
 
   const [openedImage, setOpenedImage] = useState(null);
 
@@ -102,8 +104,9 @@ export function ThreadChatInput() {
         role: "user",
         text,
         id: Math.random(),
-        metadata: { images: images },
+        metadata: { images: [...threadChatImages] },
       });
+
       const isNewThread = !thread.id;
       let newThreadId = thread.id;
       if (isNewThread) {
@@ -120,14 +123,14 @@ export function ThreadChatInput() {
           },
         });
       }
-
       let payload = {
         role: "user",
         text: text,
         model: chatModel,
       };
 
-      if (images.length > 0) {
+      if (files.length > 0) {
+        const images = files.filter((file) => file.type.startsWith("image/"));
         payload["metadata"] = { images: images };
       }
 
@@ -140,115 +143,13 @@ export function ThreadChatInput() {
     },
     onSuccess: (data) => {
       addThreadMessage(data);
-      setImages([]);
+      setFiles([]);
+      setThreadChatImages([]);
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);
     },
   });
-
-  const getPresignedUrl = async ({
-    assistantId,
-    threadId,
-    fileName,
-    fileType,
-    action,
-    expiration,
-  }) => {
-    const params = new URLSearchParams({
-      assistant_id: assistantId,
-      thread_id: threadId,
-      file_name: fileName,
-      file_type: fileType,
-      action: action,
-      expiration: expiration,
-    });
-    console.log(`params: ${params}`);
-    const response = await fetch(`/api/v1/files/presigned-urls?${params}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) throw new Error("Failed to get presigned URL");
-    const res = await response.json();
-    console.log(`res: ${JSON.stringify(res)}`);
-    return res.data;
-  };
-
-  const uploadFile = async ({ presignedUrl, file, publicUrl }) => {
-    const response = await fetch(presignedUrl, {
-      method: "PUT",
-      body: file,
-      headers: { "Content-Type": file.type },
-    });
-    if (!response.ok) throw new Error("Failed to upload file");
-    return publicUrl;
-  };
-
-  const getPresignedUrlMutation = useMutation({
-    mutationFn: getPresignedUrl,
-    onSuccess: (data, variables) => handleUpload(data, variables.file),
-    onError: (error) => {
-      console.error("Error getting presigned URL:", error);
-      toastError("Failed to get upload URL: " + error.message);
-    },
-  });
-
-  const uploadFileMutation = useMutation({
-    mutationFn: uploadFile,
-    onSuccess: (data) => {
-      setImages((prevImages) => [...prevImages, data]);
-      console.log("Updated images:", [...images, data]);
-    },
-    onError: (error) => {
-      console.error("Error uploading file:", error);
-      toastError("Failed to upload file: " + error.message);
-    },
-  });
-
-  const handleFileChange = async (files) => {
-    if (!files) return;
-    for (const file of files) {
-      getPresignedUrlMutation.mutate({
-        assistantId: assistant.id,
-        threadId: thread.id,
-        fileName: file.name,
-        fileType: file.type,
-        action: "put",
-        expiration: 3600,
-        file, // Pass the file to be used in onSuccess
-      });
-    }
-  };
-
-  const handleUpload = async (data, file) => {
-    console.log(`uploading file: ${JSON.stringify(data)}`);
-    uploadFileMutation.mutate({
-      presignedUrl: data.presigned_url,
-      file,
-      publicUrl: data.public_url,
-    });
-  };
-
-  const fileInputButton = () => {
-    return (
-      <FileButton
-        onChange={handleFileChange}
-        accept="image/*"
-        multiple
-        disabled={
-          sendMessage.isPending ||
-          getPresignedUrlMutation.isPending ||
-          uploadFileMutation.isPending
-        }
-      >
-        {(props) => (
-          <ActionIcon {...props} variant="subtle" radius="lg">
-            <Icon icon="tabler:file-upload"></Icon>
-          </ActionIcon>
-        )}
-      </FileButton>
-    );
-  };
 
   const renderAttachmentTextArea = (children) => {
     return (
@@ -261,9 +162,9 @@ export function ThreadChatInput() {
           borderRadius: "20px",
         }}
       >
-        {images.length > 0 && (
+        {threadChatImages.length > 0 && (
           <Group px="md">
-            {images.map((imgUrl, index) => (
+            {threadChatImages.map((imgUrl, index) => (
               <Box key={index} style={{ position: "relative" }}>
                 <Image
                   src={imgUrl}
@@ -300,7 +201,7 @@ export function ThreadChatInput() {
                     }}
                     onClick={() => {
                       // Function to remove image
-                      setImages((prevImages) =>
+                      setFiles((prevImages) =>
                         prevImages.filter((image) => image !== imgUrl),
                       );
                     }}
@@ -351,7 +252,7 @@ export function ThreadChatInput() {
           <Textarea
             placeholder="Shift + Enter to send"
             radius="lg"
-            leftSection={fileInputButton()}
+            leftSection={<UploadButton />}
             minRows={1}
             maxRows={5}
             autosize
