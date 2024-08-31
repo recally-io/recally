@@ -33,10 +33,11 @@ func New() Logger {
 	}
 	var logger *slog.Logger
 	if debug {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			AddSource: true,
+		handler := NewColorHandler(&slog.HandlerOptions{
 			Level:     slog.LevelDebug,
-		}))
+			AddSource: true,
+		}, WithDestinationWriter(os.Stdout), WithColor(), WithOutputEmptyAttrs())
+		logger = slog.New(handler)
 	} else {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			AddSource: false,
