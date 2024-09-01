@@ -34,6 +34,8 @@ type assistantService interface {
 	DeleteThreadMessage(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 
 	CreateAttachment(ctx context.Context, tx db.DBTX, attachment *assistants.AttachmentDTO, docs []document.Document) (*assistants.AttachmentDTO, error)
+	ListAttachmentsByAssistant(ctx context.Context, tx db.DBTX, assistantId uuid.UUID) ([]assistants.AttachmentDTO, error)
+	ListAttachmentsByThread(ctx context.Context, tx db.DBTX, threadId uuid.UUID) ([]assistants.AttachmentDTO, error)
 
 	ListModels(ctx context.Context) ([]string, error)
 	ListTools(ctx context.Context) ([]tools.BaseTool, error)
@@ -64,7 +66,9 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 	g.PUT("/:assistant-id/threads/:thread-id/messages/:message-id", h.updateThreadMessage)
 	g.DELETE("/:assistant-id/threads/:thread-id/messages/:message-id", h.deleteThreadMessage)
 
+	g.GET("/:assistant-id/attachments", h.listAttachmentsByAssistant)
 	g.POST("/:assistant-id/attachments", h.uploadAssistantAttachment)
+	g.GET("/:assistant-id/threads/:thread-id/attachments", h.listAttachmentsByThread)
 	g.POST("/:assistant-id/threads/:thread-id/attachments", h.uploadThreadAttachment)
 
 	g.GET("/models", h.listModels)
@@ -300,6 +304,37 @@ func (h *assistantHandler) deleteAssistant(c echo.Context) error {
 	return JsonResponse(c, http.StatusNoContent, nil)
 }
 
+// @Summary List Attachments by Assistant
+// @Description Lists attachments for a specific assistant
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Success 200 {object} JSONResult{data=[]assistants.AttachmentDTO} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id}/attachments [get]
+func (h *assistantHandler) listAttachmentsByAssistant(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(getAssistantRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	attachments, err := h.service.ListAttachmentsByAssistant(ctx, tx, req.AssistantId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, attachments)
+}
+
 type uploadAssistantAttachmentRequest struct {
 	AssistantId uuid.UUID           `param:"assistant-id" validate:"required,uuid4"`
 	Type        string              `json:"type" validate:"required"`
@@ -347,6 +382,37 @@ func (h *assistantHandler) uploadAssistantAttachment(c echo.Context) error {
 	}
 
 	return JsonResponse(c, http.StatusCreated, attachment)
+}
+
+// @Summary List Attachments by Thread
+// @Description Lists attachments for a specific thread
+// @Tags Assistants
+// @Accept json
+// @Produce json
+// @Param assistant-id path string true "Assistant ID"
+// @Param thread-id path string true "Thread ID"
+// @Success 200 {object} JSONResult{data=[]assistants.AttachmentDTO} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /assistants/{assistant-id}/threads/{thread-id}/attachments [get]
+func (h *assistantHandler) listAttachmentsByThread(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(getThreadRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	attachments, err := h.service.ListAttachmentsByThread(ctx, tx, req.ThreadId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, attachments)
 }
 
 type uploadThreadAttachmentRequest struct {

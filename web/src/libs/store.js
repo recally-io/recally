@@ -72,10 +72,6 @@ const useStore = create((set) => ({
     set((state) => ({
       threadChatImages: [...state.threadChatImages, image],
     })),
-
-  files: [],
-  setFiles: (files) => set(() => ({ files: files })),
-  addFile: (file) => set((state) => ({ files: [...state.files, file] })),
 }));
 
 export default useStore;

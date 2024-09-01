@@ -104,7 +104,7 @@ func requestLoggerMiddleware() echo.MiddlewareFunc {
 			attrs = append(attrs, slog.String("error", v.Error.Error()))
 			logger.LogAttrs(ctx, slog.LevelError, "REQUEST", attrs...)
 		}
-		return nil
+		return v.Error
 	}
 
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{

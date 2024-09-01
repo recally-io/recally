@@ -34,7 +34,7 @@ func (e *EmbeddingDTO) Load(dbo *db.AssistantEmbeddding) {
 
 func (e *EmbeddingDTO) Dump() *db.AssistantEmbeddding {
 	return &db.AssistantEmbeddding{
-		UserID:       pgtype.UUID{Bytes: e.UserID, Valid: true},
+		UserID:       pgtype.UUID{Bytes: e.UserID, Valid: e.UserID != uuid.Nil},
 		AttachmentID: pgtype.UUID{Bytes: e.AttachmentID, Valid: e.AttachmentID != uuid.Nil},
 		Text:         e.Text,
 		Embeddings:   pgvector.NewVector(e.Embeddings),

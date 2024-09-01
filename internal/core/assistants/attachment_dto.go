@@ -51,13 +51,13 @@ func (a *AttachmentDTO) Dump() *db.AssistantAttachment {
 	}
 	return &db.AssistantAttachment{
 		Uuid:        a.Id,
-		UserID:      pgtype.UUID{Bytes: a.UserId, Valid: true},
-		AssistantID: pgtype.UUID{Bytes: a.AssistantId, Valid: true},
-		ThreadID:    pgtype.UUID{Bytes: a.ThreadId, Valid: true},
-		Name:        pgtype.Text{String: a.Name, Valid: true},
-		Type:        pgtype.Text{String: a.Type, Valid: true},
-		Url:         pgtype.Text{String: a.URL, Valid: true},
-		Size:        pgtype.Int4{Int32: int32(a.Size), Valid: true},
+		UserID:      pgtype.UUID{Bytes: a.UserId, Valid: a.UserId != uuid.Nil},
+		AssistantID: pgtype.UUID{Bytes: a.AssistantId, Valid: a.AssistantId != uuid.Nil},
+		ThreadID:    pgtype.UUID{Bytes: a.ThreadId, Valid: a.ThreadId != uuid.Nil},
+		Name:        pgtype.Text{String: a.Name, Valid: a.Name != ""},
+		Type:        pgtype.Text{String: a.Type, Valid: a.Type != ""},
+		Url:         pgtype.Text{String: a.URL, Valid: a.URL != ""},
+		Size:        pgtype.Int4{Int32: int32(a.Size), Valid: a.Size > 0},
 		Metadata:    metadata,
 	}
 }

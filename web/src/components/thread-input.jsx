@@ -49,7 +49,6 @@ export function ThreadChatInput() {
   const setTools = useStore((state) => state.setThreadTools);
   const [modelSelecterValue, setModelSelecterValue] = useState("");
 
-  const [files, setFiles] = useStore((state) => [state.files, state.setFiles]);
   const threadChatImages = useStore((state) => state.threadChatImages);
   const setThreadChatImages = useStore((state) => state.setThreadChatImages);
 
@@ -129,9 +128,8 @@ export function ThreadChatInput() {
         model: chatModel,
       };
 
-      if (files.length > 0) {
-        const images = files.filter((file) => file.type.startsWith("image/"));
-        payload["metadata"] = { images: images };
+      if (threadChatImages.length > 0) {
+        payload["metadata"] = { images: threadChatImages };
       }
 
       const res = await post(
@@ -143,7 +141,6 @@ export function ThreadChatInput() {
     },
     onSuccess: (data) => {
       addThreadMessage(data);
-      setFiles([]);
       setThreadChatImages([]);
     },
     onError: (error) => {
@@ -201,7 +198,7 @@ export function ThreadChatInput() {
                     }}
                     onClick={() => {
                       // Function to remove image
-                      setFiles((prevImages) =>
+                      setThreadChatImages((prevImages) =>
                         prevImages.filter((image) => image !== imgUrl),
                       );
                     }}
@@ -252,7 +249,7 @@ export function ThreadChatInput() {
           <Textarea
             placeholder="Shift + Enter to send"
             radius="lg"
-            leftSection={<UploadButton />}
+            leftSection={<UploadButton useButton={true} />}
             minRows={1}
             maxRows={5}
             autosize

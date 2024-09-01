@@ -55,12 +55,12 @@ func (d *MessageDTO) Load(dbo *db.AssistantMessage) {
 func (d *MessageDTO) Dump() *db.AssistantMessage {
 	metadata, _ := json.Marshal(d.Metadata)
 	if d.Embeddings == nil {
-		d.Embeddings = []float32{}
+		d.Embeddings = nil
 	}
 	return &db.AssistantMessage{
-		UserID:          pgtype.UUID{Bytes: d.UserID, Valid: true},
-		AssistantID:     pgtype.UUID{Bytes: d.AssistantID, Valid: true},
-		ThreadID:        pgtype.UUID{Bytes: d.ThreadID, Valid: true},
+		UserID:          pgtype.UUID{Bytes: d.UserID, Valid: d.UserID != uuid.Nil},
+		AssistantID:     pgtype.UUID{Bytes: d.AssistantID, Valid: d.AssistantID != uuid.Nil},
+		ThreadID:        pgtype.UUID{Bytes: d.ThreadID, Valid: d.ThreadID != uuid.Nil},
 		Model:           pgtype.Text{String: d.Model, Valid: d.Model != ""},
 		Role:            d.Role,
 		Text:            pgtype.Text{String: d.Text, Valid: d.Text != ""},
