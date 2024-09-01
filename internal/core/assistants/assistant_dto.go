@@ -49,7 +49,7 @@ func (a *AssistantDTO) Load(dbo *db.Assistant) {
 func (a *AssistantDTO) Dump() *db.Assistant {
 	metadata, _ := json.Marshal(a.Metadata)
 	return &db.Assistant{
-		UserID:       pgtype.UUID{Bytes: a.UserId, Valid: true},
+		UserID:       pgtype.UUID{Bytes: a.UserId, Valid: a.UserId != uuid.Nil},
 		Name:         a.Name,
 		Description:  pgtype.Text{String: a.Description, Valid: a.Description != ""},
 		SystemPrompt: pgtype.Text{String: a.SystemPrompt, Valid: a.SystemPrompt != ""},

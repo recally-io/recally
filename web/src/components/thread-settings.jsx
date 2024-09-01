@@ -1,14 +1,11 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   Button,
-  FileButton,
+  Divider,
   Group,
   Modal,
   MultiSelect,
   NativeSelect,
-  Slider,
   Stack,
-  Text,
   TextInput,
   Textarea,
 } from "@mantine/core";
@@ -17,6 +14,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { put } from "../libs/api";
 import useStore from "../libs/store";
+import { UploadButton } from "./upload-button";
 
 export function ThreadSettingsModal() {
   const [isOpen, setIsOpen] = useStore((state) => [
@@ -99,6 +97,8 @@ export function ThreadSettingsModal() {
       onClose={() => setIsOpen(false)}
       title="Thread Settings"
     >
+      <UploadButton />
+      <Divider my="sm" variant="dashed" />
       <form
         onSubmit={form.onSubmit(async (values) => {
           console.log(values);
@@ -167,14 +167,6 @@ export function ThreadSettingsModal() {
             searchable
           />
         </Stack>
-        <FileButton
-          size="sm"
-          variant="transparent"
-          multiple
-          leftSection={<Icon icon="tabler:upload"></Icon>}
-        >
-          {(props) => <Button {...props}>Upload image</Button>}
-        </FileButton>
         <Group justify="flex-end" mt="md">
           <Button type="submit" onClick={() => setIsOpen(false)}>
             Submit

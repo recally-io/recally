@@ -34,7 +34,7 @@ type getPresignedURLsRequest struct {
 	ThreadId    uuid.UUID `query:"thread_id,omitempty" validate:"omitempty,uuid4"`
 	FileName    string    `query:"file_name" validate:"required"`
 	FileType    string    `query:"file_type" validate:"required"`
-	Action      string    `query:"action" validate:"required,oneof=put get"`
+	Action      string    `query:"action" validate:"required,oneof=PUT GET"`
 	// Expiration in seconds
 	Expiration int `query:"expiration" validate:"required,min=1,max=604800"`
 }

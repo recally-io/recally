@@ -1,30 +1,21 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { ActionIcon, FileButton } from "@mantine/core";
+import { Group, Text } from "@mantine/core";
+import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { toastError } from "../libs/alert";
-import { getPresignedUrl, uploadFile, postAttachment } from "../libs/api";
+import { toastError, toastInfo } from "../libs/alert";
+import { getPresignedUrl, postAttachment, uploadFile } from "../libs/api";
 import { fileToDocs } from "../libs/rag.mjs";
 import useStore from "../libs/store";
 
-export function UploadButton() {
+export function UploadButton({ useButton = false }) {
   const assistant = useStore((state) => state.assistant);
   const thread = useStore((state) => state.thread);
 
-  const [files, addFile, setFiles] = useStore((state) => [
-    state.files,
-    state.addFile,
-    state.setFiles,
-  ]);
   const addThreadChatImage = useStore((state) => state.addThreadChatImage);
 
   const getPresignedUrlMutation = useMutation({
     mutationFn: getPresignedUrl,
-    onSuccess: (data) => {
-      console.log("Presigned URL:", data);
-    },
     onError: (error) => {
-      console.error("Error getting presigned URL:", error);
       toastError("Failed to get upload URL: " + error.message);
     },
   });
@@ -32,10 +23,9 @@ export function UploadButton() {
   const uploadFileMutation = useMutation({
     mutationFn: uploadFile,
     onSuccess: (data) => {
-      console.log("File uploaded:", data);
+      toastInfo("File uploaded");
     },
     onError: (error) => {
-      console.error("Error uploading file:", error);
       toastError("Failed to upload file: " + error.message);
     },
   });
@@ -43,10 +33,9 @@ export function UploadButton() {
   const postAttachmentMutation = useMutation({
     mutationFn: postAttachment,
     onSuccess: (data) => {
-      console.log("Attachment posted:", data);
+      toastInfo("Attachment added to knowledge base: " + data.name);
     },
     onError: (error) => {
-      console.error("Error posting attachment:", error);
       toastError("Failed to post attachment: " + error.message);
     },
     enabled: assistant.id,
@@ -66,25 +55,23 @@ export function UploadButton() {
       });
       // upload file
       const uploadRes = await uploadFileMutation.mutateAsync({
-        preSignedURL: preSignedUrlRes.data.presigned_url,
+        preSignedURL: preSignedUrlRes.preSignedURL,
         file,
-        publicUrl: preSignedUrlRes.data.public_url,
+        publicUrl: preSignedUrlRes.publicUrl,
       });
-      const publicUrl = uploadRes.data;
       if (file.type.startsWith("image/")) {
         // add image to chat message
-        addThreadChatImage(res.data);
+        addThreadChatImage(uploadRes);
       } else if (file.type.endsWith("pdf")) {
         // extract text from pdf
-        const docs = await fileToDocs(file, publicUrl);
-        console.log("docs", docs);
+        const docs = await fileToDocs(file, uploadRes);
 
         await postAttachmentMutation.mutateAsync({
           assistantId: assistant.id,
           threadId: thread.id,
           type: file.type,
           name: file.name,
-          publicUrl: publicUrl,
+          publicUrl: uploadRes,
           docs: docs,
         });
       }
@@ -92,25 +79,53 @@ export function UploadButton() {
       addFile({
         type: file.type,
         name: file.name,
-        url: publicUrl,
+        url: uploadRes,
       });
     }
   };
 
   return (
-    <FileButton
-      onChange={handleFilesChange}
-      accept="image/*,application/pdf"
-      multiple
-      disabled={
-        getPresignedUrlMutation.isPending || uploadFileMutation.isPending
-      }
+    <Dropzone
+      onDrop={handleFilesChange}
+      onReject={(files) => console.log("rejected files", files)}
+      maxSize={10 * 1024 ** 2}
+      accept={IMAGE_MIME_TYPE + PDF_MIME_TYPE}
     >
-      {(props) => (
-        <ActionIcon {...props} variant="subtle" radius="lg">
-          <Icon icon="tabler:file-upload"></Icon>
-        </ActionIcon>
-      )}
-    </FileButton>
+      <Group
+        justify="center"
+        gap="xl"
+        mih={useButton ? 0 : 100}
+        style={
+          useButton
+            ? {}
+            : {
+                pointerEvents: "none",
+                border: "1px solid lightblue",
+                borderRadius: "10px",
+                padding: "10px",
+              }
+        }
+      >
+        <Dropzone.Accept>
+          <Icon icon="tabler:file-upload" />
+        </Dropzone.Accept>
+        <Dropzone.Reject>
+          <Icon icon="tabler:x" />
+        </Dropzone.Reject>
+        <Dropzone.Idle>
+          <Icon icon="tabler:photo" />
+        </Dropzone.Idle>
+        {!useButton && (
+          <div>
+            <Text size="xl" inline>
+              Add files to knowledge base
+            </Text>
+            <Text size="sm" c="dimmed" inline mt={7}>
+              Add pdf, images, or any files to help AI answer questions
+            </Text>
+          </div>
+        )}
+      </Group>
+    </Dropzone>
   );
 }

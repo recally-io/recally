@@ -120,7 +120,7 @@ func (q *Queries) GetAssistantAttachmentById(ctx context.Context, db DBTX, argUu
 }
 
 const listAssistantAttachmentsByAssistantId = `-- name: ListAssistantAttachmentsByAssistantId :many
-SELECT id, uuid, user_id, assistant_id, thread_id, name, type, url, size, metadata, created_at, updated_at FROM assistant_attachments WHERE assistant_id = $1 ORDER BY created_at DESC
+SELECT id, uuid, user_id, assistant_id, thread_id, name, type, url, size, metadata, created_at, updated_at FROM assistant_attachments WHERE assistant_id = $1 AND thread_id IS NULL ORDER BY created_at DESC
 `
 
 func (q *Queries) ListAssistantAttachmentsByAssistantId(ctx context.Context, db DBTX, assistantID pgtype.UUID) ([]AssistantAttachment, error) {

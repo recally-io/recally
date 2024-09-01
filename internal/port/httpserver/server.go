@@ -3,7 +3,6 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"syscall"
 	"vibrain/internal/pkg/cache"
@@ -59,13 +58,13 @@ func New(pool *db.Pool, llm *llms.LLM, opts ...Option) (*Service, error) {
 		llm:    llm,
 	}
 	s.Server.Validator = &CustomValidator{validator: validator.New()}
-	if config.Settings.DebugUI {
-		logger.Default.Info("debug ui enabled")
-		s.uiCmd = exec.Command("bun", "run", "dev")
-		s.uiCmd.Dir = "web"
-		s.uiCmd.Stdout = os.Stdout
-		s.uiCmd.Stderr = os.Stderr
-	}
+	// if config.Settings.DebugUI {
+	// 	logger.Default.Info("debug ui enabled")
+	// 	s.uiCmd = exec.Command("bun", "run", "dev")
+	// 	s.uiCmd.Dir = "web"
+	// 	s.uiCmd.Stdout = os.Stdout
+	// 	s.uiCmd.Stderr = os.Stderr
+	// }
 	for _, opt := range opts {
 		opt(s)
 	}

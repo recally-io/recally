@@ -6,6 +6,7 @@ import {
   Button,
   Divider,
   Flex,
+  Group,
   LoadingOverlay,
   ScrollArea,
   Stack,
@@ -137,26 +138,21 @@ export default function Sidebar() {
           <Stack align="stretch" justify="start" gap="sm">
             {listThreads.data &&
               listThreads.data.map((item) => (
-                <Flex
-                  key={item.id}
-                  align="center"
-                  w="95%"
+                <Group
                   justify="space-between"
+                  grow
+                  preventGrowOverflow={false}
+                  gap="2"
+                  key={item.id}
                 >
                   <Button
                     radius="md"
                     color={thread?.id == item.id ? "accent" : "default"}
+                    justify="space-between"
                     variant={thread?.id == item.id ? "filled" : "subtle"}
                     onClick={() => {
                       setThreadId(item.id);
                       toggleMobileSidebar();
-                    }}
-                    styles={{
-                      inner: {
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-start",
-                      },
                     }}
                   >
                     <Text
@@ -170,7 +166,7 @@ export default function Sidebar() {
                       {item.name}
                     </Text>
                   </Button>
-                  {thread?.id == item.id && (
+                  {thread?.id == item.id ? (
                     <ActionIcon
                       variant="subtle"
                       color="danger"
@@ -180,8 +176,8 @@ export default function Sidebar() {
                     >
                       <Icon icon="tabler:trash" />
                     </ActionIcon>
-                  )}
-                </Flex>
+                  ) : null}
+                </Group>
               ))}
           </Stack>
         </ScrollArea>

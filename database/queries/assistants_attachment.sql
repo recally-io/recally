@@ -11,7 +11,7 @@ SELECT * FROM assistant_attachments WHERE uuid = $1;
 SELECT * FROM assistant_attachments WHERE user_id = $1 ORDER BY created_at DESC;
 
 -- name: ListAssistantAttachmentsByAssistantId :many
-SELECT * FROM assistant_attachments WHERE assistant_id = $1 ORDER BY created_at DESC;
+SELECT * FROM assistant_attachments WHERE assistant_id = $1 AND thread_id IS NULL ORDER BY created_at DESC;
 
 -- name: ListAssistantAttachmentsByThreadId :many
 SELECT * FROM assistant_attachments WHERE thread_id = $1 ORDER BY created_at DESC;

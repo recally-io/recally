@@ -27,4 +27,15 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    // open: "/assistants.html",
+    // https://vitejs.dev/config/server-options#server-proxy
+    proxy: {
+      "/api": {
+        target: "http://localhost:1323",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

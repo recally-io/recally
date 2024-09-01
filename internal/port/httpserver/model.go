@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"net/http"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/labstack/echo/v4"
 )
@@ -30,7 +29,6 @@ func JsonResponse(c echo.Context, code int, data interface{}) error {
 }
 
 func ErrorResponse(c echo.Context, code int, err error) error {
-	logger.FromContext(c.Request().Context()).Error("error response", "err", err)
 	_ = c.JSON(code, JSONResult{
 		Success: false,
 		Code:    code,

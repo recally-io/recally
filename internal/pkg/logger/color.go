@@ -222,7 +222,6 @@ func NewColorHandler(handlerOptions *slog.HandlerOptions, options ...Option) *Ha
 	return handler
 }
 
-
 type Option func(h *Handler)
 
 func WithDestinationWriter(writer io.Writer) Option {
