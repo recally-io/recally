@@ -1,7 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   ActionIcon,
-  Autocomplete,
   Box,
   Button,
   Container,
@@ -11,15 +10,14 @@ import {
   Group,
   Image,
   Modal,
-  Text,
+  NativeSelect,
   Textarea,
   Tooltip,
 } from "@mantine/core";
-import { getHotkeyHandler, useOs } from "@mantine/hooks";
+import { getHotkeyHandler } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toastError } from "../libs/alert";
-
 import {
   listModels,
   listModelsKey,
@@ -31,22 +29,18 @@ import useStore from "../libs/store";
 import { UploadButton } from "./upload-button";
 
 export function ThreadChatInput() {
-  const os = useOs();
-  const [sendKey, setSendKey] = useState("shift+enter");
+  const [sendKey, setSendKey] = useState("mod+enter");
   const isLogin = useStore((state) => state.isLogin);
 
   const assistant = useStore((state) => state.assistant);
   const thread = useStore((state) => state.thread);
   const setThread = useStore((state) => state.setThread);
 
-  const [isShowModelSelecter, setIsShowModelSelecter] = useStore((state) => [
-    state.threadIsOpenModelSelecter,
-    state.setThreadIsOpenModelSelecter,
-  ]);
   const [chatModel, setChatModel] = useStore((state) => [
     state.threadChatModel,
     state.setThreadChatModel,
   ]);
+
   const [newText, setNewText] = useStore((state) => [
     state.threadNewText,
     state.setThreadNewText,
@@ -54,18 +48,11 @@ export function ThreadChatInput() {
   const addThreadMessage = useStore((state) => state.addThreadMessage);
   const setModels = useStore((state) => state.setThreadModels);
   const setTools = useStore((state) => state.setThreadTools);
-  const [modelSelecterValue, setModelSelecterValue] = useState("");
 
   const threadChatImages = useStore((state) => state.threadChatImages);
   const setThreadChatImages = useStore((state) => state.setThreadChatImages);
 
   const [openedImage, setOpenedImage] = useState(null);
-
-  useEffect(() => {
-    if (newText === "@") {
-      setIsShowModelSelecter(true);
-    }
-  }, [newText]);
 
   const createThread = useMutation({
     mutationFn: async (data) => {
@@ -156,16 +143,32 @@ export function ThreadChatInput() {
   });
 
   const getSendKeyLabel = () => {
-    const isMac = os === "macos";
     switch (sendKey) {
       case "shift+enter":
-        return "⇧ ↵";
+        return (
+          <Flex align="center" gap="1">
+            <Icon icon="mdi:apple-keyboard-shift" />
+            <Icon icon="mdi:keyboard-return" />
+            <span>Send</span>
+          </Flex>
+        );
       case "mod+enter":
-        return isMac ? "⌘ ↵" : "Ctrl ↵";
+        return (
+          <Flex align="center" gap="1">
+            <Icon icon="mdi:apple-keyboard-command" />
+            <Icon icon="mdi:keyboard-return" />
+            <span>Send</span>
+          </Flex>
+        );
       case "enter":
-        return "↵";
+        return (
+          <Flex align="center" gap="1">
+            <Icon icon="mdi:keyboard-return" />
+            <span>Send</span>
+          </Flex>
+        );
       default:
-        return "?";
+        return "Send";
     }
   };
 
@@ -174,6 +177,24 @@ export function ThreadChatInput() {
     const currentIndex = keys.indexOf(sendKey);
     const nextIndex = (currentIndex + 1) % keys.length;
     setSendKey(keys[nextIndex]);
+  };
+
+  const selectModel = () => {
+    return (
+      <NativeSelect
+        variant="filled"
+        maw="150px"
+        radius="lg"
+        size="xs"
+        px="0"
+        mx="0"
+        value={chatModel}
+        onChange={(e) => {
+          setChatModel(e.target.value);
+        }}
+        data={[...new Set(listModelsQuery.data)]}
+      />
+    );
   };
 
   const renderAttachmentTextArea = (children) => {
@@ -240,17 +261,22 @@ export function ThreadChatInput() {
         )}
         <div>{children}</div>
         <Divider />
-        <Group px="md" justify="flex-start">
-          <UploadButton useButton={true} />
-          <Tooltip label="Click to change send key">
+        <Group px="xs" justify="space-between">
+          <Group align="center" gap="3">
+            <Tooltip label="Upload image">
+              <UploadButton useButton={true} />
+            </Tooltip>
+            {selectModel()}
+          </Group>
+
+          <Tooltip label="Click to change hotkey">
             <Button
               variant="transparent"
               size="xs"
-              px="xs"
+              align="center"
               onClick={cycleSendKey}
-              rightSection={<Icon icon="tabler:arrow-up" />}
             >
-              <Text fz="12px">{getSendKeyLabel()}</Text>
+              {getSendKeyLabel()}
             </Button>
           </Tooltip>
         </Group>
@@ -267,28 +293,7 @@ export function ThreadChatInput() {
       }}
     >
       <Flex align="flex-end" gap="xs">
-        {isShowModelSelecter && (
-          <FocusTrap active={isShowModelSelecter}>
-            <Autocomplete
-              label="Talk to model"
-              placeholder="Type to select model"
-              data={[...new Set(listModelsQuery.data)]}
-              dropdownOpened={isShowModelSelecter}
-              radius="lg"
-              fz="16px"
-              leftSectionPointerEvents="none"
-              leftSection={<Icon icon="tabler:robot" />}
-              value={modelSelecterValue}
-              onChange={setModelSelecterValue}
-              onOptionSubmit={(v) => {
-                setChatModel(v);
-                setNewText(`@${v} `);
-                setIsShowModelSelecter(false);
-              }}
-            />
-          </FocusTrap>
-        )}
-        <FocusTrap active={!isShowModelSelecter}>
+        <FocusTrap>
           <Textarea
             placeholder="Shift + Enter to send"
             radius="lg"
