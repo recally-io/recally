@@ -1,45 +1,20 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Group, Text } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
-import { useMutation } from "@tanstack/react-query";
-import { toastError, toastInfo } from "../libs/alert";
-import { getPresignedUrl, postAttachment, uploadFile } from "../libs/api";
+import { useQueryContext } from "../libs/query-context";
 import { fileToDocs } from "../libs/rag.mjs";
 import useStore from "../libs/store";
 
 export function UploadButton({ useButton = false }) {
-  const assistant = useStore((state) => state.assistant);
-  const thread = useStore((state) => state.thread);
+  const {
+    getAssistant,
+    getThread,
+    getPresignedUrlMutation,
+    uploadFileMutation,
+    postAttachmentMutation,
+  } = useQueryContext();
 
   const addThreadChatImage = useStore((state) => state.addThreadChatImage);
-
-  const getPresignedUrlMutation = useMutation({
-    mutationFn: getPresignedUrl,
-    onError: (error) => {
-      toastError("Failed to get upload URL: " + error.message);
-    },
-  });
-
-  const uploadFileMutation = useMutation({
-    mutationFn: uploadFile,
-    onSuccess: (data) => {
-      toastInfo("File uploaded");
-    },
-    onError: (error) => {
-      toastError("Failed to upload file: " + error.message);
-    },
-  });
-
-  const postAttachmentMutation = useMutation({
-    mutationFn: postAttachment,
-    onSuccess: (data) => {
-      toastInfo("Attachment added to knowledge base: " + data.name);
-    },
-    onError: (error) => {
-      toastError("Failed to post attachment: " + error.message);
-    },
-    enabled: assistant.id,
-  });
 
   const handleFilesChange = async (files) => {
     if (!files) return;
@@ -48,8 +23,8 @@ export function UploadButton({ useButton = false }) {
 
       // get presigned url
       const preSignedUrlRes = await getPresignedUrlMutation.mutateAsync({
-        assistantId: assistant.id,
-        threadId: thread.id,
+        assistantId: getAssistant.data.id,
+        threadId: getThread.data.id,
         fileName: file.name,
         fileType: file.type,
       });
@@ -67,8 +42,8 @@ export function UploadButton({ useButton = false }) {
         const docs = await fileToDocs(file, uploadRes);
 
         await postAttachmentMutation.mutateAsync({
-          assistantId: assistant.id,
-          threadId: thread.id,
+          assistantId: getAssistant.data.id,
+          threadId: getThread.data.id,
           type: file.type,
           name: file.name,
           publicUrl: uploadRes,

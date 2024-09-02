@@ -21,84 +21,29 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toastError } from "../libs/alert";
-import { del, get, post, put, queryClient } from "../libs/api";
-
+import { useQueryContext } from "../libs/query-context";
+import useStore from "../libs/store";
 const url = new URL(window.location.href);
 
 export default function Assistants() {
-  const [assistantId, setAssistantId] = useState("");
+  const {
+    listAssistants,
+    listModels,
+    listTools,
+    upsertAssistant,
+    deleteAssistant,
+  } = useQueryContext();
+  const assistantId = useStore((state) => state.assistantId);
+  const setAssistantId = useStore((state) => state.setAssistantId);
   const [filteredAssistants, setFilteredAssistants] = useState([]);
   const [searchValue, setSearchValue] = useState(url.searchParams.get("id"));
-
-  const listAssistants = useQuery({
-    queryKey: ["list-asstants"],
-    queryFn: async () => {
-      const res = await get("/api/v1/assistants");
-      return res.data || [];
-    },
-  });
 
   useEffect(() => {
     if (listAssistants.data) {
       setFilteredAssistants(listAssistants.data);
     }
   }, [listAssistants.data]);
-
-  const listModels = useQuery({
-    queryKey: ["list-assistants-models"],
-    queryFn: async () => {
-      const res = await get("/api/v1/assistants/models");
-      return res.data || [];
-    },
-  });
-
-  const listTools = useQuery({
-    queryKey: ["list-assistants-tools"],
-    queryFn: async () => {
-      const res = await get("/api/v1/assistants/tools");
-      let data = res.data || [];
-      data = data.map((tool) => tool.name);
-      return data;
-    },
-  });
-
-  const upsertAssistant = useMutation({
-    mutationFn: async (data) => {
-      if (assistantId) {
-        const res = await put(`/api/v1/assistants/${assistantId}`, null, data);
-        return res.data;
-      } else {
-        const res = await post("/api/v1/assistants", null, data);
-        return res.data;
-      }
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries("list-asstants");
-    },
-    onError: (error) => {
-      toastError(
-        `Failed to upsert assistant ${assistantId} : ${error.message}`,
-      );
-    },
-  });
-
-  const deleteAssistant = useMutation({
-    mutationFn: async (id) => {
-      const res = await del(`/api/v1/assistants/${id}`);
-      return res.data;
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries("list-asstants");
-    },
-    onError: (error) => {
-      toastError(
-        `Failed to delete assistant ${assistantId} : ${error.message}`,
-      );
-    },
-  });
 
   const [opened, { open, close }] = useDisclosure(false);
   const form = useForm({
