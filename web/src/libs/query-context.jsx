@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createContext, useContext } from "react";
-import { toastError } from "../libs/alert";
+import { createContext, useContext, useEffect } from "react";
+import { toastError, toastInfo } from "../libs/alert";
 import {
   del,
   get,
@@ -101,13 +101,6 @@ export function QueryContextProvider({ children }) {
     },
   });
 
-  const updateThreadId = (id) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("thread-id", id);
-    window.location.href = url;
-    // window.history.pushState({}, "", url);
-  };
-
   const createThread = useMutation({
     mutationFn: async (data) => {
       const res = await post(
@@ -120,7 +113,6 @@ export function QueryContextProvider({ children }) {
     onSuccess: (data) => {
       setThreadId(data.id);
       setMessageList([]);
-      updateThreadId(data.id);
       queryClient.invalidateQueries({
         queryKey: ["list-threads", assistantId],
       });
@@ -231,7 +223,6 @@ export function QueryContextProvider({ children }) {
       queryClient.invalidateQueries({
         queryKey: ["list-threads", assistantId],
       });
-      setThread(null);
       setMessageList([]);
       const url = new URL(window.location.href);
       url.searchParams.delete("thread-id");
@@ -246,8 +237,14 @@ export function QueryContextProvider({ children }) {
         null,
         data,
       );
-      setThread(res.data);
       return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["get-thread", threadId]);
+      toastInfo("Thread updated");
+    },
+    onError: (error) => {
+      toastError("Failed to update thread: " + error.message);
     },
   });
 
@@ -279,6 +276,23 @@ export function QueryContextProvider({ children }) {
     enabled: isLogin && !!assistantId,
   });
 
+  useEffect(() => {
+    if (threadId) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("thread-id", threadId);
+      window.history.pushState({}, "", url);
+      setMessageList([]);
+      getThread.refetch();
+    }
+  }, [threadId]);
+
+  useEffect(() => {
+    if (getThread.data) {
+      setMessageList(getThread.data.messages || []);
+      window.document.title = getThread.data.name;
+    }
+  }, [getThread.data]);
+
   return (
     <QueryContext.Provider
       value={{
@@ -296,7 +310,6 @@ export function QueryContextProvider({ children }) {
         updateThread,
         deleteThread,
         generateThreadTitle,
-        updateThreadId,
 
         sendThreadMessage,
 

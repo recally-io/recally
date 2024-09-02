@@ -19,11 +19,12 @@ import useStore from "../libs/store";
 import { ThreadAddButton } from "./thread-add-button";
 
 export default function Sidebar() {
-  const { listThreads, deleteThread, updateThreadId } = useQueryContext();
+  const { listThreads, deleteThread } = useQueryContext();
 
   const isDarkMode = useStore((state) => state.isDarkMode);
   const assistantId = useStore((state) => state.assistantId);
   const threadId = useStore((state) => state.threadId);
+  const setThreadId = useStore((state) => state.setThreadId);
   const toggleMobileSidebar = useStore((state) => state.toggleMobileSidebar);
 
   return (
@@ -78,7 +79,7 @@ export default function Sidebar() {
               );
               if (filteredItems.length > 0) {
                 toggleMobileSidebar();
-                updateThreadId(filteredItems[0].id);
+                setThreadId(filteredItems[0].id);
               }
             }}
           />
@@ -103,7 +104,7 @@ export default function Sidebar() {
                     variant={threadId == item.id ? "filled" : "subtle"}
                     onClick={() => {
                       toggleMobileSidebar();
-                      updateThreadId(item.id);
+                      setThreadId(item.id);
                     }}
                   >
                     <Text
