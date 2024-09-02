@@ -24,17 +24,6 @@ function ThreadApp() {
 
   const setThreadId = useStore((state) => state.setThreadId);
   const setAssistantId = useStore((state) => state.setAssistantId);
-  const setMessageList = useStore((state) => state.setThreadMessageList);
-
-  useEffect(() => {
-    if (urlThreadId) {
-      setThreadId(urlThreadId);
-    }
-    if (getThread.data) {
-      setMessageList(getThread.data.messages || []);
-      window.document.title = getThread.data.name;
-    }
-  }, [getThread.data, urlThreadId]);
 
   useEffect(() => {
     if (urlAssistantId) {
@@ -42,7 +31,10 @@ function ThreadApp() {
     } else {
       window.location.href = "/assistants.html";
     }
-  }, [urlAssistantId]);
+    if (urlThreadId) {
+      setThreadId(urlThreadId);
+    }
+  }, []);
 
   return (
     <>
