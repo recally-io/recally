@@ -3,18 +3,23 @@ import {
   ActionIcon,
   Autocomplete,
   Box,
+  Button,
   Container,
+  Divider,
   Flex,
   FocusTrap,
   Group,
   Image,
   Modal,
+  Text,
   Textarea,
   Tooltip,
 } from "@mantine/core";
+import { getHotkeyHandler, useOs } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toastError } from "../libs/alert";
+
 import {
   listModels,
   listModelsKey,
@@ -26,6 +31,8 @@ import useStore from "../libs/store";
 import { UploadButton } from "./upload-button";
 
 export function ThreadChatInput() {
+  const os = useOs();
+  const [sendKey, setSendKey] = useState("shift+enter");
   const isLogin = useStore((state) => state.isLogin);
 
   const assistant = useStore((state) => state.assistant);
@@ -65,7 +72,7 @@ export function ThreadChatInput() {
       const res = await post(
         `/api/v1/assistants/${assistant.id}/threads`,
         null,
-        data,
+        data
       );
       setThread(res.data);
       return res.data;
@@ -135,7 +142,7 @@ export function ThreadChatInput() {
       const res = await post(
         `/api/v1/assistants/${assistant.id}/threads/${newThreadId}/messages`,
         null,
-        payload,
+        payload
       );
       return res.data;
     },
@@ -147,6 +154,27 @@ export function ThreadChatInput() {
       toastError("Failed to send message: " + error.message);
     },
   });
+
+  const getSendKeyLabel = () => {
+    const isMac = os === "macos";
+    switch (sendKey) {
+      case "shift+enter":
+        return "⇧ ↵";
+      case "mod+enter":
+        return isMac ? "⌘ ↵" : "Ctrl ↵";
+      case "enter":
+        return "↵";
+      default:
+        return "?";
+    }
+  };
+
+  const cycleSendKey = () => {
+    const keys = ["shift+enter", "mod+enter", "enter"];
+    const currentIndex = keys.indexOf(sendKey);
+    const nextIndex = (currentIndex + 1) % keys.length;
+    setSendKey(keys[nextIndex]);
+  };
 
   const renderAttachmentTextArea = (children) => {
     return (
@@ -199,7 +227,7 @@ export function ThreadChatInput() {
                     onClick={() => {
                       // Function to remove image
                       setThreadChatImages((prevImages) =>
-                        prevImages.filter((image) => image !== imgUrl),
+                        prevImages.filter((image) => image !== imgUrl)
                       );
                     }}
                   >
@@ -211,6 +239,21 @@ export function ThreadChatInput() {
           </Group>
         )}
         <div>{children}</div>
+        <Divider />
+        <Group px="md" justify="flex-start">
+          <UploadButton useButton={true} />
+          <Tooltip label="Click to change send key">
+            <Button
+              variant="transparent"
+              size="xs"
+              px="xs"
+              onClick={cycleSendKey}
+              rightSection={<Icon icon="tabler:arrow-up" />}
+            >
+              <Text fz="12px">{getSendKeyLabel()}</Text>
+            </Button>
+          </Tooltip>
+        </Group>
       </Flex>
     );
   };
@@ -249,17 +292,23 @@ export function ThreadChatInput() {
           <Textarea
             placeholder="Shift + Enter to send"
             radius="lg"
-            leftSection={<UploadButton useButton={true} />}
             minRows={1}
             maxRows={5}
             autosize
             w="100%"
             disabled={sendMessage.isPending}
             onKeyDown={async (e) => {
-              // Shift + Enter to send
-              if (e.key === "Enter" && e.shiftKey === true) {
-                await sendMessage.mutateAsync();
-              }
+              e.stopPropagation();
+              getHotkeyHandler([
+                [
+                  sendKey,
+                  async () => {
+                    if (newText.trim() !== "") {
+                      await sendMessage.mutateAsync();
+                    }
+                  },
+                ],
+              ])(e);
             }}
             styles={{
               input: {
