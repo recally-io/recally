@@ -163,9 +163,7 @@ export function ThreadChatInput() {
         <Divider />
         <Group px="xs" justify="space-between">
           <Group align="center" gap="3">
-            <Tooltip label="Upload image">
-              <UploadButton useButton={true} />
-            </Tooltip>
+            <UploadButton useButton={true} />
             {selectModel()}
           </Group>
 
