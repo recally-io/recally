@@ -50,12 +50,6 @@ export function UploadButton({ useButton = false }) {
           docs: docs,
         });
       }
-
-      addFile({
-        type: file.type,
-        name: file.name,
-        url: uploadRes,
-      });
     }
   };
 
@@ -64,7 +58,7 @@ export function UploadButton({ useButton = false }) {
       onDrop={handleFilesChange}
       onReject={(files) => console.log("rejected files", files)}
       maxSize={10 * 1024 ** 2}
-      accept={IMAGE_MIME_TYPE + PDF_MIME_TYPE}
+      accept={[...IMAGE_MIME_TYPE, ...PDF_MIME_TYPE]}
     >
       <Group
         justify="center"
