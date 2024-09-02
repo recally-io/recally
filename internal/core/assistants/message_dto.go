@@ -16,6 +16,9 @@ type MessageMetadata struct {
 	Images []string `json:"images"`
 }
 
+// 1563 dimensions
+var defaultEmbeddings = make([]float32, 1536)
+
 type MessageDTO struct {
 	ID              uuid.UUID       `json:"id"`
 	UserID          uuid.UUID       `json:"user_id"`
@@ -55,7 +58,7 @@ func (d *MessageDTO) Load(dbo *db.AssistantMessage) {
 func (d *MessageDTO) Dump() *db.AssistantMessage {
 	metadata, _ := json.Marshal(d.Metadata)
 	if d.Embeddings == nil {
-		d.Embeddings = nil
+		d.Embeddings = defaultEmbeddings
 	}
 	return &db.AssistantMessage{
 		UserID:          pgtype.UUID{Bytes: d.UserID, Valid: d.UserID != uuid.Nil},
