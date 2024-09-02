@@ -17,7 +17,7 @@ export default defineConfig({
   //   },
   // },
   build: {
-    // target: "esnext",
+    target: "esnext",
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
