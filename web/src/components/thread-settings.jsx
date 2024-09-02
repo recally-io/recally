@@ -10,24 +10,19 @@ import {
   Textarea,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { put } from "../libs/api";
+import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
 import { UploadButton } from "./upload-button";
 
 export function ThreadSettingsModal() {
+  const { listTools, listModels, updateThread, getAssistant, getThread } =
+    useQueryContext();
+
   const [isOpen, setIsOpen] = useStore((state) => [
     state.threadIsOpenSettings,
     state.setThreadIsOpenSettings,
   ]);
-
-  const assistant = useStore((state) => state.assistant);
-  const thread = useStore((state) => state.thread);
-  const setThread = useStore((state) => state.setThread);
-
-  const models = useStore((state) => state.threadModels);
-  const tools = useStore((state) => state.threadTools);
 
   const form = useForm({
     initialValues: {
@@ -44,7 +39,8 @@ export function ThreadSettingsModal() {
   });
 
   useEffect(() => {
-    if (assistant?.id) {
+    if (getAssistant.data) {
+      const assistant = getAssistant.data;
       form.setValues({
         name: assistant.name,
         description: assistant.description,
@@ -55,10 +51,12 @@ export function ThreadSettingsModal() {
         },
       });
     }
-  }, [assistant]);
+  }, [getAssistant.data]);
 
   useEffect(() => {
-    if (thread?.id) {
+    if (getThread.data) {
+      const assistant = getAssistant.data;
+      const thread = getThread.data;
       form.setValues({
         name: thread.name ? thread.name : "New Thread",
         description: thread.description
@@ -77,19 +75,7 @@ export function ThreadSettingsModal() {
         },
       });
     }
-  }, [thread]);
-
-  const updateThread = useMutation({
-    mutationFn: async (data) => {
-      const res = await put(
-        `/api/v1/assistants/${assistant.id}/threads/${thread.id}`,
-        null,
-        data,
-      );
-      setThread(res.data);
-      return res.data;
-    },
-  });
+  }, [getThread.data]);
 
   return (
     <Modal
@@ -128,33 +114,11 @@ export function ThreadSettingsModal() {
             key={form.key("system_prompt")}
             {...form.getInputProps("system_prompt")}
           />
-          {/* <Stack spacing="xs">
-                        <Text size="sm">Temperature</Text>
-                        <Slider
-                            min={0}
-                            max={1}
-                            step={0.1}
-                            key={form.key("temperature")}
-                            {...form.getInputProps("temperature")}
-                            labelAlwaysOn
-                        />
-                    </Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">Max Tokens</Text>
-                        <Slider
-                            min={0}
-                            max={4096}
-                            step={1}
-                            key={form.key("max_token")}
-                            {...form.getInputProps("max_token")}
-                            labelAlwaysOn
-                        />
-                    </Stack> */}
           <NativeSelect
             label="Model"
             key={form.key("model")}
             {...form.getInputProps("model")}
-            data={models}
+            data={listModels.data}
           />
           <MultiSelect
             label="Tools"
@@ -163,7 +127,7 @@ export function ThreadSettingsModal() {
               type: "checkbox",
             })}
             defaultValue={form.values.metadata.tools}
-            data={tools}
+            data={listTools.data}
             searchable
           />
         </Stack>

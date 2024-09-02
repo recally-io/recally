@@ -13,67 +13,18 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { del, get, queryClient } from "../libs/api";
+import { useQueryContext } from "../libs/query-context";
 
-import { useEffect } from "react";
 import useStore from "../libs/store";
 import { ThreadAddButton } from "./thread-add-button";
 
 export default function Sidebar() {
+  const { listThreads, deleteThread, updateThreadId } = useQueryContext();
+
   const isDarkMode = useStore((state) => state.isDarkMode);
-  const isLogin = useStore((state) => state.isLogin);
-  const assistant = useStore((state) => state.assistant);
-  const thread = useStore((state) => state.thread);
-  const setThread = useStore((state) => state.setThread);
-
-  const [threadId, setThreadId] = useStore((state) => [
-    state.threadId,
-    state.setThreadId,
-  ]);
-
+  const assistantId = useStore((state) => state.assistantId);
+  const threadId = useStore((state) => state.threadId);
   const toggleMobileSidebar = useStore((state) => state.toggleMobileSidebar);
-  const setMessageList = useStore((state) => state.setThreadMessageList);
-
-  useEffect(() => {
-    if (threadId) {
-      const url = new URL(window.location.href);
-      url.searchParams.set("thread-id", threadId);
-      window.history.pushState({}, "", url);
-    }
-  }, [threadId]);
-
-  const listThreads = useQuery({
-    queryKey: ["list-threads", assistant.id],
-    queryFn: async () => {
-      const res = await get(`/api/v1/assistants/${assistant.id}/threads`);
-      const data = res.data;
-      data.map((item) => {
-        item["value"] =
-          item["name"] + " - " + item["description"] + " - " + item["id"];
-      });
-      return data;
-    },
-    enabled: isLogin && !!assistant,
-  });
-
-  const deleteThread = useMutation({
-    mutationFn: async () => {
-      await del(`/api/v1/assistants/${assistant.id}/threads/${thread.id}`);
-      console.log("delete thread success");
-    },
-    onSuccess: () => {
-      console.log("onSuccess: delete thread success");
-      queryClient.invalidateQueries({
-        queryKey: ["list-threads", assistant.id],
-      });
-      setThread(null);
-      setMessageList([]);
-      const url = new URL(window.location.href);
-      url.searchParams.delete("thread-id");
-      window.history.pushState({}, "", url);
-    },
-  });
 
   return (
     <>
@@ -92,7 +43,7 @@ export default function Sidebar() {
           <Flex justify="center" align="center" gap="md">
             <Button variant="outline" radius="lg" size="sm">
               <Anchor
-                href={`/assistants.html?id=${assistant.id}`}
+                href={`/assistants.html?id=${assistantId}`}
                 variant="gradient"
                 gradient={{ from: "pink", to: "yellow" }}
                 underline="always"
@@ -126,8 +77,8 @@ export default function Sidebar() {
                 (i) => i.value == item,
               );
               if (filteredItems.length > 0) {
-                setThreadId(filteredItems[0].id);
                 toggleMobileSidebar();
+                updateThreadId(filteredItems[0].id);
               }
             }}
           />
@@ -147,12 +98,12 @@ export default function Sidebar() {
                 >
                   <Button
                     radius="md"
-                    color={thread?.id == item.id ? "accent" : "default"}
+                    color={threadId == item.id ? "accent" : "default"}
                     justify="space-between"
-                    variant={thread?.id == item.id ? "filled" : "subtle"}
+                    variant={threadId == item.id ? "filled" : "subtle"}
                     onClick={() => {
-                      setThreadId(item.id);
                       toggleMobileSidebar();
+                      updateThreadId(item.id);
                     }}
                   >
                     <Text
@@ -166,7 +117,7 @@ export default function Sidebar() {
                       {item.name}
                     </Text>
                   </Button>
-                  {thread?.id == item.id ? (
+                  {threadId == item.id ? (
                     <ActionIcon
                       variant="subtle"
                       color="danger"

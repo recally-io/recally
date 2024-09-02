@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   Avatar,
   Box,
@@ -13,27 +14,23 @@ import {
   em,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { post, queryClient } from "../libs/api";
+import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
 import { CopyBtn } from "./copy-button";
 import { MarkdownRenderer } from "./markdown-renderer";
 
 export function ThreadChatWindows() {
-  const assistant = useStore((state) => state.assistant);
-  const thread = useStore((state) => state.thread);
+  const { generateThreadTitle, getThread } = useQueryContext();
+
   const desktopSidebarOpen = useStore((state) => state.desktopSidebarOpen);
   const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
   const isDarkMode = useStore((state) => state.isDarkMode);
   const messageList = useStore((state) => state.threadMessageList);
-  const [isTitleGenerated, setIsTitleGenerated] = useStore((state) => [
-    state.threadIsTitleGenerated,
-    state.setThreadIsTitleGenerated,
-  ]);
+
   const chatArea = useRef(null);
   const [openedImage, setOpenedImage] = useState(null);
+
   useEffect(() => {
     chatArea.current.scrollTo({
       top: chatArea.current.scrollHeight,
@@ -41,32 +38,17 @@ export function ThreadChatWindows() {
     });
 
     const generate = async () => {
-      await generateTitle.mutateAsync();
-      if (generateTitle.isSuccess) {
-        setIsTitleGenerated(true);
-      }
+      await generateThreadTitle.mutateAsync();
     };
 
-    if (messageList.length >= 4 && !isTitleGenerated) {
-      console.log("Generate title");
+    if (
+      messageList.length >= 4 &&
+      getThread.data &&
+      !getThread.data.metadata.is_generated_title
+    ) {
       generate();
     }
-  }, [messageList]);
-
-  const generateTitle = useMutation({
-    mutationFn: async () => {
-      const res = await post(
-        `/api/v1/assistants/${assistant.id}/threads/${thread.id}/generate-title`,
-        null,
-        {},
-      );
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["get-thread", thread.id]);
-      queryClient.invalidateQueries(["list-threads", assistant.id]);
-    },
-  });
+  }, [messageList, getThread.data]);
 
   const messagePaper = (message) => {
     const isSender = message.role === "user";

@@ -10,6 +10,7 @@ import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import "@mantine/notifications/styles.css";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryContextProvider } from "../libs/query-context";
 
 import React from "react";
 import { queryClient } from "../libs/api";
@@ -152,31 +153,33 @@ export default function Layout({ main, nav = null, header = null }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MantineProvider theme={theme} defaultColorScheme="auto">
-        <ModalsProvider>
-          <Notifications />
-          <AppShell
-            header={{ height: 40 }}
-            navbar={{
-              width: "300",
-              breakpoint: "sm",
-              collapsed: {
-                mobile: !hasNavBar || !mobileSidebarOpen,
-                desktop: !hasNavBar || !desktopSidebarOpen,
-              },
-            }}
-            padding="0"
-            withBorder={true}
-            layout="alt"
-          >
-            <AppShell.Header>
-              {header ? header : <Header hasNavBar={hasNavBar} />}
-            </AppShell.Header>
-            <AppShell.Navbar>{nav}</AppShell.Navbar>
-            <AppShell.Main>{main}</AppShell.Main>
-          </AppShell>
-        </ModalsProvider>
-      </MantineProvider>
+      <QueryContextProvider>
+        <MantineProvider theme={theme} defaultColorScheme="auto">
+          <ModalsProvider>
+            <Notifications />
+            <AppShell
+              header={{ height: 40 }}
+              navbar={{
+                width: "300",
+                breakpoint: "sm",
+                collapsed: {
+                  mobile: !hasNavBar || !mobileSidebarOpen,
+                  desktop: !hasNavBar || !desktopSidebarOpen,
+                },
+              }}
+              padding="0"
+              withBorder={true}
+              layout="alt"
+            >
+              <AppShell.Header>
+                {header ? header : <Header hasNavBar={hasNavBar} />}
+              </AppShell.Header>
+              <AppShell.Navbar>{nav}</AppShell.Navbar>
+              <AppShell.Main>{main}</AppShell.Main>
+            </AppShell>
+          </ModalsProvider>
+        </MantineProvider>
+      </QueryContextProvider>
     </QueryClientProvider>
   );
 }

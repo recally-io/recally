@@ -15,132 +15,32 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { toastError } from "../libs/alert";
-import {
-  listModels,
-  listModelsKey,
-  listTools,
-  listToolsKey,
-  post,
-} from "../libs/api";
+import { useEffect, useState } from "react";
+import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
 import { UploadButton } from "./upload-button";
 
 export function ThreadChatInput() {
-  const [sendKey, setSendKey] = useState("mod+enter");
-  const isLogin = useStore((state) => state.isLogin);
-
-  const assistant = useStore((state) => state.assistant);
-  const thread = useStore((state) => state.thread);
-  const setThread = useStore((state) => state.setThread);
-
-  const [chatModel, setChatModel] = useStore((state) => [
-    state.threadChatModel,
-    state.setThreadChatModel,
-  ]);
+  const { sendThreadMessage, listModels, getThread } = useQueryContext();
 
   const [newText, setNewText] = useStore((state) => [
     state.threadNewText,
     state.setThreadNewText,
   ]);
-  const addThreadMessage = useStore((state) => state.addThreadMessage);
-  const setModels = useStore((state) => state.setThreadModels);
-  const setTools = useStore((state) => state.setThreadTools);
+  const [threadChatImages, setThreadChatImages] = useStore((state) => [
+    state.threadChatImages,
+    state.setThreadChatImages,
+  ]);
 
-  const threadChatImages = useStore((state) => state.threadChatImages);
-  const setThreadChatImages = useStore((state) => state.setThreadChatImages);
-
+  const [chatModel, setChatModel] = useState("");
+  const [sendKey, setSendKey] = useState("enter");
   const [openedImage, setOpenedImage] = useState(null);
 
-  const createThread = useMutation({
-    mutationFn: async (data) => {
-      const res = await post(
-        `/api/v1/assistants/${assistant.id}/threads`,
-        null,
-        data
-      );
-      setThread(res.data);
-      return res.data;
-    },
-  });
-
-  const listModelsQuery = useQuery({
-    queryKey: listModelsKey,
-    queryFn: async () => {
-      const res = await listModels();
-      setModels(res);
-      return res;
-    },
-    enabled: isLogin,
-  });
-
-  useQuery({
-    queryKey: [listToolsKey],
-    queryFn: async () => {
-      const res = await listTools();
-      setTools(res);
-      return res;
-    },
-    enabled: isLogin,
-  });
-
-  const sendMessage = useMutation({
-    mutationFn: async () => {
-      let text = newText;
-      if (text.startsWith("@")) {
-        text = text.replace(/^@[^ ]+\s*/, "");
-      }
-      setNewText("");
-      addThreadMessage({
-        role: "user",
-        text,
-        id: Math.random(),
-        metadata: { images: [...threadChatImages] },
-      });
-
-      const isNewThread = !thread.id;
-      let newThreadId = thread.id;
-      if (isNewThread) {
-        newThreadId = crypto.randomUUID();
-        await createThread.mutateAsync({
-          id: newThreadId,
-          name: "New Thread",
-          description: assistant.description,
-          system_prompt: assistant.systemPrompt,
-          model: assistant.model,
-          metadata: {
-            is_generated_title: false,
-            tools: assistant.metadata.tools,
-          },
-        });
-      }
-      let payload = {
-        role: "user",
-        text: text,
-        model: chatModel,
-      };
-
-      if (threadChatImages.length > 0) {
-        payload["metadata"] = { images: threadChatImages };
-      }
-
-      const res = await post(
-        `/api/v1/assistants/${assistant.id}/threads/${newThreadId}/messages`,
-        null,
-        payload
-      );
-      return res.data;
-    },
-    onSuccess: (data) => {
-      addThreadMessage(data);
-      setThreadChatImages([]);
-    },
-    onError: (error) => {
-      toastError("Failed to send message: " + error.message);
-    },
-  });
+  useEffect(() => {
+    if (getThread.data) {
+      setChatModel(getThread.data.model);
+    }
+  }, [getThread.data]);
 
   const getSendKeyLabel = () => {
     switch (sendKey) {
@@ -192,7 +92,7 @@ export function ThreadChatInput() {
         onChange={(e) => {
           setChatModel(e.target.value);
         }}
-        data={[...new Set(listModelsQuery.data)]}
+        data={listModels.data}
       />
     );
   };
@@ -248,7 +148,7 @@ export function ThreadChatInput() {
                     onClick={() => {
                       // Function to remove image
                       setThreadChatImages((prevImages) =>
-                        prevImages.filter((image) => image !== imgUrl)
+                        prevImages.filter((image) => image !== imgUrl),
                       );
                     }}
                   >
@@ -301,7 +201,7 @@ export function ThreadChatInput() {
             maxRows={5}
             autosize
             w="100%"
-            disabled={sendMessage.isPending}
+            disabled={sendThreadMessage.isPending}
             onKeyDown={async (e) => {
               e.stopPropagation();
               getHotkeyHandler([
@@ -309,7 +209,13 @@ export function ThreadChatInput() {
                   sendKey,
                   async () => {
                     if (newText.trim() !== "") {
-                      await sendMessage.mutateAsync();
+                      const localText = newText.trim();
+                      setNewText("");
+                      await sendThreadMessage.mutateAsync({
+                        model: chatModel,
+                        text: localText,
+                        images: threadChatImages,
+                      });
                     }
                   },
                 ],
@@ -325,12 +231,12 @@ export function ThreadChatInput() {
                 variant="filled"
                 radius="lg"
                 aria-label="Settings"
-                disabled={newText === "" || sendMessage.isPending}
+                disabled={newText === "" || sendThreadMessage.isPending}
                 onClick={async () => {
-                  await sendMessage.mutateAsync();
+                  await sendThreadMessage.mutateAsync();
                 }}
               >
-                {sendMessage.isPending ? (
+                {sendThreadMessage.isPending ? (
                   <Icon icon="svg-spinners:180-ring" />
                 ) : (
                   <Icon icon="tabler:arrow-up"></Icon>
