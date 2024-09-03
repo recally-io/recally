@@ -15,14 +15,11 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
-import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
 import { CopyBtn } from "./copy-button";
 import { MarkdownRenderer } from "./markdown-renderer";
 
 export function ThreadChatWindows() {
-  const { generateThreadTitle, getThread } = useQueryContext();
-
   const desktopSidebarOpen = useStore((state) => state.desktopSidebarOpen);
   const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
   const isDarkMode = useStore((state) => state.isDarkMode);
@@ -36,19 +33,7 @@ export function ThreadChatWindows() {
       top: chatArea.current.scrollHeight,
       behavior: "smooth",
     });
-
-    const generate = async () => {
-      await generateThreadTitle.mutateAsync();
-    };
-
-    if (
-      messageList.length >= 4 &&
-      getThread.data &&
-      !getThread.data.metadata.is_generated_title
-    ) {
-      generate();
-    }
-  }, [messageList, getThread.data]);
+  }, [messageList]);
 
   const messagePaper = (message) => {
     const isSender = message.role === "user";
