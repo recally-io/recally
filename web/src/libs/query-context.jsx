@@ -80,7 +80,7 @@ export function QueryContextProvider({ children }) {
     },
     onError: (error) => {
       toastError(
-        `Failed to upsert assistant ${assistantId} : ${error.message}`
+        `Failed to upsert assistant ${assistantId} : ${error.message}`,
       );
     },
   });
@@ -95,7 +95,7 @@ export function QueryContextProvider({ children }) {
     },
     onError: (error) => {
       toastError(
-        `Failed to delete assistant ${assistantId} : ${error.message}`
+        `Failed to delete assistant ${assistantId} : ${error.message}`,
       );
     },
   });
@@ -105,7 +105,7 @@ export function QueryContextProvider({ children }) {
       const res = await post(
         `/api/v1/assistants/${assistantId}/threads`,
         null,
-        data
+        data,
       );
       return res.data;
     },
@@ -124,7 +124,7 @@ export function QueryContextProvider({ children }) {
       const res = await post(
         `/api/v1/assistants/${assistantId}/threads/${threadId}/generate-title`,
         null,
-        {}
+        {},
       );
       return res.data;
     },
@@ -173,7 +173,7 @@ export function QueryContextProvider({ children }) {
       const res = await post(
         `/api/v1/assistants/${assistantId}/threads/${newThreadId}/messages`,
         null,
-        payload
+        payload,
       );
       return res.data;
     },
@@ -203,7 +203,7 @@ export function QueryContextProvider({ children }) {
     queryKey: ["get-thread", threadId],
     queryFn: async () => {
       const res = await get(
-        `/api/v1/assistants/${assistantId}/threads/${threadId}`
+        `/api/v1/assistants/${assistantId}/threads/${threadId}`,
       );
 
       return res.data || {};
@@ -233,7 +233,7 @@ export function QueryContextProvider({ children }) {
       const res = await put(
         `/api/v1/assistants/${assistantId}/threads/${threadId}`,
         null,
-        data
+        data,
       );
       return res.data;
     },
