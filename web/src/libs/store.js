@@ -30,16 +30,6 @@ const useStore = create((set) => ({
     set((state) => ({
       threadMessageList: [...state.threadMessageList, message],
     })),
-
-  threadNewText: "",
-  setThreadNewText: (text) => set(() => ({ threadNewText: text })),
-
-  threadChatImages: [],
-  setThreadChatImages: (images) => set(() => ({ threadChatImages: images })),
-  addThreadChatImage: (image) =>
-    set((state) => ({
-      threadChatImages: [...state.threadChatImages, image],
-    })),
 }));
 
 export default useStore;

@@ -2,37 +2,52 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   ActionIcon,
   Box,
-  Button,
   Container,
   Divider,
+  FileButton,
   Flex,
   FocusTrap,
   Group,
   Image,
   Modal,
-  NativeSelect,
+  Popover,
+  Select,
   Textarea,
   Tooltip,
 } from "@mantine/core";
+import { IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useQueryContext } from "../libs/query-context";
-import useStore from "../libs/store";
-import { UploadButton } from "./upload-button";
 
 export function ThreadChatInput() {
-  const { sendThreadMessage, listModels, getThread } = useQueryContext();
+  const {
+    sendThreadMessage,
+    listModels,
+    getThread,
+    getAssistant,
+    getPresignedUrlMutation,
+    uploadFileMutation,
+  } = useQueryContext();
 
-  const [newText, setNewText] = useStore((state) => [
-    state.threadNewText,
-    state.setThreadNewText,
-  ]);
-  const [threadChatImages, setThreadChatImages] = useStore((state) => [
-    state.threadChatImages,
-    state.setThreadChatImages,
-  ]);
-
+  const [text, setText] = useState("");
+  const [images, setImages] = useState([]);
   const [chatModel, setChatModel] = useState("");
+
+  const validSendKeys = [
+    {
+      value: "mod+enter",
+      label: "⌘ + ↵ Send",
+    },
+    {
+      value: "shift+enter",
+      label: "⇧ + ↵ Send",
+    },
+    {
+      value: "enter",
+      label: "↵ Send",
+    },
+  ];
   const [sendKey, setSendKey] = useState("enter");
   const [openedImage, setOpenedImage] = useState(null);
 
@@ -42,58 +57,107 @@ export function ThreadChatInput() {
     }
   }, [getThread.data]);
 
-  const getSendKeyLabel = () => {
-    switch (sendKey) {
-      case "shift+enter":
-        return (
-          <Flex align="center" gap="1">
-            <Icon icon="mdi:apple-keyboard-shift" />
-            <Icon icon="mdi:keyboard-return" />
-            <span>Send</span>
-          </Flex>
-        );
-      case "mod+enter":
-        return (
-          <Flex align="center" gap="1">
-            <Icon icon="mdi:apple-keyboard-command" />
-            <Icon icon="mdi:keyboard-return" />
-            <span>Send</span>
-          </Flex>
-        );
-      case "enter":
-        return (
-          <Flex align="center" gap="1">
-            <Icon icon="mdi:keyboard-return" />
-            <span>Send</span>
-          </Flex>
-        );
-      default:
-        return "Send";
+  const handleUploadImage = async (files) => {
+    if (!files) return;
+    for (const file of files) {
+      console.log(`file: ${file.name}, type: ${file.type}`);
+
+      // get presigned url
+      const preSignedUrlRes = await getPresignedUrlMutation.mutateAsync({
+        assistantId: getAssistant.data.id,
+        threadId: getThread.data.id,
+        fileName: file.name,
+        fileType: file.type,
+      });
+      // upload file
+      const uploadRes = await uploadFileMutation.mutateAsync({
+        preSignedURL: preSignedUrlRes.preSignedURL,
+        file,
+        publicUrl: preSignedUrlRes.publicUrl,
+      });
+      setImages((prevImages) => [...prevImages, uploadRes]);
     }
   };
 
-  const cycleSendKey = () => {
-    const keys = ["shift+enter", "mod+enter", "enter"];
-    const currentIndex = keys.indexOf(sendKey);
-    const nextIndex = (currentIndex + 1) % keys.length;
-    setSendKey(keys[nextIndex]);
+  const uploadImageButton = () => {
+    return (
+      <FileButton
+        onChange={handleUploadImage}
+        accept={[...IMAGE_MIME_TYPE]}
+        multiple
+        disabled={sendThreadMessage.isPending}
+      >
+        {(props) => (
+          <Tooltip label="Upload Image">
+            <ActionIcon {...props} variant="subtle" size="md">
+              <Icon icon="tabler:photo" />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </FileButton>
+    );
   };
 
   const selectModel = () => {
     return (
-      <NativeSelect
-        variant="filled"
-        maw="150px"
-        radius="lg"
-        size="xs"
-        px="0"
-        mx="0"
-        value={chatModel}
-        onChange={(e) => {
-          setChatModel(e.target.value);
-        }}
-        data={listModels.data}
-      />
+      <Popover
+        width="200"
+        position="bottom"
+        trapFocus
+        withArrow
+        shadow="md"
+        disabled={sendThreadMessage.isPending}
+      >
+        <Popover.Target>
+          <Tooltip label={chatModel}>
+            <ActionIcon variant="subtle" size="md">
+              <Icon icon="tabler:robot" />
+            </ActionIcon>
+          </Tooltip>
+        </Popover.Target>
+        <Popover.Dropdown p="0">
+          <Select
+            variant="filled"
+            dropdownOpened={true}
+            value={chatModel}
+            onChange={setChatModel}
+            data={[...new Set(listModels.data)]}
+          />
+        </Popover.Dropdown>
+      </Popover>
+    );
+  };
+
+  const selectSendHotKey = () => {
+    return (
+      <Popover
+        width="150"
+        position="bottom"
+        trapFocus
+        withArrow
+        shadow="md"
+        disabled={sendThreadMessage.isPending}
+      >
+        <Popover.Target>
+          <Tooltip
+            label={validSendKeys.find((key) => key.value === sendKey).label}
+          >
+            <ActionIcon variant="subtle" size="md">
+              <Icon icon="tabler:keyboard" />
+            </ActionIcon>
+          </Tooltip>
+        </Popover.Target>
+        <Popover.Dropdown p="0">
+          <Select
+            variant="filled"
+            radius="md"
+            dropdownOpened={true}
+            value={sendKey}
+            onChange={setSendKey}
+            data={validSendKeys}
+          />
+        </Popover.Dropdown>
+      </Popover>
     );
   };
 
@@ -108,9 +172,9 @@ export function ThreadChatInput() {
           borderRadius: "20px",
         }}
       >
-        {threadChatImages.length > 0 && (
+        {images.length > 0 && (
           <Group px="md">
-            {threadChatImages.map((imgUrl, index) => (
+            {images.map((imgUrl, index) => (
               <Box key={index} style={{ position: "relative" }}>
                 <Image
                   src={imgUrl}
@@ -147,8 +211,8 @@ export function ThreadChatInput() {
                     }}
                     onClick={() => {
                       // Function to remove image
-                      setThreadChatImages((prevImages) =>
-                        prevImages.filter((image) => image !== imgUrl),
+                      setImages((prevImages) =>
+                        prevImages.filter((image) => image !== imgUrl)
                       );
                     }}
                   >
@@ -163,20 +227,10 @@ export function ThreadChatInput() {
         <Divider />
         <Group px="xs" justify="space-between">
           <Group align="center" gap="3">
-            <UploadButton useButton={true} />
+            {uploadImageButton()}
             {selectModel()}
+            {selectSendHotKey()}
           </Group>
-
-          <Tooltip label="Click to change hotkey">
-            <Button
-              variant="transparent"
-              size="xs"
-              align="center"
-              onClick={cycleSendKey}
-            >
-              {getSendKeyLabel()}
-            </Button>
-          </Tooltip>
         </Group>
       </Flex>
     );
@@ -206,13 +260,15 @@ export function ThreadChatInput() {
                 [
                   sendKey,
                   async () => {
-                    if (newText.trim() !== "") {
-                      const localText = newText.trim();
-                      setNewText("");
+                    if (text.trim() !== "") {
+                      const localText = text.trim();
+                      const localImages = images
+                      setText("");
+                      setImages([])
                       await sendThreadMessage.mutateAsync({
                         model: chatModel,
                         text: localText,
-                        images: threadChatImages,
+                        images: localImages,
                       });
                     }
                   },
@@ -229,7 +285,7 @@ export function ThreadChatInput() {
                 variant="filled"
                 radius="lg"
                 aria-label="Settings"
-                disabled={newText === "" || sendThreadMessage.isPending}
+                disabled={text === "" || sendThreadMessage.isPending}
                 onClick={async () => {
                   await sendThreadMessage.mutateAsync();
                 }}
@@ -241,8 +297,8 @@ export function ThreadChatInput() {
                 )}
               </ActionIcon>
             }
-            value={newText}
-            onChange={(e) => setNewText(e.currentTarget.value)}
+            value={text}
+            onChange={(e) => setText(e.currentTarget.value)}
             inputContainer={renderAttachmentTextArea}
           ></Textarea>
         </FocusTrap>

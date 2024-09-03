@@ -75,7 +75,7 @@ export default function Sidebar() {
             data={listThreads.data}
             onChange={(item) => {
               var filteredItems = listThreads.data.filter(
-                (i) => i.value == item,
+                (i) => i.value == item
               );
               if (filteredItems.length > 0) {
                 toggleMobileSidebar();
