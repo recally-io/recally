@@ -19,6 +19,7 @@ import { IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useQueryContext } from "../libs/query-context";
+import useStore from "../libs/store";
 
 export function ThreadChatInput() {
   const {
@@ -28,7 +29,9 @@ export function ThreadChatInput() {
     getAssistant,
     getPresignedUrlMutation,
     uploadFileMutation,
+    generateThreadTitle,
   } = useQueryContext();
+  const messageList = useStore((state) => state.threadMessageList);
 
   const [text, setText] = useState("");
   const [images, setImages] = useState([]);
@@ -90,6 +93,14 @@ export function ThreadChatInput() {
         text: localText,
         images: localImages,
       });
+
+      if (
+        messageList.length >= 2 &&
+        getThread.data &&
+        !getThread.data.metadata.is_generated_title
+      ) {
+        await generateThreadTitle.mutateAsync();
+      }
     }
   };
 
