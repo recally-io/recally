@@ -87,20 +87,20 @@ export default function Sidebar() {
         <Divider />
         <ScrollArea scrollbarSize="4" scrollbars="y">
           <LoadingOverlay visible={listThreads.isLoading} />
-          <Stack align="stretch" justify="start" gap="sm">
+          <Stack align="start" justify="start" gap="sm">
             {listThreads.data &&
               listThreads.data.map((item) => (
                 <Group
                   justify="space-between"
                   grow
                   preventGrowOverflow={false}
-                  gap="2"
+                  gap="xs"
                   key={item.id}
+                  wrap="nowrap"
                 >
                   <Button
                     radius="md"
                     color={threadId == item.id ? "accent" : "default"}
-                    justify="space-between"
                     variant={threadId == item.id ? "filled" : "subtle"}
                     onClick={() => {
                       toggleMobileSidebar();
@@ -122,6 +122,7 @@ export default function Sidebar() {
                     <ActionIcon
                       variant="subtle"
                       color="danger"
+                      size="xs"
                       onClick={async () => {
                         await deleteThread.mutateAsync(item.id);
                       }}
