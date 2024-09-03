@@ -8,7 +8,16 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA()
+    VitePWA({
+      workbox: {
+        maximumFileSizeToCacheInBytes: 10000000,
+      },
+      registerType: "autoUpdate",
+      devOptions: {
+        enabled: true,
+        type: "module",
+      },
+    }),
   ],
   // esbuild: {
   //   supported: {
