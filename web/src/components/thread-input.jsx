@@ -79,6 +79,20 @@ export function ThreadChatInput() {
     }
   };
 
+  const handleSendMessage = async () => {
+    if (text.trim() !== "") {
+      const localText = text.trim();
+      const localImages = images;
+      setText("");
+      setImages([]);
+      await sendThreadMessage.mutateAsync({
+        model: chatModel,
+        text: localText,
+        images: localImages,
+      });
+    }
+  };
+
   const uploadImageButton = () => {
     return (
       <FileButton
@@ -212,7 +226,7 @@ export function ThreadChatInput() {
                     onClick={() => {
                       // Function to remove image
                       setImages((prevImages) =>
-                        prevImages.filter((image) => image !== imgUrl)
+                        prevImages.filter((image) => image !== imgUrl),
                       );
                     }}
                   >
@@ -256,24 +270,7 @@ export function ThreadChatInput() {
             disabled={sendThreadMessage.isPending}
             onKeyDown={async (e) => {
               e.stopPropagation();
-              getHotkeyHandler([
-                [
-                  sendKey,
-                  async () => {
-                    if (text.trim() !== "") {
-                      const localText = text.trim();
-                      const localImages = images
-                      setText("");
-                      setImages([])
-                      await sendThreadMessage.mutateAsync({
-                        model: chatModel,
-                        text: localText,
-                        images: localImages,
-                      });
-                    }
-                  },
-                ],
-              ])(e);
+              getHotkeyHandler([[sendKey, handleSendMessage]])(e);
             }}
             styles={{
               input: {
@@ -286,9 +283,7 @@ export function ThreadChatInput() {
                 radius="lg"
                 aria-label="Settings"
                 disabled={text === "" || sendThreadMessage.isPending}
-                onClick={async () => {
-                  await sendThreadMessage.mutateAsync();
-                }}
+                onClick={handleSendMessage}
               >
                 {sendThreadMessage.isPending ? (
                   <Icon icon="svg-spinners:180-ring" />
