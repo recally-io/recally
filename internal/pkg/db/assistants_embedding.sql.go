@@ -97,13 +97,12 @@ func (q *Queries) IsAssistantEmbeddingExists(ctx context.Context, db DBTX, argUu
 }
 
 const similaritySearchByThreadId = `-- name: SimilaritySearchByThreadId :many
-SELECT em.id, em.text, em.metadata, 1 - (em.embeddings <=> $2) AS score
+SELECT em.id, em.user_id, em.attachment_id, em.text, em.embeddings, em.metadata, em.created_at, em.updated_at, em.uuid
 FROM assistant_embedddings em
 JOIN assistant_attachments att ON em.attachment_id = att.uuid
 JOIN assistant_threads th ON (th.uuid = att.thread_id OR th.assistant_id = att.assistant_id)
-WHERE th.uuid = $1
-    AND em.embeddings <=> $2
-ORDER BY score DESC
+WHERE th.uuid = $1 AND (em.embeddings <=> $2 < 0.5)
+ORDER BY 1 - (em.embeddings <=> $2) DESC
 LIMIT $3
 `
 
@@ -113,27 +112,25 @@ type SimilaritySearchByThreadIdParams struct {
 	Limit      int32
 }
 
-type SimilaritySearchByThreadIdRow struct {
-	ID       int32
-	Text     string
-	Metadata []byte
-	Score    int32
-}
-
-func (q *Queries) SimilaritySearchByThreadId(ctx context.Context, db DBTX, arg SimilaritySearchByThreadIdParams) ([]SimilaritySearchByThreadIdRow, error) {
+func (q *Queries) SimilaritySearchByThreadId(ctx context.Context, db DBTX, arg SimilaritySearchByThreadIdParams) ([]AssistantEmbeddding, error) {
 	rows, err := db.Query(ctx, similaritySearchByThreadId, arg.Uuid, arg.Embeddings, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []SimilaritySearchByThreadIdRow
+	var items []AssistantEmbeddding
 	for rows.Next() {
-		var i SimilaritySearchByThreadIdRow
+		var i AssistantEmbeddding
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
+			&i.AttachmentID,
 			&i.Text,
+			&i.Embeddings,
 			&i.Metadata,
-			&i.Score,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Uuid,
 		); err != nil {
 			return nil, err
 		}

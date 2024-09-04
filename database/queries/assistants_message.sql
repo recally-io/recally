@@ -34,7 +34,6 @@ SELECT * FROM assistant_messages WHERE thread_id = $1 ORDER BY created_at DESC L
 -- name: SimilaritySearchMessages :many
 SELECT *
 FROM assistant_messages
-WHERE thread_id = $1
-  AND embeddings <=> $2
+WHERE thread_id = $1 AND (embeddings <=> $2 < 0.5)
 ORDER BY 1 - (embeddings <=> $2) DESC
 LIMIT $3;

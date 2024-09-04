@@ -53,7 +53,7 @@ func (s *Service) DeleteEmbeddingsByThread(ctx context.Context, tx db.DBTX, thre
 	return nil
 }
 
-func (s *Service) SimilaritySearchByThread(ctx context.Context, tx db.DBTX, threadID uuid.UUID, query []float32, limit int32) ([]SimilaritySearchResult, error) {
+func (s *Service) SimilaritySearchByThread(ctx context.Context, tx db.DBTX, threadID uuid.UUID, query []float32, limit int32) ([]EmbeddingDTO, error) {
 	results, err := s.dao.SimilaritySearchByThreadId(ctx, tx, db.SimilaritySearchByThreadIdParams{
 		Uuid:       threadID,
 		Embeddings: pgvector.NewVector(query),
@@ -63,22 +63,12 @@ func (s *Service) SimilaritySearchByThread(ctx context.Context, tx db.DBTX, thre
 		return nil, fmt.Errorf("failed to perform similarity search: %w", err)
 	}
 
-	searchResults := make([]SimilaritySearchResult, len(results))
+	searchResults := make([]EmbeddingDTO, len(results))
 	for i, result := range results {
-		searchResults[i] = SimilaritySearchResult{
-			ID:       result.ID,
-			Text:     result.Text,
-			Metadata: result.Metadata,
-			Score:    float64(result.Score),
-		}
+		var v EmbeddingDTO
+		v.Load(&result)
+		searchResults[i] = v
 	}
 
 	return searchResults, nil
-}
-
-type SimilaritySearchResult struct {
-	ID       int32   `json:"id"`
-	Text     string  `json:"text"`
-	Metadata []byte  `json:"metadata"`
-	Score    float64 `json:"score"`
 }

@@ -46,5 +46,5 @@ type dao interface {
 	DeleteAssistantEmbeddingsByAssistantId(ctx context.Context, db db.DBTX, assistantID pgtype.UUID) error
 	DeleteAssistantEmbeddingsByAttachmentId(ctx context.Context, db db.DBTX, attachmentID pgtype.UUID) error
 	DeleteAssistantEmbeddingsByThreadId(ctx context.Context, db db.DBTX, threadID pgtype.UUID) error
-	SimilaritySearchByThreadId(ctx context.Context, db db.DBTX, arg db.SimilaritySearchByThreadIdParams) ([]db.SimilaritySearchByThreadIdRow, error)
+	SimilaritySearchByThreadId(ctx context.Context, db db.DBTX, arg db.SimilaritySearchByThreadIdParams) ([]db.AssistantEmbeddding, error)
 }
