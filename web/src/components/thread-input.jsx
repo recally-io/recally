@@ -40,15 +40,15 @@ export function ThreadChatInput() {
   const validSendKeys = [
     {
       value: "mod+enter",
-      label: "⌘ + ↵ Send",
+      label: "⌘ + ↵",
     },
     {
       value: "shift+enter",
-      label: "⇧ + ↵ Send",
+      label: "⇧ + ↵",
     },
     {
       value: "enter",
-      label: "↵ Send",
+      label: "↵",
     },
   ];
   const [sendKey, setSendKey] = useState("enter");
@@ -156,7 +156,7 @@ export function ThreadChatInput() {
   const selectSendHotKey = () => {
     return (
       <Popover
-        width="150"
+        width="100"
         position="bottom"
         trapFocus
         withArrow
@@ -272,7 +272,9 @@ export function ThreadChatInput() {
       <Flex align="flex-end" gap="xs">
         <FocusTrap>
           <Textarea
-            placeholder="Shift + Enter to send"
+            placeholder={`use ${
+              validSendKeys.find((key) => key.value === sendKey).label
+            } to send`}
             radius="lg"
             minRows={1}
             maxRows={5}
