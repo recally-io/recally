@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
@@ -11,14 +12,16 @@ import (
 )
 
 type Service struct {
-	llm *llms.LLM
-	dao dao
+	llm   *llms.LLM
+	dao   dao
+	queue *queue.Queue
 }
 
-func NewService(llm *llms.LLM) *Service {
+func NewService(llm *llms.LLM, queue *queue.Queue) *Service {
 	return &Service{
-		llm: llm,
-		dao: db.New(),
+		llm:   llm,
+		dao:   db.New(),
+		queue: queue,
 	}
 }
 

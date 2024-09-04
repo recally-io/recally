@@ -14,11 +14,12 @@ import (
 )
 
 const createAssistantEmbedding = `-- name: CreateAssistantEmbedding :exec
-INSERT INTO assistant_embedddings (user_id, attachment_id, text, embeddings, metadata)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO assistant_embedddings (uuid, user_id, attachment_id, text, embeddings, metadata)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type CreateAssistantEmbeddingParams struct {
+	Uuid         uuid.UUID
 	UserID       pgtype.UUID
 	AttachmentID pgtype.UUID
 	Text         string
@@ -29,6 +30,7 @@ type CreateAssistantEmbeddingParams struct {
 // CRUD for assistant_message_embedddings
 func (q *Queries) CreateAssistantEmbedding(ctx context.Context, db DBTX, arg CreateAssistantEmbeddingParams) error {
 	_, err := db.Exec(ctx, createAssistantEmbedding,
+		arg.Uuid,
 		arg.UserID,
 		arg.AttachmentID,
 		arg.Text,
@@ -77,6 +79,21 @@ WHERE aa.uuid = em.attachment_id AND aa.thread_id = $1
 func (q *Queries) DeleteAssistantEmbeddingsByThreadId(ctx context.Context, db DBTX, threadID pgtype.UUID) error {
 	_, err := db.Exec(ctx, deleteAssistantEmbeddingsByThreadId, threadID)
 	return err
+}
+
+const isAssistantEmbeddingExists = `-- name: IsAssistantEmbeddingExists :one
+SELECT EXISTS (
+    SELECT 1
+    FROM assistant_embedddings
+    WHERE uuid = $1
+) AS exists
+`
+
+func (q *Queries) IsAssistantEmbeddingExists(ctx context.Context, db DBTX, argUuid uuid.UUID) (bool, error) {
+	row := db.QueryRow(ctx, isAssistantEmbeddingExists, argUuid)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const similaritySearchByThreadId = `-- name: SimilaritySearchByThreadId :many

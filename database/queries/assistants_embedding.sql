@@ -1,7 +1,14 @@
 -- CRUD for assistant_message_embedddings
 -- name: CreateAssistantEmbedding :exec
-INSERT INTO assistant_embedddings (user_id, attachment_id, text, embeddings, metadata)
-VALUES ($1, $2, $3, $4, $5);
+INSERT INTO assistant_embedddings (uuid, user_id, attachment_id, text, embeddings, metadata)
+VALUES ($1, $2, $3, $4, $5, $6);
+
+-- name: IsAssistantEmbeddingExists :one
+SELECT EXISTS (
+    SELECT 1
+    FROM assistant_embedddings
+    WHERE uuid = $1
+) AS exists;
 
 -- name: DeleteAssistantEmbeddings :exec
 DELETE FROM assistant_embedddings WHERE id = $1;

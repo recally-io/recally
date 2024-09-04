@@ -2,6 +2,7 @@ package bots
 
 import (
 	"context"
+	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
@@ -14,13 +15,13 @@ type Service struct {
 	*Bot
 }
 
-func NewServer(botType BotType, cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache, llm *llms.LLM) (*Service, error) {
+func NewServer(botType BotType, cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache, llm *llms.LLM, queue *queue.Queue) (*Service, error) {
 	var b *Bot
 	var err error
 	if botType == ReaderBot {
-		b, err = NewReaderBot(cfg, pool, e, cacheService, llm)
+		b, err = NewReaderBot(cfg, pool, e, cacheService, llm, queue)
 	} else if botType == ChatBot {
-		b, err = NewChatBot(cfg, pool, e, cacheService, llm)
+		b, err = NewChatBot(cfg, pool, e, cacheService, llm, queue)
 	}
 	if err != nil {
 		return nil, err

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"syscall"
+	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
@@ -23,6 +24,7 @@ type Service struct {
 	cache  cache.Cache
 	uiCmd  *exec.Cmd
 	s3     *s3.Client
+	queue  *queue.Queue
 }
 
 type CustomValidator struct {
@@ -51,11 +53,12 @@ func WithS3(s3 *s3.Client) Option {
 	}
 }
 
-func New(pool *db.Pool, llm *llms.LLM, opts ...Option) (*Service, error) {
+func New(pool *db.Pool, llm *llms.LLM, queue *queue.Queue, opts ...Option) (*Service, error) {
 	s := &Service{
 		Server: echo.New(),
 		pool:   pool,
 		llm:    llm,
+		queue:  queue,
 	}
 	s.Server.Validator = &CustomValidator{validator: validator.New()}
 	// if config.Settings.DebugUI {
