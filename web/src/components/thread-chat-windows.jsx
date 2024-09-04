@@ -1,17 +1,18 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   Avatar,
+  Badge,
   Box,
   Container,
+  em,
   Flex,
+  Group,
   Image,
   Modal,
   Paper,
   ScrollArea,
   SimpleGrid,
   Stack,
-  Text,
-  em,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
@@ -43,19 +44,15 @@ export function ThreadChatWindows() {
         justify={isSender ? "flex-end" : "flex-start"}
         align="flex-start"
         direction="row"
-        gap="2"
+        gap="xs"
         key={message.id}
       >
         {!isSender && (
-          <Avatar size="sm" radius="lg" color="cyan" variant="filled">
-            <Icon icon="tabler:robot" />
+          <Avatar size="md" radius="md" color="cyan" variant="filled">
+            <Icon icon="tabler:brand-android" />
           </Avatar>
         )}
         <Flex align={isSender ? "flex-end" : "flex-start"} direction="column">
-          <Text size="lg" variant="gradient">
-            {isSender ? "You" : message.model}
-          </Text>
-
           <Paper
             shadow="md"
             px="xs"
@@ -101,12 +98,22 @@ export function ThreadChatWindows() {
             )}
             <MarkdownRenderer content={message.text} />
           </Paper>
-
-          {CopyBtn({ data: message.text })}
+          <Group preventGrowOverflow={false} grow gap="2">
+            {!isSender && (
+              <Badge
+                variant="gradient"
+                gradient={{ from: "blue", to: "cyan", deg: 90 }}
+                size="xs"
+              >
+                {message.model}
+              </Badge>
+            )}
+            {CopyBtn({ data: message.text })}
+          </Group>
         </Flex>
         {isSender && (
-          <Avatar size="sm" radius="lg" color="cyan" variant="filled">
-            <Icon icon="tabler:mood-crazy-happy" />
+          <Avatar size="md" radius="md" color="cyan" variant="filled">
+            <Icon icon="tabler:user" />
           </Avatar>
         )}
       </Flex>
