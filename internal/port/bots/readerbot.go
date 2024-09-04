@@ -1,6 +1,7 @@
 package bots
 
 import (
+	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/db"
@@ -11,8 +12,8 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-func NewReaderBot(cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache, llm *llms.LLM) (*Bot, error) {
-	h := handlers.New(pool, llm, handlers.WithCache(cacheService))
+func NewReaderBot(cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache, llm *llms.LLM, queue *queue.Queue) (*Bot, error) {
+	h := handlers.New(pool, llm, queue, handlers.WithCache(cacheService))
 	handlers := []Handler{
 		{
 			Endpoint: "/start",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
 
 	"github.com/jackc/pgx/v5"
@@ -38,10 +39,10 @@ func WithPeriodicJobs(jobs []*river.PeriodicJob) Option {
 	}
 }
 
-func New(pool *db.Pool, opts ...Option) (*Queue, error) {
+func New(pool *db.Pool, llm *llms.LLM, opts ...Option) (*Queue, error) {
 	q := &Queue{
 		name:         river.QueueDefault,
-		workers:      NewDefaultWorkers(),
+		workers:      NewDefaultWorkers(llm, pool.Pool),
 		periodicJobs: NewDefaultPeriodJobs(),
 	}
 	for _, opt := range opts {
@@ -66,27 +67,27 @@ func New(pool *db.Pool, opts ...Option) (*Queue, error) {
 }
 
 type Service struct {
-	q *Queue
+	*Queue
 }
 
-func NewServer(pool *db.Pool) (*Service, error) {
-	q, err := New(pool)
+func NewServer(pool *db.Pool, llm *llms.LLM) (*Service, error) {
+	q, err := New(pool, llm)
 	if err != nil {
 		return nil, err
 	}
 	return &Service{
-		q: q,
+		Queue: q,
 	}, nil
 }
 
 func (s *Service) Start(ctx context.Context) {
-	if err := s.q.Start(ctx); err != nil {
+	if err := s.Queue.Start(ctx); err != nil {
 		logger.Default.Fatal("failed to start", "service", s.Name(), "error", err)
 	}
 }
 
 func (s *Service) Stop(ctx context.Context) {
-	if err := s.q.Stop(ctx); err != nil {
+	if err := s.Queue.Stop(ctx); err != nil {
 		logger.Default.Fatal("failed to stop", "service", s.Name(), "error", err)
 	}
 }

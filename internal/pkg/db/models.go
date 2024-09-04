@@ -47,6 +47,7 @@ type AssistantEmbeddding struct {
 	Metadata     []byte
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
+	Uuid         uuid.UUID
 }
 
 type AssistantMessage struct {

@@ -3,7 +3,9 @@ package assistants
 import (
 	"context"
 	"fmt"
+	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/logger"
 	"vibrain/internal/pkg/rag/document"
 
 	"github.com/google/uuid"
@@ -25,6 +27,19 @@ func (s *Service) CreateAttachment(ctx context.Context, tx db.DBTX, attachment *
 	if err != nil {
 		return nil, fmt.Errorf("failed to create attachment: %w", err)
 	}
+
+	result, err := s.queue.Insert(ctx, queue.AttachmentEmbeddingWorkerArgs{
+		AttachmentID: ast.Uuid,
+		UserID:       ast.UserID.Bytes,
+		Docs:         docs,
+	}, nil)
+	if err != nil {
+		logger.Default.Error("failed to enqueue attachment embedding worker", "err", err)
+		return nil, fmt.Errorf("failed to enqueue attachment embedding worker: %w", err)
+	} else {
+		logger.Default.Info("successfully enqueued attachment embedding worker", "result", result)
+	}
+
 	attachment.Load(&ast)
 	return attachment, nil
 }

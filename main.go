@@ -43,13 +43,21 @@ func main() {
 	// init cache service
 	cacheService := cache.NewDBCache(pool)
 
-	// start http service
 	llm := llms.New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
 	s3Client, err := s3.New(config.Settings.S3)
 	if err != nil {
 		logger.Default.Fatal("failed to create new s3 client", "error", err)
 	}
-	httpService, err := httpserver.New(pool, llm, httpserver.WithCache(cacheService), httpserver.WithS3(s3Client))
+
+	// start queue service
+	queueService, err := queue.NewServer(pool, llm)
+	if err != nil {
+		logger.Default.Fatal("failed to create new queue service", "error", err)
+	}
+	services = append(services, queueService)
+
+	// start http service
+	httpService, err := httpserver.New(pool, llm, queueService.Queue, httpserver.WithCache(cacheService), httpserver.WithS3(s3Client))
 	if err != nil {
 		logger.Default.Fatal("failed to create new http service", "error", err)
 	}
@@ -58,7 +66,7 @@ func main() {
 	// start telegram bot service
 	if config.Settings.Telegram.Reader.Token != "" {
 		cfg := config.Settings.Telegram.Reader
-		botService, err := bots.NewServer(bots.ReaderBot, cfg, pool, httpService.Server, cacheService, llm)
+		botService, err := bots.NewServer(bots.ReaderBot, cfg, pool, httpService.Server, cacheService, llm, queueService.Queue)
 		if err != nil {
 			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.ReaderBot, "name", cfg.Name)
 		}
@@ -67,18 +75,12 @@ func main() {
 
 	if config.Settings.Telegram.Chat.Token != "" {
 		cfg := config.Settings.Telegram.Chat
-		botService, err := bots.NewServer(bots.ChatBot, cfg, pool, httpService.Server, cacheService, llm)
+		botService, err := bots.NewServer(bots.ChatBot, cfg, pool, httpService.Server, cacheService, llm, queueService.Queue)
 		if err != nil {
 			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.ChatBot, "name", cfg.Name)
 		}
 		services = append(services, botService)
 	}
-	// start queue service
-	queueService, err := queue.NewServer(pool)
-	if err != nil {
-		logger.Default.Fatal("failed to create new queue service", "error", err)
-	}
-	services = append(services, queueService)
 
 	// start services
 	for _, service := range services {
