@@ -28,11 +28,10 @@ USING assistant_attachments aa
 WHERE aa.uuid = em.attachment_id AND aa.assistant_id = $1;
 
 -- name: SimilaritySearchByThreadId :many
-SELECT em.id, em.text, em.metadata, 1 - (em.embeddings <=> $2) AS score
+SELECT em.*
 FROM assistant_embedddings em
 JOIN assistant_attachments att ON em.attachment_id = att.uuid
 JOIN assistant_threads th ON (th.uuid = att.thread_id OR th.assistant_id = att.assistant_id)
-WHERE th.uuid = $1
-    AND em.embeddings <=> $2
-ORDER BY score DESC
+WHERE th.uuid = $1 AND (em.embeddings <=> $2 < 0.5)
+ORDER BY 1 - (em.embeddings <=> $2) DESC
 LIMIT $3;

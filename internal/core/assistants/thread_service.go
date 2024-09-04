@@ -2,13 +2,17 @@ package assistants
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
+	"vibrain/internal/pkg/logger"
+	"vibrain/internal/pkg/rag/document"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/pgvector/pgvector-go"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -109,53 +113,10 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Mes
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thread: %w", err)
 	}
-	oaiMessages := make([]openai.ChatCompletionMessage, 0)
-	messages, err := s.ListThreadMessages(ctx, tx, id)
+
+	oaiMessages, model, toolNames, err := s.buildChatMessages(ctx, tx, thread)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get thread messages: %w", err)
-	}
-	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
-		Role:    "system",
-		Content: thread.SystemPrompt,
-	})
-	model := thread.Model
-	toolNames := thread.Metadata.Tools
-	for _, m := range messages {
-		oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
-			Role:    m.Role,
-			Content: m.Text,
-		})
-	}
-	lastMessage := messages[len(messages)-1]
-	// Use the model from the last message
-	if lastMessage.Model != "" {
-		model = lastMessage.Model
-	}
-	if lastMessage.Metadata.Tools != nil {
-		toolNames = lastMessage.Metadata.Tools
-	}
-
-	if len(lastMessage.Metadata.Images) > 0 {
-		multiContent := make([]openai.ChatMessagePart, 0)
-
-		if lastMessage.Text != "" {
-			multiContent = append(multiContent, openai.ChatMessagePart{
-				Type: openai.ChatMessagePartTypeText,
-				Text: lastMessage.Text,
-			})
-		}
-		for _, img := range lastMessage.Metadata.Images {
-			multiContent = append(multiContent, openai.ChatMessagePart{
-				Type: openai.ChatMessagePartTypeImageURL,
-				ImageURL: &openai.ChatMessageImageURL{
-					URL: img,
-				},
-			})
-		}
-		oaiMessages[len(oaiMessages)-1] = openai.ChatCompletionMessage{
-			Role:         "user",
-			MultiContent: multiContent,
-		}
+		return nil, fmt.Errorf("failed to build chat messages: %w", err)
 	}
 
 	opts := []llms.Option{
@@ -227,4 +188,120 @@ func (s *Service) GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.U
 	}
 
 	return title, nil
+}
+
+func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *ThreadDTO) ([]openai.ChatCompletionMessage, string, []string, error) {
+	oaiMessages := make([]openai.ChatCompletionMessage, 0)
+	messages, err := s.ListThreadMessages(ctx, tx, thread.Id)
+	if err != nil {
+		return nil, "", nil, fmt.Errorf("failed to get thread messages: %w", err)
+	}
+	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
+		Role:    "system",
+		Content: thread.SystemPrompt,
+	})
+	model := thread.Model
+	toolNames := thread.Metadata.Tools
+	for _, m := range messages {
+		oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
+			Role:    m.Role,
+			Content: m.Text,
+		})
+	}
+	lastMessage := messages[len(messages)-1]
+	s.rewriteUserMessage(ctx, tx, &lastMessage)
+
+	// Use the model from the last message
+	if lastMessage.Model != "" {
+		model = lastMessage.Model
+	}
+	if lastMessage.Metadata.Tools != nil {
+		toolNames = lastMessage.Metadata.Tools
+	}
+
+	if len(lastMessage.Metadata.Images) > 0 {
+		multiContent := make([]openai.ChatMessagePart, 0)
+
+		if lastMessage.Text != "" {
+			multiContent = append(multiContent, openai.ChatMessagePart{
+				Type: openai.ChatMessagePartTypeText,
+				Text: lastMessage.Text,
+			})
+		}
+		for _, img := range lastMessage.Metadata.Images {
+			multiContent = append(multiContent, openai.ChatMessagePart{
+				Type: openai.ChatMessagePartTypeImageURL,
+				ImageURL: &openai.ChatMessageImageURL{
+					URL: img,
+				},
+			})
+		}
+		oaiMessages[len(oaiMessages)-1] = openai.ChatCompletionMessage{
+			Role:         "user",
+			MultiContent: multiContent,
+		}
+	}
+	return oaiMessages, model, toolNames, nil
+}
+
+func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *MessageDTO) {
+	if message.Text == "" {
+		logger.FromContext(ctx).Info("RAG for user message: message text is empty")
+		return
+	}
+	// 1. search for similar documents
+	// 2. search chat history for similar questions
+	// 3. construct a new message
+	var err error
+	docs := make([]document.Document, 0)
+	// chatHistory := make([]string, 0)
+
+	embeddings, err := s.llm.CreateEmbeddings(ctx, message.Text)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to create embeddings", "err", err)
+	}
+
+	docsRes, err := s.dao.SimilaritySearchByThreadId(ctx, tx, db.SimilaritySearchByThreadIdParams{
+		Uuid:       message.ThreadID,
+		Embeddings: pgvector.NewVector(embeddings),
+		Limit:      10,
+	})
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to search for similar documents", "err", err)
+	}
+	for _, d := range docsRes {
+		var metadata map[string]any
+		if err := json.Unmarshal(d.Metadata, &metadata); err != nil {
+			logger.FromContext(ctx).Error("failed to unmarshal metadata", "err", err)
+		}
+		docs = append(docs, document.Document{
+			Content:  d.Text,
+			Metadata: metadata,
+		})
+	}
+
+	// chatHistoryRes, err := s.dao.SimilaritySearchMessages(ctx, tx, db.SimilaritySearchMessagesParams{
+	// 	ThreadID:   pgtype.UUID{Bytes: message.ThreadID, Valid: true},
+	// 	Embeddings: pgvector.NewVector(embeddings),
+	// 	Limit:      10,
+	// })
+	// if err != nil {
+	// 	logger.FromContext(ctx).Error("failed to search for similar messages", "err", err)
+	// }
+	// for _, m := range chatHistoryRes {
+	// 	chatHistory = append(chatHistory, m.Text.String)
+	// }
+
+	// chatHistoryStr := strings.Join(chatHistory, "\n")
+	docStrBuilder := strings.Builder{}
+	for _, d := range docs {
+		docStrBuilder.WriteString(fmt.Sprintf("Content: %s\nMetadata: %v\nScore: %f\n\n", d.Content, d.Metadata, d.Score))
+	}
+	docsStr := docStrBuilder.String()
+	prompt, err := getChatMessageWithRagPrompt(docsStr, "", message.Text)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to get chat message with RAG prompt", "err", err)
+	}
+
+	message.Text = prompt
 }
