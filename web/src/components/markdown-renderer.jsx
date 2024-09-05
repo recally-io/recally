@@ -1,6 +1,6 @@
 import { CodeHighlight } from "@mantine/code-highlight";
 import "@mantine/code-highlight/styles.css";
-import { Badge, Box, Group } from "@mantine/core";
+import { Badge, Box, Code, Group } from "@mantine/core";
 import React from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -15,6 +15,9 @@ export function MarkdownRenderer({ content }) {
         code({ children, className, node, ...rest }) {
           const match = /language-(\w+)/.exec(className || "");
           const code = String(children).replace(/\n$/, "");
+          if (!className && !match) {
+            return <Code {...rest}>{code}</Code>;
+          }
           return match ? (
             <Box pos="relative">
               <CodeHighlight
@@ -29,9 +32,9 @@ export function MarkdownRenderer({ content }) {
               </Group>
             </Box>
           ) : (
-            <code className={className} {...rest}>
-              {children}
-            </code>
+            <Code block {...rest}>
+              {code}
+            </Code>
           );
         },
       }}
