@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
-  Anchor,
+  ActionIcon,
   Button,
   Card,
   Container,
@@ -8,34 +8,26 @@ import {
   Grid,
   Group,
   LoadingOverlay,
-  Modal,
-  MultiSelect,
-  NativeSelect,
   Stack,
   Text,
-  Textarea,
   TextInput,
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { useEffect, useState } from "react";
 import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
+import { ThreadSettingsModal } from "./thread-settings";
+
 const url = new URL(window.location.href);
 
 export default function Assistants() {
-  const {
-    listAssistants,
-    listModels,
-    listTools,
-    upsertAssistant,
-    deleteAssistant,
-  } = useQueryContext();
-  const assistantId = useStore((state) => state.assistantId);
+  const { listAssistants, deleteAssistant } = useQueryContext();
   const setAssistantId = useStore((state) => state.setAssistantId);
+
+  const setIsOpen = useStore((state) => state.setThreadIsOpenSettings);
+
   const [filteredAssistants, setFilteredAssistants] = useState([]);
   const [searchValue, setSearchValue] = useState(url.searchParams.get("id"));
 
@@ -45,22 +37,7 @@ export default function Assistants() {
     }
   }, [listAssistants.data]);
 
-  const [opened, { open, close }] = useDisclosure(false);
-  const form = useForm({
-    initialValues: {
-      name: "Assistant name",
-      description: "Assistant description",
-      system_prompt: "You are a helpful assistant.",
-      model: "gpt-4o",
-      metadata: {
-        tools: [],
-      },
-    },
-
-    validate: {},
-  });
-
-  const deleteConfirmModal = () =>
+  const deleteConfirmModal = (assistantId) =>
     modals.openConfirmModal({
       title: "Delete assistant",
       children: (
@@ -70,84 +47,13 @@ export default function Assistants() {
         </Text>
       ),
       labels: { confirm: "Confirm", cancel: "Cancel" },
-      onCancel: close,
       onConfirm: async () => {
         await deleteAssistant.mutateAsync(assistantId);
-        close();
       },
     });
   return (
     <>
-      <Modal opened={opened} onClose={close} title="Assistant details" centered>
-        <form
-          onSubmit={form.onSubmit(async (values) => {
-            console.log(
-              `start createAssistant.mutate: ${JSON.stringify(values)}`,
-            );
-            await upsertAssistant.mutateAsync(values);
-          })}
-        >
-          <TextInput
-            withAsterisk
-            label="Name"
-            placeholder="your@email.com"
-            key={form.key("name")}
-            {...form.getInputProps("name")}
-          />
-          <TextInput
-            withAsterisk
-            label="Description"
-            placeholder="your@email.com"
-            key={form.key("description")}
-            {...form.getInputProps("description")}
-          />
-          <Textarea
-            withAsterisk
-            label="SystemPrompt"
-            placeholder="your@email.com"
-            key={form.key("system_prompt")}
-            {...form.getInputProps("system_prompt")}
-          />
-          <NativeSelect
-            label="Model"
-            key={form.key("model")}
-            {...form.getInputProps("model")}
-            onChange={(e) => {
-              form.setFieldValue("model", e.target.value);
-            }}
-            data={listModels.data}
-          />
-          <MultiSelect
-            label="Tools"
-            key={form.key("metadata.tools")}
-            defaultValue={form.values.metadata.tools}
-            {...form.getInputProps("metadata.tools", {
-              type: "checkbox",
-            })}
-            data={listTools.data}
-            searchable
-          />
-
-          <Group justify="space-between" mt="md">
-            <Button
-              type="button"
-              onClick={deleteConfirmModal}
-              color="red"
-              variant="filled"
-            >
-              Delete
-            </Button>
-            <Group>
-              <Button type="summit" onClick={close}>
-                Submit
-              </Button>
-              <Button type="reset" onClick={close}>
-                Cancel
-              </Button>
-            </Group>
-          </Group>
-        </form>
-      </Modal>
+      <ThreadSettingsModal />
       <Container size="xl" mih="100vh" py="md">
         <Flex justify="center" align="center" direction="column" gap="lg">
           <Title order={1}>Assistants Hub</Title>
@@ -166,16 +72,16 @@ export default function Assistants() {
                   listAssistants.data.filter((assistant) =>
                     (assistant.name + assistant.description + assistant.id)
                       .toLowerCase()
-                      .includes(e.currentTarget.value.toLowerCase()),
-                  ),
+                      .includes(e.currentTarget.value.toLowerCase())
+                  )
                 );
               }}
             />
             <Button
               w="100%"
               onClick={() => {
-                form.reset();
-                open();
+                setAssistantId(null);
+                setIsOpen(true);
               }}
             >
               Add assistant
@@ -187,9 +93,9 @@ export default function Assistants() {
               <Grid.Col
                 key={assistant.id}
                 span={{ base: 12, md: 6, lg: 3 }}
-                m="md"
+                p="md"
               >
-                <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Card shadow="sm" padding="xs" radius="md" withBorder>
                   <Title order={3} c="cyan">
                     {assistant.name}
                   </Title>
@@ -197,29 +103,41 @@ export default function Assistants() {
                     {assistant.description}{" "}
                   </Text>
 
-                  <Group mt="xs" mb="1" justify="flex-end">
+                  <Group justify="flex-end" gap="xs">
                     <Tooltip label="Chat">
-                      <Anchor
-                        href={`/threads.html?assistant-id=${assistant.id}`}
+                      <ActionIcon
+                        variant="filled"
+                        size="xs"
+                        onClick={() => {
+                          window.location.href = `/threads.html?assistant-id=${assistant.id}`;
+                        }}
                       >
-                        <Button variant="outline" size="xs" w={60}>
-                          <Icon icon="tabler:message-2" />
-                        </Button>
-                      </Anchor>
+                        <Icon icon="tabler:message-2" />
+                      </ActionIcon>
                     </Tooltip>
                     <Tooltip label="Edit">
-                      <Button
-                        variant="outline"
+                      <ActionIcon
+                        variant="filled"
                         size="xs"
-                        w={60}
                         onClick={() => {
                           setAssistantId(assistant.id);
-                          form.setValues(assistant);
-                          open();
+                          setIsOpen(true);
                         }}
                       >
                         <Icon icon="tabler:edit" />
-                      </Button>
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Edit">
+                      <ActionIcon
+                        variant="filled"
+                        size="xs"
+                        color="red"
+                        onClick={() => {
+                          deleteConfirmModal(assistant.id);
+                        }}
+                      >
+                        <Icon icon="tabler:trash" />
+                      </ActionIcon>
                     </Tooltip>
                   </Group>
                 </Card>
