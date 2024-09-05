@@ -24,7 +24,7 @@ export function UploadButton({ useButton = false }) {
       // get presigned url
       const preSignedUrlRes = await getPresignedUrlMutation.mutateAsync({
         assistantId: getAssistant.data.id,
-        threadId: getThread.data.id,
+        threadId: getThread.data?.id,
         fileName: file.name,
         fileType: file.type,
       });
@@ -43,7 +43,7 @@ export function UploadButton({ useButton = false }) {
 
         await postAttachmentMutation.mutateAsync({
           assistantId: getAssistant.data.id,
-          threadId: getThread.data.id,
+          threadId: getThread.data?.id,
           type: file.type,
           name: file.name,
           publicUrl: uploadRes,

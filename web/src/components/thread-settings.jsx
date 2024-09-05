@@ -16,30 +16,54 @@ import useStore from "../libs/store";
 import { UploadButton } from "./upload-button";
 
 export function ThreadSettingsModal() {
-  const { listTools, listModels, updateThread, getAssistant, getThread } =
-    useQueryContext();
+  const {
+    listTools,
+    listModels,
+    updateThread,
+    getAssistant,
+    getThread,
+    upsertAssistant,
+  } = useQueryContext();
 
   const [isOpen, setIsOpen] = useStore((state) => [
     state.threadIsOpenSettings,
     state.setThreadIsOpenSettings,
   ]);
 
-  const form = useForm({
-    initialValues: {
-      name: "New Thread",
-      description: "",
-      system_prompt: "",
-      temperature: 0.7,
-      max_token: 4096,
-      model: "",
+  const assistantId = useStore((state) => state.assistantId);
+  const threadId = useStore((state) => state.threadId);
+
+  const getInitialValues = () => {
+    if (threadId) {
+      return {
+        name: "New Thread",
+        description: "",
+        system_prompt: "",
+        temperature: 0.7,
+        max_token: 4096,
+        model: "",
+        metadata: {
+          tools: [],
+        },
+      };
+    }
+    return {
+      name: "Assistant name",
+      description: "Assistant description",
+      system_prompt: "You are a helpful assistant.",
+      model: "gpt-4o",
       metadata: {
         tools: [],
       },
-    },
+    };
+  };
+
+  const form = useForm({
+    initialValues: getInitialValues(),
   });
 
   useEffect(() => {
-    if (getAssistant.data) {
+    if (assistantId && getAssistant.data) {
       const assistant = getAssistant.data;
       form.setValues({
         name: assistant.name,
@@ -50,11 +74,13 @@ export function ThreadSettingsModal() {
           tools: assistant.metadata.tools,
         },
       });
+    } else {
+      form.reset();
     }
-  }, [getAssistant.data]);
+  }, [assistantId]);
 
   useEffect(() => {
-    if (getThread.data) {
+    if (threadId && getThread && getThread.data) {
       const assistant = getAssistant.data;
       const thread = getThread.data;
       form.setValues({
@@ -75,7 +101,7 @@ export function ThreadSettingsModal() {
         },
       });
     }
-  }, [getThread.data]);
+  }, [getThread]);
 
   return (
     <Modal
@@ -87,8 +113,13 @@ export function ThreadSettingsModal() {
       <Divider my="sm" variant="dashed" />
       <form
         onSubmit={form.onSubmit(async (values) => {
+          console.log(`assistantId: ${assistantId}, threadId: ${threadId}`);
           console.log(values);
-          await updateThread.mutateAsync(values);
+          if (threadId) {
+            await updateThread.mutateAsync(values);
+          } else {
+            await upsertAssistant.mutateAsync(values);
+          }
         })}
         mode=""
       >
