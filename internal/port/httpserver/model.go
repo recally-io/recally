@@ -29,12 +29,29 @@ func JsonResponse(c echo.Context, code int, data interface{}) error {
 }
 
 func ErrorResponse(c echo.Context, code int, err error) error {
+	return echo.NewHTTPError(code).SetInternal(err)
+}
+
+func customHTTPErrorHandler(err error, c echo.Context) {
+	if c.Response().Committed {
+		return
+	}
+
+	code := http.StatusInternalServerError
+	msg := err.Error()
+
+	he, ok := err.(*echo.HTTPError)
+	if ok {
+		code = he.Code
+		if he.Internal != nil {
+			msg = he.Internal.Error()
+		}
+	}
 	_ = c.JSON(code, JSONResult{
 		Success: false,
 		Code:    code,
-		Message: err.Error(),
+		Message: msg,
 	})
-	return err
 }
 
 // bindAndValidate binds the request data to the provided struct and validates it.

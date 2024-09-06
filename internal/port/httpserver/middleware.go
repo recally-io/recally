@@ -123,7 +123,7 @@ func requestLoggerMiddleware() echo.MiddlewareFunc {
 		LogRequestID:  true,
 		LogReferer:    true,
 		LogHeaders:    []string{},
-		HandleError:   true, // forwards error to the global error handler, so it can decide appropriate status code
+		HandleError:   false,
 		LogValuesFunc: logValuesFunc,
 	})
 }
