@@ -16,20 +16,20 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
 import { ThreadSettingsModal } from "./thread-settings";
 
-const url = new URL(window.location.href);
-
 export default function Assistants() {
+  const navigate = useNavigate();
+  const params = useParams();
   const { listAssistants, deleteAssistant } = useQueryContext();
   const setAssistantId = useStore((state) => state.setAssistantId);
-
   const setIsOpen = useStore((state) => state.setThreadIsOpenSettings);
 
   const [filteredAssistants, setFilteredAssistants] = useState([]);
-  const [searchValue, setSearchValue] = useState(url.searchParams.get("id"));
+  const [searchValue, setSearchValue] = useState(params.assistantId);
 
   useEffect(() => {
     if (listAssistants.data) {
@@ -109,7 +109,7 @@ export default function Assistants() {
                         variant="filled"
                         size="xs"
                         onClick={() => {
-                          window.location.href = `/threads.html?assistant-id=${assistant.id}`;
+                          navigate(`/assistants/${assistant.id}/threads`);
                         }}
                       >
                         <Icon icon="tabler:message-2" />

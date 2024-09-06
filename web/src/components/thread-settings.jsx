@@ -63,7 +63,7 @@ export function ThreadSettingsModal() {
   });
 
   useEffect(() => {
-    if (assistantId && getAssistant.data) {
+    if (assistantId && !getAssistant.isLoading && getAssistant.data) {
       const assistant = getAssistant.data;
       form.setValues({
         name: assistant.name,
@@ -77,10 +77,10 @@ export function ThreadSettingsModal() {
     } else {
       form.reset();
     }
-  }, [assistantId]);
+  }, [getAssistant.isLoading]);
 
   useEffect(() => {
-    if (threadId && getThread && getThread.data) {
+    if (threadId && !getThread.isLoading && getThread.data) {
       const assistant = getAssistant.data;
       const thread = getThread.data;
       form.setValues({
@@ -101,7 +101,7 @@ export function ThreadSettingsModal() {
         },
       });
     }
-  }, [getThread]);
+  }, [getThread.isLoading]);
 
   return (
     <Modal

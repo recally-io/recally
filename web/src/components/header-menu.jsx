@@ -1,18 +1,15 @@
 import { Icon } from "@iconify/react";
 import { Avatar, Button, Menu, useMantineColorScheme } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
 import Cookie from "js-cookie";
 import React, { useEffect } from "react";
-import { checkIsLogin } from "../libs/auth";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuthContext } from "../libs/auth-context";
 import useStore from "../libs/store";
 
-const url = new URL(window.location.href);
-
 export function HeaderMenu() {
-  const isLogin = useStore((state) => state.isLogin);
-  const setIsLogin = useStore((state) => state.setIsLogin);
+  const navigate = useNavigate();
+  const { isLogin } = useAuthContext();
   const { colorScheme, setColorScheme } = useMantineColorScheme();
-  const authPage = "/auth.html";
 
   const [isDarkMode, setIsDarkMode] = useStore((state) => [
     state.isDarkMode,
@@ -23,44 +20,12 @@ export function HeaderMenu() {
     setIsDarkMode(colorScheme === "dark" ? true : false);
   }, [colorScheme]);
 
-  const checkLogin = useQuery({
-    queryKey: ["check-login"],
-    queryFn: async () => {
-      const isLoggedIn = await checkIsLogin();
-      return isLoggedIn;
-    },
-  });
-
-  useEffect(() => {
-    // wait until the query is done
-    if (checkLogin.isLoading) {
-      return;
-    }
-    if (checkLogin.data) {
-      setIsLogin(true);
-      console.log("User is logged in");
-      if (window.location.pathname === authPage) {
-        const redirect = url.searchParams.get("redirect");
-        console.log("Redirecting to", redirect || "/");
-        window.location.href = redirect || "/";
-      }
-    } else {
-      setIsLogin(false);
-      console.log("User is not logged in");
-      if (window.location.pathname !== authPage) {
-        const redirect = url.pathname + url.search;
-        console.log("Redirecting to login page: " + redirect);
-        window.location.href = authPage + "?redirect=" + redirect;
-      }
-    }
-  }, [checkLogin.isFetching]);
-
   const onAuthClick = () => {
     if (isLogin) {
       Cookie.remove("token");
-      window.location.href = "/";
+      navigate("/");
     } else {
-      window.location.href = authPage;
+      navigate("/auth");
     }
   };
 
@@ -74,21 +39,11 @@ export function HeaderMenu() {
         </Menu.Target>
         <Menu.Dropdown>
           <Menu.Label>Vibrain</Menu.Label>
-          <Menu.Item
-            leftSection={<Icon icon="tabler:home" />}
-            component="a"
-            href="/"
-            // target="_blank"
-          >
-            Home
+          <Menu.Item leftSection={<Icon icon="tabler:home" />}>
+            <Link to="/">Home</Link>
           </Menu.Item>
-          <Menu.Item
-            leftSection={<Icon icon="tabler:augmented-reality" />}
-            component="a"
-            href="/assistants.html"
-            // target="_blank"
-          >
-            Assistants
+          <Menu.Item leftSection={<Icon icon="tabler:augmented-reality" />}>
+            <Link to="/assistants">Assistants</Link>
           </Menu.Item>
           <Menu.Item
             variant="transparent"

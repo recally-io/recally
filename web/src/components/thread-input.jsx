@@ -55,10 +55,10 @@ export function ThreadChatInput() {
   const [openedImage, setOpenedImage] = useState(null);
 
   useEffect(() => {
-    if (getThread.data) {
+    if (!getThread.isLoading && getThread.data) {
       setChatModel(getThread.data.model);
     }
-  }, [getThread.data]);
+  }, [getThread.isLoading]);
 
   const handleUploadImage = async (files) => {
     if (!files) return;
