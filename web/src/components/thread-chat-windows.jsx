@@ -14,6 +14,7 @@ import {
   ScrollArea,
   SimpleGrid,
   Stack,
+  useComputedColorScheme,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
@@ -23,9 +24,9 @@ import { CopyBtn } from "./copy-button";
 import { MarkdownRenderer } from "./markdown-renderer";
 
 export function ThreadChatWindows() {
+  const computedColorScheme = useComputedColorScheme("light");
   const desktopSidebarOpen = useStore((state) => state.desktopSidebarOpen);
   const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
-  const isDarkMode = useStore((state) => state.isDarkMode);
   const messageList = useStore((state) => state.threadMessageList);
   const { getThread } = useQueryContext();
   const chatArea = useRef(null);
@@ -69,7 +70,7 @@ export function ThreadChatWindows() {
             px="xs"
             radius="lg"
             withBorder
-            bg={isDarkMode ? "dark.6" : bgColor}
+            bg={computedColorScheme === "dark" ? "dark.6" : bgColor}
             maw={{
               base: "calc(100vw - 80px)",
               sm:

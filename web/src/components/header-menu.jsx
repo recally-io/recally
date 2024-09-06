@@ -1,25 +1,14 @@
 import { Icon } from "@iconify/react";
 import { Avatar, Button, Menu, useMantineColorScheme } from "@mantine/core";
 import Cookie from "js-cookie";
-import React, { useEffect } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../libs/auth-context";
-import useStore from "../libs/store";
 
 export function HeaderMenu() {
   const navigate = useNavigate();
   const { isLogin } = useAuthContext();
   const { colorScheme, setColorScheme } = useMantineColorScheme();
-
-  const [isDarkMode, setIsDarkMode] = useStore((state) => [
-    state.isDarkMode,
-    state.setIsDarkMode,
-  ]);
-
-  useEffect(() => {
-    setIsDarkMode(colorScheme === "dark" ? true : false);
-  }, [colorScheme]);
-
   const onAuthClick = () => {
     if (isLogin) {
       Cookie.remove("token");
@@ -27,6 +16,26 @@ export function HeaderMenu() {
     } else {
       navigate("/auth");
     }
+  };
+
+  const getColorSchemeIcon = () => {
+    if (colorScheme === "light") {
+      return <Icon icon="tabler:sun-filled" color="dark" />;
+    } else if (colorScheme === "dark") {
+      return <Icon icon="tabler:moon-filled" color="dark" />;
+    } else {
+      return <Icon icon="tabler:device-desktop" />;
+    }
+  };
+
+  const toggleColorScheme = () => {
+    const nextScheme =
+      colorScheme === "light"
+        ? "dark"
+        : colorScheme === "dark"
+          ? "auto"
+          : "light";
+    setColorScheme(nextScheme);
   };
 
   return (
@@ -48,18 +57,10 @@ export function HeaderMenu() {
           <Menu.Item
             variant="transparent"
             // size="sm"
-            onClick={() => {
-              setColorScheme(isDarkMode ? "light" : "dark");
-            }}
-            leftSection={
-              isDarkMode ? (
-                <Icon icon="tabler:sun" color="white" />
-              ) : (
-                <Icon icon="tabler:moon-filled" color="black" />
-              )
-            }
+            onClick={toggleColorScheme}
+            leftSection={getColorSchemeIcon()}
           >
-            {isDarkMode ? "Light" : "Dark"}
+            {colorScheme.charAt(0).toUpperCase() + colorScheme.slice(1)}
           </Menu.Item>
           <Menu.Item
             leftSection={
