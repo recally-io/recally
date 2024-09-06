@@ -1,9 +1,6 @@
 import { create } from "zustand";
 
 const useStore = create((set) => ({
-  isDarkMode: false,
-  setIsDarkMode: (isDarkMode) => set(() => ({ isDarkMode: isDarkMode })),
-
   mobileSidebarOpen: false,
   toggleMobileSidebar: () =>
     set((state) => ({ mobileSidebarOpen: !state.mobileSidebarOpen })),

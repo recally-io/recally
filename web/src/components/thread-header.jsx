@@ -1,5 +1,11 @@
 import { Icon } from "@iconify/react";
-import { ActionIcon, Flex, Group, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Flex,
+  Group,
+  Tooltip,
+  useComputedColorScheme,
+} from "@mantine/core";
 import React from "react";
 import useStore from "../libs/store";
 import { HeaderMenu } from "./header-menu";
@@ -7,7 +13,7 @@ import { ShowNavbarButton } from "./header-show-navbar-button";
 import { ThreadAddButton } from "./thread-add-button";
 
 export default function ThreadHeader() {
-  const isDarkMode = useStore((state) => state.isDarkMode);
+  const computedColorScheme = useComputedColorScheme("light");
   const setThreadIsOpenSettings = useStore(
     (state) => state.setThreadIsOpenSettings,
   );
@@ -21,7 +27,7 @@ export default function ThreadHeader() {
         gap="lg"
         px="sm"
         h="100%"
-        bg={isDarkMode ? "dark.8" : "gray.4"}
+        bg={computedColorScheme === "dark" ? "dark.8" : "gray.4"}
       >
         <Group gap="2" align="center">
           <ShowNavbarButton hasNavBar={true} />

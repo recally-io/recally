@@ -11,6 +11,7 @@ import {
   Stack,
   Text,
   Tooltip,
+  useComputedColorScheme,
 } from "@mantine/core";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryContext } from "../libs/query-context";
@@ -20,19 +21,17 @@ import { ThreadAddButton } from "./thread-add-button";
 
 export default function ThreadSidebar() {
   const { listThreads, deleteThread } = useQueryContext();
+  const computedColorScheme = useComputedColorScheme("light");
 
   const navigate = useNavigate();
   const params = useParams();
   const threadId = params.threadId;
   const assistantId = params.assistantId;
 
-  const isDarkMode = useStore((state) => state.isDarkMode);
   const toggleMobileSidebar = useStore((state) => state.toggleMobileSidebar);
-  const setMessageList = useStore((state) => state.setThreadMessageList);
 
   const navigateToThread = (threadId) => {
     toggleMobileSidebar();
-    // setMessageList([]);
     navigate(`/assistants/${assistantId}/threads/${threadId}`, {
       replace: false,
     });
@@ -49,7 +48,7 @@ export default function ThreadSidebar() {
         h="100%"
         m="0"
         radius="md"
-        bg={isDarkMode ? "dark.6" : "gray.2"}
+        bg={computedColorScheme === "dark" ? "dark.6" : "gray.2"}
       >
         <Stack align="stretch" justify="start" gap="md">
           <Flex justify="center" align="center" gap="md">
