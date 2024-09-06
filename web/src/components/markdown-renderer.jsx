@@ -32,9 +32,7 @@ export function MarkdownRenderer({ content }) {
               </Group>
             </Box>
           ) : (
-            <Code block {...rest}>
-              {code}
-            </Code>
+            <CodeHighlight code={code} {...rest} withCopyButton={false} />
           );
         },
       }}

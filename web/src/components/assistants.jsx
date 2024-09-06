@@ -72,8 +72,8 @@ export default function Assistants() {
                   listAssistants.data.filter((assistant) =>
                     (assistant.name + assistant.description + assistant.id)
                       .toLowerCase()
-                      .includes(e.currentTarget.value.toLowerCase())
-                  )
+                      .includes(e.currentTarget.value.toLowerCase()),
+                  ),
                 );
               }}
             />
