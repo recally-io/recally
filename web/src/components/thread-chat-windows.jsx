@@ -8,6 +8,7 @@ import {
   Flex,
   Group,
   Image,
+  LoadingOverlay,
   Modal,
   Paper,
   ScrollArea,
@@ -16,6 +17,7 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
+import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
 import { CopyBtn } from "./copy-button";
 import { MarkdownRenderer } from "./markdown-renderer";
@@ -25,7 +27,7 @@ export function ThreadChatWindows() {
   const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
   const isDarkMode = useStore((state) => state.isDarkMode);
   const messageList = useStore((state) => state.threadMessageList);
-
+  const { getThread } = useQueryContext();
   const chatArea = useRef(null);
   const [openedImage, setOpenedImage] = useState(null);
 
@@ -127,6 +129,7 @@ export function ThreadChatWindows() {
 
   return (
     <>
+      <LoadingOverlay visible={getThread.isLoading} />
       <ScrollArea
         viewportRef={chatArea}
         type="scroll"

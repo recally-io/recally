@@ -9,11 +9,8 @@ import "@mantine/core/styles.css";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import "@mantine/notifications/styles.css";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { QueryContextProvider } from "../libs/query-context";
-
 import React from "react";
-import { queryClient } from "../libs/api";
+import { QueryContextProvider } from "../libs/query-context";
 import useStore from "../libs/store";
 import Header from "./header";
 
@@ -146,40 +143,44 @@ const theme = createTheme({
   },
 });
 
-export default function Layout({ main, nav = null, header = null }) {
+export function ThemeProvider({ children }) {
+  return (
+    <MantineProvider theme={theme} defaultColorScheme="auto">
+      {children}
+    </MantineProvider>
+  );
+}
+
+export function Layout({ main, nav = null, header = null }) {
   let hasNavBar = nav !== null;
   const mobileSidebarOpen = useStore((state) => state.mobileSidebarOpen);
   const desktopSidebarOpen = useStore((state) => state.desktopSidebarOpen);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <ModalsProvider>
       <QueryContextProvider>
-        <MantineProvider theme={theme} defaultColorScheme="auto">
-          <ModalsProvider>
-            <Notifications />
-            <AppShell
-              header={{ height: 40 }}
-              navbar={{
-                width: "300",
-                breakpoint: "sm",
-                collapsed: {
-                  mobile: !hasNavBar || !mobileSidebarOpen,
-                  desktop: !hasNavBar || !desktopSidebarOpen,
-                },
-              }}
-              padding="0"
-              withBorder={true}
-              layout="alt"
-            >
-              <AppShell.Header>
-                {header ? header : <Header hasNavBar={hasNavBar} />}
-              </AppShell.Header>
-              <AppShell.Navbar>{nav}</AppShell.Navbar>
-              <AppShell.Main>{main}</AppShell.Main>
-            </AppShell>
-          </ModalsProvider>
-        </MantineProvider>
+        <Notifications />
+        <AppShell
+          header={{ height: 40 }}
+          navbar={{
+            width: "300",
+            breakpoint: "sm",
+            collapsed: {
+              mobile: !hasNavBar || !mobileSidebarOpen,
+              desktop: !hasNavBar || !desktopSidebarOpen,
+            },
+          }}
+          padding="0"
+          withBorder={true}
+          layout="alt"
+        >
+          <AppShell.Header>
+            {header ? header : <Header hasNavBar={hasNavBar} />}
+          </AppShell.Header>
+          <AppShell.Navbar>{nav}</AppShell.Navbar>
+          <AppShell.Main>{main}</AppShell.Main>
+        </AppShell>
       </QueryContextProvider>
-    </QueryClientProvider>
+    </ModalsProvider>
   );
 }

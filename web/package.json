@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "prettier . --write",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-pwa-assets": "pwa-assets-generator"
   },
   "dependencies": {
     "@mantine/code-highlight": "^7.12.1",
@@ -23,6 +24,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.26.1",
     "remark-gfm": "^4.0.0",
     "zustand": "^4.5.4"
   },
@@ -30,11 +32,12 @@
     "@iconify/react": "^5.0.2",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
+    "@vite-pwa/assets-generator": "^0.2.6",
     "@vitejs/plugin-react": "^4.2.0",
     "postcss": "^8.4.41",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
     "vite": "^5.0.0",
-    "vite-plugin-pwa": "^0.20.3"
+    "vite-plugin-pwa": "^0.20.5"
   }
 }

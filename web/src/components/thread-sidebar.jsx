@@ -1,7 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   ActionIcon,
-  Anchor,
   Autocomplete,
   Button,
   Divider,
@@ -13,19 +12,31 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryContext } from "../libs/query-context";
 
 import useStore from "../libs/store";
 import { ThreadAddButton } from "./thread-add-button";
 
-export default function Sidebar() {
+export default function ThreadSidebar() {
   const { listThreads, deleteThread } = useQueryContext();
 
+  const navigate = useNavigate();
+  const params = useParams();
+  const threadId = params.threadId;
+  const assistantId = params.assistantId;
+
   const isDarkMode = useStore((state) => state.isDarkMode);
-  const assistantId = useStore((state) => state.assistantId);
-  const threadId = useStore((state) => state.threadId);
-  const setThreadId = useStore((state) => state.setThreadId);
   const toggleMobileSidebar = useStore((state) => state.toggleMobileSidebar);
+  const setMessageList = useStore((state) => state.setThreadMessageList);
+
+  const navigateToThread = (threadId) => {
+    toggleMobileSidebar();
+    // setMessageList([]);
+    navigate(`/assistants/${assistantId}/threads/${threadId}`, {
+      replace: false,
+    });
+  };
 
   return (
     <>
@@ -43,14 +54,16 @@ export default function Sidebar() {
         <Stack align="stretch" justify="start" gap="md">
           <Flex justify="center" align="center" gap="md">
             <Button variant="outline" radius="lg" size="sm">
-              <Anchor
-                href={`/assistants.html?id=${assistantId}`}
-                variant="gradient"
-                gradient={{ from: "pink", to: "yellow" }}
-                underline="always"
-              >
-                <Text size="sm">Assistant</Text>
-              </Anchor>
+              <Link to={`/assistants/${assistantId}`} replace>
+                <Text
+                  size="sm"
+                  variant="gradient"
+                  gradient={{ from: "pink", to: "yellow" }}
+                  sx={{ textDecoration: "underline" }}
+                >
+                  Assistant
+                </Text>
+              </Link>
             </Button>
 
             <ThreadAddButton />
@@ -78,8 +91,7 @@ export default function Sidebar() {
                 (i) => i.value == item,
               );
               if (filteredItems.length > 0) {
-                toggleMobileSidebar();
-                setThreadId(filteredItems[0].id);
+                navigateToThread(filteredItems[0].id);
               }
             }}
           />
@@ -103,8 +115,7 @@ export default function Sidebar() {
                     color={threadId == item.id ? "accent" : "default"}
                     variant={threadId == item.id ? "filled" : "subtle"}
                     onClick={() => {
-                      toggleMobileSidebar();
-                      setThreadId(item.id);
+                      navigateToThread(item.id);
                     }}
                   >
                     <Text
@@ -125,6 +136,7 @@ export default function Sidebar() {
                       size="xs"
                       onClick={async () => {
                         await deleteThread.mutateAsync(item.id);
+                        navigate(`/assistants/${assistantId}/threads`);
                       }}
                     >
                       <Icon icon="tabler:trash" />
