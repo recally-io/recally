@@ -61,6 +61,7 @@ func New(pool *db.Pool, llm *llms.LLM, queue *queue.Queue, opts ...Option) (*Ser
 		queue:  queue,
 	}
 	s.Server.Validator = &CustomValidator{validator: validator.New()}
+	s.Server.HTTPErrorHandler = customHTTPErrorHandler
 	// if config.Settings.DebugUI {
 	// 	logger.Default.Info("debug ui enabled")
 	// 	s.uiCmd = exec.Command("bun", "run", "dev")
