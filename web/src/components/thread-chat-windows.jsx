@@ -36,6 +36,19 @@ export function ThreadChatWindows() {
     });
   }, [messageList]);
 
+  const avater = (children) => {
+    return (
+      <Avatar
+        size={{ base: "sm", md: "md" }}
+        radius="md"
+        color="cyan"
+        variant="filled"
+      >
+        {children}
+      </Avatar>
+    );
+  };
+
   const messagePaper = (message) => {
     const isSender = message.role === "user";
     const bgColor = isSender ? "primary.2" : "secondary.2";
@@ -44,14 +57,10 @@ export function ThreadChatWindows() {
         justify={isSender ? "flex-end" : "flex-start"}
         align="flex-start"
         direction="row"
-        gap="xs"
+        gap="2"
         key={message.id}
       >
-        {!isSender && (
-          <Avatar size="md" radius="md" color="cyan" variant="filled">
-            <Icon icon="tabler:brand-android" />
-          </Avatar>
-        )}
+        {!isSender && avater(<Icon icon="tabler:brand-android" />)}
         <Flex align={isSender ? "flex-end" : "flex-start"} direction="column">
           <Paper
             shadow="md"
@@ -111,11 +120,7 @@ export function ThreadChatWindows() {
             {CopyBtn({ data: message.text })}
           </Group>
         </Flex>
-        {isSender && (
-          <Avatar size="md" radius="md" color="cyan" variant="filled">
-            <Icon icon="tabler:user" />
-          </Avatar>
-        )}
+        {isSender && avater(<Icon icon="tabler:user" />)}
       </Flex>
     );
   };
@@ -130,7 +135,7 @@ export function ThreadChatWindows() {
         scrollbars="y"
         py="xs"
       >
-        <Container size="md">
+        <Container size="md" p="0">
           <Stack gap="md" align="stretch" justify="flex-start">
             {Array.isArray(messageList) &&
               messageList.map((item) => {
