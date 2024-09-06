@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createContext, useContext, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toastError, toastInfo } from "../libs/alert";
 import {
   del,
@@ -11,8 +12,8 @@ import {
   queryClient,
   uploadFile,
 } from "../libs/api";
+import { useAuthContext } from "./auth-context";
 import useStore from "./store";
-
 export const QueryContext = createContext();
 
 export function useQueryContext() {
@@ -20,12 +21,20 @@ export function useQueryContext() {
 }
 
 export function QueryContextProvider({ children }) {
-  const isLogin = useStore((state) => state.isLogin);
-  const assistantId = useStore((state) => state.assistantId);
-  const threadId = useStore((state) => state.threadId);
-  const setThreadId = useStore((state) => state.setThreadId);
+  const { isLogin } = useAuthContext();
+  const navigate = useNavigate();
+  const params = useParams();
+  const threadId = params.threadId;
+  const assistantId = params.assistantId;
+
   const setMessageList = useStore((state) => state.setThreadMessageList);
   const addThreadMessage = useStore((state) => state.addThreadMessage);
+
+  useEffect(() => {
+    if (!threadId) {
+      setMessageList([]);
+    }
+  }, [threadId]);
 
   const listModels = useQuery({
     queryKey: ["list-assistants-models"],
@@ -110,11 +119,10 @@ export function QueryContextProvider({ children }) {
       return res.data;
     },
     onSuccess: (data) => {
-      setThreadId(data.id);
-      setMessageList([]);
       queryClient.invalidateQueries({
         queryKey: ["list-threads", assistantId],
       });
+      navigate(`/assistants/${assistantId}/threads/${data.id}`);
     },
     enabled: isLogin && !!assistantId,
   });
@@ -175,7 +183,10 @@ export function QueryContextProvider({ children }) {
         null,
         payload,
       );
-      return res.data;
+      if (isNewThread) {
+        queryClient.invalidateQueries(["get-thread", newThreadId]);
+        return res.data;
+      }
     },
     onSuccess: (data) => {
       addThreadMessage(data);
@@ -205,7 +216,7 @@ export function QueryContextProvider({ children }) {
       const res = await get(
         `/api/v1/assistants/${assistantId}/threads/${threadId}`,
       );
-
+      setMessageList(res.data.messages || []);
       return res.data || {};
     },
     enabled: isLogin && !!threadId && !!assistantId,
@@ -222,9 +233,7 @@ export function QueryContextProvider({ children }) {
         queryKey: ["list-threads", assistantId],
       });
       setMessageList([]);
-      const url = new URL(window.location.href);
-      url.searchParams.delete("thread-id");
-      window.history.pushState({}, "", url);
+      navigate(`/assistants/${assistantId}/threads`);
     },
   });
 
@@ -273,23 +282,6 @@ export function QueryContextProvider({ children }) {
     },
     enabled: isLogin && !!assistantId,
   });
-
-  useEffect(() => {
-    if (threadId) {
-      const url = new URL(window.location.href);
-      url.searchParams.set("thread-id", threadId);
-      window.history.pushState({}, "", url);
-      setMessageList([]);
-      getThread.refetch();
-    }
-  }, [threadId]);
-
-  useEffect(() => {
-    if (getThread.data) {
-      setMessageList(getThread.data.messages || []);
-      window.document.title = getThread.data.name;
-    }
-  }, [getThread.data]);
 
   return (
     <QueryContext.Provider
