@@ -17,7 +17,6 @@ export function MarkdownRenderer({ content }) {
           const match = /language-(\w+)/.exec(className || "");
           // Remove trailing newline from code content
           const code = String(children).replace(/\n$/, "");
-          console.log(className, match, code);
           // If no className or language match, render as inline code
           if (!className) {
             if (code.includes("\n")) {
