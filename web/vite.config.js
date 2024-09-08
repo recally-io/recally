@@ -17,9 +17,9 @@ export default defineConfig({
         type: "module",
       },
       manifest: {
-        name: "Vibrant",
-        short_name: "Vibrant",
-        description: "Vibrant",
+        name: "Vibrain",
+        short_name: "Vibrain",
+        description: "Vibrain",
         theme_color: "#000000",
         icons: [
           {

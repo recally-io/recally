@@ -185,8 +185,8 @@ export function QueryContextProvider({ children }) {
       );
       if (isNewThread) {
         queryClient.invalidateQueries(["get-thread", newThreadId]);
-        return res.data;
       }
+      return res.data;
     },
     onSuccess: (data) => {
       addThreadMessage(data);
