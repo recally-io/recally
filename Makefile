@@ -103,6 +103,10 @@ psql:
 	@echo "Connecting to database..."
 	@docker compose exec -it postgres psql -U ${DATABASE_USER} -d ${DATABASE_NAME}
 
+deploy:
+	@echo "Deploying..."
+	@dokploy app deploy
+
 help:
 	@echo "Available commands:"
 	@echo "  lint: Lint the code"
