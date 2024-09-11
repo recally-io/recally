@@ -11,11 +11,16 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
 import { UploadButton } from "./upload-button";
 
 export function ThreadSettingsModal() {
+  const params = useParams();
+  const threadId = params.threadId;
+  const assistantId = params.assistantId;
+
   const {
     listTools,
     listModels,
@@ -25,65 +30,34 @@ export function ThreadSettingsModal() {
     upsertAssistant,
   } = useQueryContext();
 
-  const [isOpen, setIsOpen] = useStore((state) => [
+  const [isOpen, toggleThreadIsOpenSettings] = useStore((state) => [
     state.threadIsOpenSettings,
-    state.setThreadIsOpenSettings,
+    state.toggleThreadIsOpenSettings,
   ]);
 
-  const assistantId = useStore((state) => state.assistantId);
-  const threadId = useStore((state) => state.threadId);
-
-  const getInitialValues = () => {
-    if (threadId) {
-      return {
-        name: "New Thread",
-        description: "",
-        system_prompt: "",
-        temperature: 0.7,
-        max_token: 4096,
-        model: "",
-        metadata: {
-          tools: [],
-        },
-      };
-    }
-    return {
-      name: "Assistant name",
-      description: "Assistant description",
-      system_prompt: "You are a helpful assistant.",
-      model: "gpt-4o",
-      metadata: {
-        tools: [],
-      },
-    };
-  };
+  const threadSettings = useStore((state) => state.threadSettings);
+  const setThreadSettings = useStore((state) => state.setThreadSettings);
 
   const form = useForm({
-    initialValues: getInitialValues(),
+    initialValues: threadSettings,
   });
+
+  useEffect(() => {
+    form.setValues(threadSettings);
+  }, [threadSettings]);
 
   useEffect(() => {
     if (assistantId && !getAssistant.isLoading && getAssistant.data) {
       const assistant = getAssistant.data;
-      form.setValues({
-        name: assistant.name,
-        description: assistant.description,
-        system_prompt: assistant.system_prompt,
-        model: assistant.model,
-        metadata: {
-          tools: assistant.metadata.tools,
-        },
-      });
-    } else {
-      form.reset();
+      setThreadSettings(assistant);
+      form.setValues(assistant);
     }
-  }, [getAssistant.isLoading]);
 
-  useEffect(() => {
     if (threadId && !getThread.isLoading && getThread.data) {
       const assistant = getAssistant.data;
       const thread = getThread.data;
-      form.setValues({
+
+      const settings = {
         name: thread.name ? thread.name : "New Thread",
         description: thread.description
           ? thread.description
@@ -99,22 +73,23 @@ export function ThreadSettingsModal() {
             ? thread.metadata.tools
             : assistant.metadata?.tools,
         },
-      });
+      };
+
+      setThreadSettings(settings);
+      form.setValues(settings);
     }
-  }, [getThread.isLoading]);
+  }, [getAssistant.data, getThread.data]);
 
   return (
     <Modal
       opened={isOpen}
-      onClose={() => setIsOpen(false)}
+      onClose={toggleThreadIsOpenSettings}
       title="Thread Settings"
     >
       <UploadButton />
       <Divider my="sm" variant="dashed" />
       <form
         onSubmit={form.onSubmit(async (values) => {
-          console.log(`assistantId: ${assistantId}, threadId: ${threadId}`);
-          console.log(values);
           if (threadId) {
             await updateThread.mutateAsync(values);
           } else {
@@ -163,10 +138,10 @@ export function ThreadSettingsModal() {
           />
         </Stack>
         <Group justify="flex-end" mt="md">
-          <Button type="submit" onClick={() => setIsOpen(false)}>
+          <Button type="submit" onClick={toggleThreadIsOpenSettings}>
             Submit
           </Button>
-          <Button type="button" onClick={() => setIsOpen(false)}>
+          <Button type="button" onClick={toggleThreadIsOpenSettings}>
             Cancel
           </Button>
         </Group>

@@ -19,7 +19,7 @@ import { IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useQueryContext } from "../libs/query-context";
-import useStore from "../libs/store";
+import useStore, { defaultThreadSettings } from "../libs/store";
 
 export function ThreadChatInput() {
   const {
@@ -35,7 +35,7 @@ export function ThreadChatInput() {
 
   const [text, setText] = useState("");
   const [images, setImages] = useState([]);
-  const [chatModel, setChatModel] = useState("");
+  const [chatModel, setChatModel] = useState(defaultThreadSettings.model);
 
   const validSendKeys = [
     {
@@ -55,10 +55,13 @@ export function ThreadChatInput() {
   const [openedImage, setOpenedImage] = useState(null);
 
   useEffect(() => {
-    if (!getThread.isLoading && getThread.data) {
+    if (getAssistant.data) {
+      setChatModel(getAssistant.data.model);
+    }
+    if (getThread.data) {
       setChatModel(getThread.data.model);
     }
-  }, [getThread.isLoading]);
+  }, [getThread.data, getAssistant.data]);
 
   const handleUploadImage = async (files) => {
     if (!files) return;

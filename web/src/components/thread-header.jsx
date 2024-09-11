@@ -14,8 +14,8 @@ import { ThreadAddButton } from "./thread-add-button";
 
 export default function ThreadHeader() {
   const computedColorScheme = useComputedColorScheme("light");
-  const setThreadIsOpenSettings = useStore(
-    (state) => state.setThreadIsOpenSettings,
+  const toggleThreadIsOpenSettings = useStore(
+    (state) => state.toggleThreadIsOpenSettings,
   );
 
   return (
@@ -37,7 +37,7 @@ export default function ThreadHeader() {
               size="lg"
               variant="subtle"
               radius="lg"
-              onClick={() => setThreadIsOpenSettings(true)}
+              onClick={toggleThreadIsOpenSettings}
             >
               <Icon icon="tabler:settings"></Icon>
             </ActionIcon>
