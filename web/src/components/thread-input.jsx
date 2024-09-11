@@ -259,6 +259,19 @@ export function ThreadChatInput() {
             {selectModel()}
             {selectSendHotKey()}
           </Group>
+          <ActionIcon
+            variant="filled"
+            radius="lg"
+            aria-label="Settings"
+            disabled={text === "" || sendThreadMessage.isPending}
+            onClick={handleSendMessage}
+          >
+            {sendThreadMessage.isPending ? (
+              <Icon icon="svg-spinners:180-ring" />
+            ) : (
+              <Icon icon="tabler:arrow-up"></Icon>
+            )}
+          </ActionIcon>
         </Group>
       </Flex>
     );
@@ -293,21 +306,6 @@ export function ThreadChatInput() {
                 border: "none",
               },
             }}
-            rightSection={
-              <ActionIcon
-                variant="filled"
-                radius="lg"
-                aria-label="Settings"
-                disabled={text === "" || sendThreadMessage.isPending}
-                onClick={handleSendMessage}
-              >
-                {sendThreadMessage.isPending ? (
-                  <Icon icon="svg-spinners:180-ring" />
-                ) : (
-                  <Icon icon="tabler:arrow-up"></Icon>
-                )}
-              </ActionIcon>
-            }
             value={text}
             onChange={(e) => setText(e.currentTarget.value)}
             inputContainer={renderAttachmentTextArea}

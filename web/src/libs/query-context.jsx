@@ -122,7 +122,6 @@ export function QueryContextProvider({ children }) {
       queryClient.invalidateQueries({
         queryKey: ["list-threads", assistantId],
       });
-      navigate(`/assistants/${assistantId}/threads/${data.id}`);
     },
     enabled: isLogin && !!assistantId,
   });
@@ -184,7 +183,9 @@ export function QueryContextProvider({ children }) {
         payload,
       );
       if (isNewThread) {
-        queryClient.invalidateQueries(["get-thread", newThreadId]);
+        navigate(`/assistants/${assistantId}/threads/${newThreadId}`, {
+          replace: true,
+        });
       }
       return res.data;
     },
