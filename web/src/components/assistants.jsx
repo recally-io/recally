@@ -18,7 +18,7 @@ import { modals } from "@mantine/modals";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryContext } from "../libs/query-context";
-import useStore from "../libs/store";
+import useStore, { defaultThreadSettings } from "../libs/store";
 import { ThreadSettingsModal } from "./thread-settings";
 
 export default function Assistants() {
@@ -26,7 +26,10 @@ export default function Assistants() {
   const params = useParams();
   const { listAssistants, deleteAssistant } = useQueryContext();
   const setAssistantId = useStore((state) => state.setAssistantId);
-  const setIsOpen = useStore((state) => state.setThreadIsOpenSettings);
+  const toggleThreadIsOpenSettings = useStore(
+    (state) => state.toggleThreadIsOpenSettings,
+  );
+  const setThreadSettings = useStore((state) => state.setThreadSettings);
 
   const [filteredAssistants, setFilteredAssistants] = useState([]);
   const [searchValue, setSearchValue] = useState(params.assistantId);
@@ -81,7 +84,8 @@ export default function Assistants() {
               w="100%"
               onClick={() => {
                 setAssistantId(null);
-                setIsOpen(true);
+                toggleThreadIsOpenSettings();
+                setThreadSettings(defaultThreadSettings);
               }}
             >
               Add assistant
@@ -121,7 +125,8 @@ export default function Assistants() {
                         size="xs"
                         onClick={() => {
                           setAssistantId(assistant.id);
-                          setIsOpen(true);
+                          toggleThreadIsOpenSettings();
+                          setThreadSettings(assistant);
                         }}
                       >
                         <Icon icon="tabler:edit" />

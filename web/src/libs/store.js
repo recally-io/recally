@@ -1,5 +1,15 @@
 import { create } from "zustand";
 
+export const defaultThreadSettings = {
+  name: "Name",
+  description: "Assistant description",
+  system_prompt: "You are a helpful assistant.",
+  model: "gpt-4o-mini",
+  metadata: {
+    tools: [],
+  },
+};
+
 const useStore = create((set) => ({
   mobileSidebarOpen: false,
   toggleMobileSidebar: () =>
@@ -15,8 +25,8 @@ const useStore = create((set) => ({
   setThreadId: (id) => set(() => ({ threadId: id })),
 
   threadIsOpenSettings: false,
-  setThreadIsOpenSettings: (isOpen) =>
-    set(() => ({ threadIsOpenSettings: isOpen })),
+  toggleThreadIsOpenSettings: () =>
+    set((state) => ({ threadIsOpenSettings: !state.threadIsOpenSettings })),
 
   threadMessageList: [],
   setThreadMessageList: (list) => set(() => ({ threadMessageList: list })),
@@ -24,6 +34,11 @@ const useStore = create((set) => ({
     set((state) => ({
       threadMessageList: [...state.threadMessageList, message],
     })),
+
+  threadSettings: defaultThreadSettings,
+  setThreadSettings: (settings) => set(() => ({ threadSettings: settings })),
+  resetThreadSettings: () =>
+    set(() => ({ threadSettings: defaultThreadSettings })),
 }));
 
 export default useStore;
