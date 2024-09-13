@@ -2,7 +2,10 @@ package llms
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 	"time"
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/pkg/tools"
@@ -60,14 +63,27 @@ func (l *LLM) TextCompletion(ctx context.Context, prompt string, options ...Opti
 		Role:    openai.ChatMessageRoleUser,
 		Content: prompt,
 	}}
-	choice, _, err := l.generateContent(ctx, req)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate text: %w", err)
+
+	respChan := make(chan *openai.ChatCompletionChoice)
+	errChan := make(chan error)
+
+	go l.generateContent(ctx, req, respChan, errChan)
+
+	select {
+	case resp := <-respChan:
+		return resp.Message.Content, nil
+	case err := <-errChan:
+		return "", err
 	}
-	return choice.Message.Content, nil
 }
 
-func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, options ...Option) (openai.ChatCompletionChoice, openai.Usage, error) {
+type StreamingMessage struct {
+	Choice *openai.ChatCompletionChoice
+	Usage  *openai.Usage
+	Err    error
+}
+
+func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, streamingFunc func(msg StreamingMessage), options ...Option) {
 	opts := &Options{}
 	for _, o := range options {
 		o(opts)
@@ -84,40 +100,116 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 			if ok {
 				mapping[name] = tool
 			}
-			req.Tools = llmTools(mapping)
+		}
+		req.Tools = llmTools(mapping)
+	}
+
+	respChan := make(chan *openai.ChatCompletionChoice)
+	errChan := make(chan error)
+	go l.generateContentStream(ctx, req, respChan, errChan)
+	var choice *openai.ChatCompletionChoice
+	sb := strings.Builder{}
+	toolCalls := make([]openai.ToolCall, 0)
+out:
+	for {
+		select {
+		case delta := <-respChan:
+			deltaToolCalls := delta.Message.ToolCalls
+			if len(deltaToolCalls) > 0 {
+				for _, tc := range deltaToolCalls {
+					if len(toolCalls) <= *tc.Index {
+						choice = delta
+						toolCalls = append(toolCalls, tc)
+					} else {
+						toolCalls[*tc.Index].Function.Arguments += tc.Function.Arguments
+					}
+				}
+			} else {
+				if choice == nil {
+					choice = delta
+				} else {
+					sb.WriteString(delta.Message.Content)
+					choice.Message.Content = delta.Message.Content
+				}
+				if req.Stream {
+					streamingFunc(StreamingMessage{Choice: choice})
+				}
+			}
+		case err := <-errChan:
+			if errors.Is(err, io.EOF) {
+				choice.Message.Content = sb.String()
+
+				streamingFunc(StreamingMessage{Err: err})
+				break out
+			}
+			streamingFunc(StreamingMessage{Err: err})
+			return
 		}
 	}
 
-	choice, usage, err := l.generateContent(ctx, req)
-	if err != nil {
-		return choice, usage, err
-	}
-	if len(choice.Message.ToolCalls) > 0 {
+	if len(toolCalls) > 0 {
+		choice.Message.ToolCalls = toolCalls
 		req.Messages = append(req.Messages, choice.Message)
 		for {
-			toolMessages, err := l.invokeTools(ctx, choice.Message.ToolCalls)
+			toolMessages, err := l.invokeTools(ctx, toolCalls)
 			if err != nil {
-				return choice, usage, err
+				streamingFunc(StreamingMessage{Err: err})
+				return
 			}
 			req.Messages = append(req.Messages, toolMessages...)
-			choice, usage, err = l.generateContent(ctx, req)
-			if err != nil {
-				return choice, usage, err
+			toolCalls = make([]openai.ToolCall, 0)
+			go l.generateContentStream(ctx, req, respChan, errChan)
+		outloop:
+			for {
+				select {
+				case delta := <-respChan:
+					deltaToolCalls := delta.Message.ToolCalls
+					if len(deltaToolCalls) > 0 {
+						for _, tc := range deltaToolCalls {
+							if len(toolCalls) <= *tc.Index {
+								toolCalls = append(toolCalls, tc)
+							} else {
+								toolCalls[*tc.Index].Function.Arguments += tc.Function.Arguments
+							}
+						}
+					} else {
+						if choice == nil {
+							choice = delta
+						} else {
+							sb.WriteString(delta.Message.Content)
+							choice.Message.Content = delta.Message.Content
+						}
+						if req.Stream {
+							streamingFunc(StreamingMessage{Choice: choice})
+						}
+					}
+				case err := <-errChan:
+					if errors.Is(err, io.EOF) {
+						choice.Message.Content = sb.String()
+						streamingFunc(StreamingMessage{Err: err})
+						break outloop
+					}
+					streamingFunc(StreamingMessage{Err: err})
+					return
+				}
 			}
-			if len(choice.Message.ToolCalls) == 0 {
+			if len(toolCalls) == 0 {
 				break
 			}
 		}
 	}
-
-	return choice, usage, nil
+	if !req.Stream {
+		streamingFunc(StreamingMessage{Choice: choice})
+	}
 }
 
-func (l *LLM) generateContent(ctx context.Context, req openai.ChatCompletionRequest) (openai.ChatCompletionChoice, openai.Usage, error) {
+func (l *LLM) generateContent(ctx context.Context, req openai.ChatCompletionRequest, choiceChan chan *openai.ChatCompletionChoice, errChan chan error) {
 	start := time.Now()
 	resp, err := l.client.CreateChatCompletion(ctx, req)
 	if err != nil {
-		return openai.ChatCompletionChoice{}, openai.Usage{}, err
+
+		errChan <- err
+		return
 	}
 	logger.FromContext(ctx).Info("time for generated content",
 		"duration", time.Since(start),
@@ -126,9 +218,48 @@ func (l *LLM) generateContent(ctx context.Context, req openai.ChatCompletionRequ
 		"completion_tokens", resp.Usage.CompletionTokens,
 	)
 	if len(resp.Choices) == 0 {
-		return openai.ChatCompletionChoice{}, openai.Usage{}, fmt.Errorf("no choices returned")
+		errChan <- fmt.Errorf("no choices returned")
+
+		return
 	}
-	return resp.Choices[0], resp.Usage, nil
+	choiceChan <- &resp.Choices[0]
+}
+
+func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompletionRequest, choiceChan chan *openai.ChatCompletionChoice, errChan chan error) {
+	stream, err := l.client.CreateChatCompletionStream(ctx, req)
+	if err != nil {
+		errChan <- err
+		return
+	}
+	defer stream.Close()
+	start := time.Now()
+	for {
+		response, err := stream.Recv()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				logger.FromContext(ctx).Info("time for generated content stream",
+					"duration", time.Since(start),
+					"model", req.Model,
+				)
+			}
+
+			errChan <- err
+			return
+		}
+
+		delta := response.Choices[0]
+		choice := &openai.ChatCompletionChoice{
+			Index: delta.Index,
+			Message: openai.ChatCompletionMessage{
+				Role:         delta.Delta.Role,
+				Content:      delta.Delta.Content,
+				FunctionCall: delta.Delta.FunctionCall,
+				ToolCalls:    delta.Delta.ToolCalls,
+			},
+			FinishReason: delta.FinishReason,
+		}
+		choiceChan <- choice
+	}
 }
 
 func (l *LLM) invokeTools(ctx context.Context, toolCalls []openai.ToolCall) ([]openai.ChatCompletionMessage, error) {

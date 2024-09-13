@@ -1,8 +1,12 @@
 package httpserver
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"time"
 	"vibrain/internal/core/assistants"
 	"vibrain/internal/pkg/logger"
 
@@ -390,6 +394,7 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 		Metadata: assistants.MessageMetadata{
 			Tools:  req.Metadata.Tools,
 			Images: req.Metadata.Images,
+			Stream: true,
 		},
 	}
 
@@ -402,12 +407,50 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	resp, err := h.service.RunThread(ctx, tx, thread.Id)
-	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err)
-	}
+	msgChan := make(chan *assistants.MessageDTO)
+	errChan := make(chan error)
 
-	return JsonResponse(c, http.StatusCreated, resp)
+	streamingFunc := func(msg *assistants.MessageDTO, err error) {
+		if err != nil {
+			errChan <- err
+			return
+		}
+		msgChan <- msg
+	}
+	go h.service.RunThread(ctx, tx, thread.Id, streamingFunc)
+
+	w := c.Response()
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-c.Request().Context().Done():
+			logger.FromContext(ctx).Info("SSE client disconnected", "ip", c.RealIP())
+			return nil
+		case err := <-errChan:
+			if errors.Is(err, io.EOF) {
+				w.Flush()
+				return nil
+			}
+			return ErrorResponse(c, http.StatusInternalServerError, err)
+		case msg := <-msgChan:
+			data, err := json.Marshal(msg)
+			if err != nil {
+				return ErrorResponse(c, http.StatusInternalServerError, err)
+			}
+			event := Event{
+				Data: data,
+			}
+			if err := event.MarshalTo(w); err != nil {
+				return ErrorResponse(c, http.StatusInternalServerError, err)
+			}
+			w.Flush()
+		}
+	}
 }
 
 type getThreadMessageRequest struct {
@@ -530,16 +573,16 @@ func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
 	if req.Model != "" {
 		messageDTO.Model = req.Model
 	}
-
+	return JsonResponse(c, http.StatusOK, messageDTO)
 	// Create Thread Message
-	if _, err := h.service.CreateThreadMessage(ctx, tx, thread.Id, &messageDTO); err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err)
-	}
+	// if _, err := h.service.CreateThreadMessage(ctx, tx, thread.Id, &messageDTO); err != nil {
+	// 	return ErrorResponse(c, http.StatusInternalServerError, err)
+	// }
 
-	resp, err := h.service.RunThread(ctx, tx, thread.Id)
-	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err)
-	}
+	// resp, err := h.service.RunThread(ctx, tx, thread.Id)
+	// if err != nil {
+	// 	return ErrorResponse(c, http.StatusInternalServerError, err)
+	// }
 
-	return JsonResponse(c, http.StatusOK, resp)
+	// return JsonResponse(c, http.StatusOK, resp)
 }

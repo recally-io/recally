@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
@@ -20,15 +22,27 @@ func main() {
 		},
 		{
 			Role:    "user",
-			Content: "What's news in hackernews?",
+			Content: "Please tell me what in the page: https://labs.watchtowr.com/we-spent-20-to-achieve-rce-and-accidentally-became-the-admins-of-mobi/",
 		},
 	}
 
-	resp, usage, err := llm.GenerateContent(ctx, messages)
-	if err != nil {
-		logger.Default.Error("failed to generate content", "error", err)
-		return
+	sendToUser := func(m llms.StreamingMessage) {
+		choice := m.Choice
+		err := m.Err
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				logger.Default.Info("done")
+				return
+			} else {
+				logger.Default.Error("failed to send message to user", "error", err)
+				return
+			}
+		}
+		fmt.Print(choice.Message.Content)
 	}
-	logger.Default.Info("generated content", "response", resp, "usage", usage)
-	fmt.Println(resp.Message.Content)
+
+	llm.GenerateContent(ctx, messages, sendToUser,
+		llms.WithStream(true),
+		// llms.WithToolNames([]string{"googlesearch", "jinareader"}),
+	)
 }

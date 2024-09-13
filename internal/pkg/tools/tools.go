@@ -66,4 +66,3 @@ func (t *BaseTool) MarshalResult(ctx context.Context, result any) (string, error
 	}
 	return string(b), nil
 }
-

@@ -61,4 +61,3 @@ func (a *AttachmentDTO) Dump() *db.AssistantAttachment {
 		Metadata:    metadata,
 	}
 }
-
