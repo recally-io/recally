@@ -54,6 +54,8 @@ export function ThreadChatInput() {
   const [sendKey, setSendKey] = useState("enter");
   const [openedImage, setOpenedImage] = useState(null);
 
+  const [isLoading, setLoading] = useState(false);
+
   useEffect(() => {
     if (getAssistant.data) {
       setChatModel(getAssistant.data.model);
@@ -87,6 +89,7 @@ export function ThreadChatInput() {
 
   const handleSendMessage = async () => {
     if (text.trim() !== "") {
+      setLoading(true);
       const localText = text.trim();
       const localImages = images;
       setText("");
@@ -96,6 +99,7 @@ export function ThreadChatInput() {
         text: localText,
         images: localImages,
       });
+      setLoading(false);
 
       if (
         messageList.length >= 2 &&
@@ -263,13 +267,13 @@ export function ThreadChatInput() {
             variant="filled"
             radius="lg"
             aria-label="Settings"
-            disabled={text === "" || sendThreadMessage.isPending}
+            disabled={text === "" && !isLoading}
             onClick={handleSendMessage}
           >
-            {sendThreadMessage.isPending ? (
+            {isLoading ? (
               <Icon icon="svg-spinners:180-ring" />
             ) : (
-              <Icon icon="tabler:arrow-up"></Icon>
+              <Icon icon="tabler:arrow-up" />
             )}
           </ActionIcon>
         </Group>
