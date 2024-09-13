@@ -125,11 +125,6 @@ export function QueryContextProvider({ children }) {
       queryClient.invalidateQueries({
         queryKey: ["list-threads", assistantId],
       });
-      if (threadId) {
-        navigate(`/assistants/${assistantId}/threads/${data.id}`, {
-          replace: true,
-        });
-      }
     },
     enabled: isLogin && !!assistantId,
   });
