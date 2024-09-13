@@ -20,6 +20,7 @@ import { getHotkeyHandler } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useQueryContext } from "../libs/query-context";
 import useStore, { defaultThreadSettings } from "../libs/store";
+import { ThreadAddButton, ThreadSettingsButton } from "./thread-add-button";
 
 export function ThreadChatInput() {
   const {
@@ -263,19 +264,23 @@ export function ThreadChatInput() {
             {selectModel()}
             {selectSendHotKey()}
           </Group>
-          <ActionIcon
-            variant="filled"
-            radius="lg"
-            aria-label="Settings"
-            disabled={text === "" && !isLoading}
-            onClick={handleSendMessage}
-          >
-            {isLoading ? (
-              <Icon icon="svg-spinners:180-ring" />
-            ) : (
-              <Icon icon="tabler:arrow-up" />
-            )}
-          </ActionIcon>
+          <Group align="center" gap="3">
+            <ThreadSettingsButton />
+            <ThreadAddButton />
+            <ActionIcon
+              variant="filled"
+              radius="lg"
+              aria-label="Settings"
+              disabled={text === "" && !isLoading}
+              onClick={handleSendMessage}
+            >
+              {isLoading ? (
+                <Icon icon="svg-spinners:180-ring" />
+              ) : (
+                <Icon icon="tabler:arrow-up" />
+              )}
+            </ActionIcon>
+          </Group>
         </Group>
       </Flex>
     );
