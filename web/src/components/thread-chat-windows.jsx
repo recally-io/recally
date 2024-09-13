@@ -70,6 +70,9 @@ export function ThreadChatWindows() {
             px="xs"
             radius="lg"
             withBorder
+            style={{
+              wordBreak: "break-word",
+            }}
             bg={computedColorScheme === "dark" ? "dark.6" : bgColor}
             maw={{
               base: "calc(100vw - 80px)",
