@@ -14,6 +14,7 @@ import (
 type MessageMetadata struct {
 	Tools  []string `json:"tools"`
 	Images []string `json:"images"`
+	Stream bool     `json:"stream"`
 }
 
 // 1563 dimensions

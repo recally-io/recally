@@ -3,7 +3,9 @@ package assistants
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/llms"
@@ -108,43 +110,71 @@ func (s *Service) DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) er
 	return nil
 }
 
-func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*MessageDTO, error) {
+func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, streamingFunc func(*MessageDTO, error)) {
 	thread, err := s.GetThread(ctx, tx, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get thread: %w", err)
+		streamingFunc(nil, fmt.Errorf("failed to get thread: %w", err))
+		return
 	}
 
-	oaiMessages, model, toolNames, err := s.buildChatMessages(ctx, tx, thread)
+	oaiMessages, model, metadata, err := s.buildChatMessages(ctx, tx, thread)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build chat messages: %w", err)
+		streamingFunc(nil, fmt.Errorf("failed to build chat messages: %w", err))
+		return
 	}
 
 	opts := []llms.Option{
 		llms.WithModel(model),
-		llms.WithToolNames(toolNames),
+		llms.WithToolNames(metadata.Tools),
+		llms.WithStream(metadata.Stream),
 	}
 
-	resp, usage, err := s.llm.GenerateContent(ctx, oaiMessages, opts...)
-	if err != nil {
-		return nil, err
+	var newMessage *MessageDTO
+	newMessageID := uuid.New()
+	sb := strings.Builder{}
+	var usage *openai.Usage
+
+	sendToUser := func(streamMsg llms.StreamingMessage) {
+		choice := streamMsg.Choice
+		err := streamMsg.Err
+		if err != nil && !errors.Is(err, io.EOF) {
+			streamingFunc(nil, err)
+			return
+		}
+		if choice == nil {
+			// streamingFunc(nil, fmt.Errorf("no content generated"))
+			return
+		}
+		if streamMsg.Usage != nil {
+			usage = streamMsg.Usage
+		}
+		sb.WriteString(choice.Message.Content)
+		newMessage = &MessageDTO{
+			ID:          newMessageID,
+			UserID:      thread.UserId,
+			AssistantID: thread.AssistantId,
+			ThreadID:    thread.Id,
+			Model:       model,
+			Role:        choice.Message.Role,
+			Text:        choice.Message.Content,
+			// PromptToken:     int32(usage.PromptTokens),
+			// CompletionToken: int32(usage.CompletionTokens),
+		}
+		streamingFunc(newMessage, nil)
 	}
 
-	message := &MessageDTO{
-		UserID:          thread.UserId,
-		AssistantID:     thread.AssistantId,
-		ThreadID:        thread.Id,
-		Model:           model,
-		Role:            resp.Message.Role,
-		Text:            resp.Message.Content,
-		PromptToken:     int32(usage.PromptTokens),
-		CompletionToken: int32(usage.CompletionTokens),
+	s.llm.GenerateContent(ctx, oaiMessages, sendToUser, opts...)
+	if newMessage != nil {
+		newMessage.Text = sb.String()
+		if usage != nil {
+			newMessage.PromptToken = int32(usage.PromptTokens)
+			newMessage.CompletionToken = int32(usage.CompletionTokens)
+		}
+		if _, err := s.CreateThreadMessage(ctx, tx, thread.Id, newMessage); err != nil {
+			streamingFunc(nil, fmt.Errorf("failed to create thread message: %w", err))
+		}
 	}
-
-	message, err = s.CreateThreadMessage(ctx, tx, thread.Id, message)
-	if err != nil {
-		return nil, fmt.Errorf("failed to save thread message: %w", err)
-	}
-	return message, err
+	streamingFunc(nil, io.EOF)
 }
 
 // GenerateThreadTitle generates a title for the thread based on the conversation.
@@ -190,18 +220,18 @@ func (s *Service) GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.U
 	return title, nil
 }
 
-func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *ThreadDTO) ([]openai.ChatCompletionMessage, string, []string, error) {
+func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *ThreadDTO) ([]openai.ChatCompletionMessage, string, MessageMetadata, error) {
 	oaiMessages := make([]openai.ChatCompletionMessage, 0)
 	messages, err := s.ListThreadMessages(ctx, tx, thread.Id)
+	metadata := messages[len(messages)-1].Metadata
 	if err != nil {
-		return nil, "", nil, fmt.Errorf("failed to get thread messages: %w", err)
+		return nil, "", metadata, fmt.Errorf("failed to get thread messages: %w", err)
 	}
 	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 		Role:    "system",
 		Content: thread.SystemPrompt,
 	})
-	model := thread.Model
-	toolNames := thread.Metadata.Tools
+
 	for _, m := range messages {
 		oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 			Role:    m.Role,
@@ -212,11 +242,13 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 	s.rewriteUserMessage(ctx, tx, &lastMessage)
 
 	// Use the model from the last message
+	model := thread.Model
 	if lastMessage.Model != "" {
 		model = lastMessage.Model
 	}
-	if lastMessage.Metadata.Tools != nil {
-		toolNames = lastMessage.Metadata.Tools
+
+	if metadata.Tools == nil {
+		metadata.Tools = thread.Metadata.Tools
 	}
 
 	if len(lastMessage.Metadata.Images) > 0 {
@@ -241,7 +273,8 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 			MultiContent: multiContent,
 		}
 	}
-	return oaiMessages, model, toolNames, nil
+
+	return oaiMessages, model, metadata, nil
 }
 
 func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *MessageDTO) {

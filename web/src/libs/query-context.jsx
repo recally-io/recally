@@ -29,6 +29,9 @@ export function QueryContextProvider({ children }) {
 
   const setMessageList = useStore((state) => state.setThreadMessageList);
   const addThreadMessage = useStore((state) => state.addThreadMessage);
+  const updateLastThreadMessage = useStore(
+    (state) => state.updateLastThreadMessage,
+  );
 
   useEffect(() => {
     if (!threadId) {
@@ -122,6 +125,11 @@ export function QueryContextProvider({ children }) {
       queryClient.invalidateQueries({
         queryKey: ["list-threads", assistantId],
       });
+      if (threadId) {
+        navigate(`/assistants/${assistantId}/threads/${data.id}`, {
+          replace: true,
+        });
+      }
     },
     enabled: isLogin && !!assistantId,
   });
@@ -177,20 +185,62 @@ export function QueryContextProvider({ children }) {
         payload["metadata"] = { images: images };
       }
 
-      const res = await post(
-        `/api/v1/assistants/${assistantId}/threads/${newThreadId}/messages`,
-        null,
-        payload,
-      );
+      const uri = `/api/v1/assistants/${assistantId}/threads/${newThreadId}/messages`;
+      const fetchSSE = async () => {
+        const response = await fetch(uri, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let msg = null;
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const event = JSON.parse(line.substring(6));
+              if (!msg) {
+                msg = event;
+                addThreadMessage(msg);
+              } else {
+                msg.text += event.text;
+                updateLastThreadMessage(msg);
+              }
+            } catch (error) {
+              console.error("Error parsing SSE:", error);
+            }
+          }
+        }
+      };
+
+      fetchSSE().catch((error) => {
+        console.error("SSE fetch failed:", error);
+        toastError("Failed to receive message stream: " + error.message);
+      });
+
       if (isNewThread) {
         navigate(`/assistants/${assistantId}/threads/${newThreadId}`, {
           replace: true,
         });
       }
-      return res.data;
-    },
-    onSuccess: (data) => {
-      addThreadMessage(data);
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);
