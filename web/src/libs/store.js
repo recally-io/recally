@@ -34,6 +34,10 @@ const useStore = create((set) => ({
     set((state) => ({
       threadMessageList: [...state.threadMessageList, message],
     })),
+  updateLastThreadMessage: (message) =>
+    set((state) => ({
+      threadMessageList: [...state.threadMessageList.slice(0, -1), message],
+    })),
 
   threadSettings: defaultThreadSettings,
   setThreadSettings: (settings) => set(() => ({ threadSettings: settings })),

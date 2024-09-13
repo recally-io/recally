@@ -35,14 +35,17 @@ func (h *Handler) LLMChatHandler(c telebot.Context) error {
 		return err
 	}
 
-	message, err := h.assistantService.RunThread(ctx, tx, thread.Id)
-	if err != nil {
-		logger.FromContext(ctx).Error("Failed to run thread", "err", err)
-		_ = c.Reply("Failed to run thread " + err.Error())
-		return err
+	streamingFunc := func(msg *assistants.MessageDTO, err error) {
+		if err != nil {
+			logger.FromContext(ctx).Error("Failed to get message", "err", err)
+			_ = c.Reply("Failed to get message " + err.Error())
+			return
+		}
+		md := convertToTGMarkdown(msg.Text)
+		_ = c.Reply(md, telebot.ModeMarkdownV2)
 	}
-	md := convertToTGMarkdown(message.Text)
-	_ = c.Reply(md, telebot.ModeMarkdownV2)
+
+	h.assistantService.RunThread(ctx, tx, thread.Id, streamingFunc)
 	return nil
 }
 

@@ -19,6 +19,8 @@ type Option func(*Options)
 type Options struct {
 	// Model is the model to use.
 	Model string `json:"model"`
+	// Stream is whether to stream the response.
+	Stream bool `json:"stream"`
 	// CandidateCount is the number of response candidates to generate.
 	CandidateCount int `json:"candidate_count"`
 	// MaxTokens is the maximum number of tokens to generate.
@@ -85,9 +87,9 @@ func (o Options) ToChatCompletionRequest() openai.ChatCompletionRequest {
 		N:                o.N,
 		FrequencyPenalty: float32(o.FrequencyPenalty),
 		PresencePenalty:  float32(o.PresencePenalty),
-
-		ToolChoice: o.ToolChoice,
-		Seed:       &o.Seed,
+		Stream:           o.Stream,
+		ToolChoice:       o.ToolChoice,
+		Seed:             &o.Seed,
 	}
 }
 
@@ -258,5 +260,11 @@ func WithToolNames(names []string) Option {
 func WithJSONMode() Option {
 	return func(o *Options) {
 		o.JSONMode = true
+	}
+}
+
+func WithStream(stream bool) Option {
+	return func(o *Options) {
+		o.Stream = stream
 	}
 }
