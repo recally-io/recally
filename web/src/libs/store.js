@@ -19,11 +19,6 @@ const useStore = create((set) => ({
   toggleDesktopSidebar: () =>
     set((state) => ({ desktopSidebarOpen: !state.desktopSidebarOpen })),
 
-  assistantId: "",
-  setAssistantId: (id) => set(() => ({ assistantId: id })),
-  threadId: "",
-  setThreadId: (id) => set(() => ({ threadId: id })),
-
   threadIsOpenSettings: false,
   toggleThreadIsOpenSettings: () =>
     set((state) => ({ threadIsOpenSettings: !state.threadIsOpenSettings })),

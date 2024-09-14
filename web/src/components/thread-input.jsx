@@ -18,14 +18,21 @@ import {
 import { IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQueryContext } from "../libs/query-context";
 import useStore, { defaultThreadSettings } from "../libs/store";
 import { ThreadAddButton, ThreadSettingsButton } from "./thread-add-button";
 
 export function ThreadChatInput() {
+  const navigate = useNavigate();
+  const params = useParams();
+  const threadId = params.threadId;
+  const assistantId = params.assistantId;
+
   const {
     sendThreadMessage,
     listModels,
+    createThread,
     getThread,
     getAssistant,
     getPresignedUrlMutation,
@@ -90,17 +97,41 @@ export function ThreadChatInput() {
 
   const handleSendMessage = async () => {
     if (text.trim() !== "") {
+      let newThreadId = threadId;
+      if (!newThreadId) {
+        newThreadId = crypto.randomUUID();
+        const assistant = getAssistant.data;
+        await createThread.mutateAsync({
+          id: newThreadId,
+          name: "New Thread",
+          description: assistant.description,
+          system_prompt: assistant.systemPrompt,
+          model: assistant.model,
+          metadata: {
+            is_generated_title: false,
+            tools: assistant.metadata.tools,
+          },
+        });
+      }
+
       setLoading(true);
       const localText = text.trim();
       const localImages = images;
       setText("");
       setImages([]);
       await sendThreadMessage.mutateAsync({
+        assistantId: assistantId,
+        threadId: newThreadId,
         model: chatModel,
         text: localText,
         images: localImages,
       });
       setLoading(false);
+
+      // if threadId is not present, navigate to new thread
+      if (!threadId) {
+        navigate(`/assistants/${assistantId}/threads/${newThreadId}`, {});
+      }
 
       if (
         messageList.length >= 2 &&

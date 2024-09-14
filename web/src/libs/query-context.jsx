@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toastError, toastInfo } from "../libs/alert";
 import {
@@ -32,12 +32,6 @@ export function QueryContextProvider({ children }) {
   const updateLastThreadMessage = useStore(
     (state) => state.updateLastThreadMessage,
   );
-
-  useEffect(() => {
-    if (!threadId) {
-      setMessageList([]);
-    }
-  }, [threadId]);
 
   const listModels = useQuery({
     queryKey: ["list-assistants-models"],
@@ -145,31 +139,13 @@ export function QueryContextProvider({ children }) {
   });
 
   const sendThreadMessage = useMutation({
-    mutationFn: async ({ model, text, images }) => {
+    mutationFn: async ({ assistantId, threadId, model, text, images }) => {
       addThreadMessage({
         role: "user",
         text,
         id: Math.random(),
         metadata: { images: images },
       });
-
-      const isNewThread = !threadId;
-      let newThreadId = threadId;
-      if (isNewThread) {
-        newThreadId = crypto.randomUUID();
-        const assistant = getAssistant.data;
-        await createThread.mutateAsync({
-          id: newThreadId,
-          name: "New Thread",
-          description: assistant.description,
-          system_prompt: assistant.systemPrompt,
-          model: assistant.model,
-          metadata: {
-            is_generated_title: false,
-            tools: assistant.metadata.tools,
-          },
-        });
-      }
       let payload = {
         role: "user",
         text: text,
@@ -180,7 +156,7 @@ export function QueryContextProvider({ children }) {
         payload["metadata"] = { images: images };
       }
 
-      const uri = `/api/v1/assistants/${assistantId}/threads/${newThreadId}/messages`;
+      const uri = `/api/v1/assistants/${assistantId}/threads/${threadId}/messages`;
       const fetchSSE = async () => {
         const response = await fetch(uri, {
           method: "POST",
@@ -225,17 +201,7 @@ export function QueryContextProvider({ children }) {
           }
         }
       };
-
-      fetchSSE().catch((error) => {
-        console.error("SSE fetch failed:", error);
-        toastError("Failed to receive message stream: " + error.message);
-      });
-
-      if (isNewThread) {
-        navigate(`/assistants/${assistantId}/threads/${newThreadId}`, {
-          replace: true,
-        });
-      }
+      await fetchSSE();
     },
     onError: (error) => {
       toastError("Failed to send message: " + error.message);
