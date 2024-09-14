@@ -160,6 +160,11 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, strea
 			// PromptToken:     int32(usage.PromptTokens),
 			// CompletionToken: int32(usage.CompletionTokens),
 		}
+
+		if newMessage.Role == "" {
+			newMessage.Role = openai.ChatMessageRoleAssistant
+		}
+
 		streamingFunc(newMessage, nil)
 	}
 
@@ -190,12 +195,12 @@ func (s *Service) GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.U
 	if err != nil {
 		return "", fmt.Errorf("failed to get thread messages: %w", err)
 	}
-	if len(messages) < 4 {
+	if len(messages) < 2 {
 		return "", fmt.Errorf("not enough messages to generate title")
 	}
 
 	conversationStr := strings.Builder{}
-	for _, m := range messages[:4] {
+	for _, m := range messages[:min(4, len(messages))] {
 		conversationStr.WriteString(fmt.Sprintf("%s: %s\n", m.Role, m.Text))
 		conversationStr.WriteString("\n")
 	}
