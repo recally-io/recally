@@ -44,7 +44,7 @@ export function ThreadSettingsButton() {
     (state) => state.toggleThreadIsOpenSettings,
   );
   return (
-    <Tooltip label="Settings">
+    <Tooltip label="Thread Settings">
       <ActionIcon
         size="md"
         variant="subtle"
