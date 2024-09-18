@@ -173,9 +173,9 @@ export function ThreadChatInput() {
         disabled={sendThreadMessage.isPending}
       >
         <Popover.Target>
-          <Tooltip label={chatModel}>
+          <Tooltip label={"Select Model: " + chatModel}>
             <ActionIcon variant="subtle" size="md">
-              <Icon icon="tabler:robot" />
+              <Icon icon="tabler:at" />
             </ActionIcon>
           </Tooltip>
         </Popover.Target>
@@ -194,20 +194,17 @@ export function ThreadChatInput() {
 
   const selectSendHotKey = () => {
     return (
-      <Popover
-        width="100"
-        position="bottom"
-        trapFocus
-        withArrow
-        shadow="md"
-        disabled={sendThreadMessage.isPending}
-      >
+      <Popover width="100" position="bottom" trapFocus withArrow shadow="md">
         <Popover.Target>
           <Tooltip
             label={validSendKeys.find((key) => key.value === sendKey).label}
           >
-            <ActionIcon variant="subtle" size="md">
-              <Icon icon="tabler:keyboard" />
+            <ActionIcon
+              variant="transparent"
+              radius="md"
+              disabled={text === "" && !isLoading}
+            >
+              <Icon icon="tabler:chevron-down" />
             </ActionIcon>
           </Tooltip>
         </Popover.Target>
@@ -233,7 +230,7 @@ export function ThreadChatInput() {
         bd="1px solid primary"
         p="2"
         style={{
-          borderRadius: "20px",
+          borderRadius: "10px",
         }}
       >
         {images.length > 0 && (
@@ -276,7 +273,7 @@ export function ThreadChatInput() {
                     onClick={() => {
                       // Function to remove image
                       setImages((prevImages) =>
-                        prevImages.filter((image) => image !== imgUrl),
+                        prevImages.filter((image) => image !== imgUrl)
                       );
                     }}
                   >
@@ -289,18 +286,30 @@ export function ThreadChatInput() {
         )}
         <div>{children}</div>
         <Divider />
-        <Group px="xs" justify="space-between">
+        <Group px="2" justify="space-between">
           <Group align="center" gap="3">
             {uploadImageButton()}
             {selectModel()}
-            {selectSendHotKey()}
-          </Group>
-          <Group align="center" gap="3">
+            <Tooltip label="Select prompt">
+              <ActionIcon size="md" variant="subtle" radius="lg">
+                <Icon icon="tabler:slash" />
+              </ActionIcon>
+            </Tooltip>
+            {/* <Divider orientation="vertical" /> */}
+            <Tooltip label="Voice Chat">
+              <ActionIcon size="md" variant="subtle" radius="lg">
+                <Icon icon="tabler:microphone" />
+              </ActionIcon>
+            </Tooltip>
+            <Divider orientation="vertical" />
             <ThreadSettingsButton />
             <ThreadAddButton />
+            <Divider orientation="vertical" />
+          </Group>
+          <Group size="xs" p="0" gap="0">
             <ActionIcon
               variant="filled"
-              radius="lg"
+              radius="md"
               aria-label="Settings"
               disabled={text === "" && !isLoading}
               onClick={handleSendMessage}
@@ -308,9 +317,11 @@ export function ThreadChatInput() {
               {isLoading ? (
                 <Icon icon="svg-spinners:180-ring" />
               ) : (
-                <Icon icon="tabler:arrow-up" />
+                <Icon icon="tabler:send-2" />
               )}
             </ActionIcon>
+            <Divider orientation="vertical" />
+            {selectSendHotKey()}
           </Group>
         </Group>
       </Flex>
@@ -325,33 +336,31 @@ export function ThreadChatInput() {
         bottom: 0,
       }}
     >
-      <Flex align="flex-end" gap="xs">
-        <FocusTrap>
-          <Textarea
-            placeholder={`use ${
-              validSendKeys.find((key) => key.value === sendKey).label
-            } to send`}
-            radius="lg"
-            minRows={1}
-            maxRows={5}
-            autosize
-            w="100%"
-            disabled={sendThreadMessage.isPending}
-            onKeyDown={async (e) => {
-              e.stopPropagation();
-              getHotkeyHandler([[sendKey, handleSendMessage]])(e);
-            }}
-            styles={{
-              input: {
-                border: "none",
-              },
-            }}
-            value={text}
-            onChange={(e) => setText(e.currentTarget.value)}
-            inputContainer={renderAttachmentTextArea}
-          ></Textarea>
-        </FocusTrap>
-      </Flex>
+      <FocusTrap>
+        <Textarea
+          placeholder={`use ${
+            validSendKeys.find((key) => key.value === sendKey).label
+          } to send`}
+          radius="md"
+          minRows={1}
+          maxRows={5}
+          autosize
+          w="100%"
+          disabled={sendThreadMessage.isPending}
+          onKeyDown={async (e) => {
+            e.stopPropagation();
+            getHotkeyHandler([[sendKey, handleSendMessage]])(e);
+          }}
+          styles={{
+            input: {
+              border: "none",
+            },
+          }}
+          value={text}
+          onChange={(e) => setText(e.currentTarget.value)}
+          inputContainer={renderAttachmentTextArea}
+        ></Textarea>
+      </FocusTrap>
     </Container>
   );
 }

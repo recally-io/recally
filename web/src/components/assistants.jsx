@@ -25,9 +25,8 @@ export default function Assistants() {
   const navigate = useNavigate();
   const params = useParams();
   const { listAssistants, deleteAssistant } = useQueryContext();
-  const setAssistantId = useStore((state) => state.setAssistantId);
   const toggleThreadIsOpenSettings = useStore(
-    (state) => state.toggleThreadIsOpenSettings,
+    (state) => state.toggleThreadIsOpenSettings
   );
   const setThreadSettings = useStore((state) => state.setThreadSettings);
 
@@ -39,6 +38,14 @@ export default function Assistants() {
       setFilteredAssistants(listAssistants.data);
     }
   }, [listAssistants.data]);
+
+  const setAssistantId = function (assistantId) {
+    if (assistantId) {
+      navigate(`/assistants/${assistantId}`);
+    } else {
+      navigate(`/assistants`);
+    }
+  };
 
   const deleteConfirmModal = (assistantId) =>
     modals.openConfirmModal({
@@ -75,8 +82,8 @@ export default function Assistants() {
                   listAssistants.data.filter((assistant) =>
                     (assistant.name + assistant.description + assistant.id)
                       .toLowerCase()
-                      .includes(e.currentTarget.value.toLowerCase()),
-                  ),
+                      .includes(e.currentTarget.value.toLowerCase())
+                  )
                 );
               }}
             />
