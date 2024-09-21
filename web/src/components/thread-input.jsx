@@ -273,7 +273,7 @@ export function ThreadChatInput() {
                     onClick={() => {
                       // Function to remove image
                       setImages((prevImages) =>
-                        prevImages.filter((image) => image !== imgUrl)
+                        prevImages.filter((image) => image !== imgUrl),
                       );
                     }}
                   >

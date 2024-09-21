@@ -106,15 +106,19 @@ export function ThreadSettingsModal() {
             key={form.key("name")}
             {...form.getInputProps("name")}
           />
-          <TextInput
+          <Textarea
             withAsterisk
             label="Description"
+            minRows={3}
+            maxRows={5}
             placeholder="Description of the thread"
             key={form.key("description")}
             {...form.getInputProps("description")}
           />
           <Textarea
             withAsterisk
+            minRows={3}
+            maxRows={5}
             label="SystemPrompt"
             placeholder="System prompt of the thread"
             key={form.key("system_prompt")}
