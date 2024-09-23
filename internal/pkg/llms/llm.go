@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 	"time"
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/pkg/tools"
@@ -13,6 +14,25 @@ import (
 	"github.com/sashabaranov/go-openai"
 	"golang.org/x/sync/errgroup"
 )
+
+const (
+	IntermediateStepTool = "tool"
+	IntermediateStepRag  = "rag"
+)
+
+type IntermediateStep struct {
+	Type   string `json:"type"`
+	Name   string `json:"name"`
+	Input  any    `json:"input"`
+	Output any    `json:"output"`
+}
+
+type StreamingMessage struct {
+	Choice            *openai.ChatCompletionChoice
+	Usage             *openai.Usage
+	Err               error
+	IntermediateSteps []IntermediateStep `json:"intermediate_steps"`
+}
 
 type LLM struct {
 	client       *openai.Client
@@ -77,12 +97,6 @@ func (l *LLM) TextCompletion(ctx context.Context, prompt string, options ...Opti
 	}
 }
 
-type StreamingMessage struct {
-	Choice *openai.ChatCompletionChoice
-	Usage  *openai.Usage
-	Err    error
-}
-
 func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, streamingFunc func(msg StreamingMessage), options ...Option) {
 	opts := &Options{}
 	for _, o := range options {
@@ -90,6 +104,14 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 	}
 	req := opts.ToChatCompletionRequest()
 	req.Messages = messages
+
+	mu := new(sync.Mutex)
+
+	syncStreamFunc := func(msg StreamingMessage) {
+		mu.Lock()
+		defer mu.Unlock()
+		streamingFunc(msg)
+	}
 
 	// dynamically add tools to the request
 	logger.FromContext(ctx).Info("generating content", "tool_names", opts.ToolNames)
@@ -132,30 +154,34 @@ out:
 					choice.Message.Content = delta.Message.Content
 				}
 				if req.Stream {
-					streamingFunc(StreamingMessage{Choice: choice})
+					syncStreamFunc(StreamingMessage{Choice: choice})
 				}
 			}
 		case err := <-errChan:
 			if errors.Is(err, io.EOF) {
 				choice.Message.Content = sb.String()
 
-				streamingFunc(StreamingMessage{Err: err})
+				syncStreamFunc(StreamingMessage{Err: err})
 				break out
 			}
-			streamingFunc(StreamingMessage{Err: err})
+			syncStreamFunc(StreamingMessage{Err: err})
 			return
 		}
 	}
+
+	intermediateSteps := make([]IntermediateStep, 0)
 
 	if len(toolCalls) > 0 {
 		choice.Message.ToolCalls = toolCalls
 		req.Messages = append(req.Messages, choice.Message)
 		for {
-			toolMessages, err := l.invokeTools(ctx, toolCalls)
+			toolMessages, steps, err := l.invokeTools(ctx, toolCalls)
 			if err != nil {
-				streamingFunc(StreamingMessage{Err: err})
+				syncStreamFunc(StreamingMessage{Err: err})
 				return
 			}
+			intermediateSteps = append(intermediateSteps, steps...)
+			syncStreamFunc(StreamingMessage{IntermediateSteps: intermediateSteps})
 			req.Messages = append(req.Messages, toolMessages...)
 			toolCalls = make([]openai.ToolCall, 0)
 			go l.generateContentStream(ctx, req, respChan, errChan)
@@ -180,16 +206,16 @@ out:
 							choice.Message.Content = delta.Message.Content
 						}
 						if req.Stream {
-							streamingFunc(StreamingMessage{Choice: choice})
+							syncStreamFunc(StreamingMessage{Choice: choice})
 						}
 					}
 				case err := <-errChan:
 					if errors.Is(err, io.EOF) {
 						choice.Message.Content = sb.String()
-						streamingFunc(StreamingMessage{Err: err})
+						syncStreamFunc(StreamingMessage{Err: err})
 						break outloop
 					}
-					streamingFunc(StreamingMessage{Err: err})
+					syncStreamFunc(StreamingMessage{Err: err})
 					return
 				}
 			}
@@ -199,7 +225,7 @@ out:
 		}
 	}
 	if !req.Stream {
-		streamingFunc(StreamingMessage{Choice: choice})
+		syncStreamFunc(StreamingMessage{Choice: choice, IntermediateSteps: intermediateSteps})
 	}
 }
 
@@ -262,9 +288,10 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 	}
 }
 
-func (l *LLM) invokeTools(ctx context.Context, toolCalls []openai.ToolCall) ([]openai.ChatCompletionMessage, error) {
+func (l *LLM) invokeTools(ctx context.Context, toolCalls []openai.ToolCall) ([]openai.ChatCompletionMessage, []IntermediateStep, error) {
 	var messages []openai.ChatCompletionMessage
 	eg, ctx := errgroup.WithContext(ctx)
+	steps := make([]IntermediateStep, 0)
 	for _, tc := range toolCalls {
 		eg.Go(func() error {
 			toolName := tc.Function.Name
@@ -279,18 +306,23 @@ func (l *LLM) invokeTools(ctx context.Context, toolCalls []openai.ToolCall) ([]o
 			if err != nil {
 				return fmt.Errorf("failed to invoke tool %s: %w", toolName, err)
 			}
-			logger.FromContext(ctx).Info("tool response", "tool", toolName, "response", toolResp[:200], "duration", time.Since(start))
+			logger.FromContext(ctx).Info("tool response", "tool", toolName, "response", toolResp[:min(200, len(toolResp))], "duration", time.Since(start))
 			messages = append(messages, openai.ChatCompletionMessage{
 				Role:       openai.ChatMessageRoleTool,
 				ToolCallID: tc.ID,
 				Content:    toolResp,
 			})
+			steps = append(steps, IntermediateStep{
+				Type:   IntermediateStepTool,
+				Name:   toolName,
+				Input:  toolArgs,
+				Output: toolResp,
+			})
 			return nil
 		})
 	}
-
 	if err := eg.Wait(); err != nil {
-		return nil, err
+		return nil, steps, err
 	}
-	return messages, nil
+	return messages, steps, nil
 }
