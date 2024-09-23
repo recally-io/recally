@@ -41,6 +41,34 @@ func (s *Service) CreateAttachment(ctx context.Context, tx db.DBTX, attachment *
 	}
 
 	attachment.Load(&ast)
+
+	if attachment.ThreadId != uuid.Nil {
+		// update thread to enbale rag
+		t, err := s.GetThread(ctx, tx, attachment.ThreadId)
+		if err != nil {
+			logger.FromContext(ctx).Error("failed to get thread", "err", err)
+			return attachment, nil
+		}
+		if !t.Metadata.RagSettings.Enable {
+			t.Metadata.RagSettings.Enable = true
+			if _, err := s.UpdateThread(ctx, tx, t); err != nil {
+				logger.FromContext(ctx).Error("failed to update thread", "err", err)
+			}
+		}
+	} else {
+		// update assistant to enbale rag
+		a, err := s.GetAssistant(ctx, tx, attachment.AssistantId)
+		if err != nil {
+			logger.FromContext(ctx).Error("failed to get assistant", "err", err)
+			return attachment, nil
+		}
+		if !a.Metadata.RagSettings.Enable {
+			a.Metadata.RagSettings.Enable = true
+			if _, err := s.UpdateAssistant(ctx, tx, a); err != nil {
+				logger.FromContext(ctx).Error("failed to update assistant", "err", err)
+			}
+		}
+	}
 	return attachment, nil
 }
 
