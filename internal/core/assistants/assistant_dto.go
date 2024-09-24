@@ -11,9 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type RagSettings struct {
+	Enable       bool `json:"enable"`
+	MultiQuery   bool `json:"multi_query"`
+	QueryRewrite bool `json:"query_rewrite"`
+	Rerank       bool `json:"rerank"`
+}
+
 type AssistantMetadata struct {
 	// Tools is a list of tools that the assistant can use
-	Tools []string `json:"tools"`
+	Tools       []string    `json:"tools,omitempty"`
+	RagSettings RagSettings `json:"rag_settings,omitempty"`
 }
 
 type AssistantDTO struct {

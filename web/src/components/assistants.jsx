@@ -26,7 +26,7 @@ export default function Assistants() {
   const params = useParams();
   const { listAssistants, deleteAssistant } = useQueryContext();
   const toggleThreadIsOpenSettings = useStore(
-    (state) => state.toggleThreadIsOpenSettings
+    (state) => state.toggleThreadIsOpenSettings,
   );
   const setThreadSettings = useStore((state) => state.setThreadSettings);
 
@@ -82,8 +82,8 @@ export default function Assistants() {
                   listAssistants.data.filter((assistant) =>
                     (assistant.name + assistant.description + assistant.id)
                       .toLowerCase()
-                      .includes(e.currentTarget.value.toLowerCase())
-                  )
+                      .includes(e.currentTarget.value.toLowerCase()),
+                  ),
                 );
               }}
             />

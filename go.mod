@@ -19,7 +19,7 @@ require (
 	github.com/pgvector/pgvector-go v0.2.0
 	github.com/riverqueue/river v0.9.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
-	github.com/sashabaranov/go-openai v1.27.0
+	github.com/sashabaranov/go-openai v1.30.3
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.3

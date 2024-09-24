@@ -59,7 +59,13 @@ export function ThreadChatInput() {
       label: "↵",
     },
   ];
-  const [sendKey, setSendKey] = useState("enter");
+  const [sendKey, setSendKey] = useState(() => {
+    return localStorage.getItem("sendKey") || "enter";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sendKey", sendKey);
+  }, [sendKey]);
   const [openedImage, setOpenedImage] = useState(null);
 
   const [isLoading, setLoading] = useState(false);
@@ -119,14 +125,19 @@ export function ThreadChatInput() {
       const localImages = images;
       setText("");
       setImages([]);
-      await sendThreadMessage.mutateAsync({
-        assistantId: assistantId,
-        threadId: newThreadId,
-        model: chatModel,
-        text: localText,
-        images: localImages,
-      });
-      setLoading(false);
+      try {
+        await sendThreadMessage.mutateAsync({
+          assistantId: assistantId,
+          threadId: newThreadId,
+          model: chatModel,
+          text: localText,
+          images: localImages,
+        });
+      } catch (error) {
+        console.error("Failed to send message:", error);
+      } finally {
+        setLoading(false);
+      }
 
       // if threadId is not present, navigate to new thread
       if (!threadId) {
@@ -273,7 +284,7 @@ export function ThreadChatInput() {
                     onClick={() => {
                       // Function to remove image
                       setImages((prevImages) =>
-                        prevImages.filter((image) => image !== imgUrl)
+                        prevImages.filter((image) => image !== imgUrl),
                       );
                     }}
                   >

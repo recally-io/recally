@@ -11,8 +11,27 @@ import (
 )
 
 type ThreadMetadata struct {
-	IsGeneratedTitle bool     `json:"is_generated_title"`
-	Tools            []string `json:"tools"`
+	AssistantMetadata
+	IsGeneratedTitle bool `json:"is_generated_title"`
+}
+
+// Merge merges the thread metadata with the assistant metadata
+func (m *ThreadMetadata) Merge(am AssistantMetadata) {
+	mergedRagSettings := am.RagSettings // Start with assistant's RagSettings
+
+	// Override assistant's RagSettings if thread has non-default values
+	mergedRagSettings.Enable = m.RagSettings.Enable
+	mergedRagSettings.MultiQuery = m.RagSettings.MultiQuery
+	mergedRagSettings.QueryRewrite = m.RagSettings.QueryRewrite
+	mergedRagSettings.Rerank = m.RagSettings.Rerank
+
+	mergedTools := am.Tools // Take assistant tools first
+	if len(m.Tools) > 0 {
+		mergedTools = m.Tools // Override if thread has its own tools
+	}
+
+	m.Tools = mergedTools
+	m.RagSettings = mergedRagSettings
 }
 
 type ThreadDTO struct {
