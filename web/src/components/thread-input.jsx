@@ -59,7 +59,13 @@ export function ThreadChatInput() {
       label: "↵",
     },
   ];
-  const [sendKey, setSendKey] = useState("enter");
+  const [sendKey, setSendKey] = useState(() => {
+    return localStorage.getItem("sendKey") || "enter";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sendKey", sendKey);
+  }, [sendKey]);
   const [openedImage, setOpenedImage] = useState(null);
 
   const [isLoading, setLoading] = useState(false);
