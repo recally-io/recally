@@ -110,6 +110,10 @@ func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 }
 
 func (s *Service) DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error {
+	// Delete associated attachments
+	if err := s.dao.DeleteAssistantAttachmentsByThreadId(ctx, tx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
+		return fmt.Errorf("failed to delete thread attachments: %w", err)
+	}
 	if err := s.dao.DeleteThreadMessagesByThread(ctx, tx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
 		return fmt.Errorf("failed to delete thread messages: %w", err)
 	}

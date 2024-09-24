@@ -69,6 +69,10 @@ func (s *Service) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*
 }
 
 func (s *Service) DeleteAssistant(ctx context.Context, tx db.DBTX, assistantId uuid.UUID) error {
+	// Delete associated attachments
+	if err := s.dao.DeleteAssistantAttachmentsByAssistantId(ctx, tx, pgtype.UUID{Bytes: assistantId, Valid: true}); err != nil {
+		return fmt.Errorf("failed to delete assistant attachments: %w", err)
+	}
 	// Delete associated threads and messages
 	if err := s.dao.DeleteThreadMessagesByAssistant(ctx, tx, pgtype.UUID{Bytes: assistantId, Valid: true}); err != nil {
 		return fmt.Errorf("failed to delete thread messages by assistant: %w", err)
