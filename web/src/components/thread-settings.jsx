@@ -10,7 +10,7 @@ import {
   Textarea,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQueryContext } from "../libs/query-context";
 import useStore from "../libs/store";
@@ -28,6 +28,8 @@ export function ThreadSettingsModal() {
     getAssistant,
     getThread,
     upsertAssistant,
+    listAttachmentsByAssistant,
+    listAttachmentsByThread,
   } = useQueryContext();
 
   const [isOpen, toggleThreadIsOpenSettings] = useStore((state) => [
@@ -37,6 +39,8 @@ export function ThreadSettingsModal() {
 
   const threadSettings = useStore((state) => state.threadSettings);
   const setThreadSettings = useStore((state) => state.setThreadSettings);
+
+  const [attachments, setAttachments] = useState([]);
 
   const form = useForm({
     initialValues: threadSettings,
@@ -80,13 +84,49 @@ export function ThreadSettingsModal() {
     }
   }, [getAssistant.data, getThread.data]);
 
+  useEffect(() => {
+    if (listAttachmentsByAssistant.data) {
+      setAttachments(listAttachmentsByAssistant.data);
+    }
+    if (listAttachmentsByThread.data) {
+      setAttachments(listAttachmentsByThread.data);
+    }
+  }, [listAttachmentsByAssistant.data, listAttachmentsByThread.data]);
+
   return (
     <Modal
       opened={isOpen}
       onClose={toggleThreadIsOpenSettings}
-      title="Thread Settings"
+      title="Settings"
     >
       <UploadButton />
+      <Stack spacing="sm" py="xs">
+        {attachments.map((attachment) => (
+          <Group
+            key={attachment.id}
+            position="apart"
+            style={{ alignItems: "center" }}
+          >
+            <div style={{ flex: 1 }}>
+              <a
+                href={attachment.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <strong>{attachment.name}</strong>
+              </a>
+              {attachment.size > 0 && (
+                <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                  {attachment.size} KB
+                </div>
+              )}
+            </div>
+            {/* <ActionIcon variant="outline" color="red" size="xs">
+              <Icon icon="tabler:x"></Icon>
+            </ActionIcon> */}
+          </Group>
+        ))}
+      </Stack>
       <Divider my="sm" variant="dashed" />
       <form
         onSubmit={form.onSubmit(async (values) => {

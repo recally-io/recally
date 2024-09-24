@@ -236,6 +236,26 @@ export function QueryContextProvider({ children }) {
     enabled: isLogin && !!threadId && !!assistantId,
   });
 
+  const listAttachmentsByAssistant = useQuery({
+    queryKey: ["list-attachments-by-assistant", assistantId],
+    queryFn: async () => {
+      const res = await get(`/api/v1/assistants/${assistantId}/attachments`);
+      return res.data || [];
+    },
+    enabled: isLogin && !!assistantId,
+  });
+
+  const listAttachmentsByThread = useQuery({
+    queryKey: ["list-attachments-by-thread", threadId],
+    queryFn: async () => {
+      const res = await get(
+        `/api/v1/assistants/${assistantId}/threads/${threadId}/attachments`,
+      );
+      return res.data || [];
+    },
+    enabled: isLogin && !!threadId && !!assistantId,
+  });
+
   const deleteThread = useMutation({
     mutationFn: async () => {
       await del(`/api/v1/assistants/${assistantId}/threads/${threadId}`);
@@ -320,6 +340,9 @@ export function QueryContextProvider({ children }) {
         getPresignedUrlMutation,
         uploadFileMutation,
         postAttachmentMutation,
+
+        listAttachmentsByAssistant,
+        listAttachmentsByThread,
       }}
     >
       {children}
