@@ -193,6 +193,8 @@ export function QueryContextProvider({ children }) {
                 addThreadMessage(msg);
               } else {
                 msg.text += event.text;
+                msg.metadata.intermediate_steps =
+                  event.metadata.intermediate_steps;
                 updateLastThreadMessage(msg);
               }
             } catch (error) {

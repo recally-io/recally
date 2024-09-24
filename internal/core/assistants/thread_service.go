@@ -349,8 +349,8 @@ func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *M
 	}
 	steps = append(steps, llms.IntermediateStep{
 		Type:   llms.IntermediateStepRag,
-		Name:   "rag",
-		Input:  message.Text,
+		Name:   "vector_search",
+		Input:  map[string]string{"query": message.Text},
 		Output: docs,
 	})
 

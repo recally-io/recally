@@ -181,19 +181,19 @@ out:
 		}
 	}
 
-	intermediateSteps := make([]IntermediateStep, 0)
-
 	if len(toolCalls) > 0 {
-		choice.Message.ToolCalls = toolCalls
-		req.Messages = append(req.Messages, choice.Message)
 		for {
+			req.Messages = append(req.Messages, openai.ChatCompletionMessage{
+				Role:      openai.ChatMessageRoleAssistant,
+				ToolCalls: toolCalls,
+			})
 			toolMessages, steps, err := l.invokeTools(ctx, toolCalls)
 			if err != nil {
 				syncStreamFunc(StreamingMessage{Err: err})
 				return
 			}
-			intermediateSteps = append(intermediateSteps, steps...)
-			syncStreamFunc(StreamingMessage{IntermediateSteps: intermediateSteps})
+
+			syncStreamFunc(StreamingMessage{IntermediateSteps: steps})
 			req.Messages = append(req.Messages, toolMessages...)
 			toolCalls = make([]openai.ToolCall, 0)
 			go l.generateContent(ctx, req, respChan, errChan)
@@ -238,7 +238,7 @@ out:
 		}
 	}
 	if !req.Stream {
-		syncStreamFunc(StreamingMessage{Choice: choice, IntermediateSteps: intermediateSteps})
+		syncStreamFunc(StreamingMessage{Choice: choice})
 	}
 	syncStreamFunc(StreamingMessage{Err: io.EOF})
 }

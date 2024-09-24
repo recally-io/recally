@@ -1,11 +1,11 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { CodeHighlight } from "@mantine/code-highlight";
 import {
   Accordion,
   Avatar,
   Badge,
   Box,
   Button,
-  Code,
   Collapse,
   Container,
   Divider,
@@ -38,6 +38,7 @@ export function ThreadChatWindows() {
   const chatArea = useRef(null);
   const [imageOpened, setImageOpened] = useState(null);
   const [stepsOpened, { toggle: toggleSteps }] = useDisclosure(false);
+  const [messageId, setMessageId] = useState(null);
 
   useEffect(() => {
     chatArea.current.scrollTo({
@@ -61,8 +62,14 @@ export function ThreadChatWindows() {
 
   const IntermediateStep = ({ step, index }) => {
     return (
-      <Accordion.Item key={index} value={step.name}>
-        <Accordion.Control icon={<Badge color="pink">{step.type}</Badge>}>
+      <Accordion.Item key={index} value={step.name + "-" + `${index}`}>
+        <Accordion.Control
+          icon={
+            <Badge size="xs" color="pink">
+              {step.type}
+            </Badge>
+          }
+        >
           {step.name}
         </Accordion.Control>
         <Accordion.Panel>
@@ -78,15 +85,25 @@ export function ThreadChatWindows() {
             <Text size="sm" c="dimmed">
               Input:
             </Text>
-            <Code block language="json" mt="xs">
-              {JSON.stringify(JSON.parse(step.input), null, 2)}
-            </Code>
+            <CodeHighlight
+              language="json"
+              code={
+                typeof step.input === "string"
+                  ? JSON.stringify(JSON.parse(step.input), null, 2)
+                  : JSON.stringify(step.input, null, 2)
+              }
+            />
             <Text size="sm" c="dimmed" mt="xs">
               Output:
             </Text>
-            <Code block language="json" mt="xs">
-              {JSON.stringify(JSON.parse(step.output), null, 4)}
-            </Code>
+            <CodeHighlight
+              code={
+                typeof step.output === "string"
+                  ? JSON.stringify(JSON.parse(step.output), null, 4)
+                  : JSON.stringify(step.output, null, 4)
+              }
+              language="json"
+            />
           </Paper>
         </Accordion.Panel>
       </Accordion.Item>
@@ -125,31 +142,38 @@ export function ThreadChatWindows() {
           >
             {message.metadata?.intermediate_steps &&
               message.metadata.intermediate_steps.length > 0 && (
-                <Flex direction="column">
-                  <Button
-                    variant="subtle"
-                    onClick={toggleSteps}
-                    rightSection={
-                      <Icon
-                        icon={
-                          stepsOpened
-                            ? "tabler:chevron-up"
-                            : "tabler:chevron-down"
-                        }
-                      />
-                    }
-                  >
-                    <Text>Intermediate Steps</Text>
-                  </Button>
-                  <Collapse in={stepsOpened}>
-                    <Accordion>
-                      {message.metadata.intermediate_steps.map((step, index) =>
-                        IntermediateStep({ step, index }),
-                      )}
-                    </Accordion>
-                  </Collapse>
-                  <Divider />
-                </Flex>
+                <Container size="md">
+                  <Flex direction="column">
+                    <Button
+                      variant="subtle"
+                      justify="space-between"
+                      radius="md"
+                      onClick={() => {
+                        toggleSteps();
+                        setMessageId(message.id);
+                      }}
+                      rightSection={
+                        <Icon
+                          icon={
+                            stepsOpened
+                              ? "tabler:chevron-up"
+                              : "tabler:chevron-down"
+                          }
+                        />
+                      }
+                    >
+                      <Text>Intermediate Steps</Text>
+                    </Button>
+                    <Collapse in={stepsOpened && message.id == messageId}>
+                      <Accordion>
+                        {message.metadata.intermediate_steps.map(
+                          (step, index) => IntermediateStep({ step, index }),
+                        )}
+                      </Accordion>
+                    </Collapse>
+                    <Divider />
+                  </Flex>
+                </Container>
               )}
             {message.metadata?.images && message.metadata.images.length > 0 && (
               <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xs" mb="xs">
