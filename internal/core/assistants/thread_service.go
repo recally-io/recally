@@ -92,6 +92,15 @@ func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 	var t ThreadDTO
 	t.Load(&th)
 
+	ass, err := s.dao.GetAssistant(ctx, tx, th.AssistantID.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get assistant: %w", err)
+	}
+
+	var a AssistantDTO
+	a.Load(&ass)
+	t.Metadata.Merge(a.Metadata)
+
 	// messages, err := s.ListThreadMessages(ctx, tx, th.Uuid)
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to get thread messages: %w", err)
@@ -101,6 +110,10 @@ func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 }
 
 func (s *Service) DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) error {
+	// Delete associated attachments
+	if err := s.dao.DeleteAssistantAttachmentsByThreadId(ctx, tx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
+		return fmt.Errorf("failed to delete thread attachments: %w", err)
+	}
 	if err := s.dao.DeleteThreadMessagesByThread(ctx, tx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
 		return fmt.Errorf("failed to delete thread messages: %w", err)
 	}
@@ -117,22 +130,12 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, strea
 		return
 	}
 
-	oaiMessages, model, metadata, err := s.buildChatMessages(ctx, tx, thread)
-	if err != nil {
-		streamingFunc(nil, fmt.Errorf("failed to build chat messages: %w", err))
-		return
-	}
-
-	opts := []llms.Option{
-		llms.WithModel(model),
-		llms.WithToolNames(metadata.Tools),
-		llms.WithStream(metadata.Stream),
-	}
-
 	var newMessage *MessageDTO
 	newMessageID := uuid.New()
 	sb := strings.Builder{}
 	var usage *openai.Usage
+	model := thread.Model
+	intermediateSteps := make([]llms.IntermediateStep, 0)
 
 	sendToUser := func(streamMsg llms.StreamingMessage) {
 		choice := streamMsg.Choice
@@ -141,13 +144,20 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, strea
 			streamingFunc(nil, err)
 			return
 		}
+
+		if len(streamMsg.IntermediateSteps) > 0 {
+			intermediateSteps = append(intermediateSteps, streamMsg.IntermediateSteps...)
+		}
+
+		if streamMsg.Usage != nil {
+			usage = streamMsg.Usage
+		}
+
 		if choice == nil {
 			// streamingFunc(nil, fmt.Errorf("no content generated"))
 			return
 		}
-		if streamMsg.Usage != nil {
-			usage = streamMsg.Usage
-		}
+
 		sb.WriteString(choice.Message.Content)
 		newMessage = &MessageDTO{
 			ID:          newMessageID,
@@ -157,6 +167,9 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, strea
 			Model:       model,
 			Role:        choice.Message.Role,
 			Text:        choice.Message.Content,
+			Metadata: MessageMetadata{
+				IntermediateSteps: intermediateSteps,
+			},
 			// PromptToken:     int32(usage.PromptTokens),
 			// CompletionToken: int32(usage.CompletionTokens),
 		}
@@ -166,6 +179,20 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, strea
 		}
 
 		streamingFunc(newMessage, nil)
+	}
+
+	oaiMessages, lmodel, metadata, steps, err := s.buildChatMessages(ctx, tx, thread)
+	if err != nil {
+		streamingFunc(nil, fmt.Errorf("failed to build chat messages: %w", err))
+		return
+	}
+	model = lmodel
+	intermediateSteps = append(intermediateSteps, steps...)
+
+	opts := []llms.Option{
+		llms.WithModel(model),
+		llms.WithToolNames(metadata.Tools),
+		llms.WithStream(metadata.Stream),
 	}
 
 	s.llm.GenerateContent(ctx, oaiMessages, sendToUser, opts...)
@@ -225,12 +252,13 @@ func (s *Service) GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.U
 	return title, nil
 }
 
-func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *ThreadDTO) ([]openai.ChatCompletionMessage, string, MessageMetadata, error) {
+func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *ThreadDTO) ([]openai.ChatCompletionMessage, string, MessageMetadata, []llms.IntermediateStep, error) {
 	oaiMessages := make([]openai.ChatCompletionMessage, 0)
 	messages, err := s.ListThreadMessages(ctx, tx, thread.Id)
 	metadata := messages[len(messages)-1].Metadata
+	steps := make([]llms.IntermediateStep, 0)
 	if err != nil {
-		return nil, "", metadata, fmt.Errorf("failed to get thread messages: %w", err)
+		return nil, "", metadata, steps, fmt.Errorf("failed to get thread messages: %w", err)
 	}
 	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 		Role:    "system",
@@ -244,7 +272,11 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 		})
 	}
 	lastMessage := messages[len(messages)-1]
-	s.rewriteUserMessage(ctx, tx, &lastMessage)
+
+	// Rewrite user message using RAG
+	if thread.Metadata.RagSettings.Enable {
+		steps = s.rewriteUserMessage(ctx, tx, &lastMessage)
+	}
 
 	// Use the model from the last message
 	model := thread.Model
@@ -279,13 +311,14 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 		}
 	}
 
-	return oaiMessages, model, metadata, nil
+	return oaiMessages, model, metadata, steps, nil
 }
 
-func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *MessageDTO) {
+func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *MessageDTO) []llms.IntermediateStep {
+	steps := make([]llms.IntermediateStep, 0)
 	if message.Text == "" {
 		logger.FromContext(ctx).Info("RAG for user message: message text is empty")
-		return
+		return steps
 	}
 	// 1. search for similar documents
 	// 2. search chat history for similar questions
@@ -306,6 +339,7 @@ func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *M
 	})
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to search for similar documents", "err", err)
+		return steps
 	}
 	for _, d := range docsRes {
 		var metadata map[string]any
@@ -317,6 +351,12 @@ func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *M
 			Metadata: metadata,
 		})
 	}
+	steps = append(steps, llms.IntermediateStep{
+		Type:   llms.IntermediateStepRag,
+		Name:   "vector_search",
+		Input:  map[string]string{"query": message.Text},
+		Output: docs,
+	})
 
 	// chatHistoryRes, err := s.dao.SimilaritySearchMessages(ctx, tx, db.SimilaritySearchMessagesParams{
 	// 	ThreadID:   pgtype.UUID{Bytes: message.ThreadID, Valid: true},
@@ -342,4 +382,5 @@ func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *M
 	}
 
 	message.Text = prompt
+	return steps
 }

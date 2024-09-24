@@ -167,7 +167,7 @@ export function QueryContextProvider({ children }) {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(await response.text());
         }
 
         const reader = response.body.getReader();
@@ -193,6 +193,8 @@ export function QueryContextProvider({ children }) {
                 addThreadMessage(msg);
               } else {
                 msg.text += event.text;
+                msg.metadata.intermediate_steps =
+                  event.metadata.intermediate_steps;
                 updateLastThreadMessage(msg);
               }
             } catch (error) {
@@ -230,6 +232,26 @@ export function QueryContextProvider({ children }) {
       );
       setMessageList(res.data.messages || []);
       return res.data || {};
+    },
+    enabled: isLogin && !!threadId && !!assistantId,
+  });
+
+  const listAttachmentsByAssistant = useQuery({
+    queryKey: ["list-attachments-by-assistant", assistantId],
+    queryFn: async () => {
+      const res = await get(`/api/v1/assistants/${assistantId}/attachments`);
+      return res.data || [];
+    },
+    enabled: isLogin && !!assistantId,
+  });
+
+  const listAttachmentsByThread = useQuery({
+    queryKey: ["list-attachments-by-thread", threadId],
+    queryFn: async () => {
+      const res = await get(
+        `/api/v1/assistants/${assistantId}/threads/${threadId}/attachments`,
+      );
+      return res.data || [];
     },
     enabled: isLogin && !!threadId && !!assistantId,
   });
@@ -318,6 +340,9 @@ export function QueryContextProvider({ children }) {
         getPresignedUrlMutation,
         uploadFileMutation,
         postAttachmentMutation,
+
+        listAttachmentsByAssistant,
+        listAttachmentsByThread,
       }}
     >
       {children}

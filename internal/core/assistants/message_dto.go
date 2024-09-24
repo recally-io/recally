@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
@@ -12,9 +13,10 @@ import (
 )
 
 type MessageMetadata struct {
-	Tools  []string `json:"tools"`
-	Images []string `json:"images"`
-	Stream bool     `json:"stream"`
+	Tools             []string                `json:"tools"`
+	Images            []string                `json:"images"`
+	Stream            bool                    `json:"stream"`
+	IntermediateSteps []llms.IntermediateStep `json:"intermediate_steps"`
 }
 
 // 1563 dimensions

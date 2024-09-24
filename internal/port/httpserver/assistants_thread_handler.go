@@ -51,15 +51,13 @@ func (h *assistantHandler) listThreads(c echo.Context) error {
 }
 
 type createThreadRequest struct {
-	AssistantId  uuid.UUID `param:"assistant-id" validate:"required,uuid4"`
-	Id           uuid.UUID `json:"id,omitempty" validate:"omitempty,uuid"`
-	Name         string    `json:"name" validate:"required"`
-	Description  string    `json:"description,omitempty"`
-	Model        string    `json:"model,omitempty"`
-	SystemPrompt string    `json:"system_prompt,omitempty"`
-	Metadata     struct {
-		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	AssistantId  uuid.UUID                    `param:"assistant-id" validate:"required,uuid4"`
+	Id           uuid.UUID                    `json:"id,omitempty" validate:"omitempty,uuid"`
+	Name         string                       `json:"name" validate:"required"`
+	Description  string                       `json:"description,omitempty"`
+	Model        string                       `json:"model,omitempty"`
+	SystemPrompt string                       `json:"system_prompt,omitempty"`
+	Metadata     assistants.AssistantMetadata `json:"metadata,omitempty"`
 }
 
 // createThread is a handler function that creates a new thread for an assistant.
@@ -102,7 +100,7 @@ func (h *assistantHandler) createThread(c echo.Context) error {
 		AssistantId:  req.AssistantId,
 		UserId:       user.ID,
 		Metadata: assistants.ThreadMetadata{
-			Tools: req.Metadata.Tools,
+			AssistantMetadata: req.Metadata,
 		},
 	}
 
