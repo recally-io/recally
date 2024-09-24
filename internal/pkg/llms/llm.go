@@ -126,9 +126,21 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 		req.Tools = llmTools(mapping)
 	}
 
+	// o1- models don't support system messages or tools
+	// TODO: refactor this to be more elegant
+	if strings.HasPrefix(req.Model, "o1-") {
+		if req.Messages[0].Role == openai.ChatMessageRoleSystem {
+			req.Messages[0].Role = openai.ChatMessageRoleUser
+		}
+		if len(req.Tools) > 0 {
+			req.Tools = nil
+		}
+		req.Stream = false
+	}
+
 	respChan := make(chan *openai.ChatCompletionChoice)
 	errChan := make(chan error)
-	go l.generateContentStream(ctx, req, respChan, errChan)
+	go l.generateContent(ctx, req, respChan, errChan)
 	var choice *openai.ChatCompletionChoice
 	sb := strings.Builder{}
 	toolCalls := make([]openai.ToolCall, 0)
@@ -159,9 +171,9 @@ out:
 			}
 		case err := <-errChan:
 			if errors.Is(err, io.EOF) {
-				choice.Message.Content = sb.String()
-
-				syncStreamFunc(StreamingMessage{Err: err})
+				if req.Stream {
+					choice.Message.Content = sb.String()
+				}
 				break out
 			}
 			syncStreamFunc(StreamingMessage{Err: err})
@@ -184,7 +196,7 @@ out:
 			syncStreamFunc(StreamingMessage{IntermediateSteps: intermediateSteps})
 			req.Messages = append(req.Messages, toolMessages...)
 			toolCalls = make([]openai.ToolCall, 0)
-			go l.generateContentStream(ctx, req, respChan, errChan)
+			go l.generateContent(ctx, req, respChan, errChan)
 		outloop:
 			for {
 				select {
@@ -211,8 +223,9 @@ out:
 					}
 				case err := <-errChan:
 					if errors.Is(err, io.EOF) {
-						choice.Message.Content = sb.String()
-						syncStreamFunc(StreamingMessage{Err: err})
+						if req.Stream {
+							choice.Message.Content = sb.String()
+						}
 						break outloop
 					}
 					syncStreamFunc(StreamingMessage{Err: err})
@@ -227,9 +240,15 @@ out:
 	if !req.Stream {
 		syncStreamFunc(StreamingMessage{Choice: choice, IntermediateSteps: intermediateSteps})
 	}
+	syncStreamFunc(StreamingMessage{Err: io.EOF})
 }
 
 func (l *LLM) generateContent(ctx context.Context, req openai.ChatCompletionRequest, choiceChan chan *openai.ChatCompletionChoice, errChan chan error) {
+	if req.Stream {
+		l.generateContentStream(ctx, req, choiceChan, errChan)
+		return
+	}
+
 	start := time.Now()
 	resp, err := l.client.CreateChatCompletion(ctx, req)
 	if err != nil {
@@ -249,9 +268,14 @@ func (l *LLM) generateContent(ctx context.Context, req openai.ChatCompletionRequ
 		return
 	}
 	choiceChan <- &resp.Choices[0]
+	errChan <- io.EOF
 }
 
 func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompletionRequest, choiceChan chan *openai.ChatCompletionChoice, errChan chan error) {
+	// get token usage data for streamed chat completion response
+	req.StreamOptions = &openai.StreamOptions{
+		IncludeUsage: true,
+	}
 	stream, err := l.client.CreateChatCompletionStream(ctx, req)
 	if err != nil {
 		errChan <- err
@@ -259,6 +283,7 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 	}
 	defer stream.Close()
 	start := time.Now()
+	usage := &openai.Usage{}
 	for {
 		response, err := stream.Recv()
 		if err != nil {
@@ -266,13 +291,15 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 				logger.FromContext(ctx).Info("time for generated content stream",
 					"duration", time.Since(start),
 					"model", req.Model,
+					"prompt_tokens", usage.PromptTokens,
+					"completion_tokens", usage.CompletionTokens,
 				)
 			}
 
 			errChan <- err
 			return
 		}
-
+		usage = response.Usage
 		delta := response.Choices[0]
 		choice := &openai.ChatCompletionChoice{
 			Index: delta.Index,
