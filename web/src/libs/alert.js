@@ -4,9 +4,9 @@ export function toastInfo(message, title = "Success") {
   notifications.show({
     title: title,
     message: message,
-    color: "green",
+    color: "success",
     positions: "top-right",
-    autoClose: 1000,
+    autoClose: 3000,
   });
 }
 
@@ -14,9 +14,9 @@ export function toastWarning(message, title = "Attention !") {
   notifications.show({
     title: title,
     message: message,
-    color: "yellow",
+    color: "warning",
     positions: "top-right",
-    autoClose: 1000,
+    autoClose: 4000,
   });
 }
 
@@ -24,8 +24,8 @@ export function toastError(message, title = "Error !!!") {
   notifications.show({
     title: title,
     message: message,
-    color: "red",
+    color: "danger",
     positions: "top-right",
-    autoClose: 3000,
+    autoClose: 5000,
   });
 }

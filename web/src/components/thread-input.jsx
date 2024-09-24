@@ -119,14 +119,19 @@ export function ThreadChatInput() {
       const localImages = images;
       setText("");
       setImages([]);
-      await sendThreadMessage.mutateAsync({
-        assistantId: assistantId,
-        threadId: newThreadId,
-        model: chatModel,
-        text: localText,
-        images: localImages,
-      });
-      setLoading(false);
+      try {
+        await sendThreadMessage.mutateAsync({
+          assistantId: assistantId,
+          threadId: newThreadId,
+          model: chatModel,
+          text: localText,
+          images: localImages,
+        });
+      } catch (error) {
+        console.error("Failed to send message:", error);
+      } finally {
+        setLoading(false);
+      }
 
       // if threadId is not present, navigate to new thread
       if (!threadId) {

@@ -167,7 +167,7 @@ export function QueryContextProvider({ children }) {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(await response.text());
         }
 
         const reader = response.body.getReader();
