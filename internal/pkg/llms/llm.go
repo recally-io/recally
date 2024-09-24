@@ -299,19 +299,23 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 			errChan <- err
 			return
 		}
-		usage = response.Usage
-		delta := response.Choices[0]
-		choice := &openai.ChatCompletionChoice{
-			Index: delta.Index,
-			Message: openai.ChatCompletionMessage{
-				Role:         delta.Delta.Role,
-				Content:      delta.Delta.Content,
-				FunctionCall: delta.Delta.FunctionCall,
-				ToolCalls:    delta.Delta.ToolCalls,
-			},
-			FinishReason: delta.FinishReason,
+		if response.Usage != nil {
+			usage = response.Usage
 		}
-		choiceChan <- choice
+		if len(response.Choices) > 0 {
+			delta := response.Choices[0]
+			choice := &openai.ChatCompletionChoice{
+				Index: delta.Index,
+				Message: openai.ChatCompletionMessage{
+					Role:         delta.Delta.Role,
+					Content:      delta.Delta.Content,
+					FunctionCall: delta.Delta.FunctionCall,
+					ToolCalls:    delta.Delta.ToolCalls,
+				},
+				FinishReason: delta.FinishReason,
+			}
+			choiceChan <- choice
+		}
 	}
 }
 
