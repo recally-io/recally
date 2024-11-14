@@ -8,6 +8,8 @@
 // database/migrations/000003_create_assistant_threads.up.sql
 // database/migrations/000004_assistant_embeddings_add_uuid.down.sql
 // database/migrations/000004_assistant_embeddings_add_uuid.up.sql
+// database/migrations/000005_create_new_bookmarks_tables.down.sql
+// database/migrations/000005_create_new_bookmarks_tables.up.sql
 package migrations
 
 import (
@@ -244,6 +246,46 @@ func _000004_assistant_embeddings_add_uuidUpSql() (*asset, error) {
 	return a, nil
 }
 
+var __000005_create_new_bookmarks_tablesDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\x09\xf2\x0f\x50\xf0\xf4\x73\x71\x8d\x50\xf0\x74\x53\x70\x8d\xf0\x0c\x0e\x09\x56\xc8\x4c\xa9\x88\x4f\xca\xcf\xcf\xce\x4d\x2c\xca\x2e\x8e\x2f\x2d\x4e\x2d\x8a\xcf\x4c\xb1\xe6\x22\x46\x6d\x51\x0e\x51\xea\x92\x8b\x52\x13\x4b\x52\x53\xe2\x13\x4b\xac\xb9\x20\xea\x43\x1c\x9d\x7c\x5c\x91\xd4\xc3\xd5\x5a\x03\x02\x00\x00\xff\xff\x1c\xa0\xdd\x93\xa3\x00\x00\x00")
+
+func _000005_create_new_bookmarks_tablesDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000005_create_new_bookmarks_tablesDownSql,
+		"000005_create_new_bookmarks_tables.down.sql",
+	)
+}
+
+func _000005_create_new_bookmarks_tablesDownSql() (*asset, error) {
+	bytes, err := _000005_create_new_bookmarks_tablesDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000005_create_new_bookmarks_tables.down.sql", size: 163, mode: os.FileMode(420), modTime: time.Unix(1731593148, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000005_create_new_bookmarks_tablesUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xac\x92\x3d\x6f\xea\x30\x14\x86\xf7\xfc\x8a\x33\x26\x12\xcb\xbd\x57\xdc\x85\xc9\x84\x43\x71\x1b\x1c\xea\x38\x2d\x74\x89\x0c\xb6\xc0\x22\x1f\x95\xe3\x54\xed\xbf\xaf\x48\x53\x1a\xa2\x4a\x65\xe8\x98\x93\xf7\x79\x7c\x64\xbf\x21\x47\x22\x10\x04\x99\x46\x08\x74\x0e\x2c\x16\x80\x6b\x9a\x88\x04\xb6\x55\x75\x2c\xa4\x3d\xd6\xe0\x7b\x00\x00\x46\x41\x82\x9c\x92\x08\x56\x9c\x2e\x09\xdf\xc0\x1d\x6e\x46\xed\xaf\xa6\x31\x0a\xd2\x94\xce\x20\x65\xf4\x3e\xc5\x56\xc3\xd2\x28\x82\x19\xce\x49\x1a\x09\xd8\xeb\x32\xb3\xb2\x54\x55\x91\x9d\xc2\x7e\xd0\x81\xb5\xb6\x99\x51\x40\x99\xc0\x1b\xe4\x5f\x1c\xc7\x39\x72\x64\x21\x26\x6d\xa6\xf6\x8d\xfa\x44\x6c\x0e\x02\xd7\xe2\x9c\xfd\x18\x3b\xe3\x72\x0d\x0f\x84\x87\x0b\xc2\xfd\xbf\xe3\x71\x17\xaf\x9b\xa2\x90\xf6\xad\x45\x2e\x26\x99\x2e\xb6\x5a\x29\x53\xee\x6b\x78\xd1\x3b\x57\x59\xf0\xff\x8c\xff\xfd\x0f\x06\xe2\x5d\x55\x3a\x5d\xba\x9e\xa0\x9b\x5c\x2b\x38\xb8\x22\xef\xd1\x85\x76\x52\x49\x27\xe1\x36\x89\xd9\xb4\x5b\x69\x67\xb5\x2e\xeb\x43\x75\x71\x8c\xd5\xd2\x69\x95\x49\x07\x82\x2e\x31\x11\x64\xb9\x82\x47\x2a\x16\xed\x27\x3c\xc5\xec\x9b\x7b\x0e\x53\xce\x91\x89\xec\x4c\x74\x97\xf6\xac\x7e\xc1\xe5\x05\x13\xcf\xeb\x1a\x43\xd9\x0c\xd7\x83\xc6\x18\xf5\x9a\xb5\x2f\xda\x5b\x3d\x66\xfd\x22\x75\xef\x3d\xea\x2d\x14\x4c\x7e\x54\x9e\xda\x35\xf0\x34\x46\x5d\x01\xda\x7c\xc8\xd9\x3c\x98\x78\xef\x01\x00\x00\xff\xff\x24\xa8\xf5\x03\xf5\x02\x00\x00")
+
+func _000005_create_new_bookmarks_tablesUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000005_create_new_bookmarks_tablesUpSql,
+		"000005_create_new_bookmarks_tables.up.sql",
+	)
+}
+
+func _000005_create_new_bookmarks_tablesUpSql() (*asset, error) {
+	bytes, err := _000005_create_new_bookmarks_tablesUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000005_create_new_bookmarks_tables.up.sql", size: 757, mode: os.FileMode(420), modTime: time.Unix(1731593105, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -304,6 +346,8 @@ var _bindata = map[string]func() (*asset, error){
 	"000003_create_assistant_threads.up.sql":        _000003_create_assistant_threadsUpSql,
 	"000004_assistant_embeddings_add_uuid.down.sql": _000004_assistant_embeddings_add_uuidDownSql,
 	"000004_assistant_embeddings_add_uuid.up.sql":   _000004_assistant_embeddings_add_uuidUpSql,
+	"000005_create_new_bookmarks_tables.down.sql":   _000005_create_new_bookmarks_tablesDownSql,
+	"000005_create_new_bookmarks_tables.up.sql":     _000005_create_new_bookmarks_tablesUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -355,6 +399,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"000003_create_assistant_threads.up.sql":        &bintree{_000003_create_assistant_threadsUpSql, map[string]*bintree{}},
 	"000004_assistant_embeddings_add_uuid.down.sql": &bintree{_000004_assistant_embeddings_add_uuidDownSql, map[string]*bintree{}},
 	"000004_assistant_embeddings_add_uuid.up.sql":   &bintree{_000004_assistant_embeddings_add_uuidUpSql, map[string]*bintree{}},
+	"000005_create_new_bookmarks_tables.down.sql":   &bintree{_000005_create_new_bookmarks_tablesDownSql, map[string]*bintree{}},
+	"000005_create_new_bookmarks_tables.up.sql":     &bintree{_000005_create_new_bookmarks_tablesUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

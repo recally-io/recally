@@ -81,6 +81,23 @@ type AssistantThread struct {
 	UpdatedAt    pgtype.Timestamptz
 }
 
+type Bookmark struct {
+	ID                int32
+	Uuid              uuid.UUID
+	UserID            int32
+	Url               string
+	Title             pgtype.Text
+	Summary           pgtype.Text
+	SummaryEmbeddings pgvector.Vector
+	Content           pgtype.Text
+	ContentEmbeddings pgvector.Vector
+	Html              pgtype.Text
+	Metadata          []byte
+	Screenshot        pgtype.Text
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+}
+
 type Cache struct {
 	ID        int32
 	Domain    string
