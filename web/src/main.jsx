@@ -16,6 +16,7 @@ import { queryClient } from "./libs/api";
 import { AuthContextProvider, useAuthContext } from "./libs/auth-context";
 import Home from "./pages/home";
 import Threads from "./pages/threads";
+import Bookmarks from "./pages/bookmarks";
 
 const ProtectedRoute = ({ children }) => {
   const { checkIsLogin } = useAuthContext();
@@ -69,6 +70,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Threads />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/bookmarks",
+    element: (
+      <ProtectedRoute>
+        <Layout main={<Bookmarks />} />
       </ProtectedRoute>
     ),
   },
