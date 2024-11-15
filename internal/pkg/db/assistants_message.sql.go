@@ -222,7 +222,7 @@ func (q *Queries) ListThreadMessagesWithLimit(ctx context.Context, db DBTX, arg 
 const similaritySearchMessages = `-- name: SimilaritySearchMessages :many
 SELECT id, uuid, user_id, assistant_id, thread_id, model, role, text, prompt_token, completion_token, embeddings, metadata, created_at, updated_at
 FROM assistant_messages
-WHERE thread_id = $1 AND (embeddings <=> $2 < 0.4)
+WHERE thread_id = $1 AND (embeddings <=> $2 < 0.5)
 ORDER BY 1 - (embeddings <=> $2) DESC
 LIMIT $3
 `

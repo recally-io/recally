@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS bookmarks (
     id SERIAL PRIMARY KEY,
     uuid UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
-    user_id INTEGER NOT NULL REFERENCES users(id),
+    user_id UUID REFERENCES users(uuid),
     url TEXT NOT NULL,
     title VARCHAR(255),
     summary TEXT,

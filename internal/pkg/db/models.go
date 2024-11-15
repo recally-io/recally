@@ -84,7 +84,7 @@ type AssistantThread struct {
 type Bookmark struct {
 	ID                int32
 	Uuid              uuid.UUID
-	UserID            int32
+	UserID            pgtype.UUID
 	Url               string
 	Title             pgtype.Text
 	Summary           pgtype.Text

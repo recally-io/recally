@@ -33,7 +33,7 @@ INSERT INTO bookmarks (
 
 type CreateBookmarkParams struct {
 	Uuid              uuid.UUID
-	UserID            int32
+	UserID            pgtype.UUID
 	Url               string
 	Title             pgtype.Text
 	Summary           pgtype.Text
@@ -85,7 +85,7 @@ DELETE FROM bookmarks WHERE uuid = $1 AND user_id = $2
 
 type DeleteBookmarkParams struct {
 	Uuid   uuid.UUID
-	UserID int32
+	UserID pgtype.UUID
 }
 
 func (q *Queries) DeleteBookmark(ctx context.Context, db DBTX, arg DeleteBookmarkParams) error {
@@ -97,7 +97,7 @@ const deleteBookmarksByUser = `-- name: DeleteBookmarksByUser :exec
 DELETE FROM bookmarks WHERE user_id = $1
 `
 
-func (q *Queries) DeleteBookmarksByUser(ctx context.Context, db DBTX, userID int32) error {
+func (q *Queries) DeleteBookmarksByUser(ctx context.Context, db DBTX, userID pgtype.UUID) error {
 	_, err := db.Exec(ctx, deleteBookmarksByUser, userID)
 	return err
 }
@@ -108,7 +108,7 @@ SELECT id, uuid, user_id, url, title, summary, summary_embeddings, content, cont
 
 type GetBookmarkByURLParams struct {
 	Url    string
-	UserID int32
+	UserID pgtype.UUID
 }
 
 func (q *Queries) GetBookmarkByURL(ctx context.Context, db DBTX, arg GetBookmarkByURLParams) (Bookmark, error) {
@@ -167,7 +167,7 @@ LIMIT $2 OFFSET $3
 `
 
 type ListBookmarksParams struct {
-	UserID int32
+	UserID pgtype.UUID
 	Limit  int32
 	Offset int32
 }
@@ -225,7 +225,7 @@ RETURNING id, uuid, user_id, url, title, summary, summary_embeddings, content, c
 
 type UpdateBookmarkParams struct {
 	Uuid              uuid.UUID
-	UserID            int32
+	UserID            pgtype.UUID
 	Title             pgtype.Text
 	Summary           pgtype.Text
 	SummaryEmbeddings pgvector.Vector
