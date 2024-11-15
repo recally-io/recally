@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/pgvector/pgvector-go"
+	pgv "github.com/pgvector/pgvector-go"
 )
 
 const createBookmark = `-- name: CreateBookmark :one
@@ -37,9 +37,9 @@ type CreateBookmarkParams struct {
 	Url               string
 	Title             pgtype.Text
 	Summary           pgtype.Text
-	SummaryEmbeddings pgvector.Vector
+	SummaryEmbeddings *pgv.Vector
 	Content           pgtype.Text
-	ContentEmbeddings pgvector.Vector
+	ContentEmbeddings *pgv.Vector
 	Html              pgtype.Text
 	Metadata          []byte
 	Screenshot        pgtype.Text
@@ -228,9 +228,9 @@ type UpdateBookmarkParams struct {
 	UserID            pgtype.UUID
 	Title             pgtype.Text
 	Summary           pgtype.Text
-	SummaryEmbeddings pgvector.Vector
+	SummaryEmbeddings *pgv.Vector
 	Content           pgtype.Text
-	ContentEmbeddings pgvector.Vector
+	ContentEmbeddings *pgv.Vector
 	Html              pgtype.Text
 	Metadata          []byte
 	Screenshot        pgtype.Text

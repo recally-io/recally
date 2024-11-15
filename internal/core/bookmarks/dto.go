@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/pgvector/pgvector-go"
 )
 
 type Metadata struct {
@@ -40,9 +41,13 @@ func (b *BookmarkDTO) Load(dbo *db.Bookmark) {
 	b.URL = dbo.Url
 	b.Title = dbo.Title.String
 	b.Summary = dbo.Summary.String
-	b.SummaryEmbedding = dbo.ContentEmbeddings.Slice()
+	if dbo.SummaryEmbeddings != nil {
+		b.SummaryEmbedding = dbo.SummaryEmbeddings.Slice()
+	}
 	b.Content = dbo.Content.String
-	b.ContentEmbedding = dbo.ContentEmbeddings.Slice()
+	if dbo.ContentEmbeddings != nil {
+		b.ContentEmbedding = dbo.ContentEmbeddings.Slice()
+	}
 	b.HTML = dbo.Html.String
 	b.Screenshot = dbo.Screenshot.String
 	b.CreatedAt = dbo.CreatedAt.Time
@@ -74,7 +79,41 @@ func (b *BookmarkDTO) Dump() db.CreateBookmarkParams {
 		Metadata:   metadata,
 		Screenshot: pgtype.Text{String: b.Screenshot, Valid: b.Screenshot != ""},
 	}
+	if len(b.ContentEmbedding) > 0 {
+		v := pgvector.NewVector(b.ContentEmbedding)
+		bookmark.ContentEmbeddings = &v
+	}
+	if len(b.SummaryEmbedding) > 0 {
+		v := pgvector.NewVector(b.SummaryEmbedding)
+		bookmark.SummaryEmbeddings = &v
+	}
 	return bookmark
+}
+
+// Dump to UpdateBookmarkParams
+func (b *BookmarkDTO) DumpToUpdateParams() db.UpdateBookmarkParams {
+	metadata, _ := json.Marshal(b.Metadata)
+	p := db.UpdateBookmarkParams{
+		Uuid:       b.ID,
+		UserID:     pgtype.UUID{Bytes: b.UserID, Valid: b.UserID != uuid.Nil},
+		Title:      pgtype.Text{String: b.Title, Valid: b.Title != ""},
+		Summary:    pgtype.Text{String: b.Summary, Valid: b.Summary != ""},
+		Content:    pgtype.Text{String: b.Content, Valid: b.Content != ""},
+		Html:       pgtype.Text{String: b.HTML, Valid: b.HTML != ""},
+		Screenshot: pgtype.Text{String: b.Screenshot, Valid: b.Screenshot != ""},
+		Metadata:   metadata,
+	}
+
+	if len(b.ContentEmbedding) > 0 {
+		v := pgvector.NewVector(b.ContentEmbedding)
+		p.ContentEmbeddings = &v
+	}
+	if len(b.SummaryEmbedding) > 0 {
+		v := pgvector.NewVector(b.SummaryEmbedding)
+		p.SummaryEmbeddings = &v
+	}
+
+	return p
 }
 
 // BookmarkOption defines a function type for configuring BookmarkDTO

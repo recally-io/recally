@@ -7,7 +7,7 @@ package db
 import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/pgvector/pgvector-go"
+	pgv "github.com/pgvector/pgvector-go"
 )
 
 type Assistant struct {
@@ -43,7 +43,7 @@ type AssistantEmbeddding struct {
 	UserID       pgtype.UUID
 	AttachmentID pgtype.UUID
 	Text         string
-	Embeddings   pgvector.Vector
+	Embeddings   *pgv.Vector
 	Metadata     []byte
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
@@ -61,7 +61,7 @@ type AssistantMessage struct {
 	Text            pgtype.Text
 	PromptToken     pgtype.Int4
 	CompletionToken pgtype.Int4
-	Embeddings      pgvector.Vector
+	Embeddings      *pgv.Vector
 	Metadata        []byte
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
@@ -88,9 +88,9 @@ type Bookmark struct {
 	Url               string
 	Title             pgtype.Text
 	Summary           pgtype.Text
-	SummaryEmbeddings pgvector.Vector
+	SummaryEmbeddings *pgv.Vector
 	Content           pgtype.Text
-	ContentEmbeddings pgvector.Vector
+	ContentEmbeddings *pgv.Vector
 	Html              pgtype.Text
 	Metadata          []byte
 	Screenshot        pgtype.Text

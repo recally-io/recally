@@ -2,14 +2,12 @@ package bookmarks
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"vibrain/internal/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/pgvector/pgvector-go"
 )
 
 type Service struct {
@@ -39,14 +37,17 @@ func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *BookmarkDTO) (*Bo
 		UserID: pgtype.UUID{Bytes: dto.UserID, Valid: true},
 	})
 	if err == nil {
-		dto.Load(&existing)
-		return dto, nil
+		return nil, fmt.Errorf("%w, id: %s", ErrDuplicate, existing.Uuid)
+	}
+
+	if !db.IsNotFoundError(err) {
+		return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
 	}
 
 	if dto.Content == "" {
 		readerResult, err := s.fetcher.Fetch(ctx, dto.URL)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch content: %w", err)
+			return nil, fmt.Errorf("failed to fetch content for url '%s': %w", dto.URL, err)
 		}
 		dto.Content = readerResult.Content
 		dto.Title = readerResult.Title
@@ -54,7 +55,7 @@ func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *BookmarkDTO) (*Bo
 
 	bookmark, err := s.dao.CreateBookmark(ctx, tx, dto.Dump())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create bookmark for url '%s': %w", dto.URL, err)
 	}
 	dto.Load(&bookmark)
 	return dto, nil
@@ -111,25 +112,7 @@ func (s *Service) Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, 
 		return nil, ErrUnauthorized
 	}
 
-	metadata, _ := json.Marshal(dto.Metadata)
-	updateParams := db.UpdateBookmarkParams{
-		Uuid:       id,
-		UserID:     pgtype.UUID{Bytes: userID, Valid: true},
-		Title:      pgtype.Text{String: dto.Title, Valid: dto.Title != ""},
-		Summary:    pgtype.Text{String: dto.Summary, Valid: dto.Summary != ""},
-		Content:    pgtype.Text{String: dto.Content, Valid: dto.Content != ""},
-		Html:       pgtype.Text{String: dto.HTML, Valid: dto.HTML != ""},
-		Screenshot: pgtype.Text{String: dto.Screenshot, Valid: dto.Screenshot != ""},
-		Metadata:   metadata,
-	}
-
-	if len(dto.ContentEmbedding) > 0 {
-		updateParams.ContentEmbeddings = pgvector.NewVector(dto.ContentEmbedding)
-	}
-	if len(dto.SummaryEmbedding) > 0 {
-		updateParams.SummaryEmbeddings = pgvector.NewVector(dto.SummaryEmbedding)
-	}
-
+	updateParams := dto.DumpToUpdateParams()
 	bookmark, err = s.dao.UpdateBookmark(ctx, tx, updateParams)
 	if err != nil {
 		return nil, err

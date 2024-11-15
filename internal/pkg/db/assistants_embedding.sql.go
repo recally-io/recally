@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/pgvector/pgvector-go"
+	pgv "github.com/pgvector/pgvector-go"
 )
 
 const createAssistantEmbedding = `-- name: CreateAssistantEmbedding :exec
@@ -23,7 +23,7 @@ type CreateAssistantEmbeddingParams struct {
 	UserID       pgtype.UUID
 	AttachmentID pgtype.UUID
 	Text         string
-	Embeddings   pgvector.Vector
+	Embeddings   *pgv.Vector
 	Metadata     []byte
 }
 
@@ -108,7 +108,7 @@ LIMIT $3
 
 type SimilaritySearchByThreadIdParams struct {
 	Uuid       uuid.UUID
-	Embeddings pgvector.Vector
+	Embeddings *pgv.Vector
 	Limit      int32
 }
 

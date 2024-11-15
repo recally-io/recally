@@ -100,12 +100,13 @@ func (w *AttachmentEmbeddingWorker) createAssistantEmbedding(ctx context.Context
 		return fmt.Errorf("AttachmentEmbeddingWorker: failed to marshal metadata: %w", err)
 	}
 
+	vec := pgvector.NewVector(embeddings)
 	arg := db.CreateAssistantEmbeddingParams{
 		Uuid:         doc.ID,
 		UserID:       pgtype.UUID{Bytes: [16]byte(userID), Valid: userID != uuid.Nil},
 		AttachmentID: pgtype.UUID{Bytes: [16]byte(attachmentID), Valid: attachmentID != uuid.Nil},
 		Text:         doc.Content,
-		Embeddings:   pgvector.NewVector(embeddings),
+		Embeddings:   &vec,
 		Metadata:     metadata,
 	}
 	if err := w.dao.CreateAssistantEmbedding(ctx, tx, arg); err != nil {

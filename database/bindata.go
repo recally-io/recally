@@ -10,6 +10,8 @@
 // database/migrations/000004_assistant_embeddings_add_uuid.up.sql
 // database/migrations/000005_create_new_bookmarks_tables.down.sql
 // database/migrations/000005_create_new_bookmarks_tables.up.sql
+// database/migrations/000006_set_embeddings_to_nullable.down.sql
+// database/migrations/000006_set_embeddings_to_nullable.up.sql
 package migrations
 
 import (
@@ -201,7 +203,7 @@ func _000003_create_assistant_threadsUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000003_create_assistant_threads.up.sql", size: 3768, mode: os.FileMode(420), modTime: time.Unix(1725269082, 0)}
+	info := bindataFileInfo{name: "000003_create_assistant_threads.up.sql", size: 3768, mode: os.FileMode(420), modTime: time.Unix(1731662456, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -286,6 +288,46 @@ func _000005_create_new_bookmarks_tablesUpSql() (*asset, error) {
 	return a, nil
 }
 
+var __000006_set_embeddings_to_nullableDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\xf4\x09\x71\x0d\x52\x08\x71\x74\xf2\x71\x55\x48\x2c\x2e\xce\x2c\x2e\x49\xcc\x2b\x89\x4f\xcd\x4d\x4a\x4d\x49\x49\xc9\xcc\x4b\x2f\x56\x80\xa8\x70\xf6\xf7\x09\xf5\xf5\x53\x80\x48\x80\xc5\x43\x22\x03\x5c\x15\xca\x52\x93\x4b\xf2\x8b\x34\x0c\x4d\x8d\xcd\x34\x75\x70\x2a\x0d\x76\x0d\x51\xf0\xf3\x0f\x51\xf0\x0b\xf5\xf1\xb1\xe6\x02\x04\x00\x00\xff\xff\x54\xfe\xd3\xbb\x73\x00\x00\x00")
+
+func _000006_set_embeddings_to_nullableDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000006_set_embeddings_to_nullableDownSql,
+		"000006_set_embeddings_to_nullable.down.sql",
+	)
+}
+
+func _000006_set_embeddings_to_nullableDownSql() (*asset, error) {
+	bytes, err := _000006_set_embeddings_to_nullableDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000006_set_embeddings_to_nullable.down.sql", size: 115, mode: os.FileMode(420), modTime: time.Unix(1731662946, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000006_set_embeddings_to_nullableUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\xf4\x09\x71\x0d\x52\x08\x71\x74\xf2\x71\x55\x48\x2c\x2e\xce\x2c\x2e\x49\xcc\x2b\x89\x4f\xcd\x4d\x4a\x4d\x49\x49\xc9\xcc\x4b\x2f\x56\x80\xa8\x70\xf6\xf7\x09\xf5\xf5\x53\x80\x48\x80\xc5\x43\x22\x03\x5c\x15\xca\x52\x93\x4b\xf2\x8b\x34\x0c\x4d\x8d\xcd\x34\x75\x70\x2a\x75\x09\xf2\x0f\x50\xf0\xf3\x0f\x51\xf0\x0b\xf5\xf1\xb1\xe6\x02\x04\x00\x00\xff\xff\x46\x02\x96\x56\x74\x00\x00\x00")
+
+func _000006_set_embeddings_to_nullableUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000006_set_embeddings_to_nullableUpSql,
+		"000006_set_embeddings_to_nullable.up.sql",
+	)
+}
+
+func _000006_set_embeddings_to_nullableUpSql() (*asset, error) {
+	bytes, err := _000006_set_embeddings_to_nullableUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000006_set_embeddings_to_nullable.up.sql", size: 116, mode: os.FileMode(420), modTime: time.Unix(1731662959, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -348,6 +390,8 @@ var _bindata = map[string]func() (*asset, error){
 	"000004_assistant_embeddings_add_uuid.up.sql":   _000004_assistant_embeddings_add_uuidUpSql,
 	"000005_create_new_bookmarks_tables.down.sql":   _000005_create_new_bookmarks_tablesDownSql,
 	"000005_create_new_bookmarks_tables.up.sql":     _000005_create_new_bookmarks_tablesUpSql,
+	"000006_set_embeddings_to_nullable.down.sql":    _000006_set_embeddings_to_nullableDownSql,
+	"000006_set_embeddings_to_nullable.up.sql":      _000006_set_embeddings_to_nullableUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -401,6 +445,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"000004_assistant_embeddings_add_uuid.up.sql":   &bintree{_000004_assistant_embeddings_add_uuidUpSql, map[string]*bintree{}},
 	"000005_create_new_bookmarks_tables.down.sql":   &bintree{_000005_create_new_bookmarks_tablesDownSql, map[string]*bintree{}},
 	"000005_create_new_bookmarks_tables.up.sql":     &bintree{_000005_create_new_bookmarks_tablesUpSql, map[string]*bintree{}},
+	"000006_set_embeddings_to_nullable.down.sql":    &bintree{_000006_set_embeddings_to_nullableDownSql, map[string]*bintree{}},
+	"000006_set_embeddings_to_nullable.up.sql":      &bintree{_000006_set_embeddings_to_nullableUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

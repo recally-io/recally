@@ -1,7 +1,9 @@
 package db
 
+import "strings"
+
 const ErrNotFound = "no rows in result set"
 
-func IsNotFound(err error) bool {
-	return err.Error() == ErrNotFound
+func IsNotFoundError(err error) bool {
+	return strings.Contains(err.Error(), ErrNotFound)
 }
