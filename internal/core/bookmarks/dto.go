@@ -8,30 +8,29 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/pgvector/pgvector-go"
 )
 
 type Metadata struct {
-	Author string `json:"author,omitempty"`
+	Author      string    `json:"author,omitempty"`
 	PublishedAt time.Time `json:"published_at,omitempty"`
-	Tags []string `json:"tags,omitempty"`
+	Tags        []string  `json:"tags,omitempty"`
 }
 
 // BookmarkDTO represents the domain model for a bookmark
 type BookmarkDTO struct {
-	ID               uuid.UUID              `json:"id"`
-	UserID           uuid.UUID                  `json:"user_id"`
-	URL              string                 `json:"url"`
-	Title            string                 `json:"title"`
-	Summary          string                 `json:"summary,omitempty"`
-	SummaryEmbedding pgvector.Vector        `json:"summary_embedding,omitempty"`
-	Content          string                 `json:"content,omitempty"`
-	ContentEmbedding pgvector.Vector        `json:"content_embedding,omitempty"`
-	HTML             string                 `json:"html,omitempty"`
-	Metadata         Metadata               `json:"metadata,omitempty"`
-	Screenshot       string                 `json:"screenshot,omitempty"`
-	CreatedAt        time.Time              `json:"created_at"`
-	UpdatedAt        time.Time              `json:"updated_at"`
+	ID               uuid.UUID `json:"id"`
+	UserID           uuid.UUID `json:"user_id"`
+	URL              string    `json:"url"`
+	Title            string    `json:"title"`
+	Summary          string    `json:"summary,omitempty"`
+	SummaryEmbedding []float32 `json:"summary_embedding,omitempty"`
+	Content          string    `json:"content,omitempty"`
+	ContentEmbedding []float32 `json:"content_embedding,omitempty"`
+	HTML             string    `json:"html,omitempty"`
+	Metadata         Metadata  `json:"metadata,omitempty"`
+	Screenshot       string    `json:"screenshot,omitempty"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 // Load converts a database object to a domain object
@@ -41,9 +40,9 @@ func (b *BookmarkDTO) Load(dbo *db.Bookmark) {
 	b.URL = dbo.Url
 	b.Title = dbo.Title.String
 	b.Summary = dbo.Summary.String
-	b.SummaryEmbedding = dbo.SummaryEmbeddings
+	b.SummaryEmbedding = dbo.ContentEmbeddings.Slice()
 	b.Content = dbo.Content.String
-	b.ContentEmbedding = dbo.ContentEmbeddings
+	b.ContentEmbedding = dbo.ContentEmbeddings.Slice()
 	b.HTML = dbo.Html.String
 	b.Screenshot = dbo.Screenshot.String
 	b.CreatedAt = dbo.CreatedAt.Time
@@ -60,19 +59,22 @@ func (b *BookmarkDTO) Load(dbo *db.Bookmark) {
 // Dump converts a domain object to a database object for creation
 func (b *BookmarkDTO) Dump() db.CreateBookmarkParams {
 	metadata, _ := json.Marshal(b.Metadata)
-	return db.CreateBookmarkParams{
-		Uuid:              b.ID,
-		UserID:            pgtype.UUID{Bytes: b.UserID, Valid: b.UserID != uuid.Nil},
-		Url:               b.URL,
-		Title:             pgtype.Text{String: b.Title, Valid: b.Title != ""},
-		Summary:           pgtype.Text{String: b.Summary, Valid: b.Summary != ""},
-		SummaryEmbeddings: b.SummaryEmbedding,
-		Content:           pgtype.Text{String: b.Content, Valid: b.Content != ""},
-		ContentEmbeddings: b.ContentEmbedding,
-		Html:              pgtype.Text{String: b.HTML, Valid: b.HTML != ""},
-		Metadata:          metadata,
-		Screenshot:        pgtype.Text{String: b.Screenshot, Valid: b.Screenshot != ""},
+	id := b.ID
+	if id == uuid.Nil {
+		id = uuid.New()
 	}
+	bookmark := db.CreateBookmarkParams{
+		Uuid:       id,
+		UserID:     pgtype.UUID{Bytes: b.UserID, Valid: b.UserID != uuid.Nil},
+		Url:        b.URL,
+		Title:      pgtype.Text{String: b.Title, Valid: b.Title != ""},
+		Summary:    pgtype.Text{String: b.Summary, Valid: b.Summary != ""},
+		Content:    pgtype.Text{String: b.Content, Valid: b.Content != ""},
+		Html:       pgtype.Text{String: b.HTML, Valid: b.HTML != ""},
+		Metadata:   metadata,
+		Screenshot: pgtype.Text{String: b.Screenshot, Valid: b.Screenshot != ""},
+	}
+	return bookmark
 }
 
 // BookmarkOption defines a function type for configuring BookmarkDTO
@@ -81,9 +83,9 @@ type BookmarkOption func(*BookmarkDTO)
 // NewBookmark creates a new BookmarkDTO with the given options
 func NewBookmark(userID uuid.UUID, url string, opts ...BookmarkOption) *BookmarkDTO {
 	b := &BookmarkDTO{
-		ID:       uuid.New(),
-		UserID:   userID,
-		URL:      url,
+		ID:     uuid.New(),
+		UserID: userID,
+		URL:    url,
 	}
 
 	for _, opt := range opts {

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"vibrain/internal/core/assistants"
+	"vibrain/internal/core/bookmarks"
 	"vibrain/internal/core/queue"
 	"vibrain/internal/core/workers"
 	"vibrain/internal/pkg/auth"
@@ -19,6 +20,7 @@ type Handler struct {
 	authService      *auth.Service
 	toolService      *workers.Worker
 	assistantService *assistants.Service
+	bookmarkService  *bookmarks.Service
 }
 
 func New(pool *db.Pool, llm *llms.LLM, queue *queue.Queue, opts ...Option) *Handler {
@@ -29,6 +31,7 @@ func New(pool *db.Pool, llm *llms.LLM, queue *queue.Queue, opts ...Option) *Hand
 		queue:            queue,
 		authService:      auth.New(),
 		assistantService: assistants.NewService(llm, queue),
+		bookmarkService:  bookmarks.NewService(llm),
 	}
 	for _, opt := range opts {
 		opt(h)

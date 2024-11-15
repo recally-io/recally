@@ -15,7 +15,7 @@ type Embedder interface {
 
 // URLFetcher defines the interface for fetching URL content
 type URLFetcher interface {
-	Fetch(ctx context.Context, url string) (content, html string, err error)
+	Fetch(ctx context.Context, url string) (*jinareader.Content, error)
 }
 
 // Common errors
@@ -43,13 +43,19 @@ func NewJinaFetcher() *JinaFetcherService {
 	return &JinaFetcherService{reader: jinareader.New()}
 }
 
-func (j *JinaFetcherService) Fetch(ctx context.Context, url string) (content, html string, err error) {
+func (j *JinaFetcherService) Fetch(ctx context.Context, url string) (*jinareader.Content, error) {
 	args := jinareader.RequestArgs{
 		Url: url,
+		Formats: []string{
+			// "text",
+			// "html",
+			"markdown",
+			// "screenshot",
+		},
 	}
 	result, err := j.reader.Read(ctx, args)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
-	return result.Content, result.Description, nil
+	return result, nil
 }

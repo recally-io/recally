@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
 	"vibrain/internal/core/bookmarks"
 	"vibrain/internal/pkg/db"
 
@@ -83,7 +82,6 @@ func (h *bookmarksHandler) listBookmarks(c echo.Context) error {
 
 type createBookmarkRequest struct {
 	URL      string             `json:"url" validate:"required,url"`
-	Title    string             `json:"title"`
 	Metadata bookmarks.Metadata `json:"metadata"`
 }
 
@@ -115,7 +113,6 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	bookmark := &bookmarks.BookmarkDTO{
 		UserID:   user.ID,
 		URL:      req.URL,
-		Title:    req.Title,
 		Metadata: req.Metadata,
 	}
 

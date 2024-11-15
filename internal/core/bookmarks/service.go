@@ -2,12 +2,14 @@ package bookmarks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"vibrain/internal/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/pgvector/pgvector-go"
 )
 
 type Service struct {
@@ -41,6 +43,15 @@ func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *BookmarkDTO) (*Bo
 		return dto, nil
 	}
 
+	if dto.Content == "" {
+		readerResult, err := s.fetcher.Fetch(ctx, dto.URL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch content: %w", err)
+		}
+		dto.Content = readerResult.Content
+		dto.Title = readerResult.Title
+	}
+
 	bookmark, err := s.dao.CreateBookmark(ctx, tx, dto.Dump())
 	if err != nil {
 		return nil, err
@@ -63,7 +74,6 @@ func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*B
 	var dto BookmarkDTO
 	dto.Load(&bookmark)
 	return &dto, nil
-
 }
 
 // ListBookmarks retrieves a paginated list of bookmarks for a user
@@ -88,7 +98,6 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit,
 		dtos = append(dtos, &dto)
 	}
 	return dtos, err
-
 }
 
 // UpdateBookmark updates an existing bookmark
@@ -102,10 +111,30 @@ func (s *Service) Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, 
 		return nil, ErrUnauthorized
 	}
 
-	bookmark, err = s.dao.UpdateBookmark(ctx, tx, db.UpdateBookmarkParams{})
+	metadata, _ := json.Marshal(dto.Metadata)
+	updateParams := db.UpdateBookmarkParams{
+		Uuid:       id,
+		UserID:     pgtype.UUID{Bytes: userID, Valid: true},
+		Title:      pgtype.Text{String: dto.Title, Valid: dto.Title != ""},
+		Summary:    pgtype.Text{String: dto.Summary, Valid: dto.Summary != ""},
+		Content:    pgtype.Text{String: dto.Content, Valid: dto.Content != ""},
+		Html:       pgtype.Text{String: dto.HTML, Valid: dto.HTML != ""},
+		Screenshot: pgtype.Text{String: dto.Screenshot, Valid: dto.Screenshot != ""},
+		Metadata:   metadata,
+	}
+
+	if len(dto.ContentEmbedding) > 0 {
+		updateParams.ContentEmbeddings = pgvector.NewVector(dto.ContentEmbedding)
+	}
+	if len(dto.SummaryEmbedding) > 0 {
+		updateParams.SummaryEmbeddings = pgvector.NewVector(dto.SummaryEmbedding)
+	}
+
+	bookmark, err = s.dao.UpdateBookmark(ctx, tx, updateParams)
 	if err != nil {
 		return nil, err
 	}
+
 	dto.Load(&bookmark)
 	return dto, nil
 }
@@ -130,17 +159,4 @@ func (s *Service) Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) 
 // DeleteUserBookmarks removes all bookmarks for a user
 func (s *Service) DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error {
 	return s.dao.DeleteBookmarksByUser(ctx, tx, pgtype.UUID{Bytes: userID, Valid: true})
-}
-
-// Helper function to generate summary (implement based on your requirements)
-func generateSummary(content string) string {
-	// Implement summary generation logic
-	return content[:min(len(content), 500)] // Simple example
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
