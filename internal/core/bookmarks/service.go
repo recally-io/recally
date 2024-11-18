@@ -5,22 +5,28 @@ import (
 	"fmt"
 	"net/url"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/llms"
+	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Service struct {
-	dao      DAO
-	embedder Embedder
-	fetcher  URLFetcher
+	dao    DAO
+	llm    LLM
+	reader UrlReader
 }
 
-func NewService(embedder Embedder) *Service {
+func NewService(llm *llms.LLM) *Service {
+	reader, err := NewWebReader(llm)
+	if err != nil {
+		logger.Default.Fatal("failed to create web reader", "error", err)
+	}
 	return &Service{
-		dao:      db.New(),
-		embedder: embedder,
-		fetcher:  NewJinaFetcher(),
+		dao:    db.New(),
+		llm:    llm,
+		reader: reader,
 	}
 }
 
@@ -45,12 +51,14 @@ func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *BookmarkDTO) (*Bo
 	}
 
 	if dto.Content == "" {
-		readerResult, err := s.fetcher.Fetch(ctx, dto.URL)
+		readerResult, err := s.reader.Read(ctx, dto.URL)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch content for url '%s': %w", dto.URL, err)
 		}
-		dto.Content = readerResult.Content
+		dto.Content = readerResult.Markwdown
 		dto.Title = readerResult.Title
+		dto.Summary = readerResult.Summary
+		dto.HTML = readerResult.Html
 	}
 
 	bookmark, err := s.dao.CreateBookmark(ctx, tx, dto.Dump())

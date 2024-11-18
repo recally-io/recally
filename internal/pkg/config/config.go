@@ -82,9 +82,10 @@ type Config struct {
 	OAuths    struct {
 		Github OAuthConfig `envPrefix:"GITHUB_"`
 	} `envPrefix:"OAUTH_"`
-	OpenAI       OpenAIConfig       `envPrefix:"OPENAI_"`
-	GoogleSearch GoogleSearchConfig `envPrefix:"GOOGLE_SEARCH_"`
-	S3           S3Config           `envPrefix:"S3_"`
+	OpenAI                OpenAIConfig       `envPrefix:"OPENAI_"`
+	GoogleSearch          GoogleSearchConfig `envPrefix:"GOOGLE_SEARCH_"`
+	S3                    S3Config           `envPrefix:"S3_"`
+	BrowserlessControlUrl string             `env:"BROWSERLESS_CONTROL_URL"`
 }
 
 func init() {

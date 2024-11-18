@@ -3,19 +3,23 @@ package bookmarks
 import (
 	"context"
 	"fmt"
-	"vibrain/internal/pkg/tools/jinareader"
+	"vibrain/internal/pkg/llms"
+	"vibrain/internal/pkg/webreader"
+	"vibrain/internal/pkg/webreader/fetcher"
+	"vibrain/internal/pkg/webreader/processor"
 
 	"github.com/pgvector/pgvector-go"
 )
 
-// Embedder defines the interface for generating embeddings
-type Embedder interface {
+// LLM defines the interface for generating embeddings
+type LLM interface {
 	CreateEmbeddings(ctx context.Context, text string) ([]float32, error)
+	TextCompletion(ctx context.Context, prompt string, options ...llms.Option) (string, error)
 }
 
-// URLFetcher defines the interface for fetching URL content
-type URLFetcher interface {
-	Fetch(ctx context.Context, url string) (*jinareader.Content, error)
+// UrlReader defines the interface for fetching URL content
+type UrlReader interface {
+	Read(ctx context.Context, url string) (*webreader.Content, error)
 }
 
 // Common errors
@@ -35,27 +39,16 @@ type SearchParams struct {
 	Offset    int32
 }
 
-type JinaFetcherService struct {
-	reader *jinareader.Tool
-}
-
-func NewJinaFetcher() *JinaFetcherService {
-	return &JinaFetcherService{reader: jinareader.New()}
-}
-
-func (j *JinaFetcherService) Fetch(ctx context.Context, url string) (*jinareader.Content, error) {
-	args := jinareader.RequestArgs{
-		Url: url,
-		Formats: []string{
-			// "text",
-			// "html",
-			"markdown",
-			// "screenshot",
-		},
-	}
-	result, err := j.reader.Read(ctx, args)
+func NewWebReader(llm *llms.LLM) (UrlReader, error) {
+	fetcher, err := fetcher.NewBrowserFetcher()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create browser fetcher error: %w", err)
 	}
-	return result, nil
+
+	processors := []webreader.Processor{
+		processor.NewMarkdownProcessor(),
+		processor.NewSummaryProcessor(llm),
+	}
+
+	return webreader.New(fetcher, processors...), nil
 }
