@@ -383,9 +383,9 @@ export default function Bookmarks() {
                       <Icon icon="tabler:robot" width={16} />
                       <Text fw={500}>AI Summary</Text>
                     </Group>
-                    <Text size="sm" style={{ whiteSpace: "pre-line" }}>
-                      {selectedBookmark.summary}
-                    </Text>
+                    <MarkdownRenderer
+                      content={selectedBookmark.summary}
+                    />
                   </Stack>
                 </Spoiler>
               </Paper>
@@ -430,6 +430,7 @@ export default function Bookmarks() {
             {/* Main Content */}
             <Paper withBorder p="md">
               <Box style={{ maxWidth: "100%", overflow: "hidden" }}>
+                <Title order={1}>{selectedBookmark?.title}</Title>
                 <MarkdownRenderer content={selectedBookmark?.content} />
               </Box>
             </Paper>
