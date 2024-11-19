@@ -20,6 +20,7 @@ type BookmarkService interface {
 	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
 	Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
+	Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcher string, regenerateSummary bool) (*bookmarks.BookmarkDTO, error)
 }
 
 // bookmarkServiceImpl implements BookmarkService
@@ -36,6 +37,7 @@ func registerBookmarkHandlers(e *echo.Group, s *Service) {
 	g.GET("/:bookmark-id", h.getBookmark)
 	g.PUT("/:bookmark-id", h.updateBookmark)
 	g.DELETE("/:bookmark-id", h.deleteBookmark)
+	g.POST("/:bookmark-id/refresh", h.refreshBookmark)
 }
 
 type listBookmarksRequest struct {
@@ -303,4 +305,45 @@ func (h *bookmarksHandler) deleteUserBookmarks(c echo.Context) error {
 	}
 
 	return JsonResponse(c, http.StatusNoContent, nil)
+}
+
+type refreshBookmarkRequest struct {
+	BookmarkID        uuid.UUID `param:"bookmark-id" validate:"required,uuid4"`
+	Fetcher           string    `json:"fetcher" validate:"omitempty,oneof=http jina browser"`
+	RegenerateSummary bool      `json:"regenerate_summary"`
+}
+
+// refreshBookmark handles POST /bookmarks/:bookmark-id/refresh
+// @Summary Refresh Bookmark
+// @Description Refreshes bookmark content and/or regenerates AI summary
+// @Tags Bookmarks
+// @Accept json
+// @Produce json
+// @Param bookmark-id path string true "Bookmark ID"
+// @Param request body refreshBookmarkRequest true "Refresh options"
+// @Success 200 {object} JSONResult{data=bookmarks.BookmarkDTO} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 404 {object} JSONResult{data=nil} "Not Found"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /bookmarks/{bookmark-id}/refresh [post]
+func (h *bookmarksHandler) refreshBookmark(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	req := new(refreshBookmarkRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+
+	tx, user, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	bookmark, err := h.service.Refresh(ctx, tx, req.BookmarkID, user.ID, req.Fetcher, req.RegenerateSummary)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, bookmark)
 }

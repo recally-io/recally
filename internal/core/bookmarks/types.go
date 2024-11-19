@@ -22,6 +22,10 @@ type UrlReader interface {
 	Read(ctx context.Context, url string) (*webreader.Content, error)
 }
 
+type Summarier interface {
+	Process(ctx context.Context, content *webreader.Content) error
+}
+
 // Common errors
 var (
 	ErrNotFound     = fmt.Errorf("bookmark not found")
@@ -51,4 +55,8 @@ func NewWebReader(llm *llms.LLM) (UrlReader, error) {
 	}
 
 	return webreader.New(fetcher, processors...), nil
+}
+
+func NewSummarier(llm *llms.LLM) Summarier {
+	return processor.NewSummaryProcessor(llm)
 }

@@ -60,7 +60,7 @@ func WithJinaOptionTimeout(timeout int) JinaOption {
 }
 
 // NewJinaFetcher creates a new JinaFetcher with the given configuration
-func NewJinaFetcher(opts ...JinaOption) *JinaFetcher {
+func NewJinaFetcher(opts ...JinaOption) (*JinaFetcher, error) {
 	config := DefaultJinaConfig()
 
 	// Apply all options
@@ -73,7 +73,7 @@ func NewJinaFetcher(opts ...JinaOption) *JinaFetcher {
 			Timeout: time.Duration(config.Timeout) * time.Second,
 		},
 		config: config,
-	}
+	}, nil
 }
 
 // Fetch implements the Fetcher interface
