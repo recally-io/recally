@@ -45,10 +45,27 @@ type JinaFetcher struct {
 	closed bool
 }
 
+func DefaultJinaConfig() JinaConfig {
+	return JinaConfig{
+		Timeout: 30, // Default 30 Seconds
+	}
+}
+
+type JinaOption func(*JinaConfig)
+
+func WithJinaOptionTimeout(timeout int) JinaOption {
+	return func(config *JinaConfig) {
+		config.Timeout = timeout
+	}
+}
+
 // NewJinaFetcher creates a new JinaFetcher with the given configuration
-func NewJinaFetcher(config JinaConfig) *JinaFetcher {
-	if config.Timeout == 0 {
-		config.Timeout = 30 // Default 30 Seconds
+func NewJinaFetcher(opts ...JinaOption) *JinaFetcher {
+	config := DefaultJinaConfig()
+
+	// Apply all options
+	for _, opt := range opts {
+		opt(&config)
 	}
 
 	return &JinaFetcher{

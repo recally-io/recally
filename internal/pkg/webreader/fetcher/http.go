@@ -22,6 +22,9 @@ type HTTPConfig struct {
 	FollowRedirects bool              `json:"follow_redirects"` // Whether to follow redirects
 }
 
+// HTTPOption is a function type that modifies HTTPFetcher options
+type HTTPOption func(*HTTPConfig)
+
 // HTTPFetcher implements the Fetcher interface using net/http
 type HTTPFetcher struct {
 	client *http.Client
@@ -29,13 +32,21 @@ type HTTPFetcher struct {
 	closed bool
 }
 
-// NewHTTPFetcher creates a new HTTPFetcher with the given configuration
-func NewHTTPFetcher(config HTTPConfig) *HTTPFetcher {
-	if config.Timeout == 0 {
-		config.Timeout = 30 // Default 30 seconds timeout
+func DefaultHTTPConfig() HTTPConfig {
+	return HTTPConfig{
+		Timeout:         30,               // Default 30 seconds timeout
+		MaxBodySize:     10 * 1024 * 1024, // Default 10MB
+		FollowRedirects: true,             // Default to following redirects
 	}
-	if config.MaxBodySize == 0 {
-		config.MaxBodySize = 10 * 1024 * 1024 // Default 10MB
+}
+
+// NewHTTPFetcher creates a new HTTPFetcher with the given options
+func NewHTTPFetcher(opts ...HTTPOption) (*HTTPFetcher, error) {
+	config := DefaultHTTPConfig()
+
+	// Apply all options
+	for _, opt := range opts {
+		opt(&config)
 	}
 
 	sess := session.New(session.WithClientHelloID(utls.HelloChrome_100_PSK))
@@ -60,7 +71,7 @@ func NewHTTPFetcher(config HTTPConfig) *HTTPFetcher {
 	return &HTTPFetcher{
 		client: client,
 		config: config,
-	}
+	}, nil
 }
 
 // Fetch implements the Fetcher interface
@@ -131,4 +142,53 @@ func (f *HTTPFetcher) Close() error {
 	f.closed = true
 	f.client.CloseIdleConnections()
 	return nil
+}
+
+// WithHTTPOptionTimeout sets the timeout for HTTP requests
+func WithHTTPOptionTimeout(timeout int) HTTPOption {
+	return func(config *HTTPConfig) {
+		config.Timeout = timeout
+	}
+}
+
+// WithHTTPOptionMaxBodySize sets the maximum body size for HTTP responses
+func WithHTTPOptionMaxBodySize(size int64) HTTPOption {
+	return func(config *HTTPConfig) {
+		config.MaxBodySize = size
+	}
+}
+
+// WithHTTPOptionMaxRedirects sets the maximum number of redirects to follow
+func WithHTTPOptionMaxRedirects(maxRedirects int) HTTPOption {
+	return func(config *HTTPConfig) {
+		config.MaxRedirects = maxRedirects
+	}
+}
+
+// WithHTTPOptionRetryCount sets the number of times to retry failed requests
+func WithHTTPOptionRetryCount(retryCount int) HTTPOption {
+	return func(config *HTTPConfig) {
+		config.RetryCount = retryCount
+	}
+}
+
+// WithRetryDelay sets the delay between retries
+func WithRetryDelay(delay time.Duration) HTTPOption {
+	return func(config *HTTPConfig) {
+		config.RetryDelay = delay
+	}
+}
+
+// WithHTTPOptionExtraHeaders sets additional HTTP headers
+func WithHTTPOptionExtraHeaders(headers map[string]string) HTTPOption {
+	return func(config *HTTPConfig) {
+		config.ExtraHeaders = headers
+	}
+}
+
+// WithHTTPOptionFollowRedirects sets whether to follow redirects
+func WithHTTPOptionFollowRedirects(follow bool) HTTPOption {
+	return func(config *HTTPConfig) {
+		config.FollowRedirects = follow
+	}
 }

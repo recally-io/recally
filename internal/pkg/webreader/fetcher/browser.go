@@ -32,7 +32,7 @@ type BrowserFetcher struct {
 	browser *rod.Browser
 }
 
-func NewDefaultConfig() BrowserConfig {
+func NewDefaultBrowserConfig() BrowserConfig {
 	return BrowserConfig{
 		Timeout:        30,
 		ControlURL:     defaultControlURL,
@@ -43,7 +43,7 @@ func NewDefaultConfig() BrowserConfig {
 // NewBrowserFetcher creates a new BrowserFetcher with the given options
 func NewBrowserFetcher(opts ...BroswerOption) (*BrowserFetcher, error) {
 	// Start with default configuration
-	config := NewDefaultConfig()
+	config := NewDefaultBrowserConfig()
 
 	// Apply all options
 	for _, opt := range opts {
@@ -137,29 +137,29 @@ func (f *BrowserFetcher) Close() error {
 // BroswerOption defines a function type for configuring BrowserFetcher
 type BroswerOption func(*BrowserConfig)
 
-// WithTimeout sets the timeout for browser operations
-func WithTimeout(timeout int) BroswerOption {
+// WithBroswerOptionTimeout sets the timeout for browser operations
+func WithBroswerOptionTimeout(timeout int) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.Timeout = timeout
 	}
 }
 
-// WithControlURL sets the Chrome DevTools Protocol control URL
-func WithControlURL(url string) BroswerOption {
+// WithBroswerOptionControlURL sets the Chrome DevTools Protocol control URL
+func WithBroswerOptionControlURL(url string) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.ControlURL = url
 	}
 }
 
-// WithUserAgent sets the user agent string
-func WithUserAgent(userAgent string) BroswerOption {
+// WithBroswerOptionUserAgent sets the user agent string
+func WithBroswerOptionUserAgent(userAgent string) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.UserAgent = userAgent
 	}
 }
 
-// WithScrollToBottom sets whether to scroll to bottom before extracting content
-func WithScrollToBottom(scroll bool) BroswerOption {
+// WithBroswerOptionScrollToBottom sets whether to scroll to bottom before extracting content
+func WithBroswerOptionScrollToBottom(scroll bool) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.ScrollToBottom = scroll
 	}

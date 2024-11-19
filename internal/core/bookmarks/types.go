@@ -40,7 +40,7 @@ type SearchParams struct {
 }
 
 func NewWebReader(llm *llms.LLM) (UrlReader, error) {
-	fetcher, err := fetcher.NewBrowserFetcher()
+	fetcher, err := fetcher.NewHTTPFetcher()
 	if err != nil {
 		return nil, fmt.Errorf("create browser fetcher error: %w", err)
 	}
