@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var ErrUnAuthorized = errors.New("auth: password or token is invalid")
+var ErrUnAuthorized = errors.New("401: username or password or token is invalid")
 
 type Service struct {
 	dao dto
@@ -64,6 +64,9 @@ func (s *Service) CreateUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*U
 func (s *Service) AuthByPassword(ctx context.Context, tx db.DBTX, email string, password string) (*UserDTO, error) {
 	user, err := s.dao.GetUserByEmail(ctx, tx, pgtype.Text{String: email, Valid: true})
 	if err != nil {
+		if db.IsNotFoundError(err) {
+			return nil, ErrUnAuthorized
+		}
 		return nil, fmt.Errorf("failed to load user: %w", err)
 	}
 	if err := s.validatePassword(password, user.PasswordHash.String); err != nil {

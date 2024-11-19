@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/pgvector/pgvector-go"
+	pgv "github.com/pgvector/pgvector-go"
 )
 
 const createThreadMessage = `-- name: CreateThreadMessage :one
@@ -28,7 +28,7 @@ type CreateThreadMessageParams struct {
 	Text            pgtype.Text
 	PromptToken     pgtype.Int4
 	CompletionToken pgtype.Int4
-	Embeddings      pgvector.Vector
+	Embeddings      *pgv.Vector
 	Metadata        []byte
 }
 
@@ -222,14 +222,14 @@ func (q *Queries) ListThreadMessagesWithLimit(ctx context.Context, db DBTX, arg 
 const similaritySearchMessages = `-- name: SimilaritySearchMessages :many
 SELECT id, uuid, user_id, assistant_id, thread_id, model, role, text, prompt_token, completion_token, embeddings, metadata, created_at, updated_at
 FROM assistant_messages
-WHERE thread_id = $1 AND (embeddings <=> $2 < 0.4)
+WHERE thread_id = $1 AND (embeddings <=> $2 < 0.5)
 ORDER BY 1 - (embeddings <=> $2) DESC
 LIMIT $3
 `
 
 type SimilaritySearchMessagesParams struct {
 	ThreadID   pgtype.UUID
-	Embeddings pgvector.Vector
+	Embeddings *pgv.Vector
 	Limit      int32
 }
 
@@ -279,7 +279,7 @@ type UpdateThreadMessageParams struct {
 	Model           pgtype.Text
 	PromptToken     pgtype.Int4
 	CompletionToken pgtype.Int4
-	Embeddings      pgvector.Vector
+	Embeddings      *pgv.Vector
 	Metadata        []byte
 }
 

@@ -36,10 +36,10 @@ func New(cfg config.S3Config) (*Client, error) {
 		return nil, err
 	}
 	c := &Client{Client: client, bucketName: cfg.BucketName, publicURL: cfg.PublicURL}
-	err = c.PutBucketCors(context.Background())
-	if err != nil {
-		return nil, err
-	}
+	// err = c.PutBucketCors(context.Background())
+	// if err != nil {
+	// 	return nil, err
+	// }
 	return c, nil
 }
 

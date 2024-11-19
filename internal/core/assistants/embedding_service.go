@@ -54,9 +54,10 @@ func (s *Service) DeleteEmbeddingsByThread(ctx context.Context, tx db.DBTX, thre
 }
 
 func (s *Service) SimilaritySearchByThread(ctx context.Context, tx db.DBTX, threadID uuid.UUID, query []float32, limit int32) ([]EmbeddingDTO, error) {
+	vec := pgvector.NewVector(query)
 	results, err := s.dao.SimilaritySearchByThreadId(ctx, tx, db.SimilaritySearchByThreadIdParams{
 		Uuid:       threadID,
-		Embeddings: pgvector.NewVector(query),
+		Embeddings: &vec,
 		Limit:      limit,
 	})
 	if err != nil {

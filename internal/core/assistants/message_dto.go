@@ -63,6 +63,7 @@ func (d *MessageDTO) Dump() *db.AssistantMessage {
 	if d.Embeddings == nil {
 		d.Embeddings = defaultEmbeddings
 	}
+	vec := pgvector.NewVector(d.Embeddings)
 	return &db.AssistantMessage{
 		UserID:          pgtype.UUID{Bytes: d.UserID, Valid: d.UserID != uuid.Nil},
 		AssistantID:     pgtype.UUID{Bytes: d.AssistantID, Valid: d.AssistantID != uuid.Nil},
@@ -72,7 +73,7 @@ func (d *MessageDTO) Dump() *db.AssistantMessage {
 		Text:            pgtype.Text{String: d.Text, Valid: d.Text != ""},
 		PromptToken:     pgtype.Int4{Int32: d.PromptToken, Valid: d.PromptToken != 0},
 		CompletionToken: pgtype.Int4{Int32: d.CompletionToken, Valid: d.CompletionToken != 0},
-		Embeddings:      pgvector.NewVector(d.Embeddings),
+		Embeddings:      &vec,
 		Metadata:        metadata,
 	}
 }

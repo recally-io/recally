@@ -3,7 +3,6 @@ package bots
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"runtime/debug"
 	"time"
 	"vibrain/internal/pkg/contexts"
@@ -26,7 +25,7 @@ func contextMiddleware() tele.MiddlewareFunc {
 			ctx = contexts.Set(ctx, contexts.ContextKeyLogger, logger)
 			c.Set(contexts.ContextKeyContext, ctx)
 			defer func() {
-				logger.Info("message processed", slog.Duration("duration", time.Since(start)))
+				logger.Info("message processed", "duration", time.Since(start).Milliseconds())
 			}()
 			return next(c)
 		}

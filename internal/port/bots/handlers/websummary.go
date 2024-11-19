@@ -7,20 +7,27 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"vibrain/internal/core/bookmarks"
 	"vibrain/internal/core/workers"
 	"vibrain/internal/pkg/cache"
-	"vibrain/internal/pkg/contexts"
+	"vibrain/internal/pkg/db"
 	"vibrain/internal/pkg/logger"
 
+	"github.com/google/uuid"
 	tele "gopkg.in/telebot.v3"
 )
 
 var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+/?([^\s]*)`)
 
 func (h *Handler) WebSummaryHandler(c tele.Context) error {
-	user := c.Sender()
+	ctx, user, tx, err := h.initHandlerRequest(c)
+	if err != nil {
+		logger.FromContext(ctx).Error("init request error", "err", err)
+		_ = c.Reply("Failed to processing message, please retry.")
+		return err
+	}
+
 	text := c.Text()
-	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
 	logger.FromContext(ctx).Info("TextHandler", "user", user.Username, "text", text)
 	url := getUrlFromText(text)
 	if url == "" {
@@ -37,7 +44,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		return c.Reply("Failed to send message. " + err.Error())
 	}
 
-	msg, err := c.Bot().Send(user, "Please wait, I'm reading the page.")
+	msg, err := c.Bot().Send(c.Sender(), "Please wait, I'm reading the page.")
 	if err != nil {
 		return processSendError(err)
 	}
@@ -60,6 +67,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 					}
 					return processSendError(err)
 				}
+				h.saveBookmark(ctx, tx, url, user.ID, resp)
 				return nil
 			}
 			logger.FromContext(ctx).Error("TextHandler", "error", err.Error())
@@ -82,4 +90,18 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 
 func getUrlFromText(text string) string {
 	return urlPattern.FindString(text)
+}
+
+func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, url string, userId uuid.UUID, summary string) {
+	bookmark, err := h.bookmarkService.Create(ctx, tx, &bookmarks.BookmarkDTO{
+		UserID:    userId,
+		URL:       url,
+		Summary:   summary,
+		CreatedAt: time.Now(),
+	})
+	if err != nil {
+		logger.FromContext(ctx).Error("save bookmark from reader bot error", "err", err.Error())
+	} else {
+		logger.FromContext(ctx).Info("save bookmark from reader bot", "id", bookmark.ID, "title", bookmark.Title)
+	}
 }

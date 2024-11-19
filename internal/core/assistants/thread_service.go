@@ -332,9 +332,10 @@ func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *M
 		logger.FromContext(ctx).Error("failed to create embeddings", "err", err)
 	}
 
+	vec := pgvector.NewVector(embeddings)
 	docsRes, err := s.dao.SimilaritySearchByThreadId(ctx, tx, db.SimilaritySearchByThreadIdParams{
 		Uuid:       message.ThreadID,
-		Embeddings: pgvector.NewVector(embeddings),
+		Embeddings: &vec,
 		Limit:      10,
 	})
 	if err != nil {

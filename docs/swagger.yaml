@@ -23,6 +23,8 @@ definitions:
     type: object
   assistants.AssistantMetadata:
     properties:
+      rag_settings:
+        $ref: '#/definitions/assistants.RagSettings'
       tools:
         description: Tools is a list of tools that the assistant can use
         items:
@@ -93,10 +95,27 @@ definitions:
         items:
           type: string
         type: array
+      intermediate_steps:
+        items:
+          $ref: '#/definitions/llms.IntermediateStep'
+        type: array
+      stream:
+        type: boolean
       tools:
         items:
           type: string
         type: array
+    type: object
+  assistants.RagSettings:
+    properties:
+      enable:
+        type: boolean
+      multi_query:
+        type: boolean
+      query_rewrite:
+        type: boolean
+      rerank:
+        type: boolean
     type: object
   assistants.ThreadDTO:
     properties:
@@ -129,7 +148,54 @@ definitions:
     properties:
       is_generated_title:
         type: boolean
+      rag_settings:
+        $ref: '#/definitions/assistants.RagSettings'
       tools:
+        description: Tools is a list of tools that the assistant can use
+        items:
+          type: string
+        type: array
+    type: object
+  bookmarks.BookmarkDTO:
+    properties:
+      content:
+        type: string
+      content_embedding:
+        items:
+          type: number
+        type: array
+      created_at:
+        type: string
+      html:
+        type: string
+      id:
+        type: string
+      metadata:
+        $ref: '#/definitions/bookmarks.Metadata'
+      screenshot:
+        type: string
+      summary:
+        type: string
+      summary_embedding:
+        items:
+          type: number
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+      user_id:
+        type: string
+    type: object
+  bookmarks.Metadata:
+    properties:
+      author:
+        type: string
+      published_at:
+        type: string
+      tags:
         items:
           type: string
         type: array
@@ -175,6 +241,15 @@ definitions:
     required:
     - name
     type: object
+  httpserver.createBookmarkRequest:
+    properties:
+      metadata:
+        $ref: '#/definitions/bookmarks.Metadata'
+      url:
+        type: string
+    required:
+    - url
+    type: object
   httpserver.createThreadMessageRequest:
     properties:
       assistantId:
@@ -218,6 +293,21 @@ definitions:
       password:
         type: string
     type: object
+  httpserver.refreshBookmarkRequest:
+    properties:
+      bookmarkID:
+        type: string
+      fetcher:
+        enum:
+        - http
+        - jina
+        - browser
+        type: string
+      regenerate_summary:
+        type: boolean
+    required:
+    - bookmarkID
+    type: object
   httpserver.registerRequest:
     properties:
       email:
@@ -250,6 +340,19 @@ definitions:
     - assistantId
     - name
     type: object
+  httpserver.updateBookmarkRequest:
+    properties:
+      bookmarkID:
+        type: string
+      content:
+        type: string
+      html:
+        type: string
+      summary:
+        type: string
+    required:
+    - bookmarkID
+    type: object
   httpserver.userResponse:
     properties:
       email:
@@ -265,6 +368,12 @@ definitions:
         type: string
       description:
         type: string
+      html:
+        type: string
+      screenshotUrl:
+        type: string
+      text:
+        type: string
       title:
         type: string
       url:
@@ -279,6 +388,15 @@ definitions:
       title:
         type: string
       url:
+        type: string
+    type: object
+  llms.IntermediateStep:
+    properties:
+      input: {}
+      name:
+        type: string
+      output: {}
+      type:
         type: string
     type: object
 host: localhost:1323
@@ -558,6 +676,60 @@ paths:
       tags:
       - Assistants
   /assistants/{assistant-id}/attachments:
+    get:
+      consumes:
+      - application/json
+      description: Lists attachments for a specific assistant
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/assistants.AttachmentDTO'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Attachments by Assistant
+      tags:
+      - Assistants
     post:
       consumes:
       - application/json
@@ -897,6 +1069,65 @@ paths:
       tags:
       - Assistants
   /assistants/{assistant-id}/threads/{thread-id}/attachments:
+    get:
+      consumes:
+      - application/json
+      description: Lists attachments for a specific thread
+      parameters:
+      - description: Assistant ID
+        in: path
+        name: assistant-id
+        required: true
+        type: string
+      - description: Thread ID
+        in: path
+        name: thread-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/assistants.AttachmentDTO'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Attachments by Thread
+      tags:
+      - Assistants
     post:
       consumes:
       - application/json
@@ -1434,6 +1665,411 @@ paths:
       summary: Validate JWT token
       tags:
       - Auth
+  /bookmarks:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes all bookmarks for a user
+      parameters:
+      - description: User ID
+        in: query
+        name: user-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Delete User Bookmarks
+      tags:
+      - Bookmarks
+    get:
+      consumes:
+      - application/json
+      description: Lists bookmarks for a user with pagination
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Bookmarks
+      tags:
+      - Bookmarks
+    post:
+      consumes:
+      - application/json
+      description: Creates a new bookmark for the user
+      parameters:
+      - description: Bookmark to create
+        in: body
+        name: bookmark
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.createBookmarkRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Create Bookmark
+      tags:
+      - Bookmarks
+  /bookmarks/{bookmark-id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a bookmark
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: bookmark-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Delete Bookmark
+      tags:
+      - Bookmarks
+    get:
+      consumes:
+      - application/json
+      description: Gets a specific bookmark by ID
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: bookmark-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Get Bookmark
+      tags:
+      - Bookmarks
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing bookmark
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: bookmark-id
+        required: true
+        type: string
+      - description: Updated bookmark data
+        in: body
+        name: bookmark
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.updateBookmarkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Update Bookmark
+      tags:
+      - Bookmarks
+  /bookmarks/{bookmark-id}/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes bookmark content and/or regenerates AI summary
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: bookmark-id
+        required: true
+        type: string
+      - description: Refresh options
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.refreshBookmarkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Refresh Bookmark
+      tags:
+      - Bookmarks
   /files/{id}:
     delete:
       description: Delete a file by its ID

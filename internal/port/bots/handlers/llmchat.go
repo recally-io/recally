@@ -169,7 +169,7 @@ func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.
 	}
 	user, err := h.authService.GetTelegramUser(ctx, tx, userID)
 	if err != nil {
-		if db.IsNotFound(err) {
+		if strings.Contains(err.Error(), db.ErrNotFound) {
 			userName := ctx.Value(contexts.ContextKey(contexts.ContextKeyUserName)).(string)
 			user, err = h.authService.CreateTelegramUser(ctx, tx, userName, userID)
 			if err != nil {
