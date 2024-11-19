@@ -1,33 +1,32 @@
 import { Icon } from "@iconify/react";
 import {
   ActionIcon,
+  Box,
   Button,
   Card,
   Container,
+  CopyButton,
+  Divider,
   Group,
   LoadingOverlay,
+  Menu,
   Modal,
+  Paper,
+  rem,
+  Spoiler,
   Stack,
   Text,
   TextInput,
   Title,
-  Box,
-  Paper,
-  Spoiler,
-  CopyButton,
   Tooltip,
-  Badge,
-  Menu,
-  rem,
-  Divider,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { MarkdownRenderer } from "../components/markdown-renderer";
 import { del, get, post, put } from "../libs/api";
 import { useAuthContext } from "../libs/auth-context";
-import { MarkdownRenderer } from "../components/markdown-renderer";
 
 const RefreshMenu = ({ bookmark, mutation, size = "md", iconSize = 18 }) => (
   <Menu position="bottom-end" withArrow>
@@ -66,8 +65,8 @@ const RefreshMenu = ({ bookmark, mutation, size = "md", iconSize = 18 }) => (
                 fetcher === "http"
                   ? "tabler:world"
                   : fetcher === "jina"
-                  ? "tabler:api"
-                  : "tabler:browser"
+                    ? "tabler:api"
+                    : "tabler:browser"
               }
               width={14}
               height={14}
