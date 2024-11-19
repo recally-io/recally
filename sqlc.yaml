@@ -18,3 +18,10 @@ sql:
             go_type:
               import: "vibrain/internal/pkg/db/types"
               type: "JSONB"
+          - db_type: "vector"
+            nullable: true
+            go_type:
+              import: "github.com/pgvector/pgvector-go"
+              package: "pgv"
+              type: "Vector"
+              pointer: true

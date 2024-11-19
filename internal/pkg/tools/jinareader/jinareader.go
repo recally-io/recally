@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 	"vibrain/internal/pkg/cache"
 	"vibrain/internal/pkg/logger"
@@ -22,14 +23,18 @@ type Tool struct {
 }
 
 type RequestArgs struct {
-	Url string `json:"url" jsonschema_description:"The URL to read."`
+	Url     string   `json:"url" jsonschema_description:"The URL to read."`
+	Formats []string `json:"formats,omitempty" jsonschema_default:"markdown" jsonschema_description:"The content formats to return in the response, supported values: text, html, markdown, screenshot."`
 }
 
 type Content struct {
-	Url         string `json:"url"`
-	Title       string `json:"title"`
-	Content     string `json:"content"`
-	Description string `json:"description"`
+	Url           string `json:"url"`
+	Title         string `json:"title"`
+	Content       string `json:"content"`
+	Description   string `json:"description,omitempty"`
+	Text          string `json:"text,omitempty"`
+	Html          string `json:"html,omitempty"`
+	ScreenshotUrl string `json:"screenshotUrl,omitempty"`
 }
 
 type Result struct {
@@ -77,6 +82,12 @@ func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Locale", "en-US")
+
+	if len(args.Formats) == 0 {
+		args.Formats = []string{"markdown"}
+	}
+	req.Header.Set("X-Return-Format", strings.Join(args.Formats, ","))
 
 	resp, err := t.httpClient.Do(req)
 	if err != nil {

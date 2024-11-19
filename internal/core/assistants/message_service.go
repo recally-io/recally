@@ -121,9 +121,10 @@ func (s *Service) SimilaritySearchMessages(ctx context.Context, tx db.DBTX, thre
 	if err != nil {
 		return nil, fmt.Errorf("failed to create embeddings: %w", err)
 	}
+	vec := pgvector.NewVector(embeddings)
 	messages, err := s.dao.SimilaritySearchMessages(ctx, tx, db.SimilaritySearchMessagesParams{
 		ThreadID:   pgtype.UUID{Bytes: threadID, Valid: true},
-		Embeddings: pgvector.NewVector(embeddings),
+		Embeddings: &vec,
 		Limit:      limit,
 	})
 	if err != nil {

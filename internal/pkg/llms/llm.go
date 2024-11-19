@@ -257,7 +257,7 @@ func (l *LLM) generateContent(ctx context.Context, req openai.ChatCompletionRequ
 		return
 	}
 	logger.FromContext(ctx).Info("time for generated content",
-		"duration", time.Since(start),
+		"duration", time.Since(start).Milliseconds(),
 		"model", req.Model,
 		"prompt_tokens", resp.Usage.PromptTokens,
 		"completion_tokens", resp.Usage.CompletionTokens,
@@ -289,7 +289,7 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				logger.FromContext(ctx).Info("time for generated content stream",
-					"duration", time.Since(start),
+					"duration", time.Since(start).Milliseconds(),
 					"model", req.Model,
 					"prompt_tokens", usage.PromptTokens,
 					"completion_tokens", usage.CompletionTokens,
@@ -337,7 +337,7 @@ func (l *LLM) invokeTools(ctx context.Context, toolCalls []openai.ToolCall) ([]o
 			if err != nil {
 				return fmt.Errorf("failed to invoke tool %s: %w", toolName, err)
 			}
-			logger.FromContext(ctx).Info("tool response", "tool", toolName, "response", toolResp[:min(200, len(toolResp))], "duration", time.Since(start))
+			logger.FromContext(ctx).Info("tool response", "tool", toolName, "response", toolResp[:min(200, len(toolResp))], "duration", time.Since(start).Milliseconds())
 			messages = append(messages, openai.ChatCompletionMessage{
 				Role:       openai.ChatMessageRoleTool,
 				ToolCallID: tc.ID,

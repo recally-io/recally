@@ -33,11 +33,12 @@ func (e *EmbeddingDTO) Load(dbo *db.AssistantEmbeddding) {
 }
 
 func (e *EmbeddingDTO) Dump() *db.AssistantEmbeddding {
+	vec := pgvector.NewVector(e.Embeddings)
 	return &db.AssistantEmbeddding{
 		UserID:       pgtype.UUID{Bytes: e.UserID, Valid: e.UserID != uuid.Nil},
 		AttachmentID: pgtype.UUID{Bytes: e.AttachmentID, Valid: e.AttachmentID != uuid.Nil},
 		Text:         e.Text,
-		Embeddings:   pgvector.NewVector(e.Embeddings),
+		Embeddings:   &vec,
 		Metadata:     e.Metadata,
 	}
 }
