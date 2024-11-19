@@ -4,40 +4,40 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"text/template"
 	"vibrain/internal/pkg/llms"
 	"vibrain/internal/pkg/webreader"
 )
 
-const summaryPrompt = `
-You are an expert analyst skilled in critical reading and synthesis. Approach this text with careful analytical thinking to create an insightful, well-structured summary.
+const summaryPrompt = `You are an experienced editor at* **The Wall Street Journal**. *Your task is to read the following article and provide a comprehensive summary for a busy reader who wants to quickly grasp the essential information.
 
-Instructions:
-1. Read the text thoroughly, analyzing:
-- The fundamental argument or thesis
-- The logical structure of key supporting points
-- The quality and application of evidence
-- The author's methodology and reasoning
-- Significant implications and conclusions
-- Any underlying assumptions or limitations
-
-2. Synthesize your analysis into this exact format:
+<ResponseFormat>
+# Category
+[Identify the main category or categories the article belongs to (e.g., Finance, Technology, Health, International News).]
 
 # Summary
-[Provide a thorough 3-5 paragraph analytical summary that:
-- Opens with a clear statement of the main argument/thesis
-- Explains how key points build and connect to support the main argument
-- Evaluates the strength and relevance of evidence
-- Examines the author's reasoning and methodology
-- Discusses significant implications and conclusions
-Each paragraph should flow logically into the next, creating a coherent analysis rather than just a list of points.]
+[(2-3 sentences) Write a brief abstract summarizing the essence of the article.]
 
-# Opinions
-[Leave blank - retain heading for format]
+# Abstract
+[(approximately 150-200 words) Provide a detailed yet concise summary covering all key information, arguments, and narratives presented in the article.]
 
-<inputText>
-{inputText}
-</inputText>
+# Key Points
+[List the most critical points or takeaways in bullet form.]
+
+# Insights and Implications
+[Discuss significant insights, implications, or conclusions drawn from the article. Explain how the article relates to broader industry trends or current events.]
+
+# Actionable Takeaways
+[(if applicable) Provide any practical advice or recommendations mentioned in the article.]
+
+# Critical Analysis
+[Mention any potential biases, assumptions, strengths, or weaknesses in the article. Note any limitations or areas that would benefit from further exploration.]
+</ResponseFormat>
+
+Please ensure that your summary is written in the professional, clear, and engaging style characteristic of* **The Wall Street Journal**. *Maintain a neutral and informative tone suitable for helping the reader understand the article without reading it in full.
 `
+
+var summaryPromptTempl = template.Must(template.New("summaryPromptTemplate").Parse(`{{ .Prompt }}\n\n<article>\n{{ .Article }}\n<article>\n\Remenber to response in {{.Language}}.`))
 
 // SummaryOption represents an option for configuring the SummaryProcessor
 type SummaryOption func(*SummaryProcessor)
@@ -56,10 +56,17 @@ func WithPrompt(prompt string) SummaryOption {
 	}
 }
 
+func WithLanguage(language string) SummaryOption {
+	return func(p *SummaryProcessor) {
+		p.config.Language = language
+	}
+}
+
 // SummaryConfig contains configuration for the summary processor
 type SummaryConfig struct {
-	Model  string `json:"model"`
-	Prompt string `json:"prompt"`
+	Model    string `json:"model"`
+	Prompt   string `json:"prompt"`
+	Language string `json:"language"`
 }
 
 // SummaryProcessor implements content summarization using LLM
@@ -72,8 +79,9 @@ type SummaryProcessor struct {
 func NewSummaryProcessor(llm *llms.LLM, opts ...SummaryOption) *SummaryProcessor {
 	p := &SummaryProcessor{
 		config: SummaryConfig{
-			Model:  "gpt-4-mini",  // default model
-			Prompt: summaryPrompt, // default prompt
+			Model:    "gpt-4o-mini", // default model
+			Prompt:   summaryPrompt, // default prompt
+			Language: "Chinese",
 		},
 		llm: llm,
 	}
@@ -98,9 +106,16 @@ func (p *SummaryProcessor) Process(ctx context.Context, content *webreader.Conte
 	default:
 	}
 
-	prompt := strings.ReplaceAll(p.config.Prompt, "{inputText}", content.Html)
+	var prompt strings.Builder
+	if err := summaryPromptTempl.Execute(&prompt, map[string]interface{}{
+		"Prompt":   p.config.Prompt,
+		"Article":  content.Markwdown,
+		"Language": p.config.Language,
+	}); err != nil {
+		return fmt.Errorf("generate summary prompt: %w", err)
+	}
 
-	summary, err := p.llm.TextCompletion(ctx, prompt, llms.WithModel(p.config.Model))
+	summary, err := p.llm.TextCompletion(ctx, prompt.String(), llms.WithModel(p.config.Model))
 	if err != nil {
 		return fmt.Errorf("generate summary: %w", err)
 	}
