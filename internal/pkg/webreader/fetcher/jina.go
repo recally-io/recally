@@ -42,7 +42,6 @@ type jinaResponse struct {
 type JinaFetcher struct {
 	client *http.Client
 	config JinaConfig
-	closed bool
 }
 
 func DefaultJinaConfig() JinaConfig {
@@ -78,10 +77,6 @@ func NewJinaFetcher(opts ...JinaOption) (*JinaFetcher, error) {
 
 // Fetch implements the Fetcher interface
 func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.Content, error) {
-	if f.closed {
-		return nil, fmt.Errorf("fetcher is closed")
-	}
-
 	// Prepare the Jina API URL
 	jinaURL := fmt.Sprintf("%s/%s", jinaHost, url)
 
@@ -129,10 +124,5 @@ func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.Content
 
 // Close implements the Fetcher interface
 func (f *JinaFetcher) Close() error {
-	if f.closed {
-		return nil
-	}
-	f.closed = true
-	f.client.CloseIdleConnections()
 	return nil
 }

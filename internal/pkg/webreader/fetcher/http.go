@@ -29,7 +29,6 @@ type HTTPOption func(*HTTPConfig)
 type HTTPFetcher struct {
 	client *http.Client
 	config HTTPConfig
-	closed bool
 }
 
 func DefaultHTTPConfig() HTTPConfig {
@@ -76,10 +75,6 @@ func NewHTTPFetcher(opts ...HTTPOption) (*HTTPFetcher, error) {
 
 // Fetch implements the Fetcher interface
 func (f *HTTPFetcher) Fetch(ctx context.Context, url string) (*webreader.Content, error) {
-	if f.closed {
-		return nil, fmt.Errorf("fetcher is closed")
-	}
-
 	var lastErr error
 	retries := f.config.RetryCount + 1
 
@@ -136,11 +131,6 @@ func (f *HTTPFetcher) doFetch(ctx context.Context, url string) (*webreader.Conte
 
 // Close implements the Fetcher interface
 func (f *HTTPFetcher) Close() error {
-	if f.closed {
-		return nil
-	}
-	f.closed = true
-	f.client.CloseIdleConnections()
 	return nil
 }
 
