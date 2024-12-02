@@ -8,14 +8,11 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/webreader"
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
-)
-
-const (
-	defaultControlURL = "http://localhost:9222"
 )
 
 // BrowserConfig extends the base Config with browser-specific options
@@ -35,7 +32,7 @@ type BrowserFetcher struct {
 func NewDefaultBrowserConfig() BrowserConfig {
 	return BrowserConfig{
 		Timeout:        30,
-		ControlURL:     defaultControlURL,
+		ControlURL:     config.Settings.BrowserControlUrl,
 		ScrollToBottom: true,
 	}
 }
