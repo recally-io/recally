@@ -25,7 +25,7 @@ func registerToolsHandlers(e *echo.Group, s *Service) {
 	h := &toolsHandler{
 		service: workers.New(s.cache),
 	}
-	g := e.Group("/tools")
+	g := e.Group("/tools", authUserMiddleware())
 	g.GET("/web/reader", h.webReaderHandler)
 	g.POST("/web/reader", h.webReaderHandler)
 	g.GET("/web/search", h.webSearchHandler)

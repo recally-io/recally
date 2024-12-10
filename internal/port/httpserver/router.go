@@ -39,7 +39,7 @@ func (s *Service) registerRouters() {
 	})
 
 	// Debug routes
-	debugApi := e.Group("/debug")
+	debugApi := e.Group("/debug", authAdminMiddleware())
 	debugApi.GET("/routes", func(c echo.Context) error {
 		routes := e.Routes()
 		return JsonResponse(c, http.StatusOK, routes)
