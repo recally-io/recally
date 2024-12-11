@@ -46,9 +46,6 @@ func (s *Service) CreateUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*U
 		Username:            dbUser.Username,
 		Email:               dbUser.Email,
 		PasswordHash:        dbUser.PasswordHash,
-		Github:              dbUser.Github,
-		Google:              dbUser.Google,
-		Telegram:            dbUser.Telegram,
 		ActivateAssistantID: dbUser.ActivateAssistantID,
 		ActivateThreadID:    dbUser.ActivateThreadID,
 		Status:              dbUser.Status,
@@ -79,7 +76,10 @@ func (s *Service) AuthByPassword(ctx context.Context, tx db.DBTX, email string, 
 }
 
 func (s *Service) GetTelegramUser(ctx context.Context, tx db.DBTX, userID string) (*UserDTO, error) {
-	user, err := s.dao.GetTelegramUser(ctx, tx, pgtype.Text{String: userID, Valid: true})
+	user, err := s.dao.GetUserByOAuthProviderId(ctx, tx, db.GetUserByOAuthProviderIdParams{
+		Provider:       "telegram",
+		ProviderUserID: userID,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get telegram user: %w", err)
 	}
@@ -89,13 +89,21 @@ func (s *Service) GetTelegramUser(ctx context.Context, tx db.DBTX, userID string
 }
 
 func (s *Service) CreateTelegramUser(ctx context.Context, tx db.DBTX, userName, userID string) (*UserDTO, error) {
-	params := db.InserUserParams{
-		Username: pgtype.Text{String: userName, Valid: true},
-		Telegram: pgtype.Text{String: userID, Valid: true},
-	}
-	user, err := s.dao.InserUser(ctx, tx, params)
+	// create user
+	user, err := s.dao.CreateUser(ctx, tx, db.CreateUserParams{
+		Status: "active",
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create telegram user: %w", err)
+	}
+	// create oauth telegram connection
+	_, err = s.dao.CreateOAuthConnection(ctx, tx, db.CreateOAuthConnectionParams{
+		UserID:         user.Uuid,
+		Provider:       "telegram",
+		ProviderUserID: userID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create telegram oauth connection: %w", err)
 	}
 	u := new(UserDTO)
 	u.Load(&user)
@@ -104,12 +112,11 @@ func (s *Service) CreateTelegramUser(ctx context.Context, tx db.DBTX, userName, 
 
 func (s *Service) UpdateTelegramUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*UserDTO, error) {
 	dbUser := user.Dump()
-	params := db.UpdateTelegramUserParams{
-		Telegram:            dbUser.Telegram,
+	params := db.UpdateUserByIdParams{
 		ActivateAssistantID: dbUser.ActivateAssistantID,
 		ActivateThreadID:    dbUser.ActivateThreadID,
 	}
-	userModel, err := s.dao.UpdateTelegramUser(ctx, tx, params)
+	userModel, err := s.dao.UpdateUserById(ctx, tx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update telegram user: %w", err)
 	}
