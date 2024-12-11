@@ -1,6 +1,7 @@
 import { BaseLayout } from "@/components/layout/BaseLayout";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import AuthPage from "./pages/auth";
 import BookmarkPage from "./pages/BookmarkPage";
 import HomePage from "./pages/HomePage";
 
@@ -12,6 +13,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/bookmarks/:id" element={<BookmarkPage />} />
+            <Route path="/accounts/login" element={<AuthPage />} />
+            <Route path="/accounts/signup" element={<AuthPage />} />
           </Routes>
         </BaseLayout>
       </Router>

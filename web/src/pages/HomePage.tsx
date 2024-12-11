@@ -4,7 +4,6 @@ import BookmarkList from "@/components/BookmarkList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Grid, List, PlusCircle } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useState } from "react";
 
 import { Bookmark as BookmarkType } from "@/types/bookmark";
@@ -54,7 +53,6 @@ export default function HomePage() {
   const [view, setView] = useState<"list" | "grid">("list");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { setTheme, theme } = useTheme();
 
   const filteredBookmarks = bookmarks.filter(
     (bookmark) =>
