@@ -1,7 +1,5 @@
-import BookmarkDetail from '@/components/BookmarkDetail';
-import { Button } from "@/components/ui/button";
-import { Home } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import BookmarkDetail from "@/components/BookmarkDetail";
+import { useParams } from "react-router-dom";
 
 export default function BookmarkPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,16 +12,11 @@ export default function BookmarkPage() {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <Link to="/">
-        <Button variant="ghost" className="mb-4">
-          <Home className="h-4 w-4" />
-        </Button>
-      </Link>
-      <BookmarkDetail 
+      <BookmarkDetail
         bookmark={bookmark}
         onUpdateBookmark={(id, highlights) => {
           // Implement update logic here
-          console.log('Updating bookmark', id, highlights);
+          console.log("Updating bookmark", id, highlights);
         }}
       />
     </div>
@@ -38,11 +31,10 @@ function fetchBookmarkById(id: number) {
     id,
     title: `Bookmark ${id}`,
     url: `https://example.com/${id}`,
-    tags: ['example', 'mock'],
-    content: 'This is a mock bookmark content.',
-    image: '',
-    summary: 'This is a mock bookmark summary.',
-    dateAdded: '2022-01-01',
+    tags: ["example", "mock"],
+    content: "This is a mock bookmark content.",
+    image: "",
+    summary: "This is a mock bookmark summary.",
+    dateAdded: "2022-01-01",
   };
 }
-

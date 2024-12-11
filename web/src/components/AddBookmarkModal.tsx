@@ -1,28 +1,38 @@
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import React, { useState } from 'react'
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import React, { useState } from "react";
 
 interface AddBookmarkModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onAdd: (bookmark: { title: string; url: string; tags: string[] }) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onAdd: (bookmark: { title: string; url: string; tags: string[] }) => void;
 }
 
-export default function AddBookmarkModal({ isOpen, onClose, onAdd }: AddBookmarkModalProps) {
-  const [title, setTitle] = useState('')
-  const [url, setUrl] = useState('')
-  const [tags, setTags] = useState('')
+export default function AddBookmarkModal({
+  isOpen,
+  onClose,
+  onAdd,
+}: AddBookmarkModalProps) {
+  const [title, setTitle] = useState("");
+  const [url, setUrl] = useState("");
+  const [tags, setTags] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onAdd({ title, url, tags: tags.split(',').map(tag => tag.trim()) })
-    setTitle('')
-    setUrl('')
-    setTags('')
-    onClose()
-  }
+    e.preventDefault();
+    onAdd({ title, url, tags: tags.split(",").map((tag) => tag.trim()) });
+    setTitle("");
+    setUrl("");
+    setTags("");
+    onClose();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -76,6 +86,5 @@ export default function AddBookmarkModal({ isOpen, onClose, onAdd }: AddBookmark
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

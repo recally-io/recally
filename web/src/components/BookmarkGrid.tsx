@@ -1,11 +1,11 @@
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bookmark } from "@/types/bookmark"
-import { ExternalLink, Highlighter } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Bookmark } from "@/types/bookmark";
+import { ExternalLink, Highlighter } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface BookmarkGridProps {
-  bookmarks: Bookmark[]
+  bookmarks: Bookmark[];
 }
 
 export default function BookmarkGrid({ bookmarks }: BookmarkGridProps) {
@@ -15,9 +15,9 @@ export default function BookmarkGrid({ bookmarks }: BookmarkGridProps) {
         <Link to={`/bookmarks/${bookmark.id}`} key={bookmark.id}>
           <Card className="h-full cursor-pointer hover:shadow-md transition-all duration-300 ease-in-out transform hover:-translate-y-1">
             {bookmark.image && (
-              <img 
-                src={bookmark.image} 
-                alt={`Thumbnail for ${bookmark.title}`} 
+              <img
+                src={bookmark.image}
+                alt={`Thumbnail for ${bookmark.title}`}
                 className="w-full h-40 object-cover"
               />
             )}
@@ -29,10 +29,10 @@ export default function BookmarkGrid({ bookmarks }: BookmarkGridProps) {
                     <Highlighter className="h-4 w-4 text-yellow-500 flex-shrink-0" />
                   )}
                 </span>
-                <a 
-                  href={bookmark.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={bookmark.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-blue-500 hover:text-blue-700 transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -43,7 +43,9 @@ export default function BookmarkGrid({ bookmarks }: BookmarkGridProps) {
             <CardContent>
               <div className="flex flex-wrap gap-2">
                 {bookmark.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">{tag}</Badge>
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
                 ))}
               </div>
             </CardContent>
@@ -51,6 +53,5 @@ export default function BookmarkGrid({ bookmarks }: BookmarkGridProps) {
         </Link>
       ))}
     </div>
-  )
+  );
 }
-
