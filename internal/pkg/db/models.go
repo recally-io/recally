@@ -81,6 +81,41 @@ type AssistantThread struct {
 	UpdatedAt    pgtype.Timestamptz
 }
 
+type AuthApiKey struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	Name       string
+	KeyPrefix  string
+	KeyHash    string
+	Scopes     []string
+	ExpiresAt  pgtype.Timestamptz
+	LastUsedAt pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
+type AuthRevokedToken struct {
+	Jti       uuid.UUID
+	UserID    uuid.UUID
+	ExpiresAt pgtype.Timestamptz
+	RevokedAt pgtype.Timestamptz
+	Reason    pgtype.Text
+}
+
+type AuthUserOauthConnection struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	Provider       string
+	ProviderUserID string
+	ProviderEmail  pgtype.Text
+	AccessToken    pgtype.Text
+	RefreshToken   pgtype.Text
+	TokenExpiresAt pgtype.Timestamptz
+	ProviderData   []byte
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
 type Bookmark struct {
 	ID                int32
 	Uuid              uuid.UUID
@@ -114,12 +149,11 @@ type User struct {
 	Username            pgtype.Text
 	PasswordHash        pgtype.Text
 	Email               pgtype.Text
-	Github              pgtype.Text
-	Google              pgtype.Text
-	Telegram            pgtype.Text
 	ActivateAssistantID pgtype.UUID
 	ActivateThreadID    pgtype.UUID
 	Status              string
 	CreatedAt           pgtype.Timestamptz
 	UpdatedAt           pgtype.Timestamptz
+	Phone               pgtype.Text
+	Settings            []byte
 }
