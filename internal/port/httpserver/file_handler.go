@@ -24,7 +24,7 @@ func registerFileHandlers(e *echo.Group, s fileService) {
 	h := &fileHandler{
 		service: s,
 	}
-	files := e.Group("/files")
+	files := e.Group("/files", authUserMiddleware())
 	files.GET("/presigned-urls", h.getPresignedURLs)
 	files.DELETE("/:id", h.deleteFile)
 }

@@ -30,7 +30,7 @@ type bookmarksHandler struct {
 
 func registerBookmarkHandlers(e *echo.Group, s *Service) {
 	h := &bookmarksHandler{service: bookmarks.NewService(s.llm)}
-	g := e.Group("/bookmarks")
+	g := e.Group("/bookmarks", authUserMiddleware())
 	g.GET("", h.listBookmarks)
 	g.POST("", h.createBookmark)
 	g.DELETE("/", h.deleteUserBookmarks)

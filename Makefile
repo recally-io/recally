@@ -83,21 +83,50 @@ docker-down:
 	@echo "Stopping docker"
 	@docker compose down
 
+# Create a new migration file
+# Usage: make migrate-new name=your_migration_name
 migrate-new:
 	@echo "Creating migration..."
 	@migrate create -ext sql -dir database/migrations -seq "$(name)"
+	@echo "New migration created: database/migrations/*_$(name).sql"
 
+# Run all pending migrations or up to a specific version
+# Usage: make migrate-up [version=X]
 migrate-up:
 	@echo "Migrating up..."
-	@migrate -path database/migrations -database "$(DATABASE_URL)" up
+	@if [ -z "$(version)" ]; then \
+		migrate -path database/migrations -database "$(DATABASE_URL)" up; \
+		echo "All pending migrations applied."; \
+	else \
+		migrate -path database/migrations -database "$(DATABASE_URL)" up $(version); \
+		echo "Migrated up to version $(version)."; \
+	fi
 
+# Revert all migrations or down to a specific version
+# Usage: make migrate-down [version=X]
 migrate-down:
 	@echo "Migrating down..."
-	@migrate -path database/migrations -database "$(DATABASE_URL)" down
+	@if [ -z "$(version)" ]; then \
+		migrate -path database/migrations -database "$(DATABASE_URL)" down; \
+		echo "All migrations reverted."; \
+	else \
+		migrate -path database/migrations -database "$(DATABASE_URL)" down $(version); \
+		echo "Migrated down to version $(version)."; \
+	fi
 
+# Drop all tables in the database
+# Usage: make migrate-drop
 migrate-drop:
-	@echo "Migrating drop..."
+	@echo "Dropping all migrations..."
 	@migrate -path database/migrations -database "$(DATABASE_URL)" drop
+	@echo "All migrations dropped."
+
+# Force set the database version
+# Usage: make migrate-force version=X
+migrate-force:
+	@echo "Forcing migration version to $(version)..."
+	@migrate -path database/migrations -database "$(DATABASE_URL)" force "$(version)"
+	@echo "Database version forcibly set to $(version)."
 
 psql:
 	@echo "Connecting to database..."

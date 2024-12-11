@@ -47,7 +47,7 @@ type assistantHandler struct {
 
 func registerAssistantHandlers(e *echo.Group, s *Service) {
 	h := &assistantHandler{service: assistants.NewService(s.llm, s.queue)}
-	g := e.Group("/assistants")
+	g := e.Group("/assistants", authUserMiddleware())
 	g.GET("", h.listAssistants)
 	g.POST("", h.createAssistant)
 	g.GET("/:assistant-id", h.getAssistant)
