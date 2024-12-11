@@ -5,7 +5,7 @@ on: push
 jobs:
     golangci:
         name: lint and test
-        runs-on: ubuntu-latest
+        runs-on: ubicloud-standard-2
         steps:
             - uses: actions/setup-go@v5
               with:
