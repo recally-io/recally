@@ -1,30 +1,16 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ExternalLink, Highlighter, X } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Bookmark, Highlight } from "@/types/bookmark"
+import { Calendar, ExternalLink, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-interface Highlight {
-  id: string
-  text: string
-  startOffset: number
-  endOffset: number
-  note?: string
-}
 
 interface BookmarkDetailProps {
-  bookmark: {
-    id: number
-    title: string
-    url: string
-    tags: string[]
-    content: string
-    image?: string
-    summary: string
-  }
+  bookmark: Bookmark
   onUpdateBookmark: (id: number, highlights: Highlight[]) => void
 }
 
@@ -62,106 +48,137 @@ export default function BookmarkDetail({ bookmark, onUpdateBookmark }: BookmarkD
       }
 
       setHighlights([...highlights, newHighlight])
-      selection.removeAllRanges()
     }
   }
 
-  const handleAddNote = (id: string, note: string) => {
-    setHighlights(highlights.map(h => h.id === id ? { ...h, note } : h))
-  }
-
-  const handleRemoveHighlight = (id: string) => {
+  const removeHighlight = (id: string) => {
     setHighlights(highlights.filter(h => h.id !== id))
   }
 
-  const renderContent = useMemo(() => {
+  const highlightedContent = useMemo(() => {
     let content = bookmark.content
-    highlights.sort((a, b) => b.startOffset - a.startOffset).forEach(highlight => {
+    highlights.forEach(highlight => {
       const before = content.slice(0, highlight.startOffset)
       const highlighted = content.slice(highlight.startOffset, highlight.endOffset)
       const after = content.slice(highlight.endOffset)
-      content = `${before}<span class="bg-yellow-200 dark:bg-yellow-800" data-highlight-id="${highlight.id}">${highlighted}</span>${after}`
+      content = `${before}<mark class="bg-yellow-200 dark:bg-yellow-800">${highlighted}</mark>${after}`
     })
     return content
   }, [bookmark.content, highlights])
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-2xl mb-2">{bookmark.title}</CardTitle>
-            <CardDescription>
-              <a href={bookmark.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 flex items-center transition-colors">
-                {bookmark.url} <ExternalLink className="h-4 w-4 ml-1" />
-              </a>
-            </CardDescription>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {bookmark.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="transition-colors hover:bg-primary hover:text-primary-foreground">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {bookmark.image && (
-          <img 
-            src={bookmark.image} 
-            alt={`Image for ${bookmark.title}`} 
-            className="w-full h-64 object-cover mb-4 rounded-md"
-          />
-        )}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">AI Summary</h3>
-          <p className="text-gray-700 dark:text-gray-300">{bookmark.summary}</p>
-        </div>
-        <div className="mb-4">
-          <Button
-            onClick={() => setIsHighlighting(!isHighlighting)}
-            variant={isHighlighting ? "secondary" : "outline"}
-            className="transition-colors"
-          >
-            <Highlighter className="h-4 w-4 mr-2" />
-            {isHighlighting ? "Finish Highlighting" : "Start Highlighting"}
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h3 className="text-lg font-semibold mb-2">Full Content</h3>
-          <ScrollArea className="h-[300px] rounded-md border p-4">
-            <div 
-              ref={contentRef}
-              className={`prose dark:prose-invert max-w-none ${isHighlighting ? 'cursor-pointer' : ''}`}
-              dangerouslySetInnerHTML={{ __html: renderContent }}
-              onClick={isHighlighting ? handleHighlight : undefined}
-            />
-          </ScrollArea>
+          <h1 className="text-3xl font-bold">{bookmark.title}</h1>
+          <p className="text-muted-foreground mt-1">
+            <a 
+              href={bookmark.url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center hover:underline"
+            >
+              {bookmark.url}
+              <ExternalLink className="h-4 w-4 ml-1" />
+            </a>
+          </p>
         </div>
-        {highlights.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-2">Highlights and Notes</h3>
-            {highlights.map((highlight) => (
-              <div key={highlight.id} className="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-md transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <p className="font-medium">"{highlight.text}"</p>
-                  <Button variant="ghost" size="sm" onClick={() => handleRemoveHighlight(highlight.id)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Input
-                  placeholder="Add a note..."
-                  value={highlight.note || ''}
-                  onChange={(e) => handleAddNote(highlight.id, e.target.value)}
-                  className="mt-2"
-                />
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">
+            Added on {bookmark.dateAdded ? new Date(bookmark.dateAdded).toLocaleDateString() : 'Unknown date'}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {bookmark.tags.map((tag) => (
+          <Badge key={tag} variant="secondary">{tag}</Badge>
+        ))}
+      </div>
+
+      {bookmark.image && (
+        <img 
+          src={bookmark.image} 
+          alt={`Thumbnail for ${bookmark.title}`} 
+          className="w-full h-64 object-cover rounded-lg"
+        />
+      )}
+
+      <Tabs defaultValue="content" className="w-full">
+        <TabsList>
+          <TabsTrigger value="content">Content</TabsTrigger>
+          <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="highlights">Highlights</TabsTrigger>
+        </TabsList>
+        <TabsContent value="content">
+          <Card>
+            <CardHeader>
+              <CardTitle>Content</CardTitle>
+              <CardDescription>
+                The full content of the bookmarked page.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => setIsHighlighting(!isHighlighting)}>
+                  {isHighlighting ? 'Finish Highlighting' : 'Start Highlighting'}
+                </Button>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <ScrollArea className="h-[60vh]">
+                <div 
+                  ref={contentRef}
+                  className="prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: highlightedContent }}
+                  onMouseUp={isHighlighting ? handleHighlight : undefined}
+                />
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="summary">
+          <Card>
+            <CardHeader>
+              <CardTitle>Summary</CardTitle>
+              <CardDescription>
+                A brief summary of the bookmarked content.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>{bookmark.summary}</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="highlights">
+          <Card>
+            <CardHeader>
+              <CardTitle>Highlights</CardTitle>
+              <CardDescription>
+                Your saved highlights from the content.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {highlights.length > 0 ? (
+                <ScrollArea className="h-[60vh]">
+                  <div className="space-y-4">
+                    {highlights.map((highlight) => (
+                      <div key={highlight.id} className="flex items-start justify-between bg-muted p-4 rounded-md">
+                        <p className="text-sm">{highlight.text}</p>
+                        <Button variant="ghost" size="sm" onClick={() => removeHighlight(highlight.id)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <p className="text-muted-foreground">No highlights yet. Start highlighting in the Content tab!</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }
 
