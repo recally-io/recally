@@ -54,6 +54,9 @@ export function HeaderMenu() {
           <Menu.Item leftSection={<Icon icon="tabler:augmented-reality" />}>
             <Link to="/assistants">Assistants</Link>
           </Menu.Item>
+          <Menu.Item leftSection={<Icon icon="tabler:bookmark" />}>
+            <Link to="/bookmarks">Bookmarks</Link>
+          </Menu.Item>
           <Menu.Item
             variant="transparent"
             // size="sm"
