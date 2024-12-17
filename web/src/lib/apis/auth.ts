@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import fetcher from "./fetcher";
 
 // Types
 export interface User {
@@ -18,47 +19,30 @@ interface RegisterInput {
   password: string;
 }
 
-// Utility function for API calls
-async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    credentials: "include", // Important: this enables sending/receiving cookies
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.data;
-}
-
 // API Functions
 const api = {
   login: (input: LoginInput) =>
-    fetchApi<User>("/api/v1/auth/login", {
+    fetcher<User>("/api/v1/auth/login", {
       method: "POST",
       body: JSON.stringify(input),
     }),
 
   register: (input: RegisterInput) =>
-    fetchApi<User>("/api/v1/auth/register", {
+    fetcher<User>("/api/v1/auth/register", {
       method: "POST",
       body: JSON.stringify(input),
     }),
 
   logout: () =>
-    fetchApi<void>("/api/v1/auth/logout", {
+    fetcher<void>("/api/v1/auth/logout", {
       method: "POST",
     }),
 
-  validateToken: () => fetchApi<User>("/api/v1/auth/validate-jwt"),
+  validateToken: () => fetcher<User>("/api/v1/auth/validate-jwt"),
 
-  oauthLogin: (provider: string) =>
-    (window.location.href = `/api/v1/oauth/${provider}/login`),
+  oauthLogin: (provider: string) => {
+    window.location.href = `/api/v1/oauth/${provider}/login`;
+  },
 };
 
 // SWR Hooks
