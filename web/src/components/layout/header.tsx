@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { UserNav } from "./user-nav";
+import { useUser } from "@/lib/apis/auth";
 
 export default function Header() {
-  const isAuthenticated = true;
+  const { user, isLoading } = useUser();
   const navigate = useNavigate();
 
   return (
@@ -31,7 +32,7 @@ export default function Header() {
         </nav>
       </div>
       <div className="flex items-center">
-        {isAuthenticated ? (
+        {user ? (
           <UserNav />
         ) : (
           <Button

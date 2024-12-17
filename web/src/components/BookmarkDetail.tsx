@@ -9,36 +9,25 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bookmark, Highlight } from "@/types/bookmark";
+import { Bookmark, Highlight } from "@/lib/apis/bookmarks";
 import { Calendar, ExternalLink, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 interface BookmarkDetailProps {
   bookmark: Bookmark;
-  onUpdateBookmark: (id: number, highlights: Highlight[]) => void;
+  onUpdateBookmark: (id: string, highlights: Highlight[]) => void;
 }
 
 export default function BookmarkDetail({
   bookmark,
   onUpdateBookmark,
 }: BookmarkDetailProps) {
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [highlights, setHighlights] = useState<Highlight[]>(
+    bookmark.metadata?.highlights || [],
+  );
   const [isHighlighting, setIsHighlighting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const savedHighlights = localStorage.getItem(`highlights-${bookmark.id}`);
-    if (savedHighlights) {
-      setHighlights(JSON.parse(savedHighlights));
-    }
-  }, [bookmark.id]);
-
-  useEffect(() => {
-    const highlightsJson = JSON.stringify(highlights);
-    localStorage.setItem(`highlights-${bookmark.id}`, highlightsJson);
-    onUpdateBookmark(bookmark.id, highlights);
-  }, [highlights, bookmark.id, onUpdateBookmark]);
 
   const handleHighlight = () => {
     const selection = window.getSelection();
@@ -56,15 +45,18 @@ export default function BookmarkDetail({
       };
 
       setHighlights([...highlights, newHighlight]);
+      onUpdateBookmark(bookmark.id, [...highlights, newHighlight]);
     }
   };
 
   const removeHighlight = (id: string) => {
-    setHighlights(highlights.filter((h) => h.id !== id));
+    const updatedHighlights = highlights.filter((h) => h.id !== id);
+    setHighlights(updatedHighlights);
+    onUpdateBookmark(bookmark.id, updatedHighlights);
   };
 
   const highlightedContent = useMemo(() => {
-    let content = bookmark.content;
+    let content = bookmark.html || bookmark.content || "";
     highlights.forEach((highlight) => {
       const before = content.slice(0, highlight.startOffset);
       const highlighted = content.slice(
@@ -75,13 +67,13 @@ export default function BookmarkDetail({
       content = `${before}<mark class="bg-yellow-200 dark:bg-yellow-800">${highlighted}</mark>${after}`;
     });
     return content;
-  }, [bookmark.content, highlights]);
+  }, [bookmark.html, bookmark.content, highlights]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{bookmark.title}</h1>
+          <h1 className="text-3xl font-bold">{bookmark.title || "Untitled"}</h1>
           <p className="text-muted-foreground mt-1">
             <a
               href={bookmark.url}
@@ -97,26 +89,23 @@ export default function BookmarkDetail({
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">
-            Added on{" "}
-            {bookmark.dateAdded
-              ? new Date(bookmark.dateAdded).toLocaleDateString()
-              : "Unknown date"}
+            Added on {new Date(bookmark.created_at).toLocaleDateString()}
           </span>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {bookmark.tags.map((tag) => (
+        {bookmark.metadata?.tags?.map((tag) => (
           <Badge key={tag} variant="secondary">
             {tag}
           </Badge>
         ))}
       </div>
 
-      {bookmark.image && (
+      {bookmark.screenshot && (
         <img
-          src={bookmark.image}
-          alt={`Thumbnail for ${bookmark.title}`}
+          src={bookmark.screenshot}
+          alt={`Screenshot of ${bookmark.title || bookmark.url}`}
           className="w-full h-64 object-cover rounded-lg"
         />
       )}
@@ -144,12 +133,16 @@ export default function BookmarkDetail({
                 </Button>
               </div>
               <ScrollArea className="h-[60vh]">
-                <div
-                  ref={contentRef}
-                  className="prose dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: highlightedContent }}
-                  onMouseUp={isHighlighting ? handleHighlight : undefined}
-                />
+                {bookmark.html || bookmark.content ? (
+                  <div
+                    ref={contentRef}
+                    className="prose dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: highlightedContent }}
+                    onMouseUp={isHighlighting ? handleHighlight : undefined}
+                  />
+                ) : (
+                  <p className="text-muted-foreground">No content available</p>
+                )}
               </ScrollArea>
             </CardContent>
           </Card>
@@ -163,7 +156,7 @@ export default function BookmarkDetail({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p>{bookmark.summary}</p>
+              <p>{bookmark.summary || "No summary available"}</p>
             </CardContent>
           </Card>
         </TabsContent>
