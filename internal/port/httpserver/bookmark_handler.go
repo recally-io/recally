@@ -172,7 +172,7 @@ type updateBookmarkRequest struct {
 	Summary    string    `json:"summary"`
 	Content    string    `json:"content"`
 	HTML       string    `json:"html"`
-	// Metadata bookmarks.Metadata `json:"metadata"`
+	Metadata bookmarks.Metadata `json:"metadata"`
 }
 
 // updateBookmark handles PUT /bookmarks/:bookmark-id
@@ -200,10 +200,6 @@ func (h *bookmarksHandler) updateBookmark(c echo.Context) error {
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
-	}
-
-	if req.Summary == "" && req.Content == "" && req.HTML == "" {
-		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("no update fields provided"))
 	}
 
 	bookmark := &bookmarks.BookmarkDTO{

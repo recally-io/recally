@@ -11,10 +11,20 @@ import (
 	"github.com/pgvector/pgvector-go"
 )
 
+type Highlight struct {
+	ID          string `json:"id"`
+	Text        string `json:"text"`
+	StartOffset int    `json:"start_offset"`
+	EndOffset   int    `json:"end_offset"`
+	Note        string `json:"note,omitempty"`
+}
+
 type Metadata struct {
-	Author      string    `json:"author,omitempty"`
-	PublishedAt time.Time `json:"published_at,omitempty"`
-	Tags        []string  `json:"tags,omitempty"`
+	Author      string      `json:"author,omitempty"`
+	PublishedAt time.Time   `json:"published_at,omitempty"`
+	Tags        []string    `json:"tags,omitempty"`
+	Highlights  []Highlight `json:"highlights,omitempty"`
+	Image       string      `json:"image,omitempty"`
 }
 
 // BookmarkDTO represents the domain model for a bookmark

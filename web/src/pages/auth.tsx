@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { Github, Mail } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/lib/apis/auth";
+import { useNavigate } from "react-router-dom";
 
 interface AuthFormData {
   email: string;
@@ -22,7 +24,7 @@ interface AuthFormData {
 
 export default function AuthPage() {
   const location = useLocation();
-  const isLogin = location.pathname === "/login";
+  const isLogin = location.pathname === "/accounts/login";
   const mode = isLogin ? "login" : "signup";
 
   const [formData, setFormData] = useState<AuthFormData>({
@@ -30,6 +32,9 @@ export default function AuthPage() {
     password: "",
     ...(isLogin ? {} : { confirmPassword: "", name: "" }),
   });
+
+  const navigate = useNavigate();
+  const { login, register, oauthLogin } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,13 +44,29 @@ export default function AuthPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(`${mode} attempt with:`, formData);
+    try {
+      if (isLogin) {
+        await login({
+          email: formData.email,
+          password: formData.password,
+        });
+      } else {
+        await register({
+          email: formData.email,
+          password: formData.password,
+          username: formData.name || "",
+        });
+      }
+      navigate("/");
+    } catch (error) {
+      console.error(`${mode} failed:`, error);
+    }
   };
 
   const handleOAuth = (provider: string) => {
-    console.log(`Attempting to ${mode} with ${provider}`);
+    oauthLogin(provider);
   };
 
   return (
@@ -156,7 +177,7 @@ export default function AuthPage() {
                 : "Already have an account? "}
             </span>
             <Link
-              to={isLogin ? "/signup" : "/login"}
+              to={isLogin ? "/accounts/signup" : "/accounts/login"}
               className="text-primary hover:underline"
             >
               {isLogin ? "Sign up" : "Log in"}

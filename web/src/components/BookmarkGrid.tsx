@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bookmark } from "@/types/bookmark";
+import { Bookmark } from "@/lib/apis/bookmarks";
 import { ExternalLink, Highlighter } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -14,9 +14,9 @@ export default function BookmarkGrid({ bookmarks }: BookmarkGridProps) {
       {bookmarks.map((bookmark) => (
         <Link to={`/bookmarks/${bookmark.id}`} key={bookmark.id}>
           <Card className="h-full cursor-pointer hover:shadow-md transition-all duration-300 ease-in-out transform hover:-translate-y-1">
-            {bookmark.image && (
+            {bookmark.metadata?.image && (
               <img
-                src={bookmark.image}
+                src={bookmark.metadata?.image}
                 alt={`Thumbnail for ${bookmark.title}`}
                 className="w-full h-40 object-cover"
               />
@@ -25,9 +25,10 @@ export default function BookmarkGrid({ bookmarks }: BookmarkGridProps) {
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center gap-2 truncate">
                   {bookmark.title}
-                  {bookmark.highlights && bookmark.highlights.length > 0 && (
-                    <Highlighter className="h-4 w-4 text-yellow-500 flex-shrink-0" />
-                  )}
+                  {bookmark.metadata?.highlights &&
+                    bookmark.metadata?.highlights.length > 0 && (
+                      <Highlighter className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                    )}
                 </span>
                 <a
                   href={bookmark.url}
@@ -42,7 +43,7 @@ export default function BookmarkGrid({ bookmarks }: BookmarkGridProps) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {bookmark.tags.map((tag) => (
+                {bookmark.metadata?.tags?.map((tag) => (
                   <Badge key={tag} variant="secondary">
                     {tag}
                   </Badge>
