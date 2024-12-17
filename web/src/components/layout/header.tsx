@@ -4,7 +4,7 @@ import { UserNav } from "./user-nav";
 import { useUser } from "@/lib/apis/auth";
 
 export default function Header() {
-  const { user, isLoading } = useUser();
+  const { user } = useUser();
   const navigate = useNavigate();
 
   return (
