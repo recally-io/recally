@@ -1,11 +1,12 @@
 import { BaseLayout } from "@/components/layout/BaseLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { SWRConfig } from "swr";
+import fetcher from "./lib/apis/fetcher";
 import AuthPage from "./pages/auth";
 import BookmarkPage from "./pages/BookmarkPage";
 import HomePage from "./pages/HomePage";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import { SWRConfig } from "swr";
 
 export default function App() {
   return (
@@ -13,8 +14,7 @@ export default function App() {
       <SWRConfig
         value={{
           // Define your global configuration options here
-          fetcher: (resource, init) =>
-            fetch(resource, init).then((res) => res.json()),
+          fetcher: fetcher,
           // ...other global configurations...
         }}
       >

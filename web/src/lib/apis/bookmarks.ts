@@ -1,4 +1,5 @@
 import useSWR, { useSWRConfig } from "swr";
+import fetcher from "./fetcher";
 
 // Types
 export interface Highlight {
@@ -46,55 +47,37 @@ interface BookmarkRefreshInput {
   regenerate_summary?: boolean;
 }
 
-// Utility function for API calls
-async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    credentials: "include", // Important: this enables sending/receiving cookies
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.data;
-}
-
 // API Functions
 const api = {
   list: (limit = 20, offset = 0) =>
-    fetchApi<Bookmark[]>(`/api/v1/bookmarks?limit=${limit}&offset=${offset}`),
+    fetcher<Bookmark[]>(`/api/v1/bookmarks?limit=${limit}&offset=${offset}`),
 
   create: (input: BookmarkCreateInput) =>
-    fetchApi<Bookmark>("/api/v1/bookmarks", {
+    fetcher<Bookmark>("/api/v1/bookmarks", {
       method: "POST",
       body: JSON.stringify(input),
     }),
 
-  get: (id: string) => fetchApi<Bookmark>(`/api/v1/bookmarks/${id}`),
+  get: (id: string) => fetcher<Bookmark>(`/api/v1/bookmarks/${id}`),
 
   update: (id: string, input: BookmarkUpdateInput) =>
-    fetchApi<Bookmark>(`/api/v1/bookmarks/${id}`, {
+    fetcher<Bookmark>(`/api/v1/bookmarks/${id}`, {
       method: "PUT",
       body: JSON.stringify(input),
     }),
 
   delete: (id: string) =>
-    fetchApi<void>(`/api/v1/bookmarks/${id}`, {
+    fetcher<void>(`/api/v1/bookmarks/${id}`, {
       method: "DELETE",
     }),
 
   deleteAll: (userId: string) =>
-    fetchApi<void>(`/api/v1/bookmarks?user-id=${userId}`, {
+    fetcher<void>(`/api/v1/bookmarks?user-id=${userId}`, {
       method: "DELETE",
     }),
 
   refresh: (id: string, input: BookmarkRefreshInput) =>
-    fetchApi<Bookmark>(`/api/v1/bookmarks/${id}/refresh`, {
+    fetcher<Bookmark>(`/api/v1/bookmarks/${id}/refresh`, {
       method: "POST",
       body: JSON.stringify(input),
     }),

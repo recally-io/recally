@@ -14,11 +14,13 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredBookmarks = bookmarks.filter(
-    (bookmark) =>
-      bookmark.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bookmark.summary?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredBookmarks = Array.isArray(bookmarks)
+    ? bookmarks.filter(
+        (bookmark) =>
+          bookmark.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          bookmark.summary?.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : [];
 
   const addBookmark = async (newBookmark: {
     title: string;
