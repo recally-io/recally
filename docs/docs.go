@@ -4026,10 +4026,39 @@ const docTemplate = `{
                 }
             }
         },
+        "bookmarks.Highlight": {
+            "type": "object",
+            "properties": {
+                "end_offset": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "start_offset": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "bookmarks.Metadata": {
             "type": "object",
             "properties": {
                 "author": {
+                    "type": "string"
+                },
+                "highlights": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bookmarks.Highlight"
+                    }
+                },
+                "image": {
                     "type": "string"
                 },
                 "published_at": {
@@ -4264,6 +4293,9 @@ const docTemplate = `{
                 },
                 "html": {
                     "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/bookmarks.Metadata"
                 },
                 "summary": {
                     "type": "string"

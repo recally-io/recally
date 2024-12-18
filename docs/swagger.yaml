@@ -189,9 +189,28 @@ definitions:
       user_id:
         type: string
     type: object
+  bookmarks.Highlight:
+    properties:
+      end_offset:
+        type: integer
+      id:
+        type: string
+      note:
+        type: string
+      start_offset:
+        type: integer
+      text:
+        type: string
+    type: object
   bookmarks.Metadata:
     properties:
       author:
+        type: string
+      highlights:
+        items:
+          $ref: '#/definitions/bookmarks.Highlight'
+        type: array
+      image:
         type: string
       published_at:
         type: string
@@ -348,6 +367,8 @@ definitions:
         type: string
       html:
         type: string
+      metadata:
+        $ref: '#/definitions/bookmarks.Metadata'
       summary:
         type: string
     required:

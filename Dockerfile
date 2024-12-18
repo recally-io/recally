@@ -22,13 +22,21 @@ RUN bun test && bun run build
 FROM golang:1.22-alpine AS build
 WORKDIR /go/src/app
 
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
+    go install github.com/swaggo/swag/cmd/swag@latest && \
+    go install github.com/kevinburke/go-bindata/v4/...@latest
+
 COPY go.mod go.sum ./
 RUN go mod download
 ENV CGO_ENABLED=0 GOOS=linux
 
 COPY . .
 COPY --from=base /usr/src/app/dist web/dist
-RUN go build -ldflags="-s -w" -o /go/bin/app main.go
+RUN go generate ./... && \
+    go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/ && \
+    sqlc generate && \
+    swag init -g internal/port/httpserver/router.go && \
+    go build -ldflags="-s -w" -o /go/bin/app main.go
 
 # Final stage
 FROM gcr.io/distroless/static-debian12:nonroot

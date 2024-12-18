@@ -33,7 +33,7 @@ generate-spec:
 
 build: build-ui build-go
 
-build-go:
+build-go: generate
 	@echo "Building go..."
 	@go build -o bin/app main.go
 
@@ -47,17 +47,17 @@ test:
 
 run: run-go
 
-run-go:
+run-go: build-go
 	@echo "Running go..."
-	@go run main.go
+	@./bin/app
 
 run-ui:
 	@echo "Running web..."
 	@cd web && bun run dev
 
-run-dev:
+run-dev: build-go
 	@echo "Running dev..."
-	@DEBUG_UI=true go run main.go
+	@DEBUG_UI=true ./bin/app
 
 ngrok:
 	@echo "Running ngrok..."
