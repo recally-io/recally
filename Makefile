@@ -11,7 +11,7 @@ lint-go:
 
 lint-ui:
 	@echo "Linting web..."
-	@prettier ./web --write
+	@cd web && bun run lint
 
 generate: generate-go generate-sql generate-spec
 
