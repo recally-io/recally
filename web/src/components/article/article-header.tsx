@@ -10,7 +10,6 @@ interface ArticleHeaderProps {
 export const ArticleHeader: React.FC<ArticleHeaderProps> = ({
 	title,
 	url,
-	author,
 	publishedAt,
 	readingTime,
 	tags,

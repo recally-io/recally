@@ -14,9 +14,12 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Define fetcher types
+export type FetcherType = "http" | "jina" | "browser";
+
 interface ArticleActionsProps {
-	onDelete: () => void;
-	onRefetch: (type: string) => void;
+	onDelete: () => Promise<void>;
+	onRefetch: (type: FetcherType) => Promise<void>;
 	isLoading: boolean;
 }
 
@@ -44,13 +47,15 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
-								<DropdownMenuItem onClick={() => onRefetch("http")}>
+								<DropdownMenuItem onClick={async () => await onRefetch("http")}>
 									<Globe className="mr-2 h-4 w-4" /> HTTP Fetcher
 								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => onRefetch("jina")}>
+								<DropdownMenuItem onClick={async () => await onRefetch("jina")}>
 									<Database className="mr-2 h-4 w-4" /> Jina Fetcher
 								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => onRefetch("browser")}>
+								<DropdownMenuItem
+									onClick={async () => await onRefetch("browser")}
+								>
 									<Chrome className="mr-2 h-4 w-4" /> Browser Fetcher
 								</DropdownMenuItem>
 							</DropdownMenuContent>
@@ -62,7 +67,7 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
-							onClick={onDelete}
+							onClick={async () => await onDelete()}
 							variant="ghost"
 							size="icon"
 							className="text-destructive hover:bg-destructive/10 transition-all hover:scale-105"
