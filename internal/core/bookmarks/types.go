@@ -34,6 +34,14 @@ var (
 	ErrUnauthorized = fmt.Errorf("unauthorized access")
 )
 
+type FecherType string
+
+const (
+	HttpFetcher    FecherType = "http"
+	JinaFetcher    FecherType = "jina"
+	BrowserFetcher FecherType = "browser"
+)
+
 // SearchParams encapsulates search parameters
 type SearchParams struct {
 	UserID    int32
