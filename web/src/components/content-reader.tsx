@@ -1,106 +1,158 @@
+import { ArticleActions } from "@/components/article/article-actions";
+import { ArticleHeader } from "@/components/article/article-header";
+import { ArticleSummary } from "@/components/article/article-summary";
 import MarkdownRenderer from "@/components/markdown-render";
 import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
-import { Bookmark, Share2, ThumbsUp } from "lucide-react";
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import {
+	type Bookmark as BookmarkType,
+	useBookmarkMutations,
+} from "@/lib/apis/bookmarks";
 import type React from "react";
+import { useState } from "react";
+
+// Define fetcher types
+type FetcherType = "http" | "jina" | "browser";
+
 interface ArticleReaderProps {
 	bookmark: BookmarkType;
+	onDelete?: (id: string) => Promise<void>;
+	onRefetch?: (id: string, fetcherType: FetcherType) => Promise<void>;
+	onRegenerateSummary?: (id: string) => Promise<void>;
 }
 
 export const ArticleReader: React.FC<ArticleReaderProps> = ({ bookmark }) => {
-	const { title, summary, content, metadata } = bookmark;
+	const { toast } = useToast();
+	const [isLoading, setIsLoading] = useState(false);
+	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-	const handleShare = () => {
-		// Implement share functionality
-		console.log("Sharing article:", bookmark.url);
+	const { deleteBookmark, refreshBookmark } = useBookmarkMutations();
+
+	const handleRefetch = async (fetcherType: FetcherType) => {
+		try {
+			setIsLoading(true);
+			await refreshBookmark(bookmark.id, {
+				fetcher: fetcherType,
+				regenerate_summary: false,
+			});
+			toast({
+				title: "Success",
+				description: `Article refetched using ${fetcherType} fetcher`,
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to refetch article",
+				variant: "destructive",
+			});
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
-	const handleLike = () => {
-		// Implement like functionality
-		console.log("Liking article:", bookmark.id);
+	const handleRegenerateSummary = async () => {
+		try {
+			await refreshBookmark(bookmark.id, {
+				regenerate_summary: true,
+			});
+			toast({
+				title: "Success",
+				description: "Summary regenerated successfully",
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to regenerate summary",
+				variant: "destructive",
+			});
+		}
 	};
 
-	const handleSaveBookmark = () => {
-		// Implement save bookmark functionality
-		console.log("Saving bookmark:", bookmark.id);
+	const handleDelete = async () => {
+		try {
+			setIsLoading(true);
+			await deleteBookmark(bookmark.id);
+			toast({
+				title: "Success",
+				description: "Bookmark deleted successfully",
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to delete bookmark",
+				variant: "destructive",
+			});
+		} finally {
+			setIsLoading(false);
+			setShowDeleteDialog(false);
+		}
 	};
 
 	return (
 		<div className="container mx-auto px-4 py-8 max-w-screen-lg">
-			<Card className="p-8 shadow-lg">
-				<h1 className="text-3xl font-bold mb-4">{title}</h1>
+			{/* <Card className="p-4 shadow-lg"> */}
+			{/* <h1 className="text-3xl font-bold mb-4">{title}</h1> */}
 
-				{/* Summary Section using Accordion */}
-				<Accordion type="single" collapsible className="mb-8">
-					<AccordionItem value="summary" className="border-none">
-						<AccordionTrigger className="bg-background rounded-t-lg px-6 py-4 hover:no-underline">
-							<h2 className="text-lg font-semibold">Summary</h2>
-						</AccordionTrigger>
-						<AccordionContent className="bg-muted rounded-b-lg px-6 pb-6">
-							<div className="prose dark:prose-invert prose-sm max-w-none pt-4">
-								<p style={{ whiteSpace: "pre-line" }}>{summary}</p>
-							</div>
-						</AccordionContent>
-					</AccordionItem>
-				</Accordion>
+			<ArticleHeader
+				title={bookmark.title ?? "Title"}
+				url={bookmark.url}
+				author={"author"}
+				publishedAt={bookmark.created_at}
+				readingTime={"5 min read"}
+				tags={bookmark.metadata?.tags}
+			/>
 
-				{/* {metadata?.tags  && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {metadata.tags.map((tag, index) => (
-              <Badge key={index} variant="secondary">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )} */}
+			<ArticleActions
+				onDelete={() => setShowDeleteDialog(true)}
+				onRefetch={handleRefetch}
+				isLoading={isLoading}
+			/>
+			<div className="my-8">
+				<ArticleSummary
+					summary={bookmark.summary ?? ""}
+					onRegenerateSummary={handleRegenerateSummary}
+					isLoading={isLoading}
+				/>
+			</div>
 
-				<div className="flex space-x-4 mb-8">
-					<Button onClick={handleShare} variant="outline">
-						<Share2 className="mr-2 h-4 w-4" /> Share
-					</Button>
-					<Button onClick={handleLike} variant="outline">
-						<ThumbsUp className="mr-2 h-4 w-4" /> Like
-					</Button>
-					<Button onClick={handleSaveBookmark} variant="outline">
-						<Bookmark className="mr-2 h-4 w-4" /> Save
-					</Button>
+			{/* Delete Confirmation Dialog */}
+			<AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This action cannot be undone. This will permanently delete the
+							bookmark and remove it from your library.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleDelete}
+							className="bg-destructive text-destructive-foreground"
+						>
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
+			{/* Main Content */}
+			<div className="mt-8 border-t pt-8">
+				<div className="prose dark:prose-invert prose-lg max-w-none">
+					<MarkdownRenderer content={bookmark.content ?? ""} />
 				</div>
-
-				{metadata?.highlights && (
-					<div className="mb-8">
-						<h2 className="text-xl font-semibold mb-4">Highlights</h2>
-						{metadata.highlights.map((highlight) => (
-							<div
-								key={highlight.id}
-								className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-md mb-4"
-							>
-								<p className="text-gray-800 dark:text-gray-200">
-									{highlight.text}
-								</p>
-								{highlight.note && (
-									<p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-										Note: {highlight.note}
-									</p>
-								)}
-							</div>
-						))}
-					</div>
-				)}
-
-				{/* Main Content */}
-				<div className="mt-8 border-t pt-8">
-					<div className="prose dark:prose-invert prose-lg max-w-none">
-						<MarkdownRenderer content={content ?? ""} />
-					</div>
-				</div>
-			</Card>
+			</div>
+			{/* </Card> */}
 		</div>
 	);
 };

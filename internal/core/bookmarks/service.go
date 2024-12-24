@@ -148,9 +148,14 @@ func (s *Service) DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uu
 }
 
 func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType FecherType, regenerateSummary bool) (*BookmarkDTO, error) {
-	dto, err := s.FetchContent(ctx, tx, id, userID, fetcherType)
-	if err != nil {
-		return nil, err
+	var dto *BookmarkDTO
+	var err error
+
+	if fetcherType != FecherType("") {
+		dto, err = s.FetchContent(ctx, tx, id, userID, fetcherType)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if regenerateSummary {
