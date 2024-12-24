@@ -17,6 +17,7 @@ _cgo_*
 _obj
 _test
 _testmain.go
+__debug_bin*
 
 /VERSION.cache
 /bin/
