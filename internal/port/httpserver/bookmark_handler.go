@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"vibrain/internal/core/bookmarks"
+	"vibrain/internal/core/queue"
 	"vibrain/internal/pkg/db"
+	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
 
@@ -20,16 +22,19 @@ type BookmarkService interface {
 	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
 	Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
-	Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcher string, regenerateSummary bool) (*bookmarks.BookmarkDTO, error)
+	Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcher bookmarks.FecherType, regenerateSummary bool) (*bookmarks.BookmarkDTO, error)
+	FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType bookmarks.FecherType) (*bookmarks.BookmarkDTO, error)
+	SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.BookmarkDTO, error)
 }
 
 // bookmarkServiceImpl implements BookmarkService
 type bookmarksHandler struct {
 	service BookmarkService
+	queue   *queue.Queue
 }
 
 func registerBookmarkHandlers(e *echo.Group, s *Service) {
-	h := &bookmarksHandler{service: bookmarks.NewService(s.llm)}
+	h := &bookmarksHandler{service: bookmarks.NewService(s.llm), queue: s.queue}
 	g := e.Group("/bookmarks", authUserMiddleware())
 	g.GET("", h.listBookmarks)
 	g.POST("", h.createBookmark)
@@ -122,7 +127,16 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
-
+	result, err := h.queue.Insert(ctx, queue.CrawlerWorkerArgs{
+		ID:          created.ID,
+		UserID:      created.UserID,
+		FetcherName: bookmarks.HttpFetcher,
+	}, nil)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to insert job", "err", err)
+	} else {
+		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
+	}
 	return JsonResponse(c, http.StatusCreated, created)
 }
 
@@ -168,11 +182,11 @@ func (h *bookmarksHandler) getBookmark(c echo.Context) error {
 }
 
 type updateBookmarkRequest struct {
-	BookmarkID uuid.UUID `param:"bookmark-id" validate:"required,uuid4"`
-	Summary    string    `json:"summary"`
-	Content    string    `json:"content"`
-	HTML       string    `json:"html"`
-	Metadata bookmarks.Metadata `json:"metadata"`
+	BookmarkID uuid.UUID          `param:"bookmark-id" validate:"required,uuid4"`
+	Summary    string             `json:"summary"`
+	Content    string             `json:"content"`
+	HTML       string             `json:"html"`
+	Metadata   bookmarks.Metadata `json:"metadata"`
 }
 
 // updateBookmark handles PUT /bookmarks/:bookmark-id
@@ -336,7 +350,7 @@ func (h *bookmarksHandler) refreshBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmark, err := h.service.Refresh(ctx, tx, req.BookmarkID, user.ID, req.Fetcher, req.RegenerateSummary)
+	bookmark, err := h.service.Refresh(ctx, tx, req.BookmarkID, user.ID, bookmarks.FecherType(req.Fetcher), req.RegenerateSummary)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}

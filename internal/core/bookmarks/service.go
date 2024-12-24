@@ -9,6 +9,7 @@ import (
 	"vibrain/internal/pkg/logger"
 	"vibrain/internal/pkg/webreader"
 	"vibrain/internal/pkg/webreader/fetcher"
+	"vibrain/internal/pkg/webreader/processor"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -53,17 +54,6 @@ func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *BookmarkDTO) (*Bo
 
 	if !db.IsNotFoundError(err) {
 		return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
-	}
-
-	if dto.Content == "" {
-		readerResult, err := s.reader.Read(ctx, dto.URL)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch content for url '%s': %w", dto.URL, err)
-		}
-		dto.Content = readerResult.Markwdown
-		dto.Title = readerResult.Title
-		dto.Summary = readerResult.Summary
-		dto.HTML = readerResult.Html
 	}
 
 	bookmark, err := s.dao.CreateBookmark(ctx, tx, dto.Dump())
@@ -157,7 +147,23 @@ func (s *Service) DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uu
 	return s.dao.DeleteBookmarksByUser(ctx, tx, pgtype.UUID{Bytes: userID, Valid: true})
 }
 
-func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType string, regenerateSummary bool) (*BookmarkDTO, error) {
+func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType FecherType, regenerateSummary bool) (*BookmarkDTO, error) {
+	dto, err := s.FetchContent(ctx, tx, id, userID, fetcherType)
+	if err != nil {
+		return nil, err
+	}
+
+	if regenerateSummary {
+		dto, err = s.SummarierContent(ctx, tx, id, userID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return dto, nil
+}
+
+func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType FecherType) (*BookmarkDTO, error) {
 	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
 	if err != nil {
 		return nil, err
@@ -170,49 +176,55 @@ func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID,
 	var dto BookmarkDTO
 	dto.Load(&bookmark)
 
-	if fetcherType != "" {
-		var reader webreader.Fetcher
-		switch fetcherType {
-		case "http":
-			reader, err = fetcher.NewHTTPFetcher()
-		case "jina":
-			reader, err = fetcher.NewJinaFetcher()
-		case "browser":
-			reader, err = fetcher.NewBrowserFetcher()
-		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to create fetcher: %w", err)
-		}
-		content, err := reader.Fetch(ctx, bookmark.Url)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch content: %w", err)
-		}
-
-		dto.Content = content.Markwdown
-		dto.Title = content.Title
-		dto.HTML = content.Html
-
-		if err := s.summarier.Process(ctx, content); err != nil {
-			logger.Default.Error("failed to generate summary", "err", err)
-		} else {
-			dto.Summary = content.Summary
-		}
-
-		return s.Update(ctx, tx, id, userID, &dto)
+	var readerFetcher webreader.Fetcher
+	switch fetcherType {
+	case HttpFetcher:
+		readerFetcher, err = fetcher.NewHTTPFetcher()
+	case JinaFetcher:
+		readerFetcher, err = fetcher.NewJinaFetcher()
+	case BrowserFetcher:
+		readerFetcher, err = fetcher.NewBrowserFetcher()
+	default:
+		err = fmt.Errorf("invalid fetcher type: %s", fetcherType)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to create fetcher: %w", err)
 	}
 
-	if regenerateSummary {
-		content := &webreader.Content{
-			Markwdown: dto.Content,
-		}
-		if err := s.summarier.Process(ctx, content); err != nil {
-			return nil, fmt.Errorf("failed to generate summary: %w", err)
-		} else {
-			dto.Summary = content.Summary
-		}
-
-		return s.Update(ctx, tx, id, userID, &dto)
+	reader := webreader.New(readerFetcher, processor.NewMarkdownProcessor())
+	content, err := reader.Read(ctx, bookmark.Url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch content: %w", err)
 	}
 
-	return &dto, nil
+	dto.Content = content.Markwdown
+	dto.Title = content.Title
+	dto.HTML = content.Html
+	return s.Update(ctx, tx, id, userID, &dto)
+}
+
+func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*BookmarkDTO, error) {
+	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if bookmark.UserID.Bytes != userID {
+		return nil, ErrUnauthorized
+	}
+
+	var dto BookmarkDTO
+	dto.Load(&bookmark)
+
+	content := &webreader.Content{
+		Markwdown: dto.Content,
+	}
+
+	if err := s.summarier.Process(ctx, content); err != nil {
+		logger.Default.Error("failed to generate summary", "err", err)
+	} else {
+		dto.Summary = content.Summary
+	}
+
+	return s.Update(ctx, tx, id, userID, &dto)
 }

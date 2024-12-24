@@ -10,8 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type UserSettings struct {
-}
+type UserSettings struct{}
 
 type UserDTO struct {
 	ID                  uuid.UUID    `json:"id"`
