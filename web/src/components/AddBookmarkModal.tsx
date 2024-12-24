@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 
 interface AddBookmarkModalProps {
 	isOpen: boolean;

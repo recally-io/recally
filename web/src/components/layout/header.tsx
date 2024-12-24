@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/lib/apis/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { UserNav } from "./user-nav";
-import { useUser } from "@/lib/apis/auth";
 
 export default function Header() {
 	const { user } = useUser();

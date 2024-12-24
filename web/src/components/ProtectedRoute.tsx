@@ -1,5 +1,5 @@
-import React from "react";
 import { useUser } from "@/lib/apis/auth";
+import type React from "react";
 import { Navigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
