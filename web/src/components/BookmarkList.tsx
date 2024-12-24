@@ -6,7 +6,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Bookmark } from "@/lib/apis/bookmarks";
+import type { Bookmark } from "@/lib/apis/bookmarks";
 import { ExternalLink, Highlighter } from "lucide-react";
 import { Link } from "react-router-dom";
 

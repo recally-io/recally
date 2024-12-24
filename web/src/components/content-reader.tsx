@@ -1,16 +1,15 @@
 import MarkdownRenderer from "@/components/markdown-render";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
-import { Bookmark, Share2, ThumbsUp } from "lucide-react";
-import type React from "react";
 import {
 	Accordion,
 	AccordionContent,
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
+import { Bookmark, Share2, ThumbsUp } from "lucide-react";
+import type React from "react";
 interface ArticleReaderProps {
 	bookmark: BookmarkType;
 }
