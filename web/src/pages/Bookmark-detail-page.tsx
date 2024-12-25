@@ -2,7 +2,7 @@ import { ArticleReader } from "@/components/content-reader";
 import { useBookmark } from "@/lib/apis/bookmarks";
 import { useParams } from "react-router-dom";
 
-export default function BookmarkPage() {
+export default function BookmarkDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const { data: bookmark, error } = useBookmark(id!);
 
