@@ -9,11 +9,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Github, Mail } from "lucide-react";
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/apis/auth";
-import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/lib/router";
+import { Github, Mail } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface AuthFormData {
 	email: string;
@@ -24,8 +25,8 @@ interface AuthFormData {
 
 export default function AuthPage() {
 	const location = useLocation();
-	const isLogin = location.pathname === "/accounts/login";
-	const mode = isLogin ? "login" : "signup";
+	const isLogin = location.pathname === ROUTES.LOGIN;
+	const mode = isLogin ? "login" : "register";
 
 	const [formData, setFormData] = useState<AuthFormData>({
 		email: "",
@@ -177,7 +178,7 @@ export default function AuthPage() {
 								: "Already have an account? "}
 						</span>
 						<Link
-							to={isLogin ? "/accounts/signup" : "/accounts/login"}
+							to={isLogin ? ROUTES.SIGNUP : ROUTES.LOGIN}
 							className="text-primary hover:underline"
 						>
 							{isLogin ? "Sign up" : "Log in"}
