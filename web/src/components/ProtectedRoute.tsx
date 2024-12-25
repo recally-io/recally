@@ -1,4 +1,5 @@
 import { useUser } from "@/lib/apis/auth";
+import { ROUTES } from "@/lib/router";
 import type React from "react";
 import { Navigate } from "react-router-dom";
 
@@ -15,7 +16,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 	}
 
 	if (!user) {
-		return <Navigate to="/accounts/login" replace />;
+		return <Navigate to={ROUTES.LOGIN} replace />;
 	}
 
 	return children;
