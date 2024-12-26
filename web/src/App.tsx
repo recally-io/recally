@@ -10,7 +10,7 @@ import BookmarkPage from "./pages/bookmarks-page";
 
 export default function App() {
 	return (
-		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+		<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
 			<SWRConfig
 				value={{
 					// Define your global configuration options here

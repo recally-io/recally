@@ -23,6 +23,43 @@ interface ArticleActionsProps {
 	isLoading: boolean;
 }
 
+interface RefreshDropdownMenuProps {
+	isLoading: boolean;
+	onRefetch: (type: FetcherType) => Promise<void>;
+}
+
+const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button
+					variant="ghost"
+					size="icon"
+					disabled={props.isLoading}
+					className="transition-all hover:scale-105"
+				>
+					<RefreshCw
+						className={`h-4 w-4 ${props.isLoading ? "animate-spin" : ""}`}
+					/>
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end">
+				<DropdownMenuItem onClick={async () => await props.onRefetch("http")}>
+					<Globe className="mr-2 h-4 w-4" /> HTTP Fetcher
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={async () => await props.onRefetch("jina")}>
+					<Database className="mr-2 h-4 w-4" /> Jina Fetcher
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					onClick={async () => await props.onRefetch("browser")}
+				>
+					<Chrome className="mr-2 h-4 w-4" /> Browser Fetcher
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
+};
+
 export const ArticleActions: React.FC<ArticleActionsProps> = ({
 	onDelete,
 	onRefetch,
@@ -30,40 +67,8 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
 }) => {
 	return (
 		<div className="flex justify-end flex-wrap items-center gap-1 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-1">
+			<RefreshDropdownMenu isLoading={isLoading} onRefetch={onRefetch} />
 			<TooltipProvider>
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									size="icon"
-									disabled={isLoading}
-									className="transition-all hover:scale-105"
-								>
-									<RefreshCw
-										className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-									/>
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem onClick={async () => await onRefetch("http")}>
-									<Globe className="mr-2 h-4 w-4" /> HTTP Fetcher
-								</DropdownMenuItem>
-								<DropdownMenuItem onClick={async () => await onRefetch("jina")}>
-									<Database className="mr-2 h-4 w-4" /> Jina Fetcher
-								</DropdownMenuItem>
-								<DropdownMenuItem
-									onClick={async () => await onRefetch("browser")}
-								>
-									<Chrome className="mr-2 h-4 w-4" /> Browser Fetcher
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</TooltipTrigger>
-					<TooltipContent>Refetch article</TooltipContent>
-				</Tooltip>
-
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
