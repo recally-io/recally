@@ -1,11 +1,9 @@
 export const ROUTES = {
 	HOME: "/",
-	DASHBOARD: "/dashboard",
-	LOGIN: "/auth/login",
-	SIGNUP: "/auth/register",
-	PROFILE: "/profile",
-	SETTINGS: "/settings",
-	BOOKMARKS: "/bookmarks",
+	LOGIN: "/auth.html?mode=login",
+	SIGNUP: "/auth.html?mode=register",
+	SETTINGS: "/settings.html",
+	BOOKMARKS: "/bookmarks.html",
 } as const;
 
 // Type for route keys

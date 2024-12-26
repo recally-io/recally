@@ -1,7 +1,6 @@
 import { useUser } from "@/lib/apis/auth";
 import { ROUTES } from "@/lib/router";
 import type React from "react";
-import { Navigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
 	children: React.ReactElement;
@@ -16,7 +15,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 	}
 
 	if (!user) {
-		return <Navigate to={ROUTES.LOGIN} replace />;
+		window.location.href = ROUTES.LOGIN;
+		return null;
 	}
 
 	return children;

@@ -8,8 +8,6 @@ import {
 } from "@/components/ui/card";
 import type { Bookmark } from "@/lib/apis/bookmarks";
 import { ROUTES } from "@/lib/router";
-import { Highlighter } from "lucide-react";
-import { Link } from "react-router-dom";
 
 interface BookmarkListProps {
 	bookmarks: Bookmark[];
@@ -23,7 +21,11 @@ export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 					key={bookmark.id}
 					className="overflow-hidden transition-transform transform hover:-translate-y-1 mx-2"
 				>
-					<Link to={`${ROUTES.BOOKMARKS}/${bookmark.id}`} className="block">
+					<a
+						href={`${ROUTES.BOOKMARKS}?id=${bookmark.id}`}
+						target="_blank"
+						rel="noreferrer"
+					>
 						{bookmark.metadata?.image && (
 							<img
 								src={bookmark.metadata.image}
@@ -33,27 +35,30 @@ export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 						)}
 						<CardHeader>
 							<CardTitle className="flex items-center justify-between gap-2">
+								{/* <a
+									href={`${ROUTES.BOOKMARKS}?id=${bookmark.id}`}
+									target="_blank"
+									rel="noreferrer"
+								> */}
 								<span className="flex items-center gap-2 truncate">
 									{bookmark.title}
-									{bookmark.metadata?.highlights?.length ? (
-										<Highlighter className="h-4 w-4 text-yellow-500" />
-									) : null}
 								</span>
+								{/* </a> */}
 							</CardTitle>
 							<CardDescription className="truncate">
 								{bookmark.url}
 							</CardDescription>
 						</CardHeader>
-						<CardContent>
-							<div className="flex flex-wrap gap-2">
-								{bookmark.metadata?.tags?.map((tag) => (
-									<Badge key={tag} variant="secondary">
-										{tag}
-									</Badge>
-								))}
-							</div>
-						</CardContent>
-					</Link>
+					</a>
+					<CardContent>
+						<div className="flex flex-wrap gap-2">
+							{bookmark.metadata?.tags?.map((tag) => (
+								<Badge key={tag} variant="secondary">
+									{tag}
+								</Badge>
+							))}
+						</div>
+					</CardContent>
 				</Card>
 			))}
 		</div>

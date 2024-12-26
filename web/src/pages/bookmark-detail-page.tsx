@@ -22,24 +22,20 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useBookmark, useBookmarkMutations } from "@/lib/apis/bookmarks";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
-export default function BookmarkDetailPage() {
-	const { id } = useParams<{ id: string }>();
-	const { data: bookmark, error } = useBookmark(id!);
 
-	if (error) {
-		return <div className="container mx-auto p-4">Error loading bookmark</div>;
-	}
-
-	if (!bookmark) {
-		return <div className="container mx-auto p-4">Loading...</div>;
-	}
-
+export default function BookmarkDetailPage({ id }: { id: string }) {
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
 	const { deleteBookmark, refreshBookmark } = useBookmarkMutations();
+
+	const { data: bookmark, error } = useBookmark(id);
+	if (error) {
+		return <div className="container mx-auto p-4">Error loading bookmark</div>;
+	}
+	if (!bookmark) {
+		return <div className="container mx-auto p-4">Loading...</div>;
+	}
 
 	const handleRefetch = async (fetcherType: FetcherType) => {
 		try {
