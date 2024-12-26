@@ -1,23 +1,18 @@
 interface ArticleHeaderProps {
 	title: string;
 	url: string;
-	author?: string;
 	publishedAt?: string;
-	readingTime?: string;
-	tags?: string[];
 }
 
 export const ArticleHeader: React.FC<ArticleHeaderProps> = ({
 	title,
 	url,
 	publishedAt,
-	readingTime,
-	tags,
 }) => {
 	const domain = new URL(url).hostname;
 
 	return (
-		<div className="space-y-6 border-b pb-8">
+		<div className="space-y-6 border-b pb-4">
 			{/* Title */}
 			<h1 className="text-4xl font-serif font-bold leading-tight tracking-tighter md:text-5xl">
 				{title}
@@ -38,33 +33,20 @@ export const ArticleHeader: React.FC<ArticleHeaderProps> = ({
 					/>
 					<span>{domain}</span>
 				</a>
-				{readingTime && (
-					<>
-						<span className="text-muted-foreground/40">•</span>
-						<span>{readingTime}</span>
-					</>
-				)}
+
 				{publishedAt && (
 					<>
 						<span className="text-muted-foreground/40">•</span>
-						<span>{publishedAt}</span>
+						<span>
+							{new Date(publishedAt).toLocaleDateString("en-US", {
+								year: "numeric",
+								month: "long",
+								day: "numeric",
+							})}
+						</span>
 					</>
 				)}
 			</div>
-
-			{/* Tags */}
-			{tags && tags.length > 0 && (
-				<div className="flex flex-wrap gap-2">
-					{tags.map((tag) => (
-						<span
-							key={tag}
-							className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
-						>
-							{tag}
-						</span>
-					))}
-				</div>
-			)}
 		</div>
 	);
 };

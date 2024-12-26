@@ -22,7 +22,7 @@ export function BookmarkSidebar({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
 	return (
-		<Sidebar collapsible="icon" {...props}>
+		<Sidebar variant="sidebar" side="left" collapsible="icon" {...props}>
 			<SidebarHeader>
 				<SidebarMenu>
 					<SidebarMenuItem>
