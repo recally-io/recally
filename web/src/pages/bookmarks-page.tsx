@@ -1,11 +1,5 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import {
-	SidebarInset,
-	SidebarProvider,
-	SidebarTrigger,
-} from "@/components/ui/sidebar";
-
 import BookmarkList from "@/components/bookmarks-list";
+import { AppSidebar } from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -15,6 +9,11 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+	SidebarInset,
+	SidebarProvider,
+	SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
 import { PlusCircle } from "lucide-react";
 import { useState } from "react";
@@ -33,6 +32,31 @@ export default function BookmarkPage() {
 		setOpen(false);
 	};
 
+	const AddBookmarkModal = () => {
+		return (
+			<Dialog open={open} onOpenChange={setOpen}>
+				<DialogTrigger asChild>
+					<Button variant="ghost" size="icon" className="h-7 w-7">
+						<PlusCircle className="size-6" />
+					</Button>
+				</DialogTrigger>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Add New Bookmark</DialogTitle>
+					</DialogHeader>
+					<form onSubmit={handleSubmit} className="space-y-4">
+						<Input
+							placeholder="Enter URL"
+							value={url}
+							onChange={(e) => setUrl(e.target.value)}
+						/>
+						<Button type="submit">Add Bookmark</Button>
+					</form>
+				</DialogContent>
+			</Dialog>
+		);
+	};
+
 	return (
 		<SidebarProvider>
 			<AppSidebar />
@@ -41,26 +65,7 @@ export default function BookmarkPage() {
 					<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
 						<div className="flex items-center gap-1 px-4">
 							<SidebarTrigger className="-ml-1" />
-							<Dialog open={open} onOpenChange={setOpen}>
-								<DialogTrigger asChild>
-									<Button variant="ghost" size="icon" className="h-7 w-7">
-										<PlusCircle className="size-6" />
-									</Button>
-								</DialogTrigger>
-								<DialogContent>
-									<DialogHeader>
-										<DialogTitle>Add New Bookmark</DialogTitle>
-									</DialogHeader>
-									<form onSubmit={handleSubmit} className="space-y-4">
-										<Input
-											placeholder="Enter URL"
-											value={url}
-											onChange={(e) => setUrl(e.target.value)}
-										/>
-										<Button type="submit">Add Bookmark</Button>
-									</form>
-								</DialogContent>
-							</Dialog>
+							<AddBookmarkModal />
 						</div>
 					</header>
 					<BookmarkList bookmarks={bookmarks} />
