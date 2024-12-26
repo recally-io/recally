@@ -7,7 +7,8 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import type { Bookmark } from "@/lib/apis/bookmarks";
-import { ExternalLink, Highlighter } from "lucide-react";
+import { ROUTES } from "@/lib/router";
+import { Highlighter } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface BookmarkListProps {
@@ -22,7 +23,7 @@ export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 					key={bookmark.id}
 					className="overflow-hidden transition-transform transform hover:-translate-y-1 mx-2"
 				>
-					<Link to={`/bookmarks/${bookmark.id}`} className="block">
+					<Link to={`${ROUTES.BOOKMARKS}/${bookmark.id}`} className="block">
 						{bookmark.metadata?.image && (
 							<img
 								src={bookmark.metadata.image}
@@ -38,14 +39,6 @@ export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 										<Highlighter className="h-4 w-4 text-yellow-500" />
 									) : null}
 								</span>
-								<a
-									href={bookmark.url}
-									target="_blank"
-									rel="noopener noreferrer"
-									onClick={(e) => e.stopPropagation()}
-								>
-									<ExternalLink className="h-4 w-4 text-blue-500" />
-								</a>
 							</CardTitle>
 							<CardDescription className="truncate">
 								{bookmark.url}

@@ -1,11 +1,9 @@
-import { BookmarkIcon } from "lucide-react";
 import type * as React from "react";
 
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
+import { NavContent } from "@/components/sidebar-content";
+import { NavUser } from "@/components/sidebar-nav-user";
 import {
 	Sidebar,
-	SidebarContent,
 	SidebarFooter,
 	SidebarHeader,
 	SidebarMenu,
@@ -14,6 +12,8 @@ import {
 	SidebarRail,
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
+import { Bookmark } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	return (
@@ -22,21 +22,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton size="lg" asChild>
-							<a href={ROUTES.BOOKMARKS} className="flex items-center gap-2">
+							<Link to={ROUTES.HOME}>
 								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-									<BookmarkIcon className="size-4" />
+									<Bookmark className="size-4" />
 								</div>
 								<div className="flex flex-col gap-0.5 leading-none">
 									<span className="font-semibold">Vibrain</span>
 								</div>
-							</a>
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarHeader>
-			<SidebarContent>
-				<NavMain />
-			</SidebarContent>
+			<NavContent />
 			<SidebarFooter>
 				<NavUser />
 			</SidebarFooter>
