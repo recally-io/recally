@@ -1,10 +1,11 @@
 import type * as React from "react";
 
-import { NavContent } from "@/components/sidebar-content";
 import { NavUser } from "@/components/sidebar-nav-user";
 import {
 	Sidebar,
+	SidebarContent,
 	SidebarFooter,
+	SidebarGroup,
 	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
@@ -12,10 +13,14 @@ import {
 	SidebarRail,
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Settings2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BookmarkSidebarContent } from "./bookmark-sidebar-content";
+import ThemeToggle from "./theme-toggle";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function BookmarkSidebar({
+	...props
+}: React.ComponentProps<typeof Sidebar>) {
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
@@ -34,7 +39,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarHeader>
-			<NavContent />
+			<SidebarContent>
+				<BookmarkSidebarContent />
+				<SidebarGroup className="mt-auto">
+					<SidebarMenu>
+						<SidebarMenuItem key="preferences">
+							<SidebarMenuButton asChild>
+								<Link to={ROUTES.SETTINGS}>
+									<Settings2 />
+									<span>Preferences</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<ThemeToggle />
+					</SidebarMenu>
+				</SidebarGroup>
+			</SidebarContent>
 			<SidebarFooter>
 				<NavUser />
 			</SidebarFooter>
