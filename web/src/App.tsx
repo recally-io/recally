@@ -4,7 +4,7 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { SWRConfig } from "swr";
 import fetcher from "./lib/apis/fetcher";
 import { ROUTES } from "./lib/router";
-import BookmarkDetailPage from "./pages/Bookmark-detail-page";
+import BookmarkDetailPage from "./pages/bookmark-detail-page";
 import AuthPage from "./pages/auth";
 import BookmarkPage from "./pages/bookmarks-page";
 

@@ -1,6 +1,5 @@
 import BookmarkList from "@/components/bookmarks-list";
 import { BookmarksSidebar } from "@/components/bookmarks-sidebar";
-import { BookmarksSidebarContent } from "@/components/bookmarks-sidebar-content";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -60,9 +59,7 @@ export default function BookmarkPage() {
 
 	return (
 		<SidebarProvider>
-			<BookmarksSidebar>
-				<BookmarksSidebarContent />
-			</BookmarksSidebar>
+			<BookmarksSidebar />
 			<SidebarInset>
 				<div className="flex flex-col h-full">
 					<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
