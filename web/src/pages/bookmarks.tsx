@@ -17,8 +17,13 @@ import {
 import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
 import { PlusCircle } from "lucide-react";
 import { useState } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./app-basic";
 
-export default function BookmarkPage() {
+import { useQueryState } from "nuqs";
+import BookmarkDetailPage from "./bookmark-detail-page";
+
+function BookmarksListView() {
 	const { data: bookmarks = [] } = useBookmarks();
 	const { createBookmark } = useBookmarkMutations();
 	const [open, setOpen] = useState(false);
@@ -74,3 +79,17 @@ export default function BookmarkPage() {
 		</SidebarProvider>
 	);
 }
+
+function BookmarkPage() {
+	const [id] = useQueryState("id");
+	if (id != null) {
+		return <BookmarkDetailPage id={id} />;
+	}
+	return <BookmarksListView />;
+}
+
+createRoot(document.getElementById("root")!).render(
+	<App>
+		<BookmarkPage />
+	</App>,
+);

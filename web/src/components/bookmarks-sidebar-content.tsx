@@ -20,7 +20,6 @@ import {
 	ChevronRight,
 	Newspaper,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 
 const items = [
 	{
@@ -86,10 +85,10 @@ export function BookmarksSidebarContent() {
 									{item.items?.map((subItem) => (
 										<SidebarMenuSubItem key={subItem.title}>
 											<SidebarMenuSubButton asChild>
-												<Link to={subItem.url}>
+												<a href={subItem.url}>
 													{subItem.icon && <subItem.icon />}
 													<span>{subItem.title}</span>
-												</Link>
+												</a>
 											</SidebarMenuSubButton>
 										</SidebarMenuSubItem>
 									))}

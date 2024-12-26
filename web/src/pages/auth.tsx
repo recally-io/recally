@@ -10,11 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/apis/auth";
-import { ROUTES } from "@/lib/router";
 import { Github, Mail } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 import type React from "react";
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { createRoot } from "react-dom/client";
+
+import { ROUTES } from "@/lib/router";
+import App from "./app-basic";
 
 interface AuthFormData {
 	email: string;
@@ -23,10 +26,18 @@ interface AuthFormData {
 	name?: string;
 }
 
+const AuthMode = {
+	Login: "login",
+	Register: "register",
+};
+
 export default function AuthPage() {
-	const location = useLocation();
-	const isLogin = location.pathname === ROUTES.LOGIN;
-	const mode = isLogin ? "login" : "register";
+	// "login" or "register"
+	const [mode, _] = useQueryState(
+		"mode",
+		parseAsString.withDefault(AuthMode.Login),
+	);
+	const isLogin = mode === AuthMode.Login;
 
 	const [formData, setFormData] = useState<AuthFormData>({
 		email: "",
@@ -34,7 +45,6 @@ export default function AuthPage() {
 		...(isLogin ? {} : { confirmPassword: "", name: "" }),
 	});
 
-	const navigate = useNavigate();
 	const { login, register, oauthLogin } = useAuth();
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +70,7 @@ export default function AuthPage() {
 					username: formData.name || "",
 				});
 			}
-			navigate("/");
+			window.location.href = "/";
 		} catch (error) {
 			console.error(`${mode} failed:`, error);
 		}
@@ -177,15 +187,21 @@ export default function AuthPage() {
 								? "Don't have an account? "
 								: "Already have an account? "}
 						</span>
-						<Link
-							to={isLogin ? ROUTES.SIGNUP : ROUTES.LOGIN}
+						<a
+							href={isLogin ? ROUTES.SIGNUP : ROUTES.SIGNUP}
 							className="text-primary hover:underline"
 						>
 							{isLogin ? "Sign up" : "Log in"}
-						</Link>
+						</a>
 					</div>
 				</CardContent>
 			</Card>
 		</div>
 	);
 }
+
+createRoot(document.getElementById("root")!).render(
+	<App>
+		<AuthPage />
+	</App>,
+);
