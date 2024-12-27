@@ -20,6 +20,7 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./app-basic";
 
+import ProtectedRoute from "@/components/protected-route";
 import { useQueryState } from "nuqs";
 import BookmarkDetailPage from "./bookmark-detail-page";
 
@@ -90,6 +91,8 @@ function BookmarkPage() {
 
 createRoot(document.getElementById("root")!).render(
 	<App>
-		<BookmarkPage />
+		<ProtectedRoute>
+			<BookmarkPage />
+		</ProtectedRoute>
 	</App>,
 );

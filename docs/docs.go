@@ -3976,6 +3976,9 @@ const docTemplate = `{
                 }
             }
         },
+        "auth.UserSettings": {
+            "type": "object"
+        },
         "bookmarks.BookmarkDTO": {
             "type": "object",
             "properties": {
@@ -4309,6 +4312,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "settings": {
+                    "$ref": "#/definitions/auth.UserSettings"
+                },
+                "status": {
                     "type": "string"
                 },
                 "username": {

@@ -4,8 +4,12 @@ import fetcher from "./fetcher";
 // Types
 export interface User {
 	id: string;
+	avatar?: string;
 	username?: string;
 	email?: string;
+	phone?: string;
+	Status?: string;
+	Settings?: object;
 }
 
 interface LoginInput {
