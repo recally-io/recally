@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 	"vibrain/internal/pkg/auth"
 	"vibrain/internal/pkg/db"
@@ -19,7 +20,7 @@ type authService interface {
 	CreateUser(ctx context.Context, tx db.DBTX, user *auth.UserDTO) (*auth.UserDTO, error)
 	AuthByPassword(ctx context.Context, tx db.DBTX, email string, password string) (*auth.UserDTO, error)
 	GenerateJWT(user uuid.UUID) (string, error)
-	ValidateJWT(tokenString string) (uuid.UUID, int64, error)
+	ValidateJWT(ctx context.Context, tx db.DBTX, tokenString string) (*auth.UserDTO, int64, error)
 }
 
 type authHandler struct {
@@ -36,6 +37,7 @@ func registerAuthHandlers(e *echo.Group) {
 
 	auth := e.Group("/auth")
 	auth.POST("/login", h.login)
+	auth.POST("/logout", h.logout)
 	auth.POST("/register", h.register)
 	auth.GET("/validate-jwt", h.validateJwtToken)
 }
@@ -111,11 +113,7 @@ func (h *authHandler) login(c echo.Context) error {
 	}
 
 	h.setCookieJwtToken(c, token)
-	return JsonResponse(c, http.StatusOK, userResponse{
-		ID:       user.ID,
-		Username: user.Username,
-		Email:    user.Email,
-	})
+	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
 
 type registerRequest struct {
@@ -125,9 +123,13 @@ type registerRequest struct {
 }
 
 type userResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
+	ID       uuid.UUID         `json:"id"`
+	Avatar   string            `json:"avatar"`
+	Username string            `json:"username"`
+	Email    string            `json:"email"`
+	Phone    string            `json:"phone"`
+	Status   string            `json:"status"`
+	Settings auth.UserSettings `json:"settings"`
 }
 
 // @Summary Register a new user
@@ -194,24 +196,62 @@ func (h *authHandler) setCookieJwtToken(c echo.Context, token string) {
 // @Failure 500 {object} JSONResult{data=nil} "Internal
 // @Router /auth/validate-jwt [get]
 func (h *authHandler) validateJwtToken(c echo.Context) error {
+	ctx := c.Request().Context()
+	tx, err := loadTx(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
 	token, err := c.Cookie("token")
 	if err != nil {
 		return ErrorResponse(c, http.StatusUnauthorized, fmt.Errorf("failed to get jwt token: %w", err))
 	}
 
-	userId, exp, err := h.service.ValidateJWT(token.Value)
+	user, exp, err := h.service.ValidateJWT(ctx, tx, token.Value)
 	if err != nil {
 		return ErrorResponse(c, http.StatusUnauthorized, fmt.Errorf("failed to validate jwt token: %w", err))
 	}
 
 	if time.Now().Add(-time.Hour*4).Unix() < exp {
-		jwt, err := h.service.GenerateJWT(userId)
+		jwt, err := h.service.GenerateJWT(user.ID)
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token: %w", err))
 		}
 		h.setCookieJwtToken(c, jwt)
 	}
-	return JsonResponse(c, http.StatusOK, userResponse{
-		ID: userId,
-	})
+	return JsonResponse(c, http.StatusOK, toUserResponse(user))
+}
+
+// @Summary User logout
+// @Description Clear user session by removing JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} JSONResult{data=nil} "Successfully logged out"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal server error"
+// @Router /auth/logout [post]
+func (h *authHandler) logout(c echo.Context) error {
+	// Remove the token cookie by setting its expiry to a past time
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Expires:  time.Now().Add(-24 * time.Hour), // Set expiry to the past
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
+	}
+	c.SetCookie(cookie)
+
+	return JsonResponse(c, http.StatusOK, nil)
+}
+
+func toUserResponse(user *auth.UserDTO) userResponse {
+	return userResponse{
+		ID:       user.ID,
+		Avatar:   strings.ToUpper(user.Username[:1]),
+		Username: user.Username,
+		Email:    user.Email,
+		Phone:    user.Phone,
+		Status:   user.Status,
+		Settings: user.Settings,
+	}
 }

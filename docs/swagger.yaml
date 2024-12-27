@@ -156,6 +156,8 @@ definitions:
           type: string
         type: array
     type: object
+  auth.UserSettings:
+    type: object
   bookmarks.BookmarkDTO:
     properties:
       content:
@@ -379,6 +381,12 @@ definitions:
       email:
         type: string
       id:
+        type: string
+      phone:
+        type: string
+      settings:
+        $ref: '#/definitions/auth.UserSettings'
+      status:
         type: string
       username:
         type: string

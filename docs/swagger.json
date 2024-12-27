@@ -3970,6 +3970,9 @@
                 }
             }
         },
+        "auth.UserSettings": {
+            "type": "object"
+        },
         "bookmarks.BookmarkDTO": {
             "type": "object",
             "properties": {
@@ -4303,6 +4306,15 @@
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "settings": {
+                    "$ref": "#/definitions/auth.UserSettings"
+                },
+                "status": {
                     "type": "string"
                 },
                 "username": {

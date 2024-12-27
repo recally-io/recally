@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"time"
 	"vibrain/internal/pkg/config"
+	"vibrain/internal/pkg/db"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -29,8 +31,13 @@ func (s *Service) GenerateJWT(userId uuid.UUID) (string, error) {
 	return token.SignedString(getJWTSecret())
 }
 
-func (s *Service) ValidateJWT(tokenString string) (uuid.UUID, int64, error) {
-	return ValidateJWT(tokenString)
+func (s *Service) ValidateJWT(ctx context.Context, tx db.DBTX, tokenString string) (*UserDTO, int64, error) {
+	userId, exp, err := ValidateJWT(tokenString)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid token: %w", err)
+	}
+	user, err := s.GetUserById(ctx, tx, userId)
+	return user, exp, err
 }
 
 func ValidateJWT(tokenString string) (uuid.UUID, int64, error) {
