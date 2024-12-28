@@ -23,7 +23,6 @@ export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 				>
 					<a
 						href={`${ROUTES.BOOKMARKS}?id=${bookmark.id}`}
-						target="_blank"
 						rel="noreferrer"
 					>
 						{bookmark.metadata?.image && (
