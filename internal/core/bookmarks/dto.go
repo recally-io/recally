@@ -22,6 +22,7 @@ type Highlight struct {
 type Metadata struct {
 	Author      string      `json:"author,omitempty"`
 	PublishedAt time.Time   `json:"published_at,omitempty"`
+	Description string      `json:"description,omitempty"`
 	Tags        []string    `json:"tags,omitempty"`
 	Highlights  []Highlight `json:"highlights,omitempty"`
 	Image       string      `json:"image,omitempty"`

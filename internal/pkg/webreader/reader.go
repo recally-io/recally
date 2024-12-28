@@ -106,7 +106,12 @@ func (w *Reader) preProcess(content *Content) error {
 	// Set Markdown content
 	content.Title = article.Title
 	content.Description = article.Byline
-	content.Image = article.Image
+	if article.Favicon != "" {
+		content.Image = article.Favicon
+	}
+	if content.Image == "" {
+		content.Image = article.Image
+	}
 	content.Text = article.TextContent
 	content.Html = article.Content
 	content.PublishedTime = article.PublishedTime
