@@ -208,6 +208,8 @@ definitions:
     properties:
       author:
         type: string
+      description:
+        type: string
       highlights:
         items:
           $ref: '#/definitions/bookmarks.Highlight'
