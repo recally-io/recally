@@ -2,7 +2,6 @@ package fetcher
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"vibrain/internal/pkg/webreader"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 )
 
@@ -50,14 +50,13 @@ func NewBrowserFetcher(opts ...BroswerOption) (*BrowserFetcher, error) {
 }
 
 func newBrowserFetcher(cfg BrowserConfig) (*BrowserFetcher, error) {
-	// Get WebSocket debugger URL
-	wsURL, err := getWebSocketDebuggerURL(cfg.ControlURL)
+	// https://go-rod.github.io/#/custom-launch?id=remotely-manage-the-launcher
+	l, err := launcher.NewManaged(cfg.ControlURL)
 	if err != nil {
-		return nil, fmt.Errorf("get debugger URL: %w", err)
+		return nil, fmt.Errorf("create new launcher: %w", err)
 	}
-
-	// Connect to browser
-	browser := rod.New().ControlURL(wsURL).MustConnect()
+	l.Headless(true).Set("disable-gpu").Set("no-sandbox").Set("disable-dev-shm-usage")
+	browser := rod.New().Client(l.MustClient()).MustConnect()
 
 	return &BrowserFetcher{
 		config:  cfg,
@@ -65,25 +64,6 @@ func newBrowserFetcher(cfg BrowserConfig) (*BrowserFetcher, error) {
 	}, nil
 }
 
-// getWebSocketDebuggerURL retrieves the WebSocket debugger URL from Chrome
-func getWebSocketDebuggerURL(controlURL string) (string, error) {
-	resp, err := http.Get(controlURL + "/json/version")
-	if err != nil {
-		return "", fmt.Errorf("get version info: %w", err)
-	}
-	defer resp.Body.Close()
-
-	var info versionInfo
-	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
-		return "", fmt.Errorf("decode version info: %w", err)
-	}
-
-	if info.WebSocketDebuggerUrl == "" {
-		return "", fmt.Errorf("no WebSocket debugger URL found")
-	}
-
-	return info.WebSocketDebuggerUrl, nil
-}
 
 // Fetch implements the Fetcher interface
 func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Content, error) {
@@ -160,10 +140,4 @@ func WithBroswerOptionScrollToBottom(scroll bool) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.ScrollToBottom = scroll
 	}
-}
-
-// versionInfo represents Chrome DevTools Protocol version info
-type versionInfo struct {
-	Browser              string `json:"Browser"`
-	WebSocketDebuggerUrl string `json:"webSocketDebuggerUrl"`
 }
