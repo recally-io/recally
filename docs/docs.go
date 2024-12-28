@@ -4126,6 +4126,9 @@ const docTemplate = `{
                 "author": {
                     "type": "string"
                 },
+                "description": {
+                    "type": "string"
+                },
                 "highlights": {
                     "type": "array",
                     "items": {
