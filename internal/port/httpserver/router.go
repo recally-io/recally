@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"net/http"
-	"vibrain/internal/pkg/config"
 	"vibrain/internal/pkg/logger"
 	"vibrain/web"
 
@@ -49,12 +48,15 @@ func (s *Service) registerRouters() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// web pages
-	if config.Settings.DebugUI {
-		// proxy to vite server localhost:5173
-		logger.Default.Debug("Using vite server as frontend")
-		e.GET("/*", reactReverseProxy)
-	} else {
-		logger.Default.Debug("Using static files as frontend")
-		e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
-	}
+	logger.Default.Debug("Using static files as frontend")
+	e.GET("/manifest.webmanifest", func(c echo.Context) error {
+		file, err := web.StaticHttpFS.Open("manifest.webmanifest")
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		c.Response().Header().Set("Content-Type", "application/manifest+json")
+		return c.Stream(http.StatusOK, "application/manifest+json", file)
+	})
+	e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
 }
