@@ -205,6 +205,11 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 	dto.Content = content.Markwdown
 	dto.Title = content.Title
 	dto.HTML = content.Html
+	dto.Metadata.Image = content.Image
+	dto.Metadata.Description = content.Description
+	if content.PublishedTime != nil {
+		dto.Metadata.PublishedAt = *content.PublishedTime
+	}
 	return s.Update(ctx, tx, id, userID, &dto)
 }
 
