@@ -3,12 +3,12 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"recally/internal/core/assistants"
+	"recally/internal/pkg/auth"
+	"recally/internal/pkg/contexts"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 	"strings"
-	"vibrain/internal/core/assistants"
-	"vibrain/internal/pkg/auth"
-	"vibrain/internal/pkg/contexts"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/jackc/pgx/v5"
 	"gopkg.in/telebot.v3"

@@ -26,10 +26,10 @@
 ```bash
 
 # Clone the repository
-git clone https://github.com/vaayne/vibrain
+git clone https://github.com/vaayne/recally
 
 # Change directory
-cd vibrain
+cd recally
 
 # edit the .env file as needed
 cp env.example .env

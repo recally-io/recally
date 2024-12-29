@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"recally/internal/pkg/contexts"
 	"strconv"
-	"vibrain/internal/pkg/contexts"
 )
 
 var defaultLogAttrs = []string{contexts.ContextKeyRequestID, contexts.ContextKeyUserID, contexts.ContextKeyUserName}

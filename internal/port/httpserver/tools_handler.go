@@ -3,10 +3,10 @@ package httpserver
 import (
 	"context"
 	"net/http"
-	"vibrain/internal/core/workers"
-	"vibrain/internal/pkg/logger"
-	"vibrain/internal/pkg/tools/jinareader"
-	"vibrain/internal/pkg/tools/jinasearcher"
+	"recally/internal/core/workers"
+	"recally/internal/pkg/logger"
+	"recally/internal/pkg/tools/jinareader"
+	"recally/internal/pkg/tools/jinasearcher"
 
 	"github.com/labstack/echo/v4"
 )

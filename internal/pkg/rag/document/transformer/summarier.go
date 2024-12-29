@@ -3,8 +3,8 @@ package transformer
 import (
 	"context"
 	"fmt"
-	"vibrain/internal/pkg/llms"
-	"vibrain/internal/pkg/rag/document"
+	"recally/internal/pkg/llms"
+	"recally/internal/pkg/rag/document"
 )
 
 const summaryPrompt = "Summarize the following text in a concise way:"

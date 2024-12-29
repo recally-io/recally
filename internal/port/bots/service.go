@@ -2,11 +2,11 @@ package bots
 
 import (
 	"context"
-	"vibrain/internal/core/queue"
-	"vibrain/internal/pkg/cache"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/llms"
+	"recally/internal/core/queue"
+	"recally/internal/pkg/cache"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/llms"
 
 	"github.com/labstack/echo/v4"
 )

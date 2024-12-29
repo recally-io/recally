@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"vibrain/internal/core/bookmarks"
-	"vibrain/internal/core/queue"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/logger"
+	"recally/internal/core/bookmarks"
+	"recally/internal/core/queue"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 
 	"github.com/google/uuid"
 

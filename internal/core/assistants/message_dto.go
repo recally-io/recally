@@ -2,10 +2,10 @@ package assistants
 
 import (
 	"encoding/json"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/llms"
+	"recally/internal/pkg/logger"
 	"time"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/llms"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

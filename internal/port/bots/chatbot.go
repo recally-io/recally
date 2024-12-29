@@ -1,12 +1,12 @@
 package bots
 
 import (
-	"vibrain/internal/core/queue"
-	"vibrain/internal/pkg/cache"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/llms"
-	"vibrain/internal/port/bots/handlers"
+	"recally/internal/core/queue"
+	"recally/internal/pkg/cache"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/llms"
+	"recally/internal/port/bots/handlers"
 
 	"github.com/labstack/echo/v4"
 	"gopkg.in/telebot.v3"

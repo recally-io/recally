@@ -3,8 +3,8 @@ package migrations
 import (
 	"context"
 	"fmt"
+	"recally/internal/pkg/logger"
 	"strings"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"

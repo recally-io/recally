@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/webreader"
 	"strings"
 	"time"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/webreader"
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"

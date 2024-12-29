@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"recally/internal/pkg/db"
 	"strings"
 	"testing"
 	"time"
-	"vibrain/internal/pkg/db"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

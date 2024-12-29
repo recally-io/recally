@@ -1,6 +1,6 @@
 services:
-  vibrain:
-    image: vaayne/vibrain:latest
+  recally:
+    image: vaayne/recally:latest
     build: .
     ports:
       - "1323:1323"
@@ -35,7 +35,7 @@ services:
       - "15432:5432"
     restart: always
     volumes:
-      - vibrain-data:/var/lib/postgresql/data
+      - recally-data:/var/lib/postgresql/data
 
 volumes:
-  vibrain-data:
+  recally-data:

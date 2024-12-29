@@ -3,7 +3,7 @@ package embedddings
 import (
 	"context"
 	"fmt"
-	"vibrain/internal/pkg/rag/document"
+	"recally/internal/pkg/rag/document"
 
 	"github.com/sashabaranov/go-openai"
 )

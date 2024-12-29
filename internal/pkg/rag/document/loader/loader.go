@@ -2,9 +2,9 @@ package loader
 
 import (
 	"context"
-	"vibrain/internal/pkg/rag/document"
-	"vibrain/internal/pkg/rag/document/transformer"
-	"vibrain/internal/pkg/rag/textsplitter"
+	"recally/internal/pkg/rag/document"
+	"recally/internal/pkg/rag/document/transformer"
+	"recally/internal/pkg/rag/textsplitter"
 )
 
 type Options struct {

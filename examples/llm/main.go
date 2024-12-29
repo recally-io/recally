@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/llms"
-	"vibrain/internal/pkg/logger"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/llms"
+	"recally/internal/pkg/logger"
 
 	"github.com/sashabaranov/go-openai"
 )

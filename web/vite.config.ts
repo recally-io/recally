@@ -20,8 +20,8 @@ export default defineConfig({
 			srcDir: "src",
 			filename: "sw.js",
 			manifest: {
-				name: "Vibrain",
-				short_name: "Vibrain",
+				name: "Recally",
+				short_name: "Recally",
 				display: "fullscreen",
 				description: "Save what matters, recall when it counts.",
 				theme_color: "#ffffff",

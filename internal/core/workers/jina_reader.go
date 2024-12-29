@@ -2,9 +2,9 @@ package workers
 
 import (
 	"context"
-	"vibrain/internal/pkg/cache"
-	"vibrain/internal/pkg/tools/jinareader"
-	"vibrain/internal/pkg/tools/jinasearcher"
+	"recally/internal/pkg/cache"
+	"recally/internal/pkg/tools/jinareader"
+	"recally/internal/pkg/tools/jinasearcher"
 )
 
 const (
