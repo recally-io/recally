@@ -64,7 +64,6 @@ func newBrowserFetcher(cfg BrowserConfig) (*BrowserFetcher, error) {
 	}, nil
 }
 
-
 // Fetch implements the Fetcher interface
 func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Content, error) {
 	var err error
