@@ -25,7 +25,7 @@ type ServiceConfig struct {
 }
 
 type TelegramConfig struct {
-	Name                string `env:"NAME" envDefault:"VibrainBot"`
+	Name                string `env:"NAME" envDefault:"RecallyBot"`
 	Token               string `env:"TOKEN"`
 	Webhook             bool   `env:"WEBHOOK"`
 	WebhookSecrectToken string `env:"WEBHOOK_SECRET_TOKEN"`
