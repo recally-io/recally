@@ -13,20 +13,7 @@ self.addEventListener("fetch", (event) => {
 	) {
 		event.respondWith(
 			(async () => {
-				let formData;
-				// Handle both form encodings
-				if (
-					event.request.headers
-						.get("content-type")
-						?.includes("application/x-www-form-urlencoded")
-				) {
-					const formText = await event.request.text();
-					const params = new URLSearchParams(formText);
-					formData = params;
-				} else {
-					formData = await event.request.formData();
-				}
-
+				const formData = await event.request.formData();
 				const link = formData.get("url") || "";
 				const title = formData.get("title") || "";
 				const text = formData.get("text") || "";
@@ -40,6 +27,7 @@ self.addEventListener("fetch", (event) => {
 
 				try {
 					const resp = await saveBookmark(link);
+					console.log("Bookmark saved:", resp);
 					return Response.redirect("/bookmarks", 303);
 				} catch (error) {
 					return new Response(error.message, {

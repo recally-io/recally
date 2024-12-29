@@ -22,6 +22,7 @@ export default defineConfig({
 			manifest: {
 				name: "Vibrain",
 				short_name: "Vibrain",
+				display: "fullscreen",
 				description: "Save what matters, recall when it counts.",
 				theme_color: "#ffffff",
 				icons: [
@@ -51,7 +52,7 @@ export default defineConfig({
 				share_target: {
 					action: "/save-bookmark", 
 					method: "POST",
-					enctype: "application/x-www-form-urlencoded", 
+					enctype: "multipart/form-data", 
 					params: {
 						title: "title",
 						text: "text",
