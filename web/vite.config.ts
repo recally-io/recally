@@ -7,11 +7,18 @@ export default defineConfig({
 	plugins: [
 		react(),
 		VitePWA({
-			registerType: "autoUpdate",
+			registerType: "prompt",
 			workbox: {
-        cleanupOutdatedCaches: false
-      },
-			includeAssets: ["favicon.ico", "apple-touch-icon.png", "maskable-icon-512x512.png"],
+				cleanupOutdatedCaches: true,
+			},
+			includeAssets: [
+				"favicon.ico",
+				"apple-touch-icon.png",
+				"maskable-icon-512x512.png",
+			],
+			strategies: "injectManifest",
+			srcDir: "src",
+			filename: "sw.js",
 			manifest: {
 				name: "Vibrain",
 				short_name: "Vibrain",
@@ -29,18 +36,28 @@ export default defineConfig({
 						type: "image/png",
 					},
 					{
-						src: 'pwa-512x512.png',
-						sizes: '512x512',
-						type: 'image/png',
-						purpose: 'any'
+						src: "pwa-512x512.png",
+						sizes: "512x512",
+						type: "image/png",
+						purpose: "any",
 					},
 					{
-						src: 'maskable-icon-512x512.png',
-						sizes: '512x512',
-						type: 'image/png',
-						purpose: 'maskable'
-					}
+						src: "maskable-icon-512x512.png",
+						sizes: "512x512",
+						type: "image/png",
+						purpose: "maskable",
+					},
 				],
+				share_target: {
+					action: "/save-bookmark", 
+					method: "POST",
+					enctype: "application/x-www-form-urlencoded", 
+					params: {
+						title: "title",
+						text: "text",
+						url: "url"
+					},
+				},
 			},
 		}),
 	],
