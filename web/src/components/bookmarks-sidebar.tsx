@@ -31,7 +31,7 @@ export function BookmarksSidebar({
 									<Bookmark className="size-4" />
 								</div>
 								<div className="flex flex-col gap-0.5 leading-none">
-									<span className="font-semibold">Vibrain</span>
+									<span className="font-semibold">Recally</span>
 								</div>
 							</a>
 						</SidebarMenuButton>

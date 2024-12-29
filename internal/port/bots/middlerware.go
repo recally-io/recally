@@ -3,11 +3,11 @@ package bots
 import (
 	"context"
 	"fmt"
+	"recally/internal/pkg/contexts"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 	"runtime/debug"
 	"time"
-	"vibrain/internal/pkg/contexts"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	tele "gopkg.in/telebot.v3"

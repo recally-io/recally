@@ -1,13 +1,13 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is a simple API for Vibrain project.",
-        "title": "Vibrain API",
-        "termsOfService": "https://vibrain.vaayne.com/terms/",
+        "description": "This is a simple API for Recally project.",
+        "title": "Recally API",
+        "termsOfService": "https://recally.vaayne.com/terms/",
         "contact": {
             "name": "Vaayne",
             "url": "https://vaayne.com",
-            "email": "vibrain@vaayne.com"
+            "email": "recally@vaayne.com"
         },
         "version": "1.0"
     },

@@ -2,8 +2,8 @@ package transformer
 
 import (
 	"context"
-	"vibrain/internal/pkg/rag/document"
-	"vibrain/internal/pkg/rag/embedddings"
+	"recally/internal/pkg/rag/document"
+	"recally/internal/pkg/rag/embedddings"
 )
 
 func WithEmbedder(embedder embedddings.Embedder) Transformer {

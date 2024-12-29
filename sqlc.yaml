@@ -16,7 +16,7 @@ sql:
               type: "UUID"
           - column: "text_embeddings.metadata"
             go_type:
-              import: "vibrain/internal/pkg/db/types"
+              import: "recally/internal/pkg/db/types"
               type: "JSONB"
           - db_type: "vector"
             nullable: true

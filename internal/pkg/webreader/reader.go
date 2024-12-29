@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"recally/internal/pkg/logger"
 	"time"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/go-shiori/go-readability"
 )

@@ -3,10 +3,10 @@ package assistants
 import (
 	"context"
 	"fmt"
-	"vibrain/internal/core/queue"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/logger"
-	"vibrain/internal/pkg/rag/document"
+	"recally/internal/core/queue"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
+	"recally/internal/pkg/rag/document"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/logger"
 	"time"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/cors"

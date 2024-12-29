@@ -2,9 +2,9 @@ package transformer
 
 import (
 	"context"
+	"recally/internal/pkg/logger"
+	"recally/internal/pkg/rag/document"
 	"runtime"
-	"vibrain/internal/pkg/logger"
-	"vibrain/internal/pkg/rag/document"
 
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"

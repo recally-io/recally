@@ -2,9 +2,9 @@ package bookmarks
 
 import (
 	"encoding/json"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 	"time"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

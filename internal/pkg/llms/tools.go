@@ -1,11 +1,11 @@
 package llms
 
 import (
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/tools"
-	"vibrain/internal/pkg/tools/googlesearch"
-	"vibrain/internal/pkg/tools/jinareader"
-	"vibrain/internal/pkg/tools/jinasearcher"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/tools"
+	"recally/internal/pkg/tools/googlesearch"
+	"recally/internal/pkg/tools/jinareader"
+	"recally/internal/pkg/tools/jinasearcher"
 
 	"github.com/sashabaranov/go-openai"
 )

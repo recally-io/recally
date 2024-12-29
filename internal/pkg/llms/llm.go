@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"recally/internal/pkg/logger"
+	"recally/internal/pkg/tools"
 	"strings"
 	"sync"
 	"time"
-	"vibrain/internal/pkg/logger"
-	"vibrain/internal/pkg/tools"
 
 	"github.com/sashabaranov/go-openai"
 	"golang.org/x/sync/errgroup"

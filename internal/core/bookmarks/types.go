@@ -3,10 +3,10 @@ package bookmarks
 import (
 	"context"
 	"fmt"
-	"vibrain/internal/pkg/llms"
-	"vibrain/internal/pkg/webreader"
-	"vibrain/internal/pkg/webreader/fetcher"
-	"vibrain/internal/pkg/webreader/processor"
+	"recally/internal/pkg/llms"
+	"recally/internal/pkg/webreader"
+	"recally/internal/pkg/webreader/fetcher"
+	"recally/internal/pkg/webreader/processor"
 
 	"github.com/pgvector/pgvector-go"
 )

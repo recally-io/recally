@@ -435,12 +435,12 @@ definitions:
 host: localhost:1323
 info:
   contact:
-    email: vibrain@vaayne.com
+    email: recally@vaayne.com
     name: Vaayne
     url: https://vaayne.com
-  description: This is a simple API for Vibrain project.
-  termsOfService: https://vibrain.vaayne.com/terms/
-  title: Vibrain API
+  description: This is a simple API for Recally project.
+  termsOfService: https://recally.vaayne.com/terms/
+  title: Recally API
   version: "1.0"
 paths:
   /assistants:

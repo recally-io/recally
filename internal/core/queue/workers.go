@@ -1,8 +1,8 @@
 package queue
 
 import (
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/llms"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/llms"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"

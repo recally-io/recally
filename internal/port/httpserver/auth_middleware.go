@@ -2,8 +2,8 @@ package httpserver
 
 import (
 	"fmt"
-	"vibrain/internal/pkg/auth"
-	"vibrain/internal/pkg/contexts"
+	"recally/internal/pkg/auth"
+	"recally/internal/pkg/contexts"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

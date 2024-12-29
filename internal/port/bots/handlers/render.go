@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"bytes"
+	"recally/internal/pkg/logger"
 	"sync"
-	"vibrain/internal/pkg/logger"
 
 	tgmd "github.com/Mad-Pixels/goldmark-tgmd"
 	"github.com/yuin/goldmark"

@@ -19,7 +19,7 @@ ENV NODE_ENV=production
 RUN bun test && bun run build
 
 # Build Go binary
-FROM golang:1.22-alpine AS build
+FROM golang:1.23-alpine AS build
 WORKDIR /go/src/app
 
 RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \

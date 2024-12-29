@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"recally/internal/pkg/auth"
+	"recally/internal/pkg/db"
 	"strings"
 	"time"
-	"vibrain/internal/pkg/auth"
-	"vibrain/internal/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"

@@ -3,7 +3,7 @@ package processor
 import (
 	"context"
 	"fmt"
-	"vibrain/internal/pkg/webreader"
+	"recally/internal/pkg/webreader"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 )

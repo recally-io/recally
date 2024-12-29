@@ -3,10 +3,10 @@ package processor
 import (
 	"context"
 	"fmt"
+	"recally/internal/pkg/llms"
+	"recally/internal/pkg/webreader"
 	"strings"
 	"text/template"
-	"vibrain/internal/pkg/llms"
-	"vibrain/internal/pkg/webreader"
 )
 
 const summaryPrompt = `You are an experienced editor at* **The Wall Street Journal**. *Your task is to read the following article and provide a comprehensive summary for a busy reader who wants to quickly grasp the essential information.
