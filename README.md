@@ -1,34 +1,80 @@
-# GoWorkers
+# Recally
 
-Using Golang to build cloudflare workers.
+[Recally.io](https://recally.io) is your personal knowledge engine, designed to help you collect, organize, and remember the digital content that matters most. Save articles, videos, and podcasts with a single click, and let Recally’s smart tools help you recall and connect ideas when you need them. Say goodbye to information overload and hello to effortless learning.
 
-## OpenAPI
+![logo](./web/public/logo.svg)
 
-Using AI to generate OpenAPI specs and then using [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) to generate the go server code.
+## 🚀 Key Features
 
-## DB
+- **Smart Content Capture**: Save articles, videos, and podcasts with a single click
+- **Flexible Content Fetching**: 
+  - Multiple fetcher support for various content sources
+  - Raw HTTP client for simple pages
+  - [Jina reader](https://github.com/jina-ai/reader) for advanced text extraction
+  - Headless browser for JavaScript-heavy sites
+  - [Crawl4AI](https://github.com/unclecode/crawl4ai) (Coming) for AI-powered content extraction
+- **AI-Powered Organization**:
+  - Automatic tagging and categorization
+  - Semantic search capabilities
+- **Privacy & Control**:
+  - Privacy-first architecture
+  - First class self-hosting support
+  - No tracking or data sharing
 
-Using AI to generate the DB schema and then using [sqlc](https://github.com/sqlc-dev/sqlc) to generate the go code.
+## 🛠 Installation
 
-- [sqlc](https://github.com/sqlc-dev/sqlc) generate go code from SQL
-- [migrate](https://github.com/golang-migrate/migrate) to manage DB migrations
-- [pgx](https://github.com/jackc/pgx) for postgres driver
+```bash
 
-## Setup
+# Clone the repository
+git clone https://github.com/vaayne/vibrain
 
+# Change directory
+cd vibrain
+
+# edit the .env file as needed
+cp env.example .env
+# vim .env
+
+# Run the application
+docker compose up -d
+
+# Access the application
+open http://localhost:1323
 ```
-go build -o bin/go-workers cmd/httpserver/main.go
 
-./bin/go-workers
-```
+## 🏗 Tech Stack
 
-## API
+### Backend
+- **API Server**: [Echo](https://github.com/labstack/echo) - High performance, minimalist Go web framework
+- **Job Queue**: [River](https://github.com/riverqueue/river) - Background job processing
+- **Database**: 
+  - [PostgreSQL](https://www.postgresql.org/) - Primary data store
+  - [PgVector](https://github.com/pgvector/pgvector) - Vector similarity search
+- **Tools**:
+  - [Migrate](https://github.com/golang-migrate/migrate) - Database migrations
+  - [Sqlc](https://github.com/sqlc-dev/sqlc) - Type-safe SQL
 
-- /docs/ui - Swagger UI
-- /docs/json - Swagger JSON
-- /docs/redoc - Redoc UI
+### Frontend
+- **Framework**: [React](https://github.com/facebook/react) - UI development
+- **Build Tool**: [Vite](https://github.com/vitejs/vite) - Next generation frontend tooling
+- **Styling**: 
+  - [TailwindCSS](https://github.com/tailwindlabs/tailwindcss) - Utility-first CSS
+  - [shadcn/ui](https://github.com/shadcn-ui/ui) - Accessible components
 
-## Usage
+### AI Integration
+- [OpenAI](https://openai.com/) and compatible models for:
+  - Content analysis
+  - Tag generation
+  - Semantic search
 
-email: a1@b.com
-password: 1234567
+## 🤝 Contributing
+
+We welcome contributions!
+
+## 📝 License
+
+See the [LICENSE](LICENSE) file for details.
+
+- **Non-commercial Use**: Free under MIT License terms
+- **Commercial Use**: Contact [license@recally.io](mailto:license@recally.io) for permission
+

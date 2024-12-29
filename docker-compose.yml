@@ -12,12 +12,14 @@ services:
       - DATABASE_USER=postgres
       - DATABASE_PASSWORD=postgres
       - DATABASE_NAME=postgres
+      - BROWSER_CONTROL_URL=http://browser:7317
     env_file:
       - .env
     volumes:
       - .env:/app/.env
     depends_on:
       - postgres
+      - browser
   browser:
     image:  ghcr.docker.vaayne.com/go-rod/rod:latest
     restart: unless-stopped
