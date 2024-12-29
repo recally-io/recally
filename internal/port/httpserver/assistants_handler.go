@@ -3,10 +3,10 @@ package httpserver
 import (
 	"context"
 	"net/http"
-	"vibrain/internal/core/assistants"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/rag/document"
-	"vibrain/internal/pkg/tools"
+	"recally/internal/core/assistants"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/rag/document"
+	"recally/internal/pkg/tools"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"

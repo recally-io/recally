@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"recally/internal/core/assistants"
+	"recally/internal/pkg/logger"
 	"time"
-	"vibrain/internal/core/assistants"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"

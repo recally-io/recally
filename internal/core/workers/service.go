@@ -1,6 +1,6 @@
 package workers
 
-import "vibrain/internal/pkg/cache"
+import "recally/internal/pkg/cache"
 
 type Worker struct {
 	cache cache.Cache

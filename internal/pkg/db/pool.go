@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"vibrain/internal/pkg/logger"
+	"recally/internal/pkg/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

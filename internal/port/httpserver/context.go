@@ -3,9 +3,9 @@ package httpserver
 import (
 	"context"
 	"errors"
-	"vibrain/internal/pkg/auth"
-	"vibrain/internal/pkg/contexts"
-	"vibrain/internal/pkg/db"
+	"recally/internal/pkg/auth"
+	"recally/internal/pkg/contexts"
+	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"
 )

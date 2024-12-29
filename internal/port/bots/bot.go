@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 	"time"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"

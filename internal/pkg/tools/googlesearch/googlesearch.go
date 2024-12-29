@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"vibrain/internal/pkg/tools"
+	"recally/internal/pkg/tools"
 )
 
 type Tool struct {

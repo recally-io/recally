@@ -2,8 +2,8 @@ package transformer
 
 import (
 	"errors"
-	"vibrain/internal/pkg/rag/document"
-	"vibrain/internal/pkg/rag/textsplitter"
+	"recally/internal/pkg/rag/document"
+	"recally/internal/pkg/rag/textsplitter"
 )
 
 // ErrMismatchMetadatasAndText is returned when the number of texts and metadatas

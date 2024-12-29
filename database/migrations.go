@@ -3,8 +3,8 @@ package migrations
 import (
 	"context"
 	"fmt"
+	"recally/internal/pkg/logger"
 	"strings"
-	"vibrain/internal/pkg/logger"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -49,18 +49,11 @@ func migrateRiver(ctx context.Context, databaseURL string) {
 	}
 	defer dbPool.Close()
 
-	migrator := rivermigrate.New(riverpgxv5.New(dbPool), nil)
-	tx, err := dbPool.Begin(ctx)
+	migrator, err := rivermigrate.New(riverpgxv5.New(dbPool), nil)
 	if err != nil {
-		logger.Default.Fatal("migrateRiver failed to start transaction", "err", err)
+		logger.Default.Fatal("migrateRiver failed to create migrator", "err", err)
 	}
-
-	defer func() {
-		if err := tx.Commit(ctx); err != nil {
-			logger.Default.Error("Failed to commit transaction", "err", err)
-		}
-	}()
-	res, err := migrator.MigrateTx(ctx, tx, rivermigrate.DirectionUp, &rivermigrate.MigrateOpts{
+	res, err := migrator.Migrate(ctx, rivermigrate.DirectionUp, &rivermigrate.MigrateOpts{
 		TargetVersion: -1,
 	})
 	if err != nil {

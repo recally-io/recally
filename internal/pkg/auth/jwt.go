@@ -3,9 +3,9 @@ package auth
 import (
 	"context"
 	"fmt"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/db"
 	"time"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/db"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"

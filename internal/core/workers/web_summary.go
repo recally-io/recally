@@ -10,10 +10,10 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"recally/internal/pkg/cache"
+	"recally/internal/pkg/logger"
 	"strings"
 	"time"
-	"vibrain/internal/pkg/cache"
-	"vibrain/internal/pkg/logger"
 )
 
 const elmoSummaryUrl = "https://www.elmo.chat/api/v1/prompt"

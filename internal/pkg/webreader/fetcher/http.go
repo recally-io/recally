@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"recally/internal/pkg/session"
+	"recally/internal/pkg/webreader"
 	"time"
-	"vibrain/internal/pkg/session"
-	"vibrain/internal/pkg/webreader"
 
 	utls "github.com/refraction-networking/utls"
 )

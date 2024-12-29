@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"vibrain/internal/core/assistants"
-	"vibrain/internal/core/bookmarks"
-	"vibrain/internal/core/queue"
-	"vibrain/internal/core/workers"
-	"vibrain/internal/pkg/auth"
-	"vibrain/internal/pkg/cache"
-	"vibrain/internal/pkg/db"
-	"vibrain/internal/pkg/llms"
+	"recally/internal/core/assistants"
+	"recally/internal/core/bookmarks"
+	"recally/internal/core/queue"
+	"recally/internal/core/workers"
+	"recally/internal/pkg/auth"
+	"recally/internal/pkg/cache"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/llms"
 )
 
 type Handler struct {

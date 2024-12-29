@@ -2,23 +2,23 @@ package httpserver
 
 import (
 	"net/http"
-	"vibrain/internal/pkg/logger"
-	"vibrain/web"
+	"recally/internal/pkg/logger"
+	"recally/web"
 
-	_ "vibrain/docs"
+	_ "recally/docs"
 
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-//	@title			Vibrain API
+//	@title			Recally API
 //	@version		1.0
-//	@description	This is a simple API for Vibrain project.
-//	@termsOfService	https://vibrain.vaayne.com/terms/
+//	@description	This is a simple API for Recally project.
+//	@termsOfService	https://recally.vaayne.com/terms/
 
 //	@contact.name	Vaayne
 //	@contact.url	https://vaayne.com
-//	@contact.email	vibrain@vaayne.com
+//	@contact.email	recally@vaayne.com
 
 // @host		localhost:1323
 // @BasePath	/api/v1

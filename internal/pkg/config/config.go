@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
-	"vibrain/internal/pkg/logger"
+	"recally/internal/pkg/logger"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
@@ -25,11 +25,11 @@ type ServiceConfig struct {
 }
 
 type TelegramConfig struct {
-	Name                string `env:"NAME" envDefault:"VibrainBot"`
+	Name                string `env:"NAME" envDefault:"RecallyBot"`
 	Token               string `env:"TOKEN"`
 	Webhook             bool   `env:"WEBHOOK"`
 	WebhookSecrectToken string `env:"WEBHOOK_SECRET_TOKEN"`
-	Description         string `env:"DESCRIPTION" envDefault:"Hi, I'am Vibrain Bot. Contact me for more information on Twitter https://x.com/LiuVaayne"`
+	Description         string `env:"DESCRIPTION" envDefault:"Hi, I'am Recally Bot. Contact me for more information on Twitter https://x.com/LiuVaayne"`
 }
 
 type DatabaseConfig struct {

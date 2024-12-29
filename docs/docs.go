@@ -9,11 +9,11 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "https://vibrain.vaayne.com/terms/",
+        "termsOfService": "https://recally.vaayne.com/terms/",
         "contact": {
             "name": "Vaayne",
             "url": "https://vaayne.com",
-            "email": "vibrain@vaayne.com"
+            "email": "recally@vaayne.com"
         },
         "version": "{{.Version}}"
     },
@@ -4470,8 +4470,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:1323",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Vibrain API",
-	Description:      "This is a simple API for Vibrain project.",
+	Title:            "Recally API",
+	Description:      "This is a simple API for Recally project.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

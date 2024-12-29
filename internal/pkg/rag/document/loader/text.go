@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"vibrain/internal/pkg/rag/document"
-	"vibrain/internal/pkg/rag/document/transformer"
+	"recally/internal/pkg/rag/document"
+	"recally/internal/pkg/rag/document/transformer"
 )
 
 // TextLoader loads text data from an io.Reader.

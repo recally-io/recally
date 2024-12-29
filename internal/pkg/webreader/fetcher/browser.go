@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"recally/internal/pkg/config"
+	"recally/internal/pkg/webreader"
 	"strings"
 	"time"
-	"vibrain/internal/pkg/config"
-	"vibrain/internal/pkg/webreader"
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
@@ -63,7 +63,6 @@ func newBrowserFetcher(cfg BrowserConfig) (*BrowserFetcher, error) {
 		browser: browser,
 	}, nil
 }
-
 
 // Fetch implements the Fetcher interface
 func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Content, error) {
