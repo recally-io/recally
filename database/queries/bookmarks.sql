@@ -47,3 +47,10 @@ DELETE FROM bookmarks WHERE uuid = $1 AND user_id = $2;
 
 -- name: DeleteBookmarksByUser :exec
 DELETE FROM bookmarks WHERE user_id = $1;
+
+-- name: OwnerTransferBookmark :exec
+UPDATE bookmarks 
+SET 
+    user_id = $2,
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = $1;

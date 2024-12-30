@@ -19,6 +19,7 @@ type dto interface {
 	DeleteUserById(ctx context.Context, db db.DBTX, argUuid uuid.UUID) error
 	GetAPIKeyByPrefix(ctx context.Context, db db.DBTX, arg db.GetAPIKeyByPrefixParams) (db.AuthApiKey, error)
 	GetOAuthConnectionByUserAndProvider(ctx context.Context, db db.DBTX, arg db.GetOAuthConnectionByUserAndProviderParams) (db.AuthUserOauthConnection, error)
+	GetOAuthConnectionByProviderAndProviderID(ctx context.Context, db db.DBTX, arg db.GetOAuthConnectionByProviderAndProviderIDParams) (db.AuthUserOauthConnection, error)
 	GetUserByEmail(ctx context.Context, db db.DBTX, email pgtype.Text) (db.User, error)
 	GetUserById(ctx context.Context, db db.DBTX, argUuid uuid.UUID) (db.User, error)
 	GetUserByOAuthProviderId(ctx context.Context, db db.DBTX, arg db.GetUserByOAuthProviderIdParams) (db.User, error)
@@ -35,4 +36,6 @@ type dto interface {
 	UpdateAPIKeyLastUsed(ctx context.Context, db db.DBTX, id uuid.UUID) error
 	UpdateOAuthConnection(ctx context.Context, db db.DBTX, arg db.UpdateOAuthConnectionParams) (db.AuthUserOauthConnection, error)
 	UpdateUserById(ctx context.Context, db db.DBTX, arg db.UpdateUserByIdParams) (db.User, error)
+
+	OwnerTransferBookmark(ctx context.Context, db db.DBTX, arg db.OwnerTransferBookmarkParams) error
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"recally/internal/core/bookmarks"
+	"recally/internal/core/queue"
 	"recally/internal/core/workers"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
@@ -103,5 +104,16 @@ func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, url string, user
 		logger.FromContext(ctx).Error("save bookmark from reader bot error", "err", err.Error())
 	} else {
 		logger.FromContext(ctx).Info("save bookmark from reader bot", "id", bookmark.ID, "title", bookmark.Title)
+	}
+
+	result, err := h.queue.Insert(ctx, queue.CrawlerWorkerArgs{
+		ID:          bookmark.ID,
+		UserID:      bookmark.UserID,
+		FetcherName: bookmarks.HttpFetcher,
+	}, nil)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to insert job", "err", err)
+	} else {
+		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
 	}
 }

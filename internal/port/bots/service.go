@@ -20,8 +20,6 @@ func NewServer(botType BotType, cfg config.TelegramConfig, pool *db.Pool, e *ech
 	var err error
 	if botType == ReaderBot {
 		b, err = NewReaderBot(cfg, pool, e, cacheService, llm, queue)
-	} else if botType == ChatBot {
-		b, err = NewChatBot(cfg, pool, e, cacheService, llm, queue)
 	}
 	if err != nil {
 		return nil, err

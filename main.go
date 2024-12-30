@@ -73,15 +73,6 @@ func main() {
 		services = append(services, botService)
 	}
 
-	if config.Settings.Telegram.Chat.Token != "" {
-		cfg := config.Settings.Telegram.Chat
-		botService, err := bots.NewServer(bots.ChatBot, cfg, pool, httpService.Server, cacheService, llm, queueService.Queue)
-		if err != nil {
-			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.ChatBot, "name", cfg.Name)
-		}
-		services = append(services, botService)
-	}
-
 	// start services
 	for _, service := range services {
 		go service.Start(ctx)
