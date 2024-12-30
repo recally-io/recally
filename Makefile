@@ -45,9 +45,7 @@ test:
 	@echo "Testing..."
 	@go test ./...
 
-run: run-go
-
-run-go: build-go
+run: build
 	@echo "Running go..."
 	@./bin/app
 
@@ -55,7 +53,7 @@ run-ui:
 	@echo "Running web..."
 	@cd web && bun run dev
 
-run-dev: build-go
+run-go: build-go
 	@echo "Running dev..."
 	@DEBUG_UI=true ./bin/app
 
