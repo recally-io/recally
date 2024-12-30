@@ -23,6 +23,10 @@ interface RegisterInput {
 	password: string;
 }
 
+interface OAuthLoginResponse {
+	url: string;
+}
+
 // API Functions
 const api = {
 	login: (input: LoginInput) =>
@@ -45,7 +49,13 @@ const api = {
 	validateToken: () => fetcher<User>("/api/v1/auth/validate-jwt"),
 
 	oauthLogin: (provider: string) => {
-		window.location.href = `/api/v1/oauth/${provider}/login`;
+		return fetcher<OAuthLoginResponse>(
+			`/api/v1/oauth/${provider.toLowerCase()}/login`,
+		);
+	},
+
+	OAuthCallback: (provider: string, code: string) => {
+		return fetcher<User>(`/api/v1/oauth/${provider}/callback?code=${code}`);
 	},
 };
 
@@ -91,7 +101,12 @@ export function useAuth() {
 		},
 
 		oauthLogin: (provider: string) => {
-			api.oauthLogin(provider);
+			return api.oauthLogin(provider);
+		},
+
+		oauthCallback: async (provider: string, code: string) => {
+			const data = await api.OAuthCallback(provider, code);
+			return data;
 		},
 	};
 }

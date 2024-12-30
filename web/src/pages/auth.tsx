@@ -9,14 +9,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/lib/apis/auth";
-import { Github, Mail } from "lucide-react";
+import { useAuth, useUser } from "@/lib/apis/auth";
+import { ROUTES } from "@/lib/router";
+import { SiGithub } from "@icons-pack/react-simple-icons";
+import { Mail } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-
-import { ROUTES } from "@/lib/router";
 import App from "./app-basic";
 
 interface AuthFormData {
@@ -31,6 +31,21 @@ const AuthMode = {
 	Register: "register",
 };
 
+const OAuthProviders = [
+	{
+		name: "GitHub",
+		icon: SiGithub,
+	},
+	// {
+	// 	name: "Google",
+	// 	icon: SiGoogle,
+	// },
+	// {
+	// 	name: "Telegram",
+	// 	icon: SiTelegram,
+	// },
+];
+
 export default function AuthPage() {
 	// "login" or "register"
 	const [mode, _] = useQueryState(
@@ -39,13 +54,35 @@ export default function AuthPage() {
 	);
 	const isLogin = mode === AuthMode.Login;
 
+	// oauth callback state and code
+	const [code] = useQueryState("code");
+	const [state] = useQueryState("state");
+
+	// email and password login form data
 	const [formData, setFormData] = useState<AuthFormData>({
 		email: "",
 		password: "",
 		...(isLogin ? {} : { confirmPassword: "", name: "" }),
 	});
 
-	const { login, register, oauthLogin } = useAuth();
+	const { login, register, oauthLogin, oauthCallback } = useAuth();
+
+	const { user } = useUser();
+
+	useEffect(() => {
+		const handleCallback = async () => {
+			if (state && code) {
+				console.log("OAuth Callback:", state, code);
+				await handleOAuthCallback();
+			}
+		};
+		handleCallback();
+	}, [state, code]);
+
+	if (user) {
+		window.location.href = ROUTES.HOME;
+		return null;
+	}
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -76,8 +113,21 @@ export default function AuthPage() {
 		}
 	};
 
-	const handleOAuth = (provider: string) => {
-		oauthLogin(provider);
+	const handleOAuthLogin = async (provider: string) => {
+		const resp = await oauthLogin(provider);
+		console.log("OAuth Login response:", resp);
+		window.location.href = resp.url;
+	};
+
+	const handleOAuthCallback = async () => {
+		if (state && code) {
+			const provider = state.split(":")[1];
+			console.log("OAuth Callback:", provider, code);
+			const data = await oauthCallback(provider.toLowerCase(), code);
+			console.log("OAuth Callback data:", data);
+			// TODO: redirect to previous page
+			window.location.href = "/";
+		}
 	};
 
 	return (
@@ -91,36 +141,19 @@ export default function AuthPage() {
 				</CardHeader>
 				<CardContent>
 					<div className="grid grid-cols-2 gap-4">
-						<Button
-							variant="outline"
-							onClick={() => handleOAuth("Google")}
-							className="w-full"
-						>
-							<svg
-								className="mr-2 h-4 w-4"
-								aria-hidden="true"
-								focusable="false"
-								data-prefix="fab"
-								data-icon="google"
-								role="img"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 488 512"
-							>
-								<path
-									fill="currentColor"
-									d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
-								></path>
-							</svg>
-							Google
-						</Button>
-						<Button
-							variant="outline"
-							onClick={() => handleOAuth("GitHub")}
-							className="w-full"
-						>
-							<Github className="mr-2 h-4 w-4" />
-							GitHub
-						</Button>
+						{OAuthProviders.map((provider) => {
+							return (
+								<Button
+									key={provider.name}
+									variant="outline"
+									onClick={async () => await handleOAuthLogin(provider.name)}
+									className="w-full"
+								>
+									<provider.icon className="mr-2 h-4 w-4" />
+									{provider.name}
+								</Button>
+							);
+						})}
 					</div>
 					<Separator className="my-4" />
 					<form onSubmit={handleSubmit}>

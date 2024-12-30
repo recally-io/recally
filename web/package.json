@@ -11,6 +11,7 @@
 		"generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 public/logo.svg"
 	},
 	"dependencies": {
+		"@icons-pack/react-simple-icons": "^10.2.0",
 		"@radix-ui/react-accordion": "^1.2.2",
 		"@radix-ui/react-alert-dialog": "^1.1.4",
 		"@radix-ui/react-avatar": "^1.1.2",
