@@ -17,12 +17,12 @@ func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.
 
 	tx, ok := contexts.Get[pgx.Tx](ctx, contexts.ContextKeyTx)
 	if !ok {
-		return nil, nil, nil, fmt.Errorf("failed to get dbtx from context")
+		return ctx, nil, nil, fmt.Errorf("failed to get dbtx from context")
 	}
 
 	userID, ok := contexts.Get[string](ctx, contexts.ContextKeyUserID)
 	if !ok {
-		return nil, nil, nil, fmt.Errorf("failed to get userID from context")
+		return ctx, nil, tx, fmt.Errorf("failed to get userID from context")
 	}
 	user, err := h.authService.GetTelegramUser(ctx, tx, userID)
 	if err != nil {
@@ -30,10 +30,10 @@ func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.
 			userName := ctx.Value(contexts.ContextKey(contexts.ContextKeyUserName)).(string)
 			user, err = h.authService.CreateTelegramUser(ctx, tx, userName, userID)
 			if err != nil {
-				return nil, nil, nil, fmt.Errorf("failed to create user: %w", err)
+				return ctx, nil, tx, fmt.Errorf("failed to create user: %w", err)
 			}
 		} else {
-			return nil, nil, nil, fmt.Errorf("failed to get user: %w", err)
+			return nil, nil, tx, fmt.Errorf("failed to get user: %w", err)
 		}
 	}
 
