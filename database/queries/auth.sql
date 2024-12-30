@@ -41,6 +41,10 @@ RETURNING *;
 SELECT * FROM auth_user_oauth_connections 
 WHERE user_id = $1 AND provider = $2;
 
+-- name: GetOAuthConnectionByProviderAndProviderID :one
+SELECT * FROM auth_user_oauth_connections 
+WHERE provider = $1 AND provider_user_id = $2;
+
 -- name: GetUserByOAuthProviderId :one
 SELECT * FROM users 
 WHERE uuid = (SELECT user_id FROM auth_user_oauth_connections WHERE provider = $1 AND provider_user_id = $2);
@@ -56,8 +60,9 @@ UPDATE auth_user_oauth_connections SET
     access_token = $4,
     refresh_token = $5,
     token_expires_at = $6,
-    provider_data = $7
-WHERE user_id = $1 AND provider = $2
+    provider_data = $7,
+    user_id = $8
+WHERE provider_user_id = $1 AND provider = $2
 RETURNING *;
 
 -- name: DeleteOAuthConnection :exec

@@ -207,6 +207,24 @@ func (q *Queries) ListBookmarks(ctx context.Context, db DBTX, arg ListBookmarksP
 	return items, nil
 }
 
+const ownerTransferBookmark = `-- name: OwnerTransferBookmark :exec
+UPDATE bookmarks 
+SET 
+    user_id = $2,
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = $1
+`
+
+type OwnerTransferBookmarkParams struct {
+	UserID   pgtype.UUID
+	UserID_2 pgtype.UUID
+}
+
+func (q *Queries) OwnerTransferBookmark(ctx context.Context, db DBTX, arg OwnerTransferBookmarkParams) error {
+	_, err := db.Exec(ctx, ownerTransferBookmark, arg.UserID, arg.UserID_2)
+	return err
+}
+
 const updateBookmark = `-- name: UpdateBookmark :one
 UPDATE bookmarks 
 SET 

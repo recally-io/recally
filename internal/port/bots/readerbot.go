@@ -24,6 +24,12 @@ func NewReaderBot(cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheS
 			Description: "Start the bot",
 		},
 		{
+			Endpoint:    "/linkaccount",
+			Handler:     h.LinkAccountHandler,
+			Command:     "linkaccount",
+			Description: "Link telegram bot to your account",
+		},
+		{
 			Endpoint: telebot.OnText,
 			Handler:  h.WebSummaryHandler,
 		},

@@ -233,6 +233,35 @@ func (q *Queries) GetAPIKeyByPrefix(ctx context.Context, db DBTX, arg GetAPIKeyB
 	return i, err
 }
 
+const getOAuthConnectionByProviderAndProviderID = `-- name: GetOAuthConnectionByProviderAndProviderID :one
+SELECT id, user_id, provider, provider_user_id, provider_email, access_token, refresh_token, token_expires_at, provider_data, created_at, updated_at FROM auth_user_oauth_connections 
+WHERE provider = $1 AND provider_user_id = $2
+`
+
+type GetOAuthConnectionByProviderAndProviderIDParams struct {
+	Provider       string
+	ProviderUserID string
+}
+
+func (q *Queries) GetOAuthConnectionByProviderAndProviderID(ctx context.Context, db DBTX, arg GetOAuthConnectionByProviderAndProviderIDParams) (AuthUserOauthConnection, error) {
+	row := db.QueryRow(ctx, getOAuthConnectionByProviderAndProviderID, arg.Provider, arg.ProviderUserID)
+	var i AuthUserOauthConnection
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Provider,
+		&i.ProviderUserID,
+		&i.ProviderEmail,
+		&i.AccessToken,
+		&i.RefreshToken,
+		&i.TokenExpiresAt,
+		&i.ProviderData,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getOAuthConnectionByUserAndProvider = `-- name: GetOAuthConnectionByUserAndProvider :one
 SELECT id, user_id, provider, provider_user_id, provider_email, access_token, refresh_token, token_expires_at, provider_data, created_at, updated_at FROM auth_user_oauth_connections 
 WHERE user_id = $1 AND provider = $2
@@ -675,30 +704,33 @@ UPDATE auth_user_oauth_connections SET
     access_token = $4,
     refresh_token = $5,
     token_expires_at = $6,
-    provider_data = $7
-WHERE user_id = $1 AND provider = $2
+    provider_data = $7,
+    user_id = $8
+WHERE provider_user_id = $1 AND provider = $2
 RETURNING id, user_id, provider, provider_user_id, provider_email, access_token, refresh_token, token_expires_at, provider_data, created_at, updated_at
 `
 
 type UpdateOAuthConnectionParams struct {
-	UserID         uuid.UUID
+	ProviderUserID string
 	Provider       string
 	ProviderEmail  pgtype.Text
 	AccessToken    pgtype.Text
 	RefreshToken   pgtype.Text
 	TokenExpiresAt pgtype.Timestamptz
 	ProviderData   []byte
+	UserID         uuid.UUID
 }
 
 func (q *Queries) UpdateOAuthConnection(ctx context.Context, db DBTX, arg UpdateOAuthConnectionParams) (AuthUserOauthConnection, error) {
 	row := db.QueryRow(ctx, updateOAuthConnection,
-		arg.UserID,
+		arg.ProviderUserID,
 		arg.Provider,
 		arg.ProviderEmail,
 		arg.AccessToken,
 		arg.RefreshToken,
 		arg.TokenExpiresAt,
 		arg.ProviderData,
+		arg.UserID,
 	)
 	var i AuthUserOauthConnection
 	err := row.Scan(

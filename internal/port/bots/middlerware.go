@@ -3,6 +3,7 @@ package bots
 import (
 	"context"
 	"fmt"
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
@@ -33,7 +34,10 @@ func contextMiddleware() tele.MiddlewareFunc {
 }
 
 func recoverErrorHandler(err error, c tele.Context) {
-	logger.FromContext(c.Get(contexts.ContextKeyContext).(context.Context)).Error("recovered from panic", "err", err, "trace", debug.Stack())
+	if config.Settings.Debug {
+		debug.PrintStack()
+	}
+	logger.FromContext(c.Get(contexts.ContextKeyContext).(context.Context)).Error("recovered from panic", "err", err, "trace", string(debug.Stack()))
 	_ = c.Reply("Something went wrong, Please try again later")
 }
 
