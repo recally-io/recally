@@ -50,13 +50,13 @@ export default defineConfig({
 					},
 				],
 				share_target: {
-					action: "/save-bookmark", 
+					action: "/save-bookmark",
 					method: "POST",
-					enctype: "multipart/form-data", 
+					enctype: "multipart/form-data",
 					params: {
 						title: "title",
 						text: "text",
-						url: "url"
+						url: "url",
 					},
 				},
 			},
@@ -68,6 +68,7 @@ export default defineConfig({
 				main: path.resolve(__dirname, "index.html"),
 				bookmarks: path.resolve(__dirname, "bookmarks.html"),
 				auth: path.resolve(__dirname, "auth.html"),
+				settings: path.resolve(__dirname, "settings.html"),
 			},
 		},
 	},
