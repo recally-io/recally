@@ -11,12 +11,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"golang.org/x/oauth2"
 )
 
 type authService interface {
 	GetOAuth2RedirectURL(ctx context.Context, provider string) (string, error)
-	GetOAuth2Token(ctx context.Context, provider, code string) (*oauth2.Token, error)
+	HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider, code string) (*auth.UserDTO, error)
 	CreateUser(ctx context.Context, tx db.DBTX, user *auth.UserDTO) (*auth.UserDTO, error)
 	AuthByPassword(ctx context.Context, tx db.DBTX, email string, password string) (*auth.UserDTO, error)
 	GenerateJWT(user uuid.UUID) (string, error)
@@ -50,29 +49,31 @@ func (h *authHandler) oAuthLogin(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth redirect url: %w", err))
 	}
 
-	return c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
+	return JsonResponse(c, http.StatusOK, map[string]string{
+		"url": redirectUrl,
+	})
 }
 
 func (h *authHandler) oAuthCallback(c echo.Context) error {
 	provider := c.Param("provider")
 	code := c.QueryParam("code")
 	ctx := c.Request().Context()
-
-	_, err := h.service.GetOAuth2Token(ctx, provider, code)
+	tx, err := loadTx(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	user, err := h.service.HandleOAuth2Callback(ctx, tx, provider, code)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth token: %w", err))
 	}
 
-	userId := uuid.New()
-	jwtToken, err := h.service.GenerateJWT(userId)
+	jwtToken, err := h.service.GenerateJWT(user.ID)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token: %w", err))
 	}
 
 	h.setCookieJwtToken(c, jwtToken)
-	return JsonResponse(c, http.StatusOK, userResponse{
-		ID: userId,
-	})
+	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
 
 type loginRequest struct {
