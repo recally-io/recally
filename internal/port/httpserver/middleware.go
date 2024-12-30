@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"recally/internal/pkg/config"
@@ -63,18 +64,17 @@ func recoverMiddleware() echo.MiddlewareFunc {
 		if config.Settings.Debug {
 			debug.PrintStack()
 		}
-		logger.FromContext(c.Request().Context()).Error("recovered from panic", "err", err, "stack", string(stack))
+		logger.FromContext(c.Request().Context()).Error("http request recovered from panic", "err", err, "stack", string(stack))
 		return err
 	}
 	return middleware.RecoverWithConfig(cfg)
 }
 
 func requestLoggerMiddleware() echo.MiddlewareFunc {
-	logger := logger.New()
 	logValuesFunc := func(c echo.Context, v middleware.RequestLoggerValues) error {
 		attrs := []slog.Attr{
 			slog.Time("start_time", v.StartTime),
-			slog.Duration("duration", v.Latency),
+			slog.Duration("duration", time.Duration(v.Latency.Milliseconds())),
 			slog.String("remote_ip", v.RemoteIP),
 			slog.String("method", v.Method),
 			slog.String("uri", v.URI),
@@ -84,11 +84,13 @@ func requestLoggerMiddleware() echo.MiddlewareFunc {
 			slog.Any("headers", v.Headers),
 		}
 		ctx := c.Request().Context()
+		msg := fmt.Sprintf("HTTP Request - %s %s, Status: %d, Duration: %dms", v.Method, v.URI, v.Status, v.Latency.Milliseconds())
+
 		if v.Error == nil {
-			logger.LogAttrs(ctx, slog.LevelInfo, "REQUEST", attrs...)
+			logger.Default.LogAttrs(ctx, slog.LevelInfo, msg, attrs...)
 		} else {
 			attrs = append(attrs, slog.String("error", v.Error.Error()))
-			logger.LogAttrs(ctx, slog.LevelError, "REQUEST", attrs...)
+			logger.Default.LogAttrs(ctx, slog.LevelError, msg, attrs...)
 		}
 		return v.Error
 	}

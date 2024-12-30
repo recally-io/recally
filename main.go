@@ -37,7 +37,7 @@ func main() {
 	// init db pool
 	pool, err := db.NewPool(ctx, config.Settings.Database.URL())
 	if err != nil {
-		logger.Default.Fatal("failed to create new database pool", "error", err)
+		logger.Default.Fatal("failed to create new database pool", "err", err)
 	}
 
 	// init cache service
@@ -46,20 +46,20 @@ func main() {
 	llm := llms.New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
 	s3Client, err := s3.New(config.Settings.S3)
 	if err != nil {
-		logger.Default.Fatal("failed to create new s3 client", "error", err)
+		logger.Default.Fatal("failed to create new s3 client", "err", err)
 	}
 
 	// start queue service
 	queueService, err := queue.NewServer(pool, llm)
 	if err != nil {
-		logger.Default.Fatal("failed to create new queue service", "error", err)
+		logger.Default.Fatal("failed to create new queue service", "err", err)
 	}
 	services = append(services, queueService)
 
 	// start http service
 	httpService, err := httpserver.New(pool, llm, queueService.Queue, httpserver.WithCache(cacheService), httpserver.WithS3(s3Client))
 	if err != nil {
-		logger.Default.Fatal("failed to create new http service", "error", err)
+		logger.Default.Fatal("failed to create new http service", "err", err)
 	}
 	services = append(services, httpService)
 
@@ -68,7 +68,7 @@ func main() {
 		cfg := config.Settings.Telegram.Reader
 		botService, err := bots.NewServer(bots.ReaderBot, cfg, pool, httpService.Server, cacheService, llm, queueService.Queue)
 		if err != nil {
-			logger.Default.Fatal("failed to create new bot service", "error", err, "type", bots.ReaderBot, "name", cfg.Name)
+			logger.Default.Fatal("failed to create new bot service", "err", err, "type", bots.ReaderBot, "name", cfg.Name)
 		}
 		services = append(services, botService)
 	}

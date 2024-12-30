@@ -29,19 +29,20 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	}
 
 	text := c.Text()
-	logger.FromContext(ctx).Info("TextHandler", "user", user.Username, "text", text)
+	logger.FromContext(ctx).Info("TextHandler start summary", "text", text)
 	url := getUrlFromText(text)
 	if url == "" {
 		return c.Reply("Please provide a valid URL.")
 	}
 	reader, err := h.toolService.WebSummaryStream(ctx, url)
 	if err != nil {
+		logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err.Error())
 		return c.Reply(fmt.Sprintf("Failed to get summary:\n%s", err.Error()))
 	}
 	defer reader.Close()
 
 	processSendError := func(err error) error {
-		logger.FromContext(ctx).Error("TextHandler failed to send message", "error", err.Error())
+		logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err.Error(), "user", user.Username, "text", text)
 		return c.Reply("Failed to send message. " + err.Error())
 	}
 
@@ -71,7 +72,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 				h.saveBookmark(ctx, tx, url, user.ID, resp)
 				return nil
 			}
-			logger.FromContext(ctx).Error("TextHandler", "error", err.Error())
+			logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err.Error())
 			if _, err := c.Bot().Edit(msg, "Failed to get summary."); err != nil {
 				return processSendError(err)
 			}

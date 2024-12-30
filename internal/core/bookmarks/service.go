@@ -25,7 +25,7 @@ type Service struct {
 func NewService(llm *llms.LLM) *Service {
 	reader, err := NewWebReader(llm)
 	if err != nil {
-		logger.Default.Fatal("failed to create web reader", "error", err)
+		logger.Default.Fatal("failed to create web reader", "err", err)
 	}
 	summarier := NewSummarier(llm)
 	return &Service{
@@ -171,7 +171,7 @@ func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID,
 func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType FecherType) (*BookmarkDTO, error) {
 	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get bookmark by id '%s': %w", id.String(), err)
 	}
 
 	if bookmark.UserID.Bytes != userID {

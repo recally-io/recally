@@ -34,7 +34,7 @@ func main() {
 				logger.Default.Info("done")
 				return
 			} else {
-				logger.Default.Error("failed to send message to user", "error", err)
+				logger.Default.Error("failed to send message to user", "err", err)
 				return
 			}
 		}

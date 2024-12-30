@@ -34,7 +34,7 @@ func convertToTGMarkdown(md string) string {
 	mdBytes := []byte(md)
 	var buf bytes.Buffer
 	if err := mdParser.Convert(mdBytes, &buf); err != nil {
-		logger.Default.Warn("Failed to convert markdown to HTML", "error", err.Error())
+		logger.Default.Warn("Failed to convert markdown to HTML", "err", err.Error())
 		buf = *bytes.NewBuffer(mdBytes)
 		return md
 	}

@@ -88,23 +88,23 @@ func (s *Service) Start(ctx context.Context) {
 			// run vite server
 			logger.Default.Info("starting vite server")
 			if err := s.uiCmd.Run(); err != nil {
-				logger.Default.Fatal("failed to start vite server", "error", err)
+				logger.Default.Fatal("failed to start vite server", "err", err)
 			}
 		}()
 	}
 	if err := s.Server.Start(addr); err != nil {
-		logger.Default.Fatal("failed to start", "service", s.Name(), "addr", addr, "error", err)
+		logger.Default.Fatal("failed to start", "service", s.Name(), "addr", addr, "err", err)
 	}
 }
 
 func (s *Service) Stop(ctx context.Context) {
 	if s.uiCmd != nil {
 		if err := s.uiCmd.Process.Signal(syscall.SIGINT); err != nil {
-			logger.Default.Fatal("failed to stop vite server", "error", err)
+			logger.Default.Fatal("failed to stop vite server", "err", err)
 		}
 	}
 	if err := s.Server.Shutdown(ctx); err != nil {
-		logger.Default.Fatal("failed to stop", "service", s.Name(), "error", err)
+		logger.Default.Fatal("failed to stop", "service", s.Name(), "err", err)
 	}
 }
 
