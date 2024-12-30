@@ -38,25 +38,25 @@ func (w *CrawlerWorker) Work(ctx context.Context, job *river.Job[CrawlerWorkerAr
 	svc := bookmarks.NewService(w.llm)
 	tx, err := w.dbPool.Begin(ctx)
 	if err != nil {
-		logger.FromContext(ctx).Error("failed to start transaction", "error", err)
+		logger.FromContext(ctx).Error("failed to start transaction", "err", err)
 		return err
 	}
 	dto, err := svc.FetchContent(ctx, tx, job.Args.ID, job.Args.UserID, job.Args.FetcherName)
 	if err != nil {
-		logger.FromContext(ctx).Error("failed to fetch bookmark", "error", err)
+		logger.FromContext(ctx).Error("failed to fetch bookmark", "err", err)
 		return err
 	}
 
 	if dto.Content != "" && dto.Summary == "" {
 		dto, err = svc.SummarierContent(ctx, tx, job.Args.ID, job.Args.UserID)
 		if err != nil {
-			logger.FromContext(ctx).Error("failed to summarise content", "error", err)
+			logger.FromContext(ctx).Error("failed to summarise content", "err", err)
 			return err
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		logger.FromContext(ctx).Error("failed to commit transaction", "error", err)
+		logger.FromContext(ctx).Error("failed to commit transaction", "err", err)
 	}
 
 	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title)

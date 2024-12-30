@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"log/slog"
+	"os"
 )
 
 type MultiHandler struct {
@@ -23,6 +24,11 @@ func (h *MultiHandler) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (h *MultiHandler) Handle(ctx context.Context, r slog.Record) error {
+	r.AddAttrs(
+		slog.String("env", os.Getenv("ENV")),
+		slog.String("app", "recally"),
+		// slog.String("version", "1.0.0"),
+	)
 	for _, handler := range h.handlers {
 		if err := handler.Handle(ctx, r); err != nil {
 			return err

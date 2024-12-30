@@ -82,13 +82,13 @@ func NewServer(pool *db.Pool, llm *llms.LLM) (*Service, error) {
 
 func (s *Service) Start(ctx context.Context) {
 	if err := s.Queue.Start(ctx); err != nil {
-		logger.Default.Fatal("failed to start", "service", s.Name(), "error", err)
+		logger.Default.Fatal("failed to start", "service", s.Name(), "err", err)
 	}
 }
 
 func (s *Service) Stop(ctx context.Context) {
 	if err := s.Queue.Stop(ctx); err != nil {
-		logger.Default.Fatal("failed to stop", "service", s.Name(), "error", err)
+		logger.Default.Fatal("failed to stop", "service", s.Name(), "err", err)
 	}
 }
 
