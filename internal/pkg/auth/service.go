@@ -91,7 +91,7 @@ func (s *Service) GetTelegramUser(ctx context.Context, tx db.DBTX, userID string
 func (s *Service) CreateTelegramUser(ctx context.Context, tx db.DBTX, userName, userID string) (*UserDTO, error) {
 	// create user
 	user, err := s.dao.CreateUser(ctx, tx, db.CreateUserParams{
-		Username: pgtype.Text{String: userName, Valid: true},
+		Username: pgtype.Text{String: fmt.Sprintf("TG-%s", userName), Valid: true},
 		Status:   "active",
 	})
 	if err != nil {
