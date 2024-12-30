@@ -37,7 +37,7 @@ function SidebarNav() {
 function SettingsPage() {
 	const [tab, _] = useQueryState(
 		"tab",
-		parseAsString.withDefault(settingsEnum.GENERAL),
+		parseAsString.withDefault(settingsEnum.PROFILE),
 	);
 
 	const mainTab = () => {
