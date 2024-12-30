@@ -47,7 +47,7 @@ func (w *CrawlerWorker) Work(ctx context.Context, job *river.Job[CrawlerWorkerAr
 		return err
 	}
 
-	if dto.Content != "" {
+	if dto.Content != "" && dto.Summary == "" {
 		dto, err = svc.SummarierContent(ctx, tx, job.Args.ID, job.Args.UserID)
 		if err != nil {
 			logger.FromContext(ctx).Error("failed to summarise content", "error", err)

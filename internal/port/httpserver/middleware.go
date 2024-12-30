@@ -4,9 +4,11 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -58,6 +60,9 @@ func contextMiddleWare() echo.MiddlewareFunc {
 func recoverMiddleware() echo.MiddlewareFunc {
 	cfg := middleware.DefaultRecoverConfig
 	cfg.LogErrorFunc = func(c echo.Context, err error, stack []byte) error {
+		if config.Settings.Debug {
+			debug.PrintStack()
+		}
 		logger.FromContext(c.Request().Context()).Error("recovered from panic", "err", err, "stack", string(stack))
 		return err
 	}
