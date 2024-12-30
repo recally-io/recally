@@ -24,6 +24,7 @@ require (
 	github.com/refraction-networking/utls v1.6.7
 	github.com/riverqueue/river v0.15.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.15.0
+	github.com/samber/slog-betterstack v1.4.1
 	github.com/sashabaranov/go-openai v1.36.1
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/echo-swagger v1.4.1
@@ -110,6 +111,8 @@ require (
 	github.com/riverqueue/river/rivershared v0.15.0 // indirect
 	github.com/riverqueue/river/rivertype v0.15.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
+	github.com/samber/lo v1.47.0 // indirect
+	github.com/samber/slog-common v0.18.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.24.5 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect

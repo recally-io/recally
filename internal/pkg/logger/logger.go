@@ -6,6 +6,8 @@ import (
 	"os"
 	"recally/internal/pkg/contexts"
 	"strconv"
+
+	slogbetterstack "github.com/samber/slog-betterstack"
 )
 
 var defaultLogAttrs = []string{contexts.ContextKeyRequestID, contexts.ContextKeyUserID, contexts.ContextKeyUserName}
@@ -32,18 +34,33 @@ func New() Logger {
 		debug = false
 	}
 	var logger *slog.Logger
+
+	handlers := make([]slog.Handler, 0)
+
 	if debug {
 		handler := NewColorHandler(&slog.HandlerOptions{
 			Level:     slog.LevelDebug,
-			AddSource: true,
+			AddSource: debug,
 		}, WithDestinationWriter(os.Stdout), WithColor(), WithOutputEmptyAttrs())
-		logger = slog.New(handler)
+
+		handlers = append(handlers, handler)
 	} else {
-		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			AddSource: false,
+		handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			AddSource: debug,
 			Level:     slog.LevelInfo,
-		}))
+		})
+		handlers = append(handlers, handler)
 	}
+
+	if os.Getenv("BETTER_STACK_SOURCE_TOKEN") != "" {
+		handler := slogbetterstack.Option{
+			Token:     os.Getenv("BETTER_STACK_SOURCE_TOKEN"),
+			AddSource: debug,
+		}.NewBetterstackHandler()
+		handlers = append(handlers, handler)
+	}
+
+	logger = slog.New(NewMultiHandler(handlers...))
 	return Logger{
 		Logger: logger,
 	}
