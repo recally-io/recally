@@ -84,7 +84,7 @@ func (s *Service) HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider
 
 			// user not found, create new user
 			createUserParams := db.CreateUserParams{
-				Username: pgtype.Text{String: oUser.Name, Valid: oUser.Name != ""},
+				Username: pgtype.Text{String: fmt.Sprintf("%s-%s", oUser.Provider, oUser.Name), Valid: oUser.Name != ""},
 				Email:    pgtype.Text{String: oUser.Email, Valid: oUser.Email != ""},
 			}
 			dbUser, err = s.dao.CreateUser(ctx, tx, createUserParams)
