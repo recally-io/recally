@@ -2,6 +2,7 @@ import { type ReactNode, StrictMode } from "react";
 import "../index.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import { SWRConfig } from "swr";
 import fetcher from "../lib/apis/fetcher";
@@ -18,6 +19,7 @@ export default function App({ children }: { children: ReactNode }) {
 					}}
 				>
 					<NuqsAdapter>{children}</NuqsAdapter>
+					<Toaster />
 				</SWRConfig>
 			</ThemeProvider>
 		</StrictMode>

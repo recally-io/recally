@@ -24,6 +24,11 @@ const fetcher = async <T>(url: string, init?: RequestInit): Promise<T> => {
 
 		throw error;
 	}
+
+	if (response.status === 204) {
+		return {} as T;
+	}
+
 	const data = await response.json();
 	return data.data;
 };
