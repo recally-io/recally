@@ -148,6 +148,7 @@ func (s *Service) LinkAccount(ctx context.Context, tx db.DBTX, oAuthUser OAuth2U
 
 	// mark the original user as linked to the new user
 	updateUserParams := db.UpdateUserByIdParams{
+		Uuid: originalUserId,
 		Status: "linked to " + userId.String(),
 	}
 	if _, err = s.dao.UpdateUserById(ctx, tx, updateUserParams); err != nil {
