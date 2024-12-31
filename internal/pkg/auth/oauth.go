@@ -146,10 +146,22 @@ func (s *Service) LinkAccount(ctx context.Context, tx db.DBTX, oAuthUser OAuth2U
 		return fmt.Errorf("owner transfer failed: %w", err)
 	}
 
+	originalUser, err := s.dao.GetUserById(ctx, tx, originalUserId)
+	if err != nil {
+		return fmt.Errorf("get user by id failed: %w", err)
+	}
+
 	// mark the original user as linked to the new user
 	updateUserParams := db.UpdateUserByIdParams{
-		Uuid: originalUserId,
-		Status: "linked to " + userId.String(),
+		Uuid:                originalUser.Uuid,
+		Username:            originalUser.Username,
+		Email:               originalUser.Email,
+		Phone:               originalUser.Phone,
+		PasswordHash:        originalUser.PasswordHash,
+		ActivateAssistantID: originalUser.ActivateAssistantID,
+		ActivateThreadID:    originalUser.ActivateThreadID,
+		Status:              "linked to " + userId.String(),
+		Settings:            originalUser.Settings,
 	}
 	if _, err = s.dao.UpdateUserById(ctx, tx, updateUserParams); err != nil {
 		return fmt.Errorf("update user by id failed: %w", err)
