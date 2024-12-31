@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { useBookmark, useBookmarkMutations } from "@/lib/apis/bookmarks";
+import { ROUTES } from "@/lib/router";
 import { useState } from "react";
 
 export default function BookmarkDetailPage({ id }: { id: string }) {
@@ -67,10 +68,11 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 				title: "Success",
 				description: "Bookmark deleted successfully",
 			});
+			window.location.href = ROUTES.BOOKMARKS;
 		} catch (error) {
 			toast({
 				title: "Error",
-				description: "Failed to delete bookmark",
+				description: `Failed to delete bookmark ${error instanceof Error ? error.message : 'Unknown error'}`,
 				variant: "destructive",
 			});
 		} finally {
