@@ -72,7 +72,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 		} catch (error) {
 			toast({
 				title: "Error",
-				description: `Failed to delete bookmark ${error instanceof Error ? error.message : 'Unknown error'}`,
+				description: `Failed to delete bookmark ${error instanceof Error ? error.message : "Unknown error"}`,
 				variant: "destructive",
 			});
 		} finally {

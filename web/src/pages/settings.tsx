@@ -47,10 +47,10 @@ function SettingsPage() {
 	};
 
 	return (
-		<div className="container mx-auto py-10">
+		<div className="container mx-auto py-10 px-4">
 			<h1 className="text-2xl font-semibold mb-8">Preferences</h1>
 
-			<div className="flex gap-12">
+			<div className="flex gap-4">
 				<div className="hidden md:block">
 					<SidebarNav />
 				</div>
@@ -64,7 +64,7 @@ function SettingsPage() {
 						<SidebarNav />
 					</SheetContent>
 				</Sheet>
-				{mainTab()}
+				<div className="w-full">{mainTab()}</div>
 			</div>
 		</div>
 	);

@@ -16,23 +16,14 @@ import (
 )
 
 type Service struct {
-	dao       DAO
-	llm       LLM
-	reader    UrlReader
-	summarier Summarier
+	dao DAO
+	llm *llms.LLM
 }
 
 func NewService(llm *llms.LLM) *Service {
-	reader, err := NewWebReader(llm)
-	if err != nil {
-		logger.Default.Fatal("failed to create web reader", "err", err)
-	}
-	summarier := NewSummarier(llm)
 	return &Service{
-		dao:       db.New(),
-		llm:       llm,
-		reader:    reader,
-		summarier: summarier,
+		dao: db.New(),
+		llm: llm,
 	}
 }
 
@@ -230,7 +221,9 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 		Markwdown: dto.Content,
 	}
 
-	if err := s.summarier.Process(ctx, content); err != nil {
+	summarier := processor.NewSummaryProcessor(s.llm)
+
+	if err := summarier.Process(ctx, content); err != nil {
 		logger.Default.Error("failed to generate summary", "err", err)
 	} else {
 		dto.Summary = content.Summary

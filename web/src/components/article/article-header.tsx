@@ -12,7 +12,7 @@ export const ArticleHeader: React.FC<ArticleHeaderProps> = ({
 	const domain = new URL(url).hostname;
 
 	return (
-		<div className="space-y-6 border-b pb-4">
+		<div className="space-y-4">
 			{/* Title */}
 			<h1 className="text-4xl font-serif font-bold leading-tight tracking-tighter md:text-5xl">
 				{title}
