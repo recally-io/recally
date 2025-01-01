@@ -4,7 +4,8 @@ import { ProfileSettings } from "@/components/settings/profile";
 import { SummarySettings } from "@/components/settings/summary";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Home, Menu, User } from "lucide-react";
+import { ROUTES } from "@/lib/router";
+import { Bot, Home, Menu, User } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { createRoot } from "react-dom/client";
 import App from "./app-basic";
@@ -19,24 +20,24 @@ function SidebarNav() {
 	return (
 		<nav className="space-y-2 w-48">
 			<a
-				href="/"
+				href={ROUTES.HOME}
 				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
 			>
 				<Home className="h-4 w-4" />
 				Home
 			</a>
 			<a
-				href={`/settings?tab=${settingsEnum.PROFILE}`}
+				href={`${ROUTES.SETTINGS}?tab=${settingsEnum.PROFILE}`}
 				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
 			>
 				<User className="h-4 w-4" />
 				Profile
 			</a>
 			<a
-				href={`/settings?tab=${settingsEnum.SUMMARY}`}
+				href={`${ROUTES.SETTINGS}?tab=${settingsEnum.SUMMARY}`}
 				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
 			>
-				<User className="h-4 w-4" />
+				<Bot className="h-4 w-4" />
 				Summary
 			</a>
 		</nav>
