@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"recally/internal/pkg/webreader/processor"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type UserSettings struct{}
+type UserSettings struct {
+	SummaryOptions processor.SummaryConfig `json:"summary_options"`
+}
 
 type UserDTO struct {
 	ID                  uuid.UUID    `json:"id"`

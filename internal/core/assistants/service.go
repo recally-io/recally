@@ -25,9 +25,9 @@ func NewService(llm *llms.LLM, queue *queue.Queue) *Service {
 	}
 }
 
-func (s *Service) ListModels(ctx context.Context) ([]string, error) {
+func (s *Service) ListModels(ctx context.Context) ([]llms.Model, error) {
 	cacheKey := cache.NewCacheKey("list-models", "")
-	if models, ok := cache.Get[[]string](ctx, cache.MemCache, cacheKey); ok {
+	if models, ok := cache.Get[[]llms.Model](ctx, cache.MemCache, cacheKey); ok {
 		return *models, nil
 	}
 	models, err := s.llm.ListModels(ctx)

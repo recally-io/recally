@@ -1,6 +1,7 @@
 import ProtectedRoute from "@/components/protected-route";
 
 import { ProfileSettings } from "@/components/settings/profile";
+import { SummarySettings } from "@/components/settings/summary";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Home, Menu, User } from "lucide-react";
@@ -11,6 +12,7 @@ import App from "./app-basic";
 const settingsEnum = {
 	GENERAL: "general",
 	PROFILE: "profile",
+	SUMMARY: "summary",
 };
 
 function SidebarNav() {
@@ -30,6 +32,13 @@ function SidebarNav() {
 				<User className="h-4 w-4" />
 				Profile
 			</a>
+			<a
+				href={`/settings?tab=${settingsEnum.SUMMARY}`}
+				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
+			>
+				<User className="h-4 w-4" />
+				Summary
+			</a>
 		</nav>
 	);
 }
@@ -43,6 +52,8 @@ function SettingsPage() {
 	const mainTab = () => {
 		if (tab === settingsEnum.PROFILE) {
 			return <ProfileSettings />;
+		} else if (tab === settingsEnum.SUMMARY) {
+			return <SummarySettings />;
 		}
 	};
 
