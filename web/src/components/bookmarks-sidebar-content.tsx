@@ -14,11 +14,9 @@ import {
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
 import {
-	BookImage,
-	BookOpen,
 	Bookmark,
 	ChevronRight,
-	Newspaper,
+	Newspaper
 } from "lucide-react";
 
 const items = [
@@ -33,16 +31,16 @@ const items = [
 				icon: Newspaper,
 				url: `${ROUTES.BOOKMARKS}?type=bookmark&category=article`,
 			},
-			{
-				title: "EPUBs",
-				icon: BookOpen,
-				url: `${ROUTES.BOOKMARKS}?type=bookmark&category=epub`,
-			},
-			{
-				title: "PDFs",
-				icon: BookImage,
-				url: `${ROUTES.BOOKMARKS}?type=bookmark&category=pdf`,
-			},
+			// {
+			// 	title: "EPUBs",
+			// 	icon: BookOpen,
+			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=epub`,
+			// },
+			// {
+			// 	title: "PDFs",
+			// 	icon: BookImage,
+			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=pdf`,
+			// },
 			// {
 			// 	title: "Videos",
 			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=video`,
