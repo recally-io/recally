@@ -60,6 +60,27 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 		}
 	};
 
+	const handleRegenerateSummary = async () => {
+		try {
+			setIsLoading(true);
+			await refreshBookmark(bookmark.id, {
+				regenerate_summary: true,
+			});
+			toast({
+				title: "Success",
+				description: "Summary regenerated successfully",
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to regenerate summary",
+				variant: "destructive",
+			});
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
 	const handleDelete = async () => {
 		try {
 			setIsLoading(true);
@@ -94,6 +115,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 							<ArticleActions
 								onDelete={async () => setShowDeleteDialog(true)}
 								onRefetch={handleRefetch}
+								onRegenerateSummary={handleRegenerateSummary}
 								isLoading={isLoading}
 							/>
 						</div>

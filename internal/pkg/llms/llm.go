@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"recally/internal/pkg/cache"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/tools"
 	"strings"
@@ -56,18 +57,21 @@ func New(baseUrl, apiKey string) *LLM {
 }
 
 func (l *LLM) ListModels(ctx context.Context) ([]Model, error) {
-	models, err := l.client.ListModels(ctx)
-	if err != nil {
-		return nil, err
-	}
-	data := make([]Model, 0, len(models.Models))
-	for _, m := range models.Models {
-		data = append(data, Model{
-			ID:   m.ID,
-			Name: m.ID,
-		})
-	}
-	return data, nil
+	models, err := cache.RunInCache[[]Model](ctx, cache.MemCache, cache.NewCacheKey("llm", "list-models"), time.Hour, func() (*[]Model, error) {
+		models, err := l.client.ListModels(ctx)
+		if err != nil {
+			return nil, err
+		}
+		data := make([]Model, 0, len(models.Models))
+		for _, m := range models.Models {
+			data = append(data, Model{
+				ID:   m.ID,
+				Name: m.ID,
+			})
+		}
+		return &data, nil
+	})
+	return *models, err
 }
 
 func (l *LLM) ListTools(ctx context.Context) ([]tools.BaseTool, error) {
