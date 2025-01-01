@@ -7,6 +7,7 @@ import (
 	"recally/internal/pkg/logger"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 )
@@ -35,12 +36,18 @@ type CrawlerWorker struct {
 }
 
 func (w *CrawlerWorker) Work(ctx context.Context, job *river.Job[CrawlerWorkerArgs]) error {
-	svc := bookmarks.NewService(w.llm)
-	tx, err := w.dbPool.Begin(ctx)
-	if err != nil {
-		logger.FromContext(ctx).Error("failed to start transaction", "err", err)
+	if err := runInTransaction(ctx, w.dbPool, job.Args.UserID, func(ctx context.Context, tx pgx.Tx) error {
+		return w.work(ctx, tx, job)
+	}); err != nil {
+		logger.FromContext(ctx).Error("failed to run job", "err", err, "job", job)
 		return err
 	}
+
+	return nil
+}
+
+func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[CrawlerWorkerArgs]) error {
+	svc := bookmarks.NewService(w.llm)
 	dto, err := svc.FetchContent(ctx, tx, job.Args.ID, job.Args.UserID, job.Args.FetcherName)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to fetch bookmark", "err", err)
@@ -54,12 +61,6 @@ func (w *CrawlerWorker) Work(ctx context.Context, job *river.Job[CrawlerWorkerAr
 			return err
 		}
 	}
-
-	if err := tx.Commit(ctx); err != nil {
-		logger.FromContext(ctx).Error("failed to commit transaction", "err", err)
-	}
-
 	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title)
-
 	return nil
 }

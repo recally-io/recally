@@ -8,6 +8,7 @@ const (
 	ContextKeyContext   = "ctx"
 	ContextKeyRequestID = "request_id"
 	ContextKeyLogger    = "logger"
+	ContextKeyUser      = "user"
 	ContextKeyUserID    = "user_id"
 	ContextKeyUserName  = "user_name"
 	ContextKeyTx        = "tx"
