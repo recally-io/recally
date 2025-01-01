@@ -1,27 +1,6 @@
 import useSWR from "swr";
 import fetcher from "./fetcher";
-
-// Types
-
-export type SummaryConfig = {
-	model?: string;
-	prompt?: string;
-	language?: string;
-};
-
-export type UserSettings = {
-	summary_options?: SummaryConfig;
-};
-
-export interface User {
-	id: string;
-	avatar?: string;
-	username?: string;
-	email?: string;
-	phone?: string;
-	Status?: string;
-	Settings?: UserSettings;
-}
+import type { User } from "./users";
 
 interface LoginInput {
 	email: string;
