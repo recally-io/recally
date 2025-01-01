@@ -1,4 +1,4 @@
-import { Chrome, Database, Globe, RefreshCw, Trash2 } from "lucide-react";
+import { Bot, Chrome, Database, Globe, RefreshCw, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +20,14 @@ export type FetcherType = "http" | "jina" | "browser";
 interface ArticleActionsProps {
 	onDelete: () => Promise<void>;
 	onRefetch: (type: FetcherType) => Promise<void>;
+	onRegenerateSummary: () => Promise<void>;
 	isLoading: boolean;
 }
 
 interface RefreshDropdownMenuProps {
 	isLoading: boolean;
 	onRefetch: (type: FetcherType) => Promise<void>;
+	onRegenerateSummary: () => Promise<void>;
 }
 
 const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
@@ -55,6 +57,11 @@ const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
 				>
 					<Chrome className="mr-2 h-4 w-4" /> Browser Fetcher
 				</DropdownMenuItem>
+				<DropdownMenuItem
+					onClick={async () => await props.onRegenerateSummary()}
+				>
+					<Bot className="mr-2 h-4 w-4" /> Genrate Summary
+				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
@@ -63,11 +70,16 @@ const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
 export const ArticleActions: React.FC<ArticleActionsProps> = ({
 	onDelete,
 	onRefetch,
+	onRegenerateSummary,
 	isLoading,
 }) => {
 	return (
 		<div className="flex justify-end flex-wrap items-center gap-1 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-1">
-			<RefreshDropdownMenu isLoading={isLoading} onRefetch={onRefetch} />
+			<RefreshDropdownMenu
+				isLoading={isLoading}
+				onRefetch={onRefetch}
+				onRegenerateSummary={onRegenerateSummary}
+			/>
 			<TooltipProvider>
 				<Tooltip>
 					<TooltipTrigger asChild>

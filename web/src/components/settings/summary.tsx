@@ -15,6 +15,14 @@ import { useLLMs } from "@/lib/apis/llm";
 import { useUsers } from "@/lib/apis/users";
 import { useState } from "react";
 
+const supportedLanguages = [
+	{ id: "en", name: "English" },
+	{ id: "zh", name: "Chinese" },
+	{ id: "es", name: "Spanish" },
+	{ id: "fr", name: "French" },
+	{ id: "de", name: "German" },
+];
+
 export function SummarySettings() {
 	const { updateSettings } = useUsers();
 	const { user } = useUser();
@@ -100,11 +108,11 @@ export function SummarySettings() {
 									<SelectValue placeholder="Select language" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="en">English</SelectItem>
-									<SelectItem value="zh">Chinese</SelectItem>
-									<SelectItem value="es">Spanish</SelectItem>
-									<SelectItem value="fr">French</SelectItem>
-									<SelectItem value="de">German</SelectItem>
+									{supportedLanguages.map((l) => (
+										<SelectItem key={l.id} value={l.name}>
+											{l.name}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						</div>

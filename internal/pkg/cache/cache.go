@@ -31,3 +31,18 @@ func Get[T any](ctx context.Context, c Cache, key CacheKey) (*T, bool) {
 	MustUnmarshaler(b, &value)
 	return &value, true
 }
+
+func RunInCache[T any](ctx context.Context, c Cache, key CacheKey, expiration time.Duration, f func() (*T, error)) (*T, error) {
+	data, ok := Get[T](ctx, c, key)
+	if ok {
+		return data, nil
+	}
+
+	data, err := f()
+	if err != nil {
+		return nil, err
+	}
+
+	c.SetWithContext(ctx, key, data, expiration)
+	return data, nil
+}

@@ -1,12 +1,7 @@
 import type { FetcherType } from "@/components/article/article-actions";
 import { ArticleHeader } from "@/components/article/article-header";
+import { ArticleSummary } from "@/components/article/article-summary";
 import MarkdownRenderer from "@/components/markdown-render";
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion";
 import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
 import type React from "react";
 import { Separator } from "./ui/separator";
@@ -18,7 +13,10 @@ interface ArticleReaderProps {
 	onRegenerateSummary?: (id: string) => Promise<void>;
 }
 
-export const ArticleReader: React.FC<ArticleReaderProps> = ({ bookmark }) => {
+export const ArticleReader: React.FC<ArticleReaderProps> = ({
+	bookmark,
+	onRegenerateSummary,
+}) => {
 	return (
 		<>
 			<ArticleHeader
@@ -27,19 +25,17 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({ bookmark }) => {
 				publishedAt={bookmark.created_at}
 			/>
 
-			<Separator className="my-2" />
+			<Separator className="my-4" />
 
 			{bookmark.summary && (
-				<Accordion type="single" collapsible className="mb-8">
-					<AccordionItem value="summary">
-						<AccordionTrigger>AI Summary</AccordionTrigger>
-						<AccordionContent>
-							<div className="prose dark:prose-invert prose-lg">
-								<MarkdownRenderer content={bookmark.summary} />
-							</div>
-						</AccordionContent>
-					</AccordionItem>
-				</Accordion>
+				<ArticleSummary
+					summary={bookmark.summary}
+					onRegenerate={
+						onRegenerateSummary
+							? () => onRegenerateSummary(bookmark.id)
+							: undefined
+					}
+				/>
 			)}
 
 			{/* Main Content */}
