@@ -10,7 +10,7 @@ import (
 	"text/template"
 )
 
-const summaryPrompt = `You are an experienced editor at* **The Wall Street Journal**. *Your task is to read the following article and provide a comprehensive summary for a busy reader who wants to quickly grasp the essential information.
+const defaultSummaryPrompt = `You are an experienced editor at* **The Wall Street Journal**. *Your task is to read the following article and provide a comprehensive summary for a busy reader who wants to quickly grasp the essential information.
 
 <ResponseFormat>
 # Category
@@ -38,26 +38,40 @@ const summaryPrompt = `You are an experienced editor at* **The Wall Street Journ
 Please ensure that your summary is written in the professional, clear, and engaging style characteristic of* **The Wall Street Journal**. *Maintain a neutral and informative tone suitable for helping the reader understand the article without reading it in full.
 `
 
-var summaryPromptTempl = template.Must(template.New("summaryPromptTemplate").Parse(`{{ .Prompt }}\n\n<article>\n{{ .Article }}\n<article>\n\Remenber to response in {{.Language}}.`))
+const summaryPromptTemplate = `
+{{ .Prompt }}
+
+<Article>
+{{ .Article }}
+</Article>
+
+<OutputLanguage>
+{{or .Language "[Same as article language]"}}
+</OutputLanguage>
+
+Please provide your summary below:
+`
+
+var summaryPromptTempl = template.Must(template.New("summaryPromptTemplate").Parse(summaryPromptTemplate))
 
 // SummaryOption represents an option for configuring the SummaryProcessor
 type SummaryOption func(*SummaryProcessor)
 
-// WithModel sets the model for the SummaryProcessor
-func WithModel(model string) SummaryOption {
+// WithSummaryOptionModel sets the model for the SummaryProcessor
+func WithSummaryOptionModel(model string) SummaryOption {
 	return func(p *SummaryProcessor) {
 		p.config.Model = model
 	}
 }
 
-// WithPrompt sets the prompt template for the SummaryProcessor
-func WithPrompt(prompt string) SummaryOption {
+// WithSummaryOptionPrompt sets the prompt template for the SummaryProcessor
+func WithSummaryOptionPrompt(prompt string) SummaryOption {
 	return func(p *SummaryProcessor) {
 		p.config.Prompt = prompt
 	}
 }
 
-func WithLanguage(language string) SummaryOption {
+func WithSummaryOptionLanguage(language string) SummaryOption {
 	return func(p *SummaryProcessor) {
 		p.config.Language = language
 	}
@@ -80,9 +94,8 @@ type SummaryProcessor struct {
 func NewSummaryProcessor(llm *llms.LLM, opts ...SummaryOption) *SummaryProcessor {
 	p := &SummaryProcessor{
 		config: SummaryConfig{
-			Model:    config.Settings.OpenAI.Model, // default model
-			Prompt:   summaryPrompt,                // default prompt
-			Language: "Chinese",
+			Model:  config.Settings.OpenAI.Model, // default model
+			Prompt: defaultSummaryPrompt,         // default prompt
 		},
 		llm: llm,
 	}

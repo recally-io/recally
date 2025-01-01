@@ -39,6 +39,11 @@ type LLM struct {
 	toolMappings map[string]tools.Tool
 }
 
+type Model struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 func New(baseUrl, apiKey string) *LLM {
 	cfg := openai.DefaultConfig(apiKey)
 	if baseUrl != "" {
@@ -50,16 +55,30 @@ func New(baseUrl, apiKey string) *LLM {
 	}
 }
 
-func (l *LLM) ListModels(ctx context.Context) ([]string, error) {
+func (l *LLM) ListModels(ctx context.Context) ([]Model, error) {
 	models, err := l.client.ListModels(ctx)
 	if err != nil {
 		return nil, err
 	}
-	data := make([]string, 0, len(models.Models))
+	data := make([]Model, 0, len(models.Models))
 	for _, m := range models.Models {
-		data = append(data, m.ID)
+		data = append(data, Model{
+			ID:   m.ID,
+			Name: m.ID,
+		})
 	}
 	return data, nil
+}
+
+func (l *LLM) ListTools(ctx context.Context) ([]tools.BaseTool, error) {
+	availableTools := make([]tools.BaseTool, 0, len(AllToolMappings))
+	for _, tool := range AllToolMappings {
+		availableTools = append(availableTools, tools.BaseTool{
+			Name:        tool.LLMName(),
+			Description: tool.LLMDescription(),
+		})
+	}
+	return availableTools, nil
 }
 
 func (l *LLM) CreateEmbeddings(ctx context.Context, text string) ([]float32, error) {

@@ -157,6 +157,9 @@ definitions:
         type: array
     type: object
   auth.UserSettings:
+    properties:
+      summary_options:
+        $ref: '#/definitions/processor.SummaryConfig'
     type: object
   bookmarks.BookmarkDTO:
     properties:
@@ -431,6 +434,30 @@ definitions:
       output: {}
       type:
         type: string
+    type: object
+  llms.Model:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  processor.SummaryConfig:
+    properties:
+      language:
+        type: string
+      model:
+        type: string
+      prompt:
+        type: string
+    type: object
+  tools.BaseTool:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      parameters: {}
     type: object
 host: localhost:1323
 info:
@@ -1546,7 +1573,7 @@ paths:
             - properties:
                 data:
                   items:
-                    type: string
+                    $ref: '#/definitions/llms.Model'
                   type: array
               type: object
         "401":
@@ -2261,6 +2288,86 @@ paths:
       summary: Get presigned URLs for file operations
       tags:
       - files
+  /llm/models:
+    get:
+      consumes:
+      - application/json
+      description: Lists available language models
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/llms.Model'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Models
+      tags:
+      - LLM
+  /llm/tools:
+    get:
+      consumes:
+      - application/json
+      description: Lists available LLM tools
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/tools.BaseTool'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Tools
+      tags:
+      - LLM
   /tools/web/reader:
     get:
       consumes:

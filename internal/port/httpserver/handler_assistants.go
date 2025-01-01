@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"recally/internal/core/assistants"
 	"recally/internal/pkg/db"
+	"recally/internal/pkg/llms"
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/tools"
 
@@ -37,7 +38,7 @@ type assistantService interface {
 	ListAttachmentsByAssistant(ctx context.Context, tx db.DBTX, assistantId uuid.UUID) ([]assistants.AttachmentDTO, error)
 	ListAttachmentsByThread(ctx context.Context, tx db.DBTX, threadId uuid.UUID) ([]assistants.AttachmentDTO, error)
 
-	ListModels(ctx context.Context) ([]string, error)
+	ListModels(ctx context.Context) ([]llms.Model, error)
 	ListTools(ctx context.Context) ([]tools.BaseTool, error)
 }
 
@@ -472,7 +473,7 @@ func (h *assistantHandler) uploadThreadAttachment(c echo.Context) error {
 // @Tags Assistants
 // @Accept json
 // @Produce json
-// @Success 200 {object} JSONResult{data=[]string} "Success"
+// @Success 200 {object} JSONResult{data=[]llms.Model} "Success"
 // @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
 // @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
 // @Router /assistants/models [get]

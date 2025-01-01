@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
@@ -205,6 +206,11 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 }
 
 func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*BookmarkDTO, error) {
+	user, err := auth.LoadUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
 	if err != nil {
 		return nil, err
@@ -221,7 +227,7 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 		Markwdown: dto.Content,
 	}
 
-	summarier := processor.NewSummaryProcessor(s.llm)
+	summarier := newSummarier(s.llm, user)
 
 	if err := summarier.Process(ctx, content); err != nil {
 		logger.Default.Error("failed to generate summary", "err", err)
@@ -230,4 +236,19 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 	}
 
 	return s.Update(ctx, tx, id, userID, &dto)
+}
+
+func newSummarier(llm *llms.LLM, user *auth.UserDTO) *processor.SummaryProcessor {
+	summaryOptions := make([]processor.SummaryOption, 0)
+	if user.Settings.SummaryOptions.Prompt != "" {
+		summaryOptions = append(summaryOptions, processor.WithSummaryOptionPrompt(user.Settings.SummaryOptions.Prompt))
+	}
+	if user.Settings.SummaryOptions.Model != "" {
+		summaryOptions = append(summaryOptions, processor.WithSummaryOptionModel(user.Settings.SummaryOptions.Model))
+	}
+	if user.Settings.SummaryOptions.Language != "" {
+		summaryOptions = append(summaryOptions, processor.WithSummaryOptionLanguage(user.Settings.SummaryOptions.Language))
+	}
+
+	return processor.NewSummaryProcessor(llm, summaryOptions...)
 }
