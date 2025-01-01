@@ -127,51 +127,50 @@ func (s *Service) HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider
 	return user, nil
 }
 
-func (s *Service) LinkAccount(ctx context.Context, tx db.DBTX, oAuthUser OAuth2User, jwtString string) error {
-	userId, _, err := ValidateJWT(jwtString)
+func (s *Service) LinkAccount(ctx context.Context, tx db.DBTX, originalOAuthUser OAuth2User, jwtString string) error {
+	// load new user from jwt
+	newUser, _, err := s.ValidateJWT(ctx, tx, jwtString)
 	if err != nil {
 		return fmt.Errorf("invalid jwt: %w", err)
 	}
 
+	// get original user from oauth connection
 	oAuthConn, err := s.dao.GetOAuthConnectionByProviderAndProviderID(ctx, tx, db.GetOAuthConnectionByProviderAndProviderIDParams{
-		Provider:       oAuthUser.Provider,
-		ProviderUserID: oAuthUser.ID,
+		Provider:       originalOAuthUser.Provider,
+		ProviderUserID: originalOAuthUser.ID,
 	})
 	if err != nil && !db.IsNotFoundError(err) {
 		return fmt.Errorf("get oauth connection by provider and provider id failed: %w", err)
 	}
-	originalUserId := oAuthConn.UserID
-	// TODO: move all resources from the original user to the new user
-	if err := s.OwnerTransfer(ctx, tx, originalUserId, userId); err != nil {
+	originalUser, err := s.GetUserById(ctx, tx, oAuthConn.UserID)
+	if err != nil {
+		return fmt.Errorf("get original user by id failed: %w", err)
+	}
+
+	// move all resources from the original user to the new user
+	if err := s.OwnerTransfer(ctx, tx, originalUser.ID, newUser.ID); err != nil {
 		return fmt.Errorf("owner transfer failed: %w", err)
 	}
 
-	originalUser, err := s.dao.GetUserById(ctx, tx, originalUserId)
-	if err != nil {
-		return fmt.Errorf("get user by id failed: %w", err)
+	// update the original user status to indicate it is linked to the new user
+	originalUserStatus := "linked to " + originalUser.ID.String()
+	if _, err = s.UpdateUserStatusById(ctx, tx, originalUser.ID, originalUserStatus); err != nil {
+		return fmt.Errorf("update original user by id failed: %w", err)
 	}
 
-	// mark the original user as linked to the new user
-	updateUserParams := db.UpdateUserByIdParams{
-		Uuid:                originalUser.Uuid,
-		Username:            originalUser.Username,
-		Email:               originalUser.Email,
-		Phone:               originalUser.Phone,
-		PasswordHash:        originalUser.PasswordHash,
-		ActivateAssistantID: originalUser.ActivateAssistantID,
-		ActivateThreadID:    originalUser.ActivateThreadID,
-		Status:              "linked to " + userId.String(),
-		Settings:            originalUser.Settings,
-	}
-	if _, err = s.dao.UpdateUserById(ctx, tx, updateUserParams); err != nil {
-		return fmt.Errorf("update user by id failed: %w", err)
+	// update the new user settings to indicate it is linked to the telegram bot
+	if oAuthConn.Provider == "telegram" {
+		newUser.Settings.IsLinkedTelegramBot = true
+		if _, err := s.UpdateUserSettingsById(ctx, tx, newUser.ID, newUser.Settings); err != nil {
+			return fmt.Errorf("update user settings by id failed: %w", err)
+		}
 	}
 
 	// update oauth connection to link to the new user
 	params := db.UpdateOAuthConnectionParams{
-		UserID:         userId,
-		Provider:       oAuthUser.Provider,
-		ProviderUserID: oAuthUser.ID,
+		UserID:         newUser.ID,
+		Provider:       originalOAuthUser.Provider,
+		ProviderUserID: originalOAuthUser.ID,
 	}
 	_, err = s.dao.UpdateOAuthConnection(ctx, tx, params)
 	if err != nil {

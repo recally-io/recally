@@ -189,35 +189,37 @@ export function ProfileSettings() {
 					</div>
 				</CardContent>
 			</Card>
-
-			<Card>
-				<CardContent className="pt-6">
-					<h2 className="text-lg font-medium mb-4">Link Telegram Bot</h2>
-					<div className="space-y-4">
-						<Button onClick={handleTelegramLink}>Link Telegram</Button>
-						{showLinkingInfo && (
-							<div className="mt-4 p-4 bg-muted rounded-lg space-y-4">
-								<p className="text-sm">Please follow these steps:</p>
-								<ol className="list-decimal list-inside space-y-2">
-									<li>Open the RecallyReader telegram bot</li>
-									<li>Send this code to the bot:</li>
-									<div className="relative">
-										<code className="block mt-2 font-mono text-lg p-2 bg-background break-all">{`/linkaccount ${token}`}</code>
-										<Button
-											variant="outline"
-											size="sm"
-											className="absolute top-2 right-2"
-											onClick={handleCopyToken}
-										>
-											{isCopied ? "Copied!" : "Copy"}
-										</Button>
-									</div>
-								</ol>
-							</div>
-						)}
-					</div>
-				</CardContent>
-			</Card>
+			{/* Telegram linking */}
+			{!user?.settings?.is_linked_telegram_bot && (
+				<Card>
+					<CardContent className="pt-6">
+						<h2 className="text-lg font-medium mb-4">Link Telegram Bot</h2>
+						<div className="space-y-4">
+							<Button onClick={handleTelegramLink}>Link Telegram</Button>
+							{showLinkingInfo && (
+								<div className="mt-4 p-4 bg-muted rounded-lg space-y-4">
+									<p className="text-sm">Please follow these steps:</p>
+									<ol className="list-decimal list-inside space-y-2">
+										<li>Open the RecallyReader telegram bot</li>
+										<li>Send this code to the bot:</li>
+										<div className="relative">
+											<code className="block mt-2 font-mono text-lg p-2 bg-background break-all">{`/linkaccount ${token}`}</code>
+											<Button
+												variant="outline"
+												size="sm"
+												className="absolute top-2 right-2"
+												onClick={handleCopyToken}
+											>
+												{isCopied ? "Copied!" : "Copy"}
+											</Button>
+										</div>
+									</ol>
+								</div>
+							)}
+						</div>
+					</CardContent>
+				</Card>
+			)}
 		</div>
 	);
 }

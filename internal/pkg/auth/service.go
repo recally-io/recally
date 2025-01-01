@@ -143,11 +143,15 @@ func (s *Service) validatePassword(password, hashedPassword string) error {
 }
 
 func (s *Service) UpdateUserSettings(ctx context.Context, tx db.DBTX, settings UserSettings) (*UserDTO, error) {
-	return s.UpdateUser(ctx, tx, nil, nil, nil, nil, nil, &settings)
+	return s.UpdateUser(ctx, tx, uuid.Nil, nil, nil, nil, nil, nil, &settings)
+}
+
+func (s *Service) UpdateUserSettingsById(ctx context.Context, tx db.DBTX, userId uuid.UUID, settings UserSettings) (*UserDTO, error) {
+	return s.UpdateUser(ctx, tx, userId, nil, nil, nil, nil, nil, &settings)
 }
 
 func (s *Service) UpdateUserInfo(ctx context.Context, tx db.DBTX, username, email, phone *string) (*UserDTO, error) {
-	return s.UpdateUser(ctx, tx, username, email, phone, nil, nil, nil)
+	return s.UpdateUser(ctx, tx, uuid.Nil, username, email, phone, nil, nil, nil)
 }
 
 func (s *Service) UpdateUserPassword(ctx context.Context, tx db.DBTX, currentPassword, password string) (*UserDTO, error) {
@@ -160,18 +164,29 @@ func (s *Service) UpdateUserPassword(ctx context.Context, tx db.DBTX, currentPas
 		return nil, fmt.Errorf("failed to validate current password: %w", err)
 	}
 
-	return s.UpdateUser(ctx, tx, nil, nil, nil, &password, nil, nil)
+	return s.UpdateUser(ctx, tx, uuid.Nil, nil, nil, nil, &password, nil, nil)
 }
 
 func (s *Service) UpdateUserStatus(ctx context.Context, tx db.DBTX, status string) (*UserDTO, error) {
-	return s.UpdateUser(ctx, tx, nil, nil, nil, nil, &status, nil)
+	return s.UpdateUser(ctx, tx, uuid.Nil, nil, nil, nil, nil, &status, nil)
 }
 
-func (s *Service) UpdateUser(ctx context.Context, tx db.DBTX, username, email, phone, password, status *string, settings *UserSettings) (*UserDTO, error) {
-	user, err := LoadUserFromContext(ctx)
+func (s *Service) UpdateUserStatusById(ctx context.Context, tx db.DBTX, userId uuid.UUID, status string) (*UserDTO, error) {
+	return s.UpdateUser(ctx, tx, userId, nil, nil, nil, nil, &status, nil)
+}
+
+func (s *Service) UpdateUser(ctx context.Context, tx db.DBTX, userId uuid.UUID, username, email, phone, password, status *string, settings *UserSettings) (*UserDTO, error) {
+	var user *UserDTO
+	var err error
+	if userId == uuid.Nil {
+		user, err = LoadUserFromContext(ctx)
+	} else {
+		user, err = s.GetUserById(ctx, tx, userId)
+	}
 	if err != nil {
 		return nil, err
 	}
+
 	dbUser := user.Dump()
 	params := db.UpdateUserByIdParams{
 		Uuid:                dbUser.Uuid,

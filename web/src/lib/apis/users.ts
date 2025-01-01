@@ -9,6 +9,7 @@ export type SummaryConfig = {
 
 export type UserSettings = {
 	summary_options?: SummaryConfig;
+	is_linked_telegram_bot?: boolean;
 };
 
 export interface User {
@@ -17,8 +18,8 @@ export interface User {
 	username?: string;
 	email?: string;
 	phone?: string;
-	Status?: string;
-	Settings?: UserSettings;
+	status?: string;
+	settings?: UserSettings;
 }
 
 // API Functions
@@ -32,7 +33,7 @@ const api = {
 			body: JSON.stringify(data),
 		}),
 
-	updateSettings: (userId: string, settings: User["Settings"]) =>
+	updateSettings: (userId: string, settings: User["settings"]) =>
 		fetcher<User>(`/api/v1/users/${userId}/settings`, {
 			method: "PUT",
 			body: JSON.stringify({ settings }),
@@ -66,7 +67,7 @@ export function useUsers() {
 			return user;
 		},
 
-		updateSettings: async (userId: string, settings: User["Settings"]) => {
+		updateSettings: async (userId: string, settings: User["settings"]) => {
 			const user = await api.updateSettings(userId, settings);
 			invalidateUserData(userId);
 			return user;

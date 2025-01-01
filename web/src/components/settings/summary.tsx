@@ -19,10 +19,10 @@ export function SummarySettings() {
 	const { updateSettings } = useUsers();
 	const { user } = useUser();
 	const { models } = useLLMs();
-	const [model, setModel] = useState(user?.Settings?.summary_options?.model);
-	const [prompt, setPrompt] = useState(user?.Settings?.summary_options?.prompt);
+	const [model, setModel] = useState(user?.settings?.summary_options?.model);
+	const [prompt, setPrompt] = useState(user?.settings?.summary_options?.prompt);
 	const [language, setLanguage] = useState(
-		user?.Settings?.summary_options?.language,
+		user?.settings?.summary_options?.language,
 	);
 	const { toast } = useToast();
 	const handleSave = async () => {
@@ -37,7 +37,7 @@ export function SummarySettings() {
 
 		try {
 			const settings = {
-				...user.Settings,
+				...user.settings,
 				summary_options: {
 					model,
 					prompt,
