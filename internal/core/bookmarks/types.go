@@ -1,30 +1,8 @@
 package bookmarks
 
 import (
-	"context"
 	"fmt"
-	"recally/internal/pkg/llms"
-	"recally/internal/pkg/webreader"
-	"recally/internal/pkg/webreader/fetcher"
-	"recally/internal/pkg/webreader/processor"
-
-	"github.com/pgvector/pgvector-go"
 )
-
-// LLM defines the interface for generating embeddings
-type LLM interface {
-	CreateEmbeddings(ctx context.Context, text string) ([]float32, error)
-	TextCompletion(ctx context.Context, prompt string, options ...llms.Option) (string, error)
-}
-
-// UrlReader defines the interface for fetching URL content
-type UrlReader interface {
-	Read(ctx context.Context, url string) (*webreader.Content, error)
-}
-
-type Summarier interface {
-	Process(ctx context.Context, content *webreader.Content) error
-}
 
 // Common errors
 var (
@@ -41,30 +19,3 @@ const (
 	JinaFetcher    FecherType = "jina"
 	BrowserFetcher FecherType = "browser"
 )
-
-// SearchParams encapsulates search parameters
-type SearchParams struct {
-	UserID    int32
-	Query     string
-	Embedding pgvector.Vector
-	Limit     int32
-	Offset    int32
-}
-
-func NewWebReader(llm *llms.LLM) (UrlReader, error) {
-	fetcher, err := fetcher.NewHTTPFetcher()
-	if err != nil {
-		return nil, fmt.Errorf("create browser fetcher error: %w", err)
-	}
-
-	processors := []webreader.Processor{
-		processor.NewMarkdownProcessor(),
-		processor.NewSummaryProcessor(llm),
-	}
-
-	return webreader.New(fetcher, processors...), nil
-}
-
-func NewSummarier(llm *llms.LLM) Summarier {
-	return processor.NewSummaryProcessor(llm)
-}

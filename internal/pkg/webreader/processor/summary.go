@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"fmt"
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/webreader"
 	"strings"
@@ -79,8 +80,8 @@ type SummaryProcessor struct {
 func NewSummaryProcessor(llm *llms.LLM, opts ...SummaryOption) *SummaryProcessor {
 	p := &SummaryProcessor{
 		config: SummaryConfig{
-			Model:    "gpt-4o-mini", // default model
-			Prompt:   summaryPrompt, // default prompt
+			Model:    config.Settings.OpenAI.Model, // default model
+			Prompt:   summaryPrompt,                // default prompt
 			Language: "Chinese",
 		},
 		llm: llm,
