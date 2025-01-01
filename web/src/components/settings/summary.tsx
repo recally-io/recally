@@ -12,9 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/lib/apis/auth";
 import { useLLMs } from "@/lib/apis/llm";
+import { useUsers } from "@/lib/apis/users";
 import { useState } from "react";
 
 export function SummarySettings() {
+	const { updateSettings } = useUsers();
 	const { user } = useUser();
 	const { models } = useLLMs();
 	const [model, setModel] = useState(user?.Settings?.summary_options?.model);
@@ -23,13 +25,40 @@ export function SummarySettings() {
 		user?.Settings?.summary_options?.language,
 	);
 	const { toast } = useToast();
+	const handleSave = async () => {
+		if (!user) {
+			toast({
+				variant: "destructive",
+				description: "User not found",
+				duration: 2000,
+			});
+			return;
+		}
 
-	const handleSave = () => {
-		// TODO: Implement actual save functionality
-		toast({
-			description: "Settings saved successfully!",
-			duration: 2000,
-		});
+		try {
+			const settings = {
+				...user.Settings,
+				summary_options: {
+					model,
+					prompt,
+					language,
+				},
+			};
+
+			await updateSettings(user.id, settings);
+
+			toast({
+				description: "Settings saved successfully!",
+				duration: 2000,
+			});
+		} catch (error) {
+			console.error("Failed to save settings:", error);
+			toast({
+				variant: "destructive",
+				description: `Failed to save settings: ${error instanceof Error ? error.message : "Unknown error"}`,
+				duration: 3000,
+			});
+		}
 	};
 
 	return (

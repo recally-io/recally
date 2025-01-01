@@ -158,6 +158,8 @@ definitions:
     type: object
   auth.UserSettings:
     properties:
+      is_linked_telegram_bot:
+        type: boolean
       summary_options:
         $ref: '#/definitions/processor.SummaryConfig'
     type: object
@@ -380,6 +382,39 @@ definitions:
         type: string
     required:
     - bookmarkID
+    type: object
+  httpserver.updateUserInfoRequest:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      phone:
+        type: string
+      username:
+        type: string
+    required:
+    - id
+    type: object
+  httpserver.updateUserPasswordRequest:
+    properties:
+      current_password:
+        type: string
+      id:
+        type: string
+      password:
+        type: string
+    required:
+    - id
+    type: object
+  httpserver.updateUserSettingsRequest:
+    properties:
+      id:
+        type: string
+      settings:
+        $ref: '#/definitions/auth.UserSettings'
+    required:
+    - id
     type: object
   httpserver.userResponse:
     properties:
@@ -1723,6 +1758,156 @@ paths:
                   type: object
               type: object
       summary: Register a new user
+      tags:
+      - Auth
+  /auth/user/info:
+    put:
+      consumes:
+      - application/json
+      description: Update user's username, email, and phone
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User info update details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.updateUserInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User info updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/httpserver.userResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Update user info
+      tags:
+      - Auth
+  /auth/user/password:
+    put:
+      consumes:
+      - application/json
+      description: Update user's password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User password update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.updateUserPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User password updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/httpserver.userResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Update user password
+      tags:
+      - Auth
+  /auth/user/settings:
+    put:
+      consumes:
+      - application/json
+      description: Update user's settings
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User settings update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.updateUserSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User settings updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/httpserver.userResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Update user settings
       tags:
       - Auth
   /auth/validate-jwt:

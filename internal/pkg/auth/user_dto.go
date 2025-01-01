@@ -12,7 +12,8 @@ import (
 )
 
 type UserSettings struct {
-	SummaryOptions processor.SummaryConfig `json:"summary_options"`
+	SummaryOptions      processor.SummaryConfig `json:"summary_options"`
+	IsLinkedTelegramBot bool                    `json:"is_linked_telegram_bot"`
 }
 
 type UserDTO struct {

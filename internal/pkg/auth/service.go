@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"recally/internal/pkg/db"
@@ -139,4 +140,79 @@ func (s *Service) validatePassword(password, hashedPassword string) error {
 		return ErrUnAuthorized
 	}
 	return nil
+}
+
+func (s *Service) UpdateUserSettings(ctx context.Context, tx db.DBTX, settings UserSettings) (*UserDTO, error) {
+	return s.UpdateUser(ctx, tx, nil, nil, nil, nil, nil, &settings)
+}
+
+func (s *Service) UpdateUserInfo(ctx context.Context, tx db.DBTX, username, email, phone *string) (*UserDTO, error) {
+	return s.UpdateUser(ctx, tx, username, email, phone, nil, nil, nil)
+}
+
+func (s *Service) UpdateUserPassword(ctx context.Context, tx db.DBTX, currentPassword, password string) (*UserDTO, error) {
+	user, err := LoadUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.validatePassword(currentPassword, user.Password); err != nil {
+		return nil, fmt.Errorf("failed to validate current password: %w", err)
+	}
+
+	return s.UpdateUser(ctx, tx, nil, nil, nil, &password, nil, nil)
+}
+
+func (s *Service) UpdateUserStatus(ctx context.Context, tx db.DBTX, status string) (*UserDTO, error) {
+	return s.UpdateUser(ctx, tx, nil, nil, nil, nil, &status, nil)
+}
+
+func (s *Service) UpdateUser(ctx context.Context, tx db.DBTX, username, email, phone, password, status *string, settings *UserSettings) (*UserDTO, error) {
+	user, err := LoadUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	dbUser := user.Dump()
+	params := db.UpdateUserByIdParams{
+		Uuid:                dbUser.Uuid,
+		Username:            dbUser.Username,
+		Email:               dbUser.Email,
+		Phone:               dbUser.Phone,
+		PasswordHash:        dbUser.PasswordHash,
+		ActivateAssistantID: dbUser.ActivateAssistantID,
+		ActivateThreadID:    dbUser.ActivateThreadID,
+		Status:              dbUser.Status,
+		Settings:            dbUser.Settings,
+	}
+
+	if username != nil {
+		params.Username = pgtype.Text{String: *username, Valid: true}
+	}
+	if email != nil {
+		params.Email = pgtype.Text{String: *email, Valid: true}
+	}
+	if phone != nil {
+		params.Phone = pgtype.Text{String: *phone, Valid: true}
+	}
+	if password != nil {
+		hashedPassword, err := s.hashPassword(*password)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+		params.PasswordHash = pgtype.Text{String: hashedPassword, Valid: true}
+	}
+	if status != nil {
+		params.Status = *status
+	}
+	if settings != nil {
+		newSettings, _ := json.Marshal(settings)
+		params.Settings = newSettings
+	}
+
+	userModel, err := s.dao.UpdateUserById(ctx, tx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update user settings: %w", err)
+	}
+	user.Load(&userModel)
+	return user, nil
 }

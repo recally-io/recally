@@ -32,6 +32,7 @@ func (s *Service) registerRouters() {
 	registerFileHandlers(v1Api, s.s3)
 	registerBookmarkHandlers(v1Api, s)
 	registerLLMHandlers(v1Api, s)
+	registerUsersHandlers(v1Api)
 
 	// Health check
 	e.GET("/status", func(c echo.Context) error {
