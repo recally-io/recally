@@ -1,4 +1,4 @@
-import BookmarksListView from "@/components/bookmarks/bookmarks-list";
+import BookmarksListView from "@/components/bookmarks/bookmarks-list-page";
 import ProtectedRoute from "@/components/protected-route";
 import { createLazyFileRoute } from "@tanstack/react-router";
 

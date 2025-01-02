@@ -13,13 +13,8 @@ import {
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
-import {
-	BookImage,
-	BookOpen,
-	Bookmark,
-	ChevronRight,
-	Newspaper,
-} from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Bookmark, ChevronRight, Newspaper } from "lucide-react";
 
 const items = [
 	{
@@ -31,18 +26,20 @@ const items = [
 			{
 				title: "Articles",
 				icon: Newspaper,
-				url: `${ROUTES.BOOKMARKS}?type=bookmark&category=article`,
+				url: ROUTES.BOOKMARKS,
+				type: "bookmark",
+				category: "article",
 			},
-			{
-				title: "EPUBs",
-				icon: BookOpen,
-				url: `${ROUTES.BOOKMARKS}?type=bookmark&category=epub`,
-			},
-			{
-				title: "PDFs",
-				icon: BookImage,
-				url: `${ROUTES.BOOKMARKS}?type=bookmark&category=pdf`,
-			},
+			// {
+			// 	title: "EPUBs",
+			// 	icon: BookOpen,
+			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=epub`,
+			// },
+			// {
+			// 	title: "PDFs",
+			// 	icon: BookImage,
+			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=pdf`,
+			// },
 			// {
 			// 	title: "Videos",
 			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=video`,
@@ -53,15 +50,9 @@ const items = [
 			// },
 		],
 	},
-	// {
-	// 	title: "Subscriptions",
-	// 	url: `${ROUTES.BOOKMARKS}?type=feed`,
-	// 	icon: Rss,
-	// 	items: [],
-	// }
 ];
 
-export function BookmarkSidebarContent() {
+export function BookmarksSidebarContent() {
 	return (
 		<SidebarGroup>
 			<SidebarMenu>
@@ -85,10 +76,16 @@ export function BookmarkSidebarContent() {
 									{item.items?.map((subItem) => (
 										<SidebarMenuSubItem key={subItem.title}>
 											<SidebarMenuSubButton asChild>
-												<a href={subItem.url}>
+												<Link
+													to={subItem.url}
+													search={{
+														type: subItem.type,
+														category: subItem.category,
+													}}
+												>
 													{subItem.icon && <subItem.icon />}
 													<span>{subItem.title}</span>
-												</a>
+												</Link>
 											</SidebarMenuSubButton>
 										</SidebarMenuSubItem>
 									))}

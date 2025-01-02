@@ -1,76 +1,63 @@
-import BookmarkList from "@/components/bookmarks-list";
-import { BookmarksSidebar } from "@/components/bookmarks-sidebar";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-	SidebarInset,
-	SidebarProvider,
-	SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
-import { PlusCircle } from "lucide-react";
-import { useState } from "react";
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import type { Bookmark } from "@/lib/apis/bookmarks";
+import { ROUTES } from "@/lib/router";
+import { Link } from "@tanstack/react-router";
 
-export default function BookmarksListView() {
-	const { data: bookmarks = [] } = useBookmarks();
-	const { createBookmark } = useBookmarkMutations();
-	const [open, setOpen] = useState(false);
-	const [url, setUrl] = useState("");
+interface BookmarkListProps {
+	bookmarks: Bookmark[];
+}
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!url) return;
-		await createBookmark({ url });
-		setUrl("");
-		setOpen(false);
-	};
-
-	const AddBookmarkModal = () => {
-		return (
-			<Dialog open={open} onOpenChange={setOpen}>
-				<DialogTrigger asChild>
-					<Button variant="ghost" size="icon" className="h-7 w-7">
-						<PlusCircle className="size-6" />
-					</Button>
-				</DialogTrigger>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Add New Bookmark</DialogTitle>
-					</DialogHeader>
-					<form onSubmit={handleSubmit} className="space-y-4">
-						<Input
-							placeholder="Enter URL"
-							value={url}
-							onChange={(e) => setUrl(e.target.value)}
-						/>
-						<Button type="submit">Add Bookmark</Button>
-					</form>
-				</DialogContent>
-			</Dialog>
-		);
-	};
-
+export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 	return (
-		<SidebarProvider>
-			<BookmarksSidebar />
-			<SidebarInset>
-				<div className="flex flex-col h-full">
-					<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-						<div className="flex items-center gap-1 px-4">
-							<SidebarTrigger className="-ml-1" />
-							<AddBookmarkModal />
+		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+			{bookmarks.map((bookmark) => (
+				<Card
+					key={bookmark.id}
+					className="overflow-hidden transition-transform transform hover:-translate-y-1 mx-2"
+				>
+					<Link to={ROUTES.BOOKMARK_DETAIL} params={{ id: bookmark.id }}>
+						{bookmark.metadata?.image && (
+							<img
+								src={bookmark.metadata.image}
+								alt={bookmark.title}
+								className="w-full h-48 object-cover"
+							/>
+						)}
+						<CardHeader>
+							<CardTitle className="flex items-center justify-between gap-2">
+								{/* <a
+									href={`${ROUTES.BOOKMARKS}?id=${bookmark.id}`}
+									target="_blank"
+									rel="noreferrer"
+								> */}
+								<span className="flex items-center gap-2 truncate">
+									{bookmark.title}
+								</span>
+								{/* </a> */}
+							</CardTitle>
+							<CardDescription className="truncate">
+								{bookmark.url}
+							</CardDescription>
+						</CardHeader>
+					</Link>
+					<CardContent>
+						<div className="flex flex-wrap gap-2">
+							{bookmark.metadata?.tags?.map((tag) => (
+								<Badge key={tag} variant="secondary">
+									{tag}
+								</Badge>
+							))}
 						</div>
-					</header>
-					<BookmarkList bookmarks={bookmarks} />
-				</div>
-			</SidebarInset>
-		</SidebarProvider>
+					</CardContent>
+				</Card>
+			))}
+		</div>
 	);
 }

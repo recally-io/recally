@@ -4,7 +4,7 @@ import { ArticleSummary } from "@/components/article/article-summary";
 import MarkdownRenderer from "@/components/markdown-render";
 import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
 import type React from "react";
-import { Separator } from "./ui/separator";
+import { Separator } from "../ui/separator";
 
 interface ArticleReaderProps {
 	bookmark: BookmarkType;
