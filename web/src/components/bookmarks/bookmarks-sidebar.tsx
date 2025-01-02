@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
 import { Bookmark, Settings2 } from "lucide-react";
-import { BookmarkSidebarContent } from "./bookmark-sidebar-content";
-import ThemeToggle from "./theme-toggle";
+import ThemeToggle from "../theme-toggle";
+import { BookmarksSidebarContent } from "./bookmarks-sidebar-content";
 
-export function BookmarkSidebar({
+export function BookmarksSidebar({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
 	return (
-		<Sidebar variant="sidebar" side="left" collapsible="icon" {...props}>
+		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
 				<SidebarMenu>
 					<SidebarMenuItem>
@@ -39,7 +39,7 @@ export function BookmarkSidebar({
 				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
-				<BookmarkSidebarContent />
+				<BookmarksSidebarContent />
 				<SidebarGroup className="mt-auto">
 					<SidebarMenu>
 						<SidebarMenuItem key="preferences">
