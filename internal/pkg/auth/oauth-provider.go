@@ -64,7 +64,7 @@ func (p *oAuthProvider) GetConfig() *oauth2.Config {
 			ClientID:     p.cfg.Key,
 			ClientSecret: p.cfg.Secret,
 			Endpoint:     p.endpoint,
-			RedirectURL:  fmt.Sprintf("%s/auth.html", config.Settings.Service.Fqdn),
+			RedirectURL:  fmt.Sprintf("%s/auth/oauth/%s/callback", config.Settings.Service.Fqdn, p.Name),
 			Scopes:       append(p.defaultScopes, p.cfg.Scopes...),
 		}
 	}

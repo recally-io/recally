@@ -1,3 +1,4 @@
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig } from "vite";
@@ -6,6 +7,7 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
 	plugins: [
 		react(),
+		TanStackRouterVite(),
 		VitePWA({
 			registerType: "autoUpdate",
 			workbox: {
@@ -62,16 +64,6 @@ export default defineConfig({
 			},
 		}),
 	],
-	build: {
-		rollupOptions: {
-			input: {
-				main: path.resolve(__dirname, "index.html"),
-				bookmarks: path.resolve(__dirname, "bookmarks.html"),
-				auth: path.resolve(__dirname, "auth.html"),
-				settings: path.resolve(__dirname, "settings.html"),
-			},
-		},
-	},
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),

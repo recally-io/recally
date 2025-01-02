@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import type { Bookmark } from "@/lib/apis/bookmarks";
 import { ROUTES } from "@/lib/router";
+import { Link } from "@tanstack/react-router";
 
 interface BookmarkListProps {
 	bookmarks: Bookmark[];
@@ -21,7 +22,7 @@ export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 					key={bookmark.id}
 					className="overflow-hidden transition-transform transform hover:-translate-y-1 mx-2"
 				>
-					<a href={`${ROUTES.BOOKMARKS}?id=${bookmark.id}`} rel="noreferrer">
+					<Link to={ROUTES.BOOKMARK_DETAIL} params={{ id: bookmark.id }}>
 						{bookmark.metadata?.image && (
 							<img
 								src={bookmark.metadata.image}
@@ -45,7 +46,7 @@ export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 								{bookmark.url}
 							</CardDescription>
 						</CardHeader>
-					</a>
+					</Link>
 					<CardContent>
 						<div className="flex flex-wrap gap-2">
 							{bookmark.metadata?.tags?.map((tag) => (

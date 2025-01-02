@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 	}
 
 	if (!user) {
-		window.location.href = ROUTES.LOGIN;
+		window.location.href = ROUTES.AUTH_LOGIN;
 		return null;
 	}
 
