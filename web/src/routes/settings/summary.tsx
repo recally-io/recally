@@ -1,8 +1,8 @@
 import { SettingsPageComponenrt } from "@/components/settings/settings";
 import { SummarySettings } from "@/components/settings/summary";
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createLazyFileRoute("/settings/summary")({
+export const Route = createFileRoute("/settings/summary")({
 	component: RouteComponent,
 });
 

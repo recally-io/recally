@@ -19,6 +19,8 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth, useUser } from "@/lib/apis/auth";
+import { ROUTES } from "@/lib/router";
+import { Link } from "@tanstack/react-router";
 
 const defaultAvatar = "V";
 
@@ -79,10 +81,10 @@ export function NavUser() {
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>
 							<DropdownMenuItem asChild>
-								<a href="/settings.html?tab=profile">
+								<Link to={ROUTES.SETTINGS_PROFILE}>
 									<BadgeCheck />
 									Account
-								</a>
+								</Link>
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />

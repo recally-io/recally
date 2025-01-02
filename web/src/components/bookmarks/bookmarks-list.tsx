@@ -32,15 +32,9 @@ export default function BookmarkList({ bookmarks }: BookmarkListProps) {
 						)}
 						<CardHeader>
 							<CardTitle className="flex items-center justify-between gap-2">
-								{/* <a
-									href={`${ROUTES.BOOKMARKS}?id=${bookmark.id}`}
-									target="_blank"
-									rel="noreferrer"
-								> */}
 								<span className="flex items-center gap-2 truncate">
 									{bookmark.title}
 								</span>
-								{/* </a> */}
 							</CardTitle>
 							<CardDescription className="truncate">
 								{bookmark.url}
