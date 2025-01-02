@@ -1,63 +1,40 @@
-import ProtectedRoute from "@/components/protected-route";
-
-import { ProfileSettings } from "@/components/settings/profile";
-import { SummarySettings } from "@/components/settings/summary";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ROUTES } from "@/lib/router";
+import { Link } from "@tanstack/react-router";
 import { Bot, Home, Menu, User } from "lucide-react";
-import { parseAsString, useQueryState } from "nuqs";
-import { createRoot } from "react-dom/client";
-import App from "./app-basic";
-
-const settingsEnum = {
-	GENERAL: "general",
-	PROFILE: "profile",
-	SUMMARY: "summary",
-};
 
 function SidebarNav() {
 	return (
 		<nav className="space-y-2 w-48">
-			<a
-				href={ROUTES.HOME}
+			<Link
+				to={ROUTES.HOME}
 				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
 			>
 				<Home className="h-4 w-4" />
 				Home
-			</a>
-			<a
-				href={`${ROUTES.SETTINGS}?tab=${settingsEnum.PROFILE}`}
+			</Link>
+			<Link
+				to={ROUTES.SETTINGS_PROFILE}
 				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
 			>
 				<User className="h-4 w-4" />
 				Profile
-			</a>
-			<a
-				href={`${ROUTES.SETTINGS}?tab=${settingsEnum.SUMMARY}`}
+			</Link>
+			<Link
+				to={ROUTES.SETTINGS_SUMMARY}
 				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
 			>
 				<Bot className="h-4 w-4" />
 				Summary
-			</a>
+			</Link>
 		</nav>
 	);
 }
 
-function SettingsPage() {
-	const [tab, _] = useQueryState(
-		"tab",
-		parseAsString.withDefault(settingsEnum.PROFILE),
-	);
-
-	const mainTab = () => {
-		if (tab === settingsEnum.PROFILE) {
-			return <ProfileSettings />;
-		} else if (tab === settingsEnum.SUMMARY) {
-			return <SummarySettings />;
-		}
-	};
-
+export function SettingsPageComponenrt({
+	children,
+}: { children: React.ReactElement }) {
 	return (
 		<div className="container mx-auto py-10 px-4">
 			<h1 className="text-2xl font-semibold mb-8">Preferences</h1>
@@ -76,16 +53,8 @@ function SettingsPage() {
 						<SidebarNav />
 					</SheetContent>
 				</Sheet>
-				<div className="w-full">{mainTab()}</div>
+				<div className="w-full">{children}</div>
 			</div>
 		</div>
 	);
 }
-
-createRoot(document.getElementById("root")!).render(
-	<App>
-		<ProtectedRoute>
-			<SettingsPage />
-		</ProtectedRoute>
-	</App>,
-);

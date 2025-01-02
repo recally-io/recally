@@ -9,15 +9,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useAuth, useUser } from "@/lib/apis/auth";
+import { useAuth } from "@/lib/apis/auth";
 import { ROUTES } from "@/lib/router";
 import { SiGithub } from "@icons-pack/react-simple-icons";
+import { Link, useRouter } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
-import { parseAsString, useQueryState } from "nuqs";
 import type React from "react";
-import { useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./app-basic";
+import { useState } from "react";
 
 interface AuthFormData {
 	email: string;
@@ -46,17 +44,8 @@ const OAuthProviders = [
 	// },
 ];
 
-export default function AuthPage() {
-	// "login" or "register"
-	const [mode, _] = useQueryState(
-		"mode",
-		parseAsString.withDefault(AuthMode.Login),
-	);
+export default function AuthComponent({ mode }: { mode: string }) {
 	const isLogin = mode === AuthMode.Login;
-
-	// oauth callback state and code
-	const [code] = useQueryState("code");
-	const [state] = useQueryState("state");
 
 	// email and password login form data
 	const [formData, setFormData] = useState<AuthFormData>({
@@ -65,24 +54,8 @@ export default function AuthPage() {
 		...(isLogin ? {} : { confirmPassword: "", name: "" }),
 	});
 
-	const { login, register, oauthLogin, oauthCallback } = useAuth();
-
-	const { user } = useUser();
-
-	useEffect(() => {
-		const handleCallback = async () => {
-			if (state && code) {
-				console.log("OAuth Callback:", state, code);
-				await handleOAuthCallback();
-			}
-		};
-		handleCallback();
-	}, [state, code]);
-
-	if (user) {
-		window.location.href = ROUTES.HOME;
-		return null;
-	}
+	const { login, register, oauthLogin } = useAuth();
+	const router = useRouter();
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -107,7 +80,7 @@ export default function AuthPage() {
 					username: formData.name || "",
 				});
 			}
-			window.location.href = "/";
+			await router.navigate({ to: ROUTES.HOME });
 		} catch (error) {
 			console.error(`${mode} failed:`, error);
 		}
@@ -117,17 +90,6 @@ export default function AuthPage() {
 		const resp = await oauthLogin(provider);
 		console.log("OAuth Login response:", resp);
 		window.location.href = resp.url;
-	};
-
-	const handleOAuthCallback = async () => {
-		if (state && code) {
-			const provider = state.split(":")[1];
-			console.log("OAuth Callback:", provider, code);
-			const data = await oauthCallback(provider.toLowerCase(), code);
-			console.log("OAuth Callback data:", data);
-			// TODO: redirect to previous page
-			window.location.href = "/";
-		}
 	};
 
 	return (
@@ -220,21 +182,15 @@ export default function AuthPage() {
 								? "Don't have an account? "
 								: "Already have an account? "}
 						</span>
-						<a
-							href={isLogin ? ROUTES.SIGNUP : ROUTES.SIGNUP}
+						<Link
+							to={isLogin ? ROUTES.AUTH_REGISTER : ROUTES.AUTH_LOGIN}
 							className="text-primary hover:underline"
 						>
 							{isLogin ? "Sign up" : "Log in"}
-						</a>
+						</Link>
 					</div>
 				</CardContent>
 			</Card>
 		</div>
 	);
 }
-
-createRoot(document.getElementById("root")!).render(
-	<App>
-		<AuthPage />
-	</App>,
-);

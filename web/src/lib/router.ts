@@ -1,13 +1,18 @@
 export const ROUTES = {
 	HOME: "/",
-	LOGIN: "/auth.html?mode=login",
-	SIGNUP: "/auth.html?mode=register",
-	SETTINGS: "/settings.html",
-	BOOKMARKS: "/bookmarks.html",
+
+	AUTH: "/auth",
+	AUTH_LOGIN: "/auth/login",
+	AUTH_REGISTER: "/auth/register",
+	AUTH_CALLBACK: "/auth/$provider/callback",
+
+	BOOKMARKS: "/bookmarks",
+	BOOKMARK_DETAIL: "/bookmarks/$id",
+
+	SETTINGS: "/settings",
+	SETTINGS_PROFILE: "/settings/profile",
+	SETTINGS_SUMMARY: "/settings/summary",
 } as const;
 
 // Type for route keys
 export type RouteKeys = keyof typeof ROUTES;
-
-// Helper function to get path
-export const getPath = (path: RouteKeys): string => ROUTES[path];

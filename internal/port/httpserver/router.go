@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"net/http"
-	"recally/internal/pkg/logger"
 	"recally/web"
 
 	_ "recally/docs"
@@ -49,8 +48,12 @@ func (s *Service) registerRouters() {
 	// Swagger
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	// web pages
-	logger.Default.Debug("Using static files as frontend")
+	// Web UI
+	s.registerWebUIRouters(e)
+}
+
+func (s *Service) registerWebUIRouters(e *echo.Echo) {
+	// manifest.webmanifest for PWA
 	e.GET("/manifest.webmanifest", func(c echo.Context) error {
 		file, err := web.StaticHttpFS.Open("manifest.webmanifest")
 		if err != nil {
@@ -58,7 +61,35 @@ func (s *Service) registerRouters() {
 		}
 		defer file.Close()
 		c.Response().Header().Set("Content-Type", "application/manifest+json")
+		c.Response().Header().Set("Cache-Control", "public, max-age=86400") // Cache for 1 day
 		return c.Stream(http.StatusOK, "application/manifest+json", file)
 	})
-	e.GET("/*", echo.WrapHandler(http.FileServer(web.StaticHttpFS)))
+
+	e.GET("/assets/*", func(c echo.Context) error {
+		c.Response().Header().Set("Cache-Control", "public, max-age=86400") // Cache for 1 day
+		return echo.WrapHandler(http.FileServer(web.StaticHttpFS))(c)
+	})
+
+	// Serve static files for SPA, if there is a static file, serve it, otherwise serve index.html
+	e.GET("/*", func(c echo.Context) error {
+		path := c.Param("*")
+		if path != "" {
+			// Try to open the requested file
+			if file, err := web.StaticHttpFS.Open(path); err == nil {
+				defer file.Close()
+				// Add cache control for static assets
+				return echo.WrapHandler(http.FileServer(web.StaticHttpFS))(c)
+			}
+		}
+
+		// If file not found, serve index.html
+		file, err := web.StaticHttpFS.Open("index.html")
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		// No cache for index.html to ensure latest version
+		c.Response().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		return c.Stream(http.StatusOK, "text/html", file)
+	})
 }
