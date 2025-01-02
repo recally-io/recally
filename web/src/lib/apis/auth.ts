@@ -94,7 +94,8 @@ export function useAuth() {
 			return api.oauthLogin(provider);
 		},
 
-		oauthCallback: async (provider: string, code: string) => {
+		oauthCallback: async (provider: string, code: string, state: string) => {
+			console.log("OAuth Callback:", provider, code, state);
 			const data = await api.OAuthCallback(provider, code);
 			return data;
 		},

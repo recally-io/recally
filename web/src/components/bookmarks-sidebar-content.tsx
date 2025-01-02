@@ -13,11 +13,7 @@ import {
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
-import {
-	Bookmark,
-	ChevronRight,
-	Newspaper
-} from "lucide-react";
+import { Bookmark, ChevronRight, Newspaper } from "lucide-react";
 
 const items = [
 	{
