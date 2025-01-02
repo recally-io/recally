@@ -8,86 +8,63 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from "@tanstack/react-router";
-
 // Import Routes
 
 import { Route as rootRoute } from "./routes/__root";
+import { Route as IndexImport } from "./routes/index";
+import { Route as SettingsIndexImport } from "./routes/settings/index";
+import { Route as BookmarksIndexImport } from "./routes/bookmarks/index";
+import { Route as AuthIndexImport } from "./routes/auth/index";
+import { Route as SettingsSummaryImport } from "./routes/settings/summary";
+import { Route as SettingsProfileImport } from "./routes/settings/profile";
+import { Route as BookmarksIdImport } from "./routes/bookmarks/$id";
 import { Route as AuthRegisterImport } from "./routes/auth/register";
-
-// Create Virtual Routes
-
-const IndexLazyImport = createFileRoute("/")();
-const SettingsIndexLazyImport = createFileRoute("/settings/")();
-const BookmarksIndexLazyImport = createFileRoute("/bookmarks/")();
-const AuthIndexLazyImport = createFileRoute("/auth/")();
-const SettingsSummaryLazyImport = createFileRoute("/settings/summary")();
-const SettingsProfileLazyImport = createFileRoute("/settings/profile")();
-const BookmarksIdLazyImport = createFileRoute("/bookmarks/$id")();
-const AuthLoginLazyImport = createFileRoute("/auth/login")();
-const AuthOauthProviderCallbackLazyImport = createFileRoute(
-	"/auth/oauth/$provider/callback",
-)();
+import { Route as AuthLoginImport } from "./routes/auth/login";
+import { Route as AuthOauthProviderCallbackImport } from "./routes/auth/oauth.$provider.callback";
 
 // Create/Update Routes
 
-const IndexLazyRoute = IndexLazyImport.update({
+const IndexRoute = IndexImport.update({
 	id: "/",
 	path: "/",
 	getParentRoute: () => rootRoute,
-} as any).lazy(() => import("./routes/index.lazy").then((d) => d.Route));
+} as any);
 
-const SettingsIndexLazyRoute = SettingsIndexLazyImport.update({
+const SettingsIndexRoute = SettingsIndexImport.update({
 	id: "/settings/",
 	path: "/settings/",
 	getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-	import("./routes/settings/index.lazy").then((d) => d.Route),
-);
+} as any);
 
-const BookmarksIndexLazyRoute = BookmarksIndexLazyImport.update({
+const BookmarksIndexRoute = BookmarksIndexImport.update({
 	id: "/bookmarks/",
 	path: "/bookmarks/",
 	getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-	import("./routes/bookmarks/index.lazy").then((d) => d.Route),
-);
+} as any);
 
-const AuthIndexLazyRoute = AuthIndexLazyImport.update({
+const AuthIndexRoute = AuthIndexImport.update({
 	id: "/auth/",
 	path: "/auth/",
 	getParentRoute: () => rootRoute,
-} as any).lazy(() => import("./routes/auth/index.lazy").then((d) => d.Route));
+} as any);
 
-const SettingsSummaryLazyRoute = SettingsSummaryLazyImport.update({
+const SettingsSummaryRoute = SettingsSummaryImport.update({
 	id: "/settings/summary",
 	path: "/settings/summary",
 	getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-	import("./routes/settings/summary.lazy").then((d) => d.Route),
-);
+} as any);
 
-const SettingsProfileLazyRoute = SettingsProfileLazyImport.update({
+const SettingsProfileRoute = SettingsProfileImport.update({
 	id: "/settings/profile",
 	path: "/settings/profile",
 	getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-	import("./routes/settings/profile.lazy").then((d) => d.Route),
-);
+} as any);
 
-const BookmarksIdLazyRoute = BookmarksIdLazyImport.update({
+const BookmarksIdRoute = BookmarksIdImport.update({
 	id: "/bookmarks/$id",
 	path: "/bookmarks/$id",
 	getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-	import("./routes/bookmarks/$id.lazy").then((d) => d.Route),
-);
-
-const AuthLoginLazyRoute = AuthLoginLazyImport.update({
-	id: "/auth/login",
-	path: "/auth/login",
-	getParentRoute: () => rootRoute,
-} as any).lazy(() => import("./routes/auth/login.lazy").then((d) => d.Route));
+} as any);
 
 const AuthRegisterRoute = AuthRegisterImport.update({
 	id: "/auth/register",
@@ -95,14 +72,17 @@ const AuthRegisterRoute = AuthRegisterImport.update({
 	getParentRoute: () => rootRoute,
 } as any);
 
-const AuthOauthProviderCallbackLazyRoute =
-	AuthOauthProviderCallbackLazyImport.update({
-		id: "/auth/oauth/$provider/callback",
-		path: "/auth/oauth/$provider/callback",
-		getParentRoute: () => rootRoute,
-	} as any).lazy(() =>
-		import("./routes/auth/oauth.$provider.callback.lazy").then((d) => d.Route),
-	);
+const AuthLoginRoute = AuthLoginImport.update({
+	id: "/auth/login",
+	path: "/auth/login",
+	getParentRoute: () => rootRoute,
+} as any);
+
+const AuthOauthProviderCallbackRoute = AuthOauthProviderCallbackImport.update({
+	id: "/auth/oauth/$provider/callback",
+	path: "/auth/oauth/$provider/callback",
+	getParentRoute: () => rootRoute,
+} as any);
 
 // Populate the FileRoutesByPath interface
 
@@ -112,7 +92,14 @@ declare module "@tanstack/react-router" {
 			id: "/";
 			path: "/";
 			fullPath: "/";
-			preLoaderRoute: typeof IndexLazyImport;
+			preLoaderRoute: typeof IndexImport;
+			parentRoute: typeof rootRoute;
+		};
+		"/auth/login": {
+			id: "/auth/login";
+			path: "/auth/login";
+			fullPath: "/auth/login";
+			preLoaderRoute: typeof AuthLoginImport;
 			parentRoute: typeof rootRoute;
 		};
 		"/auth/register": {
@@ -122,60 +109,53 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof AuthRegisterImport;
 			parentRoute: typeof rootRoute;
 		};
-		"/auth/login": {
-			id: "/auth/login";
-			path: "/auth/login";
-			fullPath: "/auth/login";
-			preLoaderRoute: typeof AuthLoginLazyImport;
-			parentRoute: typeof rootRoute;
-		};
 		"/bookmarks/$id": {
 			id: "/bookmarks/$id";
 			path: "/bookmarks/$id";
 			fullPath: "/bookmarks/$id";
-			preLoaderRoute: typeof BookmarksIdLazyImport;
+			preLoaderRoute: typeof BookmarksIdImport;
 			parentRoute: typeof rootRoute;
 		};
 		"/settings/profile": {
 			id: "/settings/profile";
 			path: "/settings/profile";
 			fullPath: "/settings/profile";
-			preLoaderRoute: typeof SettingsProfileLazyImport;
+			preLoaderRoute: typeof SettingsProfileImport;
 			parentRoute: typeof rootRoute;
 		};
 		"/settings/summary": {
 			id: "/settings/summary";
 			path: "/settings/summary";
 			fullPath: "/settings/summary";
-			preLoaderRoute: typeof SettingsSummaryLazyImport;
+			preLoaderRoute: typeof SettingsSummaryImport;
 			parentRoute: typeof rootRoute;
 		};
 		"/auth/": {
 			id: "/auth/";
 			path: "/auth";
 			fullPath: "/auth";
-			preLoaderRoute: typeof AuthIndexLazyImport;
+			preLoaderRoute: typeof AuthIndexImport;
 			parentRoute: typeof rootRoute;
 		};
 		"/bookmarks/": {
 			id: "/bookmarks/";
 			path: "/bookmarks";
 			fullPath: "/bookmarks";
-			preLoaderRoute: typeof BookmarksIndexLazyImport;
+			preLoaderRoute: typeof BookmarksIndexImport;
 			parentRoute: typeof rootRoute;
 		};
 		"/settings/": {
 			id: "/settings/";
 			path: "/settings";
 			fullPath: "/settings";
-			preLoaderRoute: typeof SettingsIndexLazyImport;
+			preLoaderRoute: typeof SettingsIndexImport;
 			parentRoute: typeof rootRoute;
 		};
 		"/auth/oauth/$provider/callback": {
 			id: "/auth/oauth/$provider/callback";
 			path: "/auth/oauth/$provider/callback";
 			fullPath: "/auth/oauth/$provider/callback";
-			preLoaderRoute: typeof AuthOauthProviderCallbackLazyImport;
+			preLoaderRoute: typeof AuthOauthProviderCallbackImport;
 			parentRoute: typeof rootRoute;
 		};
 	}
@@ -184,51 +164,51 @@ declare module "@tanstack/react-router" {
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
-	"/": typeof IndexLazyRoute;
+	"/": typeof IndexRoute;
+	"/auth/login": typeof AuthLoginRoute;
 	"/auth/register": typeof AuthRegisterRoute;
-	"/auth/login": typeof AuthLoginLazyRoute;
-	"/bookmarks/$id": typeof BookmarksIdLazyRoute;
-	"/settings/profile": typeof SettingsProfileLazyRoute;
-	"/settings/summary": typeof SettingsSummaryLazyRoute;
-	"/auth": typeof AuthIndexLazyRoute;
-	"/bookmarks": typeof BookmarksIndexLazyRoute;
-	"/settings": typeof SettingsIndexLazyRoute;
-	"/auth/oauth/$provider/callback": typeof AuthOauthProviderCallbackLazyRoute;
+	"/bookmarks/$id": typeof BookmarksIdRoute;
+	"/settings/profile": typeof SettingsProfileRoute;
+	"/settings/summary": typeof SettingsSummaryRoute;
+	"/auth": typeof AuthIndexRoute;
+	"/bookmarks": typeof BookmarksIndexRoute;
+	"/settings": typeof SettingsIndexRoute;
+	"/auth/oauth/$provider/callback": typeof AuthOauthProviderCallbackRoute;
 }
 
 export interface FileRoutesByTo {
-	"/": typeof IndexLazyRoute;
+	"/": typeof IndexRoute;
+	"/auth/login": typeof AuthLoginRoute;
 	"/auth/register": typeof AuthRegisterRoute;
-	"/auth/login": typeof AuthLoginLazyRoute;
-	"/bookmarks/$id": typeof BookmarksIdLazyRoute;
-	"/settings/profile": typeof SettingsProfileLazyRoute;
-	"/settings/summary": typeof SettingsSummaryLazyRoute;
-	"/auth": typeof AuthIndexLazyRoute;
-	"/bookmarks": typeof BookmarksIndexLazyRoute;
-	"/settings": typeof SettingsIndexLazyRoute;
-	"/auth/oauth/$provider/callback": typeof AuthOauthProviderCallbackLazyRoute;
+	"/bookmarks/$id": typeof BookmarksIdRoute;
+	"/settings/profile": typeof SettingsProfileRoute;
+	"/settings/summary": typeof SettingsSummaryRoute;
+	"/auth": typeof AuthIndexRoute;
+	"/bookmarks": typeof BookmarksIndexRoute;
+	"/settings": typeof SettingsIndexRoute;
+	"/auth/oauth/$provider/callback": typeof AuthOauthProviderCallbackRoute;
 }
 
 export interface FileRoutesById {
 	__root__: typeof rootRoute;
-	"/": typeof IndexLazyRoute;
+	"/": typeof IndexRoute;
+	"/auth/login": typeof AuthLoginRoute;
 	"/auth/register": typeof AuthRegisterRoute;
-	"/auth/login": typeof AuthLoginLazyRoute;
-	"/bookmarks/$id": typeof BookmarksIdLazyRoute;
-	"/settings/profile": typeof SettingsProfileLazyRoute;
-	"/settings/summary": typeof SettingsSummaryLazyRoute;
-	"/auth/": typeof AuthIndexLazyRoute;
-	"/bookmarks/": typeof BookmarksIndexLazyRoute;
-	"/settings/": typeof SettingsIndexLazyRoute;
-	"/auth/oauth/$provider/callback": typeof AuthOauthProviderCallbackLazyRoute;
+	"/bookmarks/$id": typeof BookmarksIdRoute;
+	"/settings/profile": typeof SettingsProfileRoute;
+	"/settings/summary": typeof SettingsSummaryRoute;
+	"/auth/": typeof AuthIndexRoute;
+	"/bookmarks/": typeof BookmarksIndexRoute;
+	"/settings/": typeof SettingsIndexRoute;
+	"/auth/oauth/$provider/callback": typeof AuthOauthProviderCallbackRoute;
 }
 
 export interface FileRouteTypes {
 	fileRoutesByFullPath: FileRoutesByFullPath;
 	fullPaths:
 		| "/"
-		| "/auth/register"
 		| "/auth/login"
+		| "/auth/register"
 		| "/bookmarks/$id"
 		| "/settings/profile"
 		| "/settings/summary"
@@ -239,8 +219,8 @@ export interface FileRouteTypes {
 	fileRoutesByTo: FileRoutesByTo;
 	to:
 		| "/"
-		| "/auth/register"
 		| "/auth/login"
+		| "/auth/register"
 		| "/bookmarks/$id"
 		| "/settings/profile"
 		| "/settings/summary"
@@ -251,8 +231,8 @@ export interface FileRouteTypes {
 	id:
 		| "__root__"
 		| "/"
-		| "/auth/register"
 		| "/auth/login"
+		| "/auth/register"
 		| "/bookmarks/$id"
 		| "/settings/profile"
 		| "/settings/summary"
@@ -264,29 +244,29 @@ export interface FileRouteTypes {
 }
 
 export interface RootRouteChildren {
-	IndexLazyRoute: typeof IndexLazyRoute;
+	IndexRoute: typeof IndexRoute;
+	AuthLoginRoute: typeof AuthLoginRoute;
 	AuthRegisterRoute: typeof AuthRegisterRoute;
-	AuthLoginLazyRoute: typeof AuthLoginLazyRoute;
-	BookmarksIdLazyRoute: typeof BookmarksIdLazyRoute;
-	SettingsProfileLazyRoute: typeof SettingsProfileLazyRoute;
-	SettingsSummaryLazyRoute: typeof SettingsSummaryLazyRoute;
-	AuthIndexLazyRoute: typeof AuthIndexLazyRoute;
-	BookmarksIndexLazyRoute: typeof BookmarksIndexLazyRoute;
-	SettingsIndexLazyRoute: typeof SettingsIndexLazyRoute;
-	AuthOauthProviderCallbackLazyRoute: typeof AuthOauthProviderCallbackLazyRoute;
+	BookmarksIdRoute: typeof BookmarksIdRoute;
+	SettingsProfileRoute: typeof SettingsProfileRoute;
+	SettingsSummaryRoute: typeof SettingsSummaryRoute;
+	AuthIndexRoute: typeof AuthIndexRoute;
+	BookmarksIndexRoute: typeof BookmarksIndexRoute;
+	SettingsIndexRoute: typeof SettingsIndexRoute;
+	AuthOauthProviderCallbackRoute: typeof AuthOauthProviderCallbackRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
-	IndexLazyRoute: IndexLazyRoute,
+	IndexRoute: IndexRoute,
+	AuthLoginRoute: AuthLoginRoute,
 	AuthRegisterRoute: AuthRegisterRoute,
-	AuthLoginLazyRoute: AuthLoginLazyRoute,
-	BookmarksIdLazyRoute: BookmarksIdLazyRoute,
-	SettingsProfileLazyRoute: SettingsProfileLazyRoute,
-	SettingsSummaryLazyRoute: SettingsSummaryLazyRoute,
-	AuthIndexLazyRoute: AuthIndexLazyRoute,
-	BookmarksIndexLazyRoute: BookmarksIndexLazyRoute,
-	SettingsIndexLazyRoute: SettingsIndexLazyRoute,
-	AuthOauthProviderCallbackLazyRoute: AuthOauthProviderCallbackLazyRoute,
+	BookmarksIdRoute: BookmarksIdRoute,
+	SettingsProfileRoute: SettingsProfileRoute,
+	SettingsSummaryRoute: SettingsSummaryRoute,
+	AuthIndexRoute: AuthIndexRoute,
+	BookmarksIndexRoute: BookmarksIndexRoute,
+	SettingsIndexRoute: SettingsIndexRoute,
+	AuthOauthProviderCallbackRoute: AuthOauthProviderCallbackRoute,
 };
 
 export const routeTree = rootRoute
@@ -300,8 +280,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/auth/register",
         "/auth/login",
+        "/auth/register",
         "/bookmarks/$id",
         "/settings/profile",
         "/settings/summary",
@@ -312,34 +292,34 @@ export const routeTree = rootRoute
       ]
     },
     "/": {
-      "filePath": "index.lazy.tsx"
+      "filePath": "index.tsx"
+    },
+    "/auth/login": {
+      "filePath": "auth/login.tsx"
     },
     "/auth/register": {
       "filePath": "auth/register.tsx"
     },
-    "/auth/login": {
-      "filePath": "auth/login.lazy.tsx"
-    },
     "/bookmarks/$id": {
-      "filePath": "bookmarks/$id.lazy.tsx"
+      "filePath": "bookmarks/$id.tsx"
     },
     "/settings/profile": {
-      "filePath": "settings/profile.lazy.tsx"
+      "filePath": "settings/profile.tsx"
     },
     "/settings/summary": {
-      "filePath": "settings/summary.lazy.tsx"
+      "filePath": "settings/summary.tsx"
     },
     "/auth/": {
-      "filePath": "auth/index.lazy.tsx"
+      "filePath": "auth/index.tsx"
     },
     "/bookmarks/": {
-      "filePath": "bookmarks/index.lazy.tsx"
+      "filePath": "bookmarks/index.tsx"
     },
     "/settings/": {
-      "filePath": "settings/index.lazy.tsx"
+      "filePath": "settings/index.tsx"
     },
     "/auth/oauth/$provider/callback": {
-      "filePath": "auth/oauth.$provider.callback.lazy.tsx"
+      "filePath": "auth/oauth.$provider.callback.tsx"
     }
   }
 }

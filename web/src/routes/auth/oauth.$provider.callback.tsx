@@ -1,6 +1,6 @@
 import { useAuth } from "@/lib/apis/auth";
 import { ROUTES } from "@/lib/router";
-import { createLazyFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 type CallbackSchema = {
@@ -8,7 +8,7 @@ type CallbackSchema = {
 	code: string;
 };
 
-export const Route = createLazyFileRoute("/auth/oauth/$provider/callback")({
+export const Route = createFileRoute("/auth/oauth/$provider/callback")({
 	component: RouteComponent,
 	// validateSearch: (search: URLSearchParams): CallbackSchema => {
 	//   const state = search.get('state')

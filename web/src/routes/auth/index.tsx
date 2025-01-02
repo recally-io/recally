@@ -1,7 +1,7 @@
 import { ROUTES } from "@/lib/router";
-import { Navigate, createLazyFileRoute } from "@tanstack/react-router";
+import { Navigate, createFileRoute } from "@tanstack/react-router";
 
-export const Route = createLazyFileRoute("/auth/")({
+export const Route = createFileRoute("/auth/")({
 	component: RouteComponent,
 });
 

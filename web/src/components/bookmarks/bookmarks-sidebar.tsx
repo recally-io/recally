@@ -13,6 +13,7 @@ import {
 	SidebarRail,
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
+import { Link } from "@tanstack/react-router";
 import { Bookmark, Settings2 } from "lucide-react";
 import ThemeToggle from "../theme-toggle";
 import { BookmarksSidebarContent } from "./bookmarks-sidebar-content";
@@ -26,14 +27,14 @@ export function BookmarksSidebar({
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton size="lg" asChild>
-							<a href={ROUTES.HOME}>
+							<Link to={ROUTES.HOME}>
 								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
 									<Bookmark className="size-4" />
 								</div>
 								<div className="flex flex-col gap-0.5 leading-none">
 									<span className="font-semibold">Recally</span>
 								</div>
-							</a>
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
@@ -44,10 +45,10 @@ export function BookmarksSidebar({
 					<SidebarMenu>
 						<SidebarMenuItem key="preferences">
 							<SidebarMenuButton asChild>
-								<a href={ROUTES.SETTINGS}>
+								<Link to={ROUTES.SETTINGS}>
 									<Settings2 />
 									<span>Preferences</span>
-								</a>
+								</Link>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 						<ThemeToggle />

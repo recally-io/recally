@@ -1,8 +1,8 @@
 import BookmarksListView from "@/components/bookmarks/bookmarks-list-page";
 import ProtectedRoute from "@/components/protected-route";
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createLazyFileRoute("/bookmarks/")({
+export const Route = createFileRoute("/bookmarks/")({
 	component: RouteComponent,
 });
 
