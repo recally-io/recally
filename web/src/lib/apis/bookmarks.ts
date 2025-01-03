@@ -39,6 +39,13 @@ export interface Bookmark {
 	updated_at: string;
 }
 
+export interface ListBookmarksResponse {
+	bookmarks: Bookmark[];
+	total: number;
+	limit: number;
+	offset: number;
+}
+
 interface BookmarkCreateInput {
 	url: string;
 	metadata?: Metadata;
@@ -59,7 +66,9 @@ interface BookmarkRefreshInput {
 // API Functions
 const api = {
 	list: (limit = 20, offset = 0) =>
-		fetcher<Bookmark[]>(`/api/v1/bookmarks?limit=${limit}&offset=${offset}`),
+		fetcher<ListBookmarksResponse>(
+			`/api/v1/bookmarks?limit=${limit}&offset=${offset}`,
+		),
 
 	create: (input: BookmarkCreateInput) =>
 		fetcher<Bookmark>("/api/v1/bookmarks", {
@@ -94,7 +103,7 @@ const api = {
 
 // SWR Hooks
 export function useBookmarks(limit = 20, offset = 0) {
-	return useSWR<Bookmark[]>(["bookmarks", limit, offset], () =>
+	return useSWR<ListBookmarksResponse>(["bookmarks", limit, offset], () =>
 		api.list(limit, offset),
 	);
 }

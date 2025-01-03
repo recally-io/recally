@@ -78,7 +78,7 @@ func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*B
 }
 
 // ListBookmarks retrieves a paginated list of bookmarks for a user
-func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit, offset int32) ([]*BookmarkDTO, error) {
+func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit, offset int32) ([]*BookmarkDTO, int64, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 50 // Default limit
 	}
@@ -86,6 +86,7 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit,
 		offset = 0
 	}
 
+	totalCount := int64(0)
 	bookmarks, err := s.dao.ListBookmarks(ctx, tx, db.ListBookmarksParams{
 		UserID: pgtype.UUID{Bytes: userID, Valid: true},
 		Limit:  limit,
@@ -95,13 +96,14 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit,
 	dtos := make([]*BookmarkDTO, 0, len(bookmarks))
 	for _, bookmark := range bookmarks {
 		var dto BookmarkDTO
-		dto.Load(&bookmark)
+		dto.LoadWithCount(&bookmark)
 		dto.HTML = ""
 		dto.SummaryEmbedding = nil
 		dto.ContentEmbedding = nil
 		dtos = append(dtos, &dto)
+		totalCount = bookmark.TotalCount
 	}
-	return dtos, err
+	return dtos, totalCount, err
 }
 
 // UpdateBookmark updates an existing bookmark

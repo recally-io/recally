@@ -22,9 +22,15 @@ SELECT * FROM bookmarks WHERE uuid = $1;
 SELECT * FROM bookmarks WHERE url = $1 AND user_id = $2;
 
 -- name: ListBookmarks :many
-SELECT * FROM bookmarks 
-WHERE user_id = $1 
-ORDER BY updated_at DESC 
+WITH total AS (
+    SELECT COUNT(*) AS total_count 
+    FROM bookmarks 
+    WHERE user_id = $1
+)
+SELECT b.*, t.total_count 
+FROM bookmarks b, total t
+WHERE b.user_id = $1 
+ORDER BY b.updated_at DESC 
 LIMIT $2 OFFSET $3;
 
 -- name: UpdateBookmark :one

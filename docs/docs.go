@@ -2680,10 +2680,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/bookmarks.BookmarkDTO"
-                                            }
+                                            "$ref": "#/definitions/httpserver.listBookmarksResponse"
                                         }
                                     }
                                 }
@@ -4549,7 +4546,16 @@ const docTemplate = `{
                 "author": {
                     "type": "string"
                 },
+                "cover": {
+                    "type": "string"
+                },
                 "description": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "favicon": {
                     "type": "string"
                 },
                 "highlights": {
@@ -4562,6 +4568,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "published_at": {
+                    "type": "string"
+                },
+                "site_name": {
                     "type": "string"
                 },
                 "tags": {
@@ -4694,6 +4703,26 @@ const docTemplate = `{
                 },
                 "public_url": {
                     "type": "string"
+                }
+            }
+        },
+        "httpserver.listBookmarksResponse": {
+            "type": "object",
+            "properties": {
+                "bookmarks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

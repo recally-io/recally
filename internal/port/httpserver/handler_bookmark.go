@@ -19,7 +19,7 @@ import (
 type BookmarkService interface {
 	Create(ctx context.Context, tx db.DBTX, dto *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
 	Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.BookmarkDTO, error)
-	List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit, offset int32) ([]*bookmarks.BookmarkDTO, error)
+	List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit, offset int32) ([]*bookmarks.BookmarkDTO, int64, error)
 	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
 	Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
@@ -51,6 +51,13 @@ type listBookmarksRequest struct {
 	Offset int32 `query:"offset" validate:"min=0"`
 }
 
+type listBookmarksResponse struct {
+	Bookmarks []*bookmarks.BookmarkDTO `json:"bookmarks"`
+	Total     int64                    `json:"total"`
+	Limit     int32                    `json:"limit"`
+	Offset    int32                    `json:"offset"`
+}
+
 // listBookmarks handles GET /bookmarks
 // @Summary List Bookmarks
 // @Description Lists bookmarks for a user with pagination
@@ -59,7 +66,7 @@ type listBookmarksRequest struct {
 // @Produce json
 // @Param limit query int false "Number of items per page" default(10)
 // @Param offset query int false "Number of items to skip" default(0)
-// @Success 200 {object} JSONResult{data=[]bookmarks.BookmarkDTO} "Success"
+// @Success 200 {object} JSONResult{data=listBookmarksResponse} "Success"
 // @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
 // @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
 // @Router /bookmarks [get]
@@ -80,12 +87,17 @@ func (h *bookmarksHandler) listBookmarks(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmarks, err := h.service.List(ctx, tx, user.ID, req.Limit, req.Offset)
+	bookmarks, total, err := h.service.List(ctx, tx, user.ID, req.Limit, req.Offset)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	return JsonResponse(c, http.StatusOK, bookmarks)
+	return JsonResponse(c, http.StatusOK, listBookmarksResponse{
+		Bookmarks: bookmarks,
+		Total:     total,
+		Limit:     req.Limit,
+		Offset:    req.Offset,
+	})
 }
 
 type createBookmarkRequest struct {

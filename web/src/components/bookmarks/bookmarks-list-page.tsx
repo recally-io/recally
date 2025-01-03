@@ -15,14 +15,21 @@ import {
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
-import { PlusCircle, List, Table } from "lucide-react";
-import { useState } from "react";
+import { PlusCircle, List, Table, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type View = "grid" | "list";
 
 export default function BookmarksListView() {
-	const { data: bookmarks = [] } = useBookmarks();
+	const [currentPage, setCurrentPage] = useState(1);
+	const limit = 12; // max 2 columns
+	const offset = useMemo(() => (currentPage - 1) * limit, [currentPage, limit]);
+
+	const { data, isLoading } = useBookmarks(limit, offset);
+	const bookmarks = data?.bookmarks ?? [];
+	const total = data?.total ?? 0;
+
 	const { createBookmark } = useBookmarkMutations();
 	const [open, setOpen] = useState(false);
 	const [url, setUrl] = useState("");
@@ -85,7 +92,20 @@ export default function BookmarksListView() {
 							</ToggleGroupItem>
 						</ToggleGroup>
 					</header>
-					<BookmarkList bookmarks={bookmarks} view={view} />
+					{isLoading ? (
+						<div className="flex items-center justify-center h-full">
+							<Loader2 className="size-8 animate-spin" />
+						</div>
+					) : (
+						<BookmarkList
+							bookmarks={bookmarks}
+							total={total}
+							view={view}
+							currentPage={currentPage}
+							onPageChange={setCurrentPage}
+							itemsPerPage={limit}
+						/>
+					)}
 				</div>
 			</SidebarInset>
 		</SidebarProvider>

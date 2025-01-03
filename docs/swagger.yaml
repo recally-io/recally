@@ -213,7 +213,13 @@ definitions:
     properties:
       author:
         type: string
+      cover:
+        type: string
       description:
+        type: string
+      domain:
+        type: string
+      favicon:
         type: string
       highlights:
         items:
@@ -222,6 +228,8 @@ definitions:
       image:
         type: string
       published_at:
+        type: string
+      site_name:
         type: string
       tags:
         items:
@@ -313,6 +321,19 @@ definitions:
         type: string
       public_url:
         type: string
+    type: object
+  httpserver.listBookmarksResponse:
+    properties:
+      bookmarks:
+        items:
+          $ref: '#/definitions/bookmarks.BookmarkDTO'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
     type: object
   httpserver.loginRequest:
     properties:
@@ -2026,9 +2047,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/bookmarks.BookmarkDTO'
-                  type: array
+                  $ref: '#/definitions/httpserver.listBookmarksResponse'
               type: object
         "401":
           description: Unauthorized
