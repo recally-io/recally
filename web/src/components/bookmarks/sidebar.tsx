@@ -16,7 +16,7 @@ import { ROUTES } from "@/lib/router";
 import { Link } from "@tanstack/react-router";
 import { Bookmark, Settings2 } from "lucide-react";
 import ThemeToggle from "../theme-toggle";
-import { BookmarksSidebarContent } from "./bookmarks-sidebar-content";
+import { BookmarksSidebarContent } from "./sidebar-content";
 
 export function BookmarksSidebar({
 	...props

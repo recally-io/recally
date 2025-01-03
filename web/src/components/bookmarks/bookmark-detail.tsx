@@ -2,8 +2,8 @@ import {
 	ArticleActions,
 	type FetcherType,
 } from "@/components/article/article-actions";
-import { BookmarksSidebar } from "@/components/bookmarks/bookmarks-sidebar";
 import { ArticleReader } from "@/components/bookmarks/bookmark-content";
+import { BookmarksSidebar } from "@/components/bookmarks/sidebar";
 import {
 	AlertDialog,
 	AlertDialogAction,
