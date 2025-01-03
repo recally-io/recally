@@ -90,7 +90,7 @@ func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.Content
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Locale", "en-US")
-	req.Header.Set("X-Return-Format", "html")
+	req.Header.Set("X-Return-Format", "markdown,html")
 
 	// Send request
 	resp, err := f.client.Do(req)
@@ -116,6 +116,7 @@ func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.Content
 		Title:       jinaResp.Data.Title,
 		Description: jinaResp.Data.Description,
 		Text:        jinaResp.Data.Text,
+		Markwdown:   jinaResp.Data.Content,
 		Html:        jinaResp.Data.Html,
 		Image:       jinaResp.Data.ScreenshotUrl,
 		Content:     io.NopCloser(strings.NewReader(jinaResp.Data.Html)),

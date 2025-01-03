@@ -173,22 +173,7 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 	var dto BookmarkDTO
 	dto.Load(&bookmark)
 
-	var readerFetcher webreader.Fetcher
-	switch fetcherType {
-	case HttpFetcher:
-		readerFetcher, err = fetcher.NewHTTPFetcher()
-	case JinaFetcher:
-		readerFetcher, err = fetcher.NewJinaFetcher()
-	case BrowserFetcher:
-		readerFetcher, err = fetcher.NewBrowserFetcher()
-	default:
-		err = fmt.Errorf("invalid fetcher type: %s", fetcherType)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to create fetcher: %w", err)
-	}
-
-	reader := webreader.New(readerFetcher, processor.NewMarkdownProcessor())
+	reader := newWebReader(fetcherType)
 	content, err := reader.Read(ctx, bookmark.Url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
@@ -251,4 +236,21 @@ func newSummarier(llm *llms.LLM, user *auth.UserDTO) *processor.SummaryProcessor
 	}
 
 	return processor.NewSummaryProcessor(llm, summaryOptions...)
+}
+
+func newWebReader(fetcherType FecherType) *webreader.Reader {
+	var readerFetcher webreader.Fetcher
+	processors := []webreader.Processor{}
+	switch fetcherType {
+	case HttpFetcher:
+		readerFetcher, _ = fetcher.NewHTTPFetcher()
+		processors = append(processors, processor.NewMarkdownProcessor())
+	case JinaFetcher:
+		readerFetcher, _ = fetcher.NewJinaFetcher()
+	case BrowserFetcher:
+		readerFetcher, _ = fetcher.NewBrowserFetcher()
+		processors = append(processors, processor.NewMarkdownProcessor())
+	}
+
+	return webreader.New(readerFetcher, processors...)
 }
