@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/llms"
+	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader"
 	"strings"
 	"text/template"
@@ -129,6 +130,7 @@ func (p *SummaryProcessor) Process(ctx context.Context, content *webreader.Conte
 		return fmt.Errorf("generate summary prompt: %w", err)
 	}
 
+	logger.FromContext(ctx).Info("start summary article", "model", p.config.Model, "language", p.config.Language)
 	summary, err := p.llm.TextCompletion(ctx, prompt.String(), llms.WithModel(p.config.Model))
 	if err != nil {
 		return fmt.Errorf("generate summary: %w", err)

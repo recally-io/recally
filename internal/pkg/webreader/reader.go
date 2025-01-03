@@ -13,8 +13,8 @@ import (
 
 // Content represents the result of a fetch operation
 type Content struct {
-	URL         string `json:"url"`
-	Content     io.ReadCloser
+	URL         string        `json:"url"`
+	Content     io.ReadCloser // Content is the raw content of the fetched URL
 	StatusCode  int
 	ContentType string
 	Headers     map[string][]string
