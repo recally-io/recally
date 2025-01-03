@@ -1,5 +1,5 @@
 import BookmarkList from "@/components/bookmarks/bookmarks-list";
-import { BookmarksSidebar } from "@/components/bookmarks/bookmarks-sidebar";
+import { BookmarksSidebar } from "@/components/bookmarks/sidebar";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
