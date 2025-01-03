@@ -160,9 +160,15 @@ func (q *Queries) GetBookmarkByUUID(ctx context.Context, db DBTX, argUuid uuid.U
 }
 
 const listBookmarks = `-- name: ListBookmarks :many
-SELECT id, uuid, user_id, url, title, summary, summary_embeddings, content, content_embeddings, html, metadata, screenshot, created_at, updated_at FROM bookmarks 
-WHERE user_id = $1 
-ORDER BY updated_at DESC 
+WITH total AS (
+    SELECT COUNT(*) AS total_count 
+    FROM bookmarks 
+    WHERE user_id = $1
+)
+SELECT b.id, b.uuid, b.user_id, b.url, b.title, b.summary, b.summary_embeddings, b.content, b.content_embeddings, b.html, b.metadata, b.screenshot, b.created_at, b.updated_at, t.total_count 
+FROM bookmarks b, total t
+WHERE b.user_id = $1 
+ORDER BY b.updated_at DESC 
 LIMIT $2 OFFSET $3
 `
 
@@ -172,15 +178,33 @@ type ListBookmarksParams struct {
 	Offset int32
 }
 
-func (q *Queries) ListBookmarks(ctx context.Context, db DBTX, arg ListBookmarksParams) ([]Bookmark, error) {
+type ListBookmarksRow struct {
+	ID                int32
+	Uuid              uuid.UUID
+	UserID            pgtype.UUID
+	Url               string
+	Title             pgtype.Text
+	Summary           pgtype.Text
+	SummaryEmbeddings *pgv.Vector
+	Content           pgtype.Text
+	ContentEmbeddings *pgv.Vector
+	Html              pgtype.Text
+	Metadata          []byte
+	Screenshot        pgtype.Text
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+	TotalCount        int64
+}
+
+func (q *Queries) ListBookmarks(ctx context.Context, db DBTX, arg ListBookmarksParams) ([]ListBookmarksRow, error) {
 	rows, err := db.Query(ctx, listBookmarks, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Bookmark
+	var items []ListBookmarksRow
 	for rows.Next() {
-		var i Bookmark
+		var i ListBookmarksRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Uuid,
@@ -196,6 +220,7 @@ func (q *Queries) ListBookmarks(ctx context.Context, db DBTX, arg ListBookmarksP
 			&i.Screenshot,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}

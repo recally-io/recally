@@ -78,6 +78,33 @@ func (b *BookmarkDTO) Load(dbo *db.Bookmark) {
 	}
 }
 
+// Load converts a database object to a domain object
+func (b *BookmarkDTO) LoadWithCount(dbo *db.ListBookmarksRow) {
+	b.ID = dbo.Uuid
+	b.UserID = dbo.UserID.Bytes
+	b.URL = dbo.Url
+	b.Title = dbo.Title.String
+	b.Summary = dbo.Summary.String
+	if dbo.SummaryEmbeddings != nil {
+		b.SummaryEmbedding = dbo.SummaryEmbeddings.Slice()
+	}
+	b.Content = dbo.Content.String
+	if dbo.ContentEmbeddings != nil {
+		b.ContentEmbedding = dbo.ContentEmbeddings.Slice()
+	}
+	b.HTML = dbo.Html.String
+	b.Screenshot = dbo.Screenshot.String
+	b.CreatedAt = dbo.CreatedAt.Time
+	b.UpdatedAt = dbo.UpdatedAt.Time
+
+	if dbo.Metadata != nil {
+		if err := json.Unmarshal(dbo.Metadata, &b.Metadata); err != nil {
+			logger.Default.Warn("failed to unmarshal Bookmark metadata",
+				"err", err, "metadata", string(dbo.Metadata))
+		}
+	}
+}
+
 // Dump converts a domain object to a database object for creation
 func (b *BookmarkDTO) Dump() db.CreateBookmarkParams {
 	metadata, _ := json.Marshal(b.Metadata)

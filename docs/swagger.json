@@ -2674,10 +2674,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/bookmarks.BookmarkDTO"
-                                            }
+                                            "$ref": "#/definitions/httpserver.listBookmarksResponse"
                                         }
                                     }
                                 }
@@ -4543,7 +4540,16 @@
                 "author": {
                     "type": "string"
                 },
+                "cover": {
+                    "type": "string"
+                },
                 "description": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "favicon": {
                     "type": "string"
                 },
                 "highlights": {
@@ -4556,6 +4562,9 @@
                     "type": "string"
                 },
                 "published_at": {
+                    "type": "string"
+                },
+                "site_name": {
                     "type": "string"
                 },
                 "tags": {
@@ -4688,6 +4697,26 @@
                 },
                 "public_url": {
                     "type": "string"
+                }
+            }
+        },
+        "httpserver.listBookmarksResponse": {
+            "type": "object",
+            "properties": {
+                "bookmarks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
