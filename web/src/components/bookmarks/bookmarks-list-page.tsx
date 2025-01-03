@@ -14,19 +14,35 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
-import { PlusCircle, List, Table, Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
+import { useRouter } from "@tanstack/react-router";
+import { List, Loader2, PlusCircle, Table } from "lucide-react";
+import { useState } from "react";
 
 type View = "grid" | "list";
 
-export default function BookmarksListView() {
-	const [currentPage, setCurrentPage] = useState(1);
-	const limit = 12; // max 2 columns
-	const offset = useMemo(() => (currentPage - 1) * limit, [currentPage, limit]);
+export type BookmarkSearch = {
+	page: number;
+	// filter: site:github.com,category:url,tag:tag1
+	filter: string;
+	// query: search query
+	query: string;
+};
 
-	const { data, isLoading } = useBookmarks(limit, offset);
+export default function BookmarksListView({
+	search,
+}: { search: BookmarkSearch }) {
+	const limit = 12; // max 2 columns
+	const offset = (search.page - 1) * limit;
+
+	const router = useRouter();
+	const { data, isLoading } = useBookmarks(
+		limit,
+		offset,
+		search.filter,
+		search.query,
+	);
 	const bookmarks = data?.bookmarks ?? [];
 	const total = data?.total ?? 0;
 
@@ -41,6 +57,18 @@ export default function BookmarksListView() {
 		await createBookmark({ url });
 		setUrl("");
 		setOpen(false);
+	};
+
+	const handlePageChange = (page: number) => {
+		router.navigate({
+			search: (prev) => ({ ...prev, page: page }),
+		});
+	};
+
+	const handleSearch = (query: string) => {
+		router.navigate({
+			search: (prev) => ({ ...prev, query: query, page: 1 }),
+		});
 	};
 
 	const AddBookmarkModal = () => {
@@ -101,8 +129,9 @@ export default function BookmarksListView() {
 							bookmarks={bookmarks}
 							total={total}
 							view={view}
-							currentPage={currentPage}
-							onPageChange={setCurrentPage}
+							currentPage={search.page}
+							onPageChange={handlePageChange}
+							onSearch={handleSearch}
 							itemsPerPage={limit}
 						/>
 					)}
