@@ -13,6 +13,15 @@ export interface Highlight {
 export interface Metadata {
 	tags?: string[];
 	highlights?: Highlight[];
+
+	author?: string;
+	published_at?: string;
+	description?: string;
+	site_name?: string;
+	domain?: string;
+
+	favicon?: string;
+	cover?: string;
 	image?: string;
 }
 

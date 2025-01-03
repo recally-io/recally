@@ -20,12 +20,18 @@ type Highlight struct {
 }
 
 type Metadata struct {
-	Author      string      `json:"author,omitempty"`
-	PublishedAt time.Time   `json:"published_at,omitempty"`
-	Description string      `json:"description,omitempty"`
-	Tags        []string    `json:"tags,omitempty"`
-	Highlights  []Highlight `json:"highlights,omitempty"`
-	Image       string      `json:"image,omitempty"`
+	Author      string    `json:"author,omitempty"`
+	PublishedAt time.Time `json:"published_at,omitempty"`
+	Description string    `json:"description,omitempty"`
+	SiteName    string    `json:"site_name,omitempty"`
+	Domain      string    `json:"domain,omitempty"`
+
+	Image   string `json:"image,omitempty"`
+	Favicon string `json:"favicon"`
+	Cover   string `json:"cover,omitempty"`
+
+	Tags       []string    `json:"tags,omitempty"`
+	Highlights []Highlight `json:"highlights,omitempty"`
 }
 
 // BookmarkDTO represents the domain model for a bookmark

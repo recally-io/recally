@@ -11,6 +11,7 @@ import (
 	"recally/internal/pkg/webreader"
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
+	"recally/internal/pkg/webreader/reader"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -69,6 +70,10 @@ func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*B
 
 	var dto BookmarkDTO
 	dto.Load(&bookmark)
+	// Clear content and HTML
+	dto.HTML = ""
+	dto.SummaryEmbedding = nil
+	dto.ContentEmbedding = nil
 	return &dto, nil
 }
 
@@ -91,6 +96,9 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit,
 	for _, bookmark := range bookmarks {
 		var dto BookmarkDTO
 		dto.Load(&bookmark)
+		dto.HTML = ""
+		dto.SummaryEmbedding = nil
+		dto.ContentEmbedding = nil
 		dtos = append(dtos, &dto)
 	}
 	return dtos, err
@@ -139,11 +147,11 @@ func (s *Service) DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uu
 	return s.dao.DeleteBookmarksByUser(ctx, tx, pgtype.UUID{Bytes: userID, Valid: true})
 }
 
-func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType FecherType, regenerateSummary bool) (*BookmarkDTO, error) {
+func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType, regenerateSummary bool) (*BookmarkDTO, error) {
 	var dto *BookmarkDTO
 	var err error
 
-	if fetcherType != FecherType("") {
+	if fetcherType != fetcher.TypeNil {
 		dto, err = s.FetchContent(ctx, tx, id, userID, fetcherType)
 		if err != nil {
 			return nil, err
@@ -160,7 +168,7 @@ func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID,
 	return dto, nil
 }
 
-func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType FecherType) (*BookmarkDTO, error) {
+func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType) (*BookmarkDTO, error) {
 	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmark by id '%s': %w", id.String(), err)
@@ -173,7 +181,10 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 	var dto BookmarkDTO
 	dto.Load(&bookmark)
 
-	reader := newWebReader(fetcherType)
+	reader, err := reader.New(fetcherType, bookmark.Url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create reader: %w", err)
+	}
 	content, err := reader.Read(ctx, bookmark.Url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
@@ -182,8 +193,20 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 	dto.Content = content.Markwdown
 	dto.Title = content.Title
 	dto.HTML = content.Html
-	dto.Metadata.Image = content.Image
+
+	// Update metadata
+	dto.Metadata.Author = content.Author
+	dto.Metadata.SiteName = content.SiteName
 	dto.Metadata.Description = content.Description
+
+	dto.Metadata.Cover = content.Cover
+	dto.Metadata.Favicon = content.Favicon
+	if content.Cover != "" {
+		dto.Metadata.Image = content.Cover
+	} else {
+		dto.Metadata.Image = content.Favicon
+	}
+
 	if content.PublishedTime != nil {
 		dto.Metadata.PublishedAt = *content.PublishedTime
 	}
@@ -236,21 +259,4 @@ func newSummarier(llm *llms.LLM, user *auth.UserDTO) *processor.SummaryProcessor
 	}
 
 	return processor.NewSummaryProcessor(llm, summaryOptions...)
-}
-
-func newWebReader(fetcherType FecherType) *webreader.Reader {
-	var readerFetcher webreader.Fetcher
-	processors := []webreader.Processor{}
-	switch fetcherType {
-	case HttpFetcher:
-		readerFetcher, _ = fetcher.NewHTTPFetcher()
-		processors = append(processors, processor.NewMarkdownProcessor())
-	case JinaFetcher:
-		readerFetcher, _ = fetcher.NewJinaFetcher()
-	case BrowserFetcher:
-		readerFetcher, _ = fetcher.NewBrowserFetcher()
-		processors = append(processors, processor.NewMarkdownProcessor())
-	}
-
-	return webreader.New(readerFetcher, processors...)
 }

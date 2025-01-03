@@ -53,3 +53,5 @@ __debug_bin*
 # For example, set up .git/info/exclude or use a global .gitignore.
 .vscode/
 dev-dist
+
+.local/

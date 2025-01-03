@@ -10,6 +10,7 @@ import (
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"recally/internal/pkg/webreader/fetcher"
 	"regexp"
 	"strings"
 	"time"
@@ -110,7 +111,7 @@ func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, url string, user
 	result, err := h.queue.Insert(ctx, queue.CrawlerWorkerArgs{
 		ID:          bookmark.ID,
 		UserID:      bookmark.UserID,
-		FetcherName: bookmarks.JinaFetcher,
+		FetcherName: fetcher.TypeJinaReader,
 	}, nil)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to insert job", "err", err)

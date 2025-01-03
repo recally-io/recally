@@ -22,7 +22,7 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 			<ArticleHeader
 				title={bookmark.title ?? "Title"}
 				url={bookmark.url}
-				publishedAt={bookmark.created_at}
+				publishedAt={bookmark.metadata?.published_at ?? bookmark.created_at}
 			/>
 
 			<Separator className="my-4" />

@@ -115,12 +115,6 @@ func (p *SummaryProcessor) Name() string {
 
 // Process implements the Processor interface
 func (p *SummaryProcessor) Process(ctx context.Context, content *webreader.Content) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-
 	var prompt strings.Builder
 	if err := summaryPromptTempl.Execute(&prompt, map[string]interface{}{
 		"Prompt":   p.config.Prompt,

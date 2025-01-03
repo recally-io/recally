@@ -8,6 +8,7 @@ import (
 	"recally/internal/core/queue"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"recally/internal/pkg/webreader/fetcher"
 
 	"github.com/google/uuid"
 
@@ -22,8 +23,8 @@ type BookmarkService interface {
 	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
 	Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
-	Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcher bookmarks.FecherType, regenerateSummary bool) (*bookmarks.BookmarkDTO, error)
-	FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType bookmarks.FecherType) (*bookmarks.BookmarkDTO, error)
+	Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcher fetcher.FecherType, regenerateSummary bool) (*bookmarks.BookmarkDTO, error)
+	FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType) (*bookmarks.BookmarkDTO, error)
 	SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.BookmarkDTO, error)
 }
 
@@ -130,7 +131,7 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	result, err := h.queue.Insert(ctx, queue.CrawlerWorkerArgs{
 		ID:          created.ID,
 		UserID:      created.UserID,
-		FetcherName: bookmarks.HttpFetcher,
+		FetcherName: fetcher.TypeHttp,
 	}, nil)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to insert job", "err", err)
@@ -350,7 +351,7 @@ func (h *bookmarksHandler) refreshBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmark, err := h.service.Refresh(ctx, tx, req.BookmarkID, user.ID, bookmarks.FecherType(req.Fetcher), req.RegenerateSummary)
+	bookmark, err := h.service.Refresh(ctx, tx, req.BookmarkID, user.ID, fetcher.FecherType(req.Fetcher), req.RegenerateSummary)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}

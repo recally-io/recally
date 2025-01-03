@@ -3,7 +3,9 @@ package processor
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"recally/internal/pkg/webreader"
+	"recally/internal/pkg/webreader/processor/hooks"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 )
@@ -18,19 +20,34 @@ func WithMarkdownOptions(options md.Options) MarkdownOption {
 	}
 }
 
+func WithMarkdownBeforeHook(hooks ...md.BeforeHook) MarkdownOption {
+	return func(p *MarkdownProcessor) {
+		p.config.BeforeHooks = append(p.config.BeforeHooks, hooks...)
+	}
+}
+
+func WithMarkdownAfterHook(hooks ...md.Afterhook) MarkdownOption {
+	return func(p *MarkdownProcessor) {
+		p.config.AfterHooks = append(p.config.AfterHooks, hooks...)
+	}
+}
+
 // MarkdownConfig contains configuration for the markdown processor
 type MarkdownConfig struct {
-	Options md.Options
+	Options     md.Options
+	BeforeHooks []md.BeforeHook
+	AfterHooks  []md.Afterhook
 }
 
 // MarkdownProcessor implements HTML to Markdown conversion
 type MarkdownProcessor struct {
+	Host   string `json:"host"`
 	config MarkdownConfig
 	conv   *md.Converter
 }
 
 // NewMarkdownProcessor creates a new MarkdownProcessor with the given configuration
-func NewMarkdownProcessor(opts ...MarkdownOption) *MarkdownProcessor {
+func NewMarkdownProcessor(host string, opts ...MarkdownOption) *MarkdownProcessor {
 	p := &MarkdownProcessor{
 		config: MarkdownConfig{
 			Options: md.Options{}, // default options
@@ -43,7 +60,20 @@ func NewMarkdownProcessor(opts ...MarkdownOption) *MarkdownProcessor {
 	}
 
 	// Create converter with configured options
-	p.conv = md.NewConverter("", true, &p.config.Options)
+	u, _ := url.Parse(host)
+	p.conv = md.NewConverter(u.Host, true, &p.config.Options)
+
+	// Register buildin hooks
+	p.conv.Before(hooks.GetMarkdownBeforeHooks(u.Host)...)
+	p.conv.After(hooks.GetMarkdownAfterHooks(u.Host)...)
+
+	// Register custom hooks
+	if len(p.config.BeforeHooks) > 0 {
+		p.conv.Before(p.config.BeforeHooks...)
+	}
+	if len(p.config.AfterHooks) > 0 {
+		p.conv.After(p.config.AfterHooks...)
+	}
 
 	return p
 }
@@ -54,12 +84,6 @@ func (p *MarkdownProcessor) Name() string {
 
 // Process implements the Processor interface
 func (p *MarkdownProcessor) Process(ctx context.Context, content *webreader.Content) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-
 	// Convert HTML to Markdown
 	markdown, err := p.conv.ConvertString(content.Html)
 	if err != nil {
