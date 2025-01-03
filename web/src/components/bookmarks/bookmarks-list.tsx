@@ -83,17 +83,28 @@ export default function BookmarkList({ bookmarks, view }: BookmarkListProps) {
 			) : (
 				<div className="space-y-4">
 					{filteredBookmarks.map((bookmark) => (
-						<div key={bookmark.id} className="p-4 border rounded-md">
-							<Link to={ROUTES.BOOKMARK_DETAIL} params={{ id: bookmark.id }}>
-								<h3 className="text-lg font-semibold">{bookmark.title}</h3>
-							</Link>
-							<p className="text-sm text-muted-foreground">{bookmark.url}</p>
-							<div className="mt-2">
-								{bookmark.metadata?.tags?.map((tag) => (
-									<Badge key={tag} variant="secondary" className="text-xs mr-1">
-										{tag}
-									</Badge>
-								))}
+						<div key={bookmark.id} className="p-4 border rounded-md flex gap-4">
+							{bookmark.metadata?.image && (
+								<div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
+									<img
+										src={bookmark.metadata.image}
+										alt={bookmark.title}
+										className="w-full h-full object-cover"
+									/>
+								</div>
+							)}
+							<div className="flex-grow">
+								<Link to={ROUTES.BOOKMARK_DETAIL} params={{ id: bookmark.id }}>
+									<h3 className="text-lg font-semibold line-clamp-1">{bookmark.title}</h3>
+								</Link>
+								<p className="text-sm text-muted-foreground line-clamp-1 break-all">{bookmark.url}</p>
+								<div className="mt-2 flex flex-wrap gap-1">
+									{bookmark.metadata?.tags?.map((tag) => (
+										<Badge key={tag} variant="secondary" className="text-xs">
+											{tag}
+										</Badge>
+									))}
+								</div>
 							</div>
 						</div>
 					))}
