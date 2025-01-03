@@ -78,10 +78,10 @@ export function BookmarksSidebarContent() {
 											<SidebarMenuSubButton asChild>
 												<Link
 													to={subItem.url}
-													search={{
-														type: subItem.type,
-														category: subItem.category,
-													}}
+													search={(prev) => ({
+														...prev,
+														filter: `type=${subItem.type},category=${subItem.category}&`,
+													})}
 												>
 													{subItem.icon && <subItem.icon />}
 													<span>{subItem.title}</span>

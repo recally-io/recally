@@ -65,9 +65,9 @@ interface BookmarkRefreshInput {
 
 // API Functions
 const api = {
-	list: (limit = 20, offset = 0) =>
+	list: (filter = "", query = "", limit = 20, offset = 0) =>
 		fetcher<ListBookmarksResponse>(
-			`/api/v1/bookmarks?limit=${limit}&offset=${offset}`,
+			`/api/v1/bookmarks?limit=${limit}&offset=${offset}&query=${query}&filter=${filter}`,
 		),
 
 	create: (input: BookmarkCreateInput) =>
@@ -102,9 +102,10 @@ const api = {
 };
 
 // SWR Hooks
-export function useBookmarks(limit = 20, offset = 0) {
-	return useSWR<ListBookmarksResponse>(["bookmarks", limit, offset], () =>
-		api.list(limit, offset),
+export function useBookmarks(limit = 20, offset = 0, filter = "", query = "") {
+	return useSWR<ListBookmarksResponse>(
+		["bookmarks", filter, query, limit, offset],
+		() => api.list(filter, query, limit, offset),
 	);
 }
 
