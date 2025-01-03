@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/url"
 	"recally/internal/pkg/logger"
 	"time"
-
-	"github.com/go-shiori/go-readability"
 )
 
 // Content represents the result of a fetch operation
@@ -24,8 +21,12 @@ type Content struct {
 	Text          string     `json:"text"`
 	Markwdown     string     `json:"markdown"`
 	Summary       string     `json:"summary"`
+	Cover         string     `json:"cover"`
+	Favicon       string     `json:"favicon"`
 	Image         string     `json:"image"`
+	Author        string     `json:"author"`
 	Description   string     `json:"description"`
+	SiteName      string     `json:"site_name"`
 	PublishedTime *time.Time `json:"published_time"`
 	ModifiedTime  *time.Time `json:"modified_time"`
 }
@@ -90,31 +91,15 @@ func (w *Reader) Read(ctx context.Context, url string) (*Content, error) {
 }
 
 func (w *Reader) preProcess(content *Content) error {
-	parsedURL, err := url.ParseRequestURI(content.URL)
-	// If there's an error parsing the URI, set parsedURL to nil
+	rawContent, err := io.ReadAll(content.Content)
 	if err != nil {
-		parsedURL = nil
+		return fmt.Errorf("failed to read content: %w", err)
 	}
 	defer content.Content.Close()
-	// Use the readability package's FromReader function to parse the HTML content
-	article, err := readability.FromReader(content.Content, parsedURL)
-	// If there's an error parsing the HTML content, return the error
-	if err != nil {
-		return fmt.Errorf("failed to parse %s, %v", content.URL, err)
+
+	if content.Html == "" {
+		content.Html = string(rawContent)
 	}
 
-	// Set Markdown content
-	content.Title = article.Title
-	content.Description = article.Byline
-	if article.Favicon != "" {
-		content.Image = article.Favicon
-	}
-	if content.Image == "" {
-		content.Image = article.Image
-	}
-	content.Text = article.TextContent
-	content.Html = article.Content
-	content.PublishedTime = article.PublishedTime
-	content.ModifiedTime = article.ModifiedTime
 	return nil
 }

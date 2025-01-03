@@ -5,6 +5,7 @@ import (
 	"recally/internal/core/bookmarks"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
+	"recally/internal/pkg/webreader/fetcher"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -13,9 +14,9 @@ import (
 )
 
 type CrawlerWorkerArgs struct {
-	ID          uuid.UUID            `json:"id"`
-	UserID      uuid.UUID            `json:"user_id"`
-	FetcherName bookmarks.FecherType `json:"fetcher_name"`
+	ID          uuid.UUID          `json:"id"`
+	UserID      uuid.UUID          `json:"user_id"`
+	FetcherName fetcher.FecherType `json:"fetcher_name"`
 }
 
 func (CrawlerWorkerArgs) Kind() string {
@@ -50,7 +51,7 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 	svc := bookmarks.NewService(w.llm)
 	dto, err := svc.FetchContent(ctx, tx, job.Args.ID, job.Args.UserID, job.Args.FetcherName)
 	if err != nil {
-		logger.FromContext(ctx).Error("failed to fetch bookmark", "err", err)
+		logger.FromContext(ctx).Error("failed to fetch bookmark", "err", err, "id", job.Args.ID, "fetcher", job.Args.FetcherName)
 		return err
 	}
 
@@ -61,6 +62,6 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 			return err
 		}
 	}
-	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title)
+	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title, "url", dto.URL, "fetcher", job.Args.FetcherName)
 	return nil
 }

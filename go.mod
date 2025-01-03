@@ -7,6 +7,7 @@ toolchain go1.23.3
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
 	github.com/Mad-Pixels/goldmark-tgmd v0.0.10
+	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/go-rod/rod v0.116.2
@@ -44,7 +45,6 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/PuerkitoBio/goquery v1.10.1 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect

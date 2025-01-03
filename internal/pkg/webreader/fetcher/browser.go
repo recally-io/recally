@@ -31,7 +31,7 @@ type BrowserFetcher struct {
 
 func NewDefaultBrowserConfig() BrowserConfig {
 	return BrowserConfig{
-		Timeout:        30,
+		Timeout:        60,
 		ControlURL:     config.Settings.BrowserControlUrl,
 		ScrollToBottom: true,
 	}
@@ -102,6 +102,7 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Cont
 		Content:     io.NopCloser(strings.NewReader(html)),
 		StatusCode:  http.StatusOK,
 		ContentType: "text/html",
+		Html:        html,
 	}, nil
 }
 
