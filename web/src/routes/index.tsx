@@ -6,5 +6,14 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-	return <Navigate to={ROUTES.BOOKMARKS} />;
+	return (
+		<Navigate
+			to={ROUTES.BOOKMARKS}
+			search={{
+				page: 1,
+				filters: [],
+				query: "",
+			}}
+		/>
+	);
 }
