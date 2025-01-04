@@ -13,7 +13,6 @@ import {
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
-import { Link } from "@tanstack/react-router";
 import { Bookmark, ChevronRight, Newspaper } from "lucide-react";
 
 const items = [
@@ -76,7 +75,7 @@ export function BookmarksSidebarContent() {
 									{item.items?.map((subItem) => (
 										<SidebarMenuSubItem key={subItem.title}>
 											<SidebarMenuSubButton asChild>
-												<Link
+												{/* <Link
 													to={subItem.url}
 													search={(prev) => ({
 														...prev,
@@ -85,7 +84,7 @@ export function BookmarksSidebarContent() {
 												>
 													{subItem.icon && <subItem.icon />}
 													<span>{subItem.title}</span>
-												</Link>
+												</Link> */}
 											</SidebarMenuSubButton>
 										</SidebarMenuSubItem>
 									))}
