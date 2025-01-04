@@ -78,7 +78,7 @@ func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*B
 }
 
 // ListBookmarks retrieves a paginated list of bookmarks for a user
-func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit, offset int32) ([]*BookmarkDTO, int64, error) {
+func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter, query string, limit, offset int32) ([]*BookmarkDTO, int64, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 50 // Default limit
 	}

@@ -66,6 +66,7 @@ interface BookmarkRefreshInput {
 // API Functions
 const api = {
 	list: (filter = "", query = "", limit = 20, offset = 0) =>
+		// filter=category:article;type:rss
 		fetcher<ListBookmarksResponse>(
 			`/api/v1/bookmarks?limit=${limit}&offset=${offset}&query=${query}&filter=${filter}`,
 		),
