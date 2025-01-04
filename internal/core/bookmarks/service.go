@@ -30,55 +30,73 @@ func NewService(llm *llms.LLM) *Service {
 }
 
 // CreateBookmark creates a new bookmark with content fetching and embedding generation
-func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *BookmarkDTO) (*BookmarkDTO, error) {
+func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *ContentDTO) (*ContentDTO, error) {
 	// Validate URL
 	if _, err := url.ParseRequestURI(dto.URL); err != nil {
 		return nil, fmt.Errorf("%w: invalid URL", ErrInvalidInput)
 	}
 
 	// Check for existing bookmark
-	existing, err := s.dao.GetBookmarkByURL(ctx, tx, db.GetBookmarkByURLParams{
-		Url:    dto.URL,
-		UserID: pgtype.UUID{Bytes: dto.UserID, Valid: true},
+	isExisting, err := s.dao.IsContentExistWithURL(ctx, tx, db.IsContentExistWithURLParams{
+		Url:    pgtype.Text{String: dto.URL, Valid: true},
+		UserID: dto.UserID,
 	})
-	if err == nil {
-		return nil, fmt.Errorf("%w, id: %s", ErrDuplicate, existing.Uuid)
+	if isExisting {
+		return nil, fmt.Errorf("%w, id: %s", ErrDuplicate, dto.URL)
 	}
 
 	if !db.IsNotFoundError(err) {
 		return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
 	}
 
-	bookmark, err := s.dao.CreateBookmark(ctx, tx, dto.Dump())
+	// create content
+	c, err := s.dao.CreateContent(ctx, tx, dto.Dump())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bookmark for url '%s': %w", dto.URL, err)
 	}
-	dto.Load(&bookmark)
+	dto.Load(&c)
+
+	if len(dto.Tags) > 0 {
+		// create tags
+		for _, tag := range dto.Tags {
+			if _, err := s.dao.CreateContentTag(ctx, tx, db.CreateContentTagParams{
+				Name:   tag,
+				UserID: dto.UserID,
+			}); err != nil {
+				logger.FromContext(ctx).Error("failed to create tag", "err", err, "content_id", c.ID, "tag", tag)
+			}
+		}
+		// link content with tags
+		if err := s.dao.LinkContentWithTags(ctx, tx, db.LinkContentWithTagsParams{
+			ContentID: c.ID,
+			Column2:   dto.Tags,
+			UserID:    dto.UserID,
+		}); err != nil {
+			logger.FromContext(ctx).Error("failed to link tags with content", "err", err, "content_id", c.ID, "tags", dto.Tags)
+		}
+	}
 	return dto, nil
 }
 
 // GetBookmark retrieves a bookmark by ID
-func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*BookmarkDTO, error) {
-	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
+func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*ContentDTO, error) {
+	c, err := s.dao.GetContent(ctx, tx, db.GetContentParams{
+		ID:     id,
+		UserID: userID,
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get content by id '%s': %w", id.String(), err)
 	}
 
-	if bookmark.UserID.Bytes != userID {
-		return nil, ErrUnauthorized
-	}
-
-	var dto BookmarkDTO
-	dto.Load(&bookmark)
+	var dto ContentDTO
+	dto.LoadWithTags(&c)
 	// Clear content and HTML
 	dto.HTML = ""
-	dto.SummaryEmbedding = nil
-	dto.ContentEmbedding = nil
 	return &dto, nil
 }
 
 // ListBookmarks retrieves a paginated list of bookmarks for a user
-func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter, query string, limit, offset int32) ([]*BookmarkDTO, int64, error) {
+func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter, query string, limit, offset int32) ([]*ContentDTO, int64, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 50 // Default limit
 	}
@@ -87,70 +105,59 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter
 	}
 
 	totalCount := int64(0)
-	bookmarks, err := s.dao.ListBookmarks(ctx, tx, db.ListBookmarksParams{
-		UserID: pgtype.UUID{Bytes: userID, Valid: true},
+	cs, err := s.dao.ListContents(ctx, tx, db.ListContentsParams{
+		UserID: userID,
 		Limit:  limit,
 		Offset: offset,
 	})
 
-	dtos := make([]*BookmarkDTO, 0, len(bookmarks))
-	for _, bookmark := range bookmarks {
-		var dto BookmarkDTO
-		dto.LoadWithCount(&bookmark)
+	dtos := make([]*ContentDTO, 0, len(cs))
+	for _, c := range cs {
+		var dto ContentDTO
+		dto.LoadWithTagsAndTotalCount(&c)
 		dto.HTML = ""
-		dto.SummaryEmbedding = nil
-		dto.ContentEmbedding = nil
 		dtos = append(dtos, &dto)
-		totalCount = bookmark.TotalCount
+		totalCount = c.TotalCount
 	}
 	return dtos, totalCount, err
 }
 
-// UpdateBookmark updates an existing bookmark
-func (s *Service) Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *BookmarkDTO) (*BookmarkDTO, error) {
-	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
+// UpdateBookmark updates an existing bookmark, PUT full update
+func (s *Service) Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *ContentDTO) (*ContentDTO, error) {
+	_, err := s.Get(ctx, tx, id, userID)
 	if err != nil {
 		return nil, err
 	}
-
-	if bookmark.UserID.Bytes != userID {
-		return nil, ErrUnauthorized
-	}
-
 	updateParams := dto.DumpToUpdateParams()
-	bookmark, err = s.dao.UpdateBookmark(ctx, tx, updateParams)
+	c, err := s.dao.UpdateContent(ctx, tx, updateParams)
 	if err != nil {
 		return nil, err
 	}
 
-	dto.Load(&bookmark)
+	dto.Load(&c)
 	return dto, nil
 }
 
 // DeleteBookmark removes a bookmark
 func (s *Service) Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error {
-	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
+	_, err := s.Get(ctx, tx, id, userID)
 	if err != nil {
 		return err
 	}
 
-	if bookmark.UserID.Bytes != userID {
-		return ErrUnauthorized
-	}
-
-	return s.dao.DeleteBookmark(ctx, tx, db.DeleteBookmarkParams{
-		Uuid:   id,
-		UserID: pgtype.UUID{Bytes: userID, Valid: true},
+	return s.dao.DeleteContent(ctx, tx, db.DeleteContentParams{
+		ID:     id,
+		UserID: userID,
 	})
 }
 
 // DeleteUserBookmarks removes all bookmarks for a user
 func (s *Service) DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error {
-	return s.dao.DeleteBookmarksByUser(ctx, tx, pgtype.UUID{Bytes: userID, Valid: true})
+	return s.dao.DeleteContentsByUser(ctx, tx, userID)
 }
 
-func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType, regenerateSummary bool) (*BookmarkDTO, error) {
-	var dto *BookmarkDTO
+func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType, regenerateSummary bool) (*ContentDTO, error) {
+	var dto *ContentDTO
 	var err error
 
 	if fetcherType != fetcher.TypeNil {
@@ -170,24 +177,17 @@ func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID,
 	return dto, nil
 }
 
-func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType) (*BookmarkDTO, error) {
-	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
+func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType) (*ContentDTO, error) {
+	dto, err := s.Get(ctx, tx, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmark by id '%s': %w", id.String(), err)
 	}
 
-	if bookmark.UserID.Bytes != userID {
-		return nil, ErrUnauthorized
-	}
-
-	var dto BookmarkDTO
-	dto.Load(&bookmark)
-
-	reader, err := reader.New(fetcherType, bookmark.Url)
+	reader, err := reader.New(fetcherType, dto.URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create reader: %w", err)
 	}
-	content, err := reader.Read(ctx, bookmark.Url)
+	content, err := reader.Read(ctx, dto.URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
 	}
@@ -212,26 +212,19 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 	if content.PublishedTime != nil {
 		dto.Metadata.PublishedAt = *content.PublishedTime
 	}
-	return s.Update(ctx, tx, id, userID, &dto)
+	return s.Update(ctx, tx, id, userID, dto)
 }
 
-func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*BookmarkDTO, error) {
+func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*ContentDTO, error) {
 	user, err := auth.LoadUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	bookmark, err := s.dao.GetBookmarkByUUID(ctx, tx, id)
+	dto, err := s.Get(ctx, tx, id, user.ID)
 	if err != nil {
 		return nil, err
 	}
-
-	if bookmark.UserID.Bytes != userID {
-		return nil, ErrUnauthorized
-	}
-
-	var dto BookmarkDTO
-	dto.Load(&bookmark)
 
 	content := &webreader.Content{
 		Markwdown: dto.Content,
@@ -245,7 +238,7 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 		dto.Summary = content.Summary
 	}
 
-	return s.Update(ctx, tx, id, userID, &dto)
+	return s.Update(ctx, tx, id, userID, dto)
 }
 
 func newSummarier(llm *llms.LLM, user *auth.UserDTO) *processor.SummaryProcessor {

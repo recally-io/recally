@@ -96,7 +96,7 @@ func getUrlFromText(text string) string {
 }
 
 func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, url string, userId uuid.UUID, summary string) {
-	bookmark, err := h.bookmarkService.Create(ctx, tx, &bookmarks.BookmarkDTO{
+	bookmark, err := h.bookmarkService.Create(ctx, tx, &bookmarks.ContentDTO{
 		UserID:    userId,
 		URL:       url,
 		Summary:   summary,

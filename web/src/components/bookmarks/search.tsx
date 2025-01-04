@@ -25,15 +25,20 @@ export interface SearchToken {
 const filterOptions = [
 	{
 		label: "Types",
-		options: ["bookmark", "rss", "newsletter"],
+		options: [
+			"Bookmark",
+			"PDF",
+			"EPUB",
+			"RSS",
+			"Newsletter",
+			"Image",
+			"Video",
+			"Podcast",
+		],
 	},
 	{
 		label: "Domains",
 		options: [],
-	},
-	{
-		label: "Categories",
-		options: ["article", "video", "podcast", "image", "pdf", "ebook"],
 	},
 ];
 

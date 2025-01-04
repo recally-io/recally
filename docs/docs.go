@@ -2760,7 +2760,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                                            "$ref": "#/definitions/bookmarks.ContentDTO"
                                         }
                                     }
                                 }
@@ -2954,7 +2954,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                                            "$ref": "#/definitions/bookmarks.ContentDTO"
                                         }
                                     }
                                 }
@@ -3077,7 +3077,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                                            "$ref": "#/definitions/bookmarks.ContentDTO"
                                         }
                                     }
                                 }
@@ -3298,7 +3298,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                                            "$ref": "#/definitions/bookmarks.ContentDTO"
                                         }
                                     }
                                 }
@@ -4470,19 +4470,19 @@ const docTemplate = `{
                 }
             }
         },
-        "bookmarks.BookmarkDTO": {
+        "bookmarks.ContentDTO": {
             "type": "object",
             "properties": {
                 "content": {
                     "type": "string"
                 },
-                "content_embedding": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    }
-                },
                 "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "domain": {
                     "type": "string"
                 },
                 "html": {
@@ -4491,22 +4491,28 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "is_favorite": {
+                    "type": "boolean"
+                },
                 "metadata": {
                     "$ref": "#/definitions/bookmarks.Metadata"
                 },
-                "screenshot": {
+                "s3_key": {
                     "type": "string"
                 },
                 "summary": {
                     "type": "string"
                 },
-                "summary_embedding": {
+                "tags": {
                     "type": "array",
                     "items": {
-                        "type": "number"
+                        "type": "string"
                     }
                 },
                 "title": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -4712,7 +4718,7 @@ const docTemplate = `{
                 "bookmarks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                        "$ref": "#/definitions/bookmarks.ContentDTO"
                     }
                 },
                 "limit": {

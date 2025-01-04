@@ -163,31 +163,35 @@ definitions:
       summary_options:
         $ref: '#/definitions/processor.SummaryConfig'
     type: object
-  bookmarks.BookmarkDTO:
+  bookmarks.ContentDTO:
     properties:
       content:
         type: string
-      content_embedding:
-        items:
-          type: number
-        type: array
       created_at:
+        type: string
+      description:
+        type: string
+      domain:
         type: string
       html:
         type: string
       id:
         type: string
+      is_favorite:
+        type: boolean
       metadata:
         $ref: '#/definitions/bookmarks.Metadata'
-      screenshot:
+      s3_key:
         type: string
       summary:
         type: string
-      summary_embedding:
+      tags:
         items:
-          type: number
+          type: string
         type: array
       title:
+        type: string
+      type:
         type: string
       updated_at:
         type: string
@@ -326,7 +330,7 @@ definitions:
     properties:
       bookmarks:
         items:
-          $ref: '#/definitions/bookmarks.BookmarkDTO'
+          $ref: '#/definitions/bookmarks.ContentDTO'
         type: array
       limit:
         type: integer
@@ -2091,7 +2095,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  $ref: '#/definitions/bookmarks.ContentDTO'
               type: object
         "400":
           description: Bad Request
@@ -2196,7 +2200,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  $ref: '#/definitions/bookmarks.ContentDTO'
               type: object
         "400":
           description: Bad Request
@@ -2263,7 +2267,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  $ref: '#/definitions/bookmarks.ContentDTO'
               type: object
         "400":
           description: Bad Request
@@ -2331,7 +2335,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  $ref: '#/definitions/bookmarks.ContentDTO'
               type: object
         "400":
           description: Bad Request
