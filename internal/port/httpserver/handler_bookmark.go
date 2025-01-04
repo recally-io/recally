@@ -19,7 +19,7 @@ import (
 type BookmarkService interface {
 	Create(ctx context.Context, tx db.DBTX, dto *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
 	Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.BookmarkDTO, error)
-	List(ctx context.Context, tx db.DBTX, userID uuid.UUID, limit, offset int32) ([]*bookmarks.BookmarkDTO, int64, error)
+	List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter, query string, limit, offset int32) ([]*bookmarks.BookmarkDTO, int64, error)
 	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
 	Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
@@ -47,8 +47,10 @@ func registerBookmarkHandlers(e *echo.Group, s *Service) {
 }
 
 type listBookmarksRequest struct {
-	Limit  int32 `query:"limit" validate:"min=1,max=100"`
-	Offset int32 `query:"offset" validate:"min=0"`
+	Limit  int32  `query:"limit" validate:"min=1,max=100"`
+	Offset int32  `query:"offset" validate:"min=0"`
+	Filter string `query:"filter"` // filter=category:article;type:rss
+	Query  string `query:"query"`  // query=keyword
 }
 
 type listBookmarksResponse struct {
@@ -87,7 +89,7 @@ func (h *bookmarksHandler) listBookmarks(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmarks, total, err := h.service.List(ctx, tx, user.ID, req.Limit, req.Offset)
+	bookmarks, total, err := h.service.List(ctx, tx, user.ID, req.Filter, req.Query, req.Limit, req.Offset)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
