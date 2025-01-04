@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -7,13 +6,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import type { Bookmark } from "@/lib/apis/bookmarks";
 import { ROUTES } from "@/lib/router";
 import { Link } from "@tanstack/react-router";
-import { Search } from "lucide-react";
-import { useState } from "react";
 
+import SearchBox, { type SearchToken } from "@/components/bookmarks/search";
+import type { BookmarkSearch, View } from "@/components/bookmarks/types";
 import {
 	Pagination,
 	PaginationContent,
@@ -22,13 +20,15 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
+
 interface BookmarkListProps {
 	bookmarks: Bookmark[];
-	view: "grid" | "list";
+	view: View;
+	search: BookmarkSearch;
 	total: number;
 	currentPage: number;
 	onPageChange: (page: number) => void;
-	onSearch: (query: string) => void;
+	onSearch: (tokens: SearchToken[], query: string) => void;
 	itemsPerPage: number;
 }
 
@@ -36,19 +36,13 @@ export default function BookmarkList({
 	bookmarks,
 	total,
 	view,
+	search,
 	currentPage,
 	onPageChange,
 	onSearch,
 	itemsPerPage,
 }: BookmarkListProps) {
-	const [searchQuery, setSearchQuery] = useState("");
 	const totalPages = Math.ceil(total / itemsPerPage);
-
-	const handleSearch = (e: React.FormEvent) => {
-		e.preventDefault();
-		// Add search logic here
-		onSearch(searchQuery);
-	};
 
 	const gridView = (bookmark: Bookmark) => {
 		return (
@@ -123,19 +117,9 @@ export default function BookmarkList({
 
 	return (
 		<div className="container mx-auto px-4 py-6 space-y-6">
-			<form onSubmit={handleSearch} className="flex gap-2">
-				<div className="w-full relative">
-					<Input
-						type="search"
-						placeholder="Search by title, URL, or tags..."
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-						className="w-full pl-9"
-					/>
-					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-				</div>
-				<Button type="submit">Search</Button>
-			</form>
+			<div className="mb-4">
+				<SearchBox onSearch={onSearch} search={search} />
+			</div>
 
 			{view === "grid" ? (
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">

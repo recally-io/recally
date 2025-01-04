@@ -1,5 +1,7 @@
 import BookmarkList from "@/components/bookmarks/bookmarks-list";
+import type { SearchToken } from "@/components/bookmarks/search";
 import { BookmarksSidebar } from "@/components/bookmarks/sidebar";
+import type { BookmarkSearch, View } from "@/components/bookmarks/types";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -20,16 +22,6 @@ import { useRouter } from "@tanstack/react-router";
 import { List, Loader2, PlusCircle, Table } from "lucide-react";
 import { useState } from "react";
 
-type View = "grid" | "list";
-
-export type BookmarkSearch = {
-	page: number;
-	// filter: site:github.com,category:url,tag:tag1
-	filter: string;
-	// query: search query
-	query: string;
-};
-
 export default function BookmarksListView({
 	search,
 }: { search: BookmarkSearch }) {
@@ -40,7 +32,7 @@ export default function BookmarksListView({
 	const { data, isLoading } = useBookmarks(
 		limit,
 		offset,
-		search.filter,
+		search.filters.join(";"),
 		search.query,
 	);
 	const bookmarks = data?.bookmarks ?? [];
@@ -51,7 +43,7 @@ export default function BookmarksListView({
 	const [url, setUrl] = useState("");
 	const [view, setView] = useState<View>("grid");
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmitCreateBookmark = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!url) return;
 		await createBookmark({ url });
@@ -61,13 +53,20 @@ export default function BookmarksListView({
 
 	const handlePageChange = (page: number) => {
 		router.navigate({
+			to: ".",
 			search: (prev) => ({ ...prev, page: page }),
 		});
 	};
 
-	const handleSearch = (query: string) => {
+	const handleSearch = (tokens: SearchToken[], query: string) => {
 		router.navigate({
-			search: (prev) => ({ ...prev, query: query, page: 1 }),
+			to: ".",
+			search: (prev) => ({
+				...prev,
+				query: query,
+				page: 1,
+				filters: tokens.map((t) => `${t.type}:${t.value}`),
+			}),
 		});
 	};
 
@@ -83,7 +82,7 @@ export default function BookmarksListView({
 					<DialogHeader>
 						<DialogTitle>Add New Bookmark</DialogTitle>
 					</DialogHeader>
-					<form onSubmit={handleSubmit} className="space-y-4">
+					<form onSubmit={handleSubmitCreateBookmark} className="space-y-4">
 						<Input
 							placeholder="Enter URL"
 							value={url}
@@ -129,6 +128,7 @@ export default function BookmarksListView({
 							bookmarks={bookmarks}
 							total={total}
 							view={view}
+							search={search}
 							currentPage={search.page}
 							onPageChange={handlePageChange}
 							onSearch={handleSearch}
