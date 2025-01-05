@@ -20,7 +20,14 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
 import { useRouter } from "@tanstack/react-router";
 import { List, Loader2, PlusCircle, Table } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const VIEW_STORAGE_KEY = "bookmarks-view-preference";
+
+function getStoredView(): View {
+	if (typeof window === "undefined") return "grid";
+	return (localStorage.getItem(VIEW_STORAGE_KEY) as View) || "grid";
+}
 
 export default function BookmarksListView({
 	search,
@@ -41,7 +48,11 @@ export default function BookmarksListView({
 	const { createBookmark } = useBookmarkMutations();
 	const [open, setOpen] = useState(false);
 	const [url, setUrl] = useState("");
-	const [view, setView] = useState<View>("grid");
+	const [view, setView] = useState<View>(getStoredView());
+
+	useEffect(() => {
+		localStorage.setItem(VIEW_STORAGE_KEY, view);
+	}, [view]);
 
 	const handleSubmitCreateBookmark = async (e: React.FormEvent) => {
 		e.preventDefault();
