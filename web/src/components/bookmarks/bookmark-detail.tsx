@@ -103,7 +103,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 	};
 
 	return (
-		<SidebarProvider>
+		<SidebarProvider defaultOpen={false}>
 			<BookmarksSidebar />
 			<SidebarInset className="overflow-auto">
 				<div className="flex flex-col h-full w-full">

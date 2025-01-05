@@ -133,13 +133,14 @@ WHERE id = $1
   AND user_id = $3;
 
 -- name: ListTagsByUser :many
-SELECT ct.*
+SELECT ct.name, count(*) as count
 FROM content_tags ct
 WHERE ct.user_id = $1
-ORDER BY ct.usage_count DESC;
+GROUP BY ct.name
+ORDER BY count DESC;
 
--- name: ListContentTags :one
-SELECT ARRAY_AGG(ct.name) as tags
+-- name: ListContentTags :many
+SELECT ct.name
 FROM content_tags ct
          JOIN content_tags_mapping ctm ON ct.id = ctm.tag_id
 WHERE ctm.content_id = $1
@@ -174,21 +175,6 @@ SELECT $1,
 FROM content_tags ct
 WHERE ct.name = ANY ($2 :: text[])
   AND ct.user_id = $3;
-
--- name: IncreaseTagsUsageCount :exec
-UPDATE
-    content_tags
-SET usage_count = usage_count + 1
-WHERE name = ANY ($1 :: text[])
-  AND user_id = $2;
-
--- name: DecreaseTagsUsageCount :exec
-UPDATE
-  content_tags
-SET usage_count = usage_count - 1
-WHERE name = ANY ($1 :: text[])
-  AND user_id = $2;
-
 
 -- name: UnLinkContentWithTags :exec
 -- $1: content_id, $2: text[], $3: user_id
