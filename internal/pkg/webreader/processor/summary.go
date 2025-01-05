@@ -14,9 +14,6 @@ import (
 const defaultSummaryPrompt = `You are an experienced editor at* **The Wall Street Journal**. *Your task is to read the following article and provide a comprehensive summary for a busy reader who wants to quickly grasp the essential information.
 
 <ResponseFormat>
-# Category
-[Identify the main category or categories the article belongs to (e.g., Finance, Technology, Health, International News).]
-
 # Summary
 [(2-3 sentences) Write a brief abstract summarizing the essence of the article.]
 
@@ -50,7 +47,11 @@ const summaryPromptTemplate = `
 {{or .Language "[Same as article language]"}}
 </OutputLanguage>
 
-Please provide your summary below:
+Please provide your summary below. When you finish summarizing the article, please add tags to the end of your response with following format: 
+
+<tags>
+#tag1 #tag2 #tag3
+</tags>
 `
 
 var summaryPromptTempl = template.Must(template.New("summaryPromptTemplate").Parse(summaryPromptTemplate))

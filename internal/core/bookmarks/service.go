@@ -12,6 +12,7 @@ import (
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
 	"recally/internal/pkg/webreader/reader"
+	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
@@ -308,7 +309,27 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 	if err := summarier.Process(ctx, content); err != nil {
 		logger.Default.Error("failed to generate summary", "err", err)
 	} else {
-		dto.Summary = content.Summary
+		tags, summary := parseTagsFromSummary(content.Summary)
+		if len(tags) > 0 {
+			// create tags
+			for _, tag := range tags {
+				if _, err := s.dao.CreateContentTag(ctx, tx, db.CreateContentTagParams{
+					Name:   tag,
+					UserID: user.ID,
+				}); err != nil {
+					logger.FromContext(ctx).Error("failed to create tag", "err", err, "content_id", id, "tag", tag)
+				}
+			}
+			// link content with tags
+			if err := s.dao.LinkContentWithTags(ctx, tx, db.LinkContentWithTagsParams{
+				ContentID: id,
+				Column2:   tags,
+				UserID:    user.ID,
+			}); err != nil {
+				logger.FromContext(ctx).Error("failed to link tags with content", "err", err, "content_id", id, "tags", tags)
+			}
+			dto.Summary = summary
+		}
 	}
 
 	return s.Update(ctx, tx, id, userID, dto)
@@ -327,4 +348,43 @@ func newSummarier(llm *llms.LLM, user *auth.UserDTO) *processor.SummaryProcessor
 	}
 
 	return processor.NewSummaryProcessor(llm, summaryOptions...)
+}
+
+// parseTagsFromSummary extracts tags from a string and returns the tags array and the string without tags
+func parseTagsFromSummary(input string) ([]string, string) {
+	// Regular expression to match the tags section
+	tagsRegex := regexp.MustCompile(`(?s)<tags>.*?</tags>`)
+
+	// Find tags section
+	tagsSection := tagsRegex.FindString(input)
+
+	// If no tags section found, return empty array and original string
+	if tagsSection == "" {
+		return []string{}, input
+	}
+
+	// Extract content between tags
+	content := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(tagsSection, "<tags>"), "</tags>"))
+
+	// Split content by whitespace
+	words := strings.Fields(content)
+
+	// Process valid tags
+	tagMap := make(map[string]bool) // Use map to ensure uniqueness
+	var tags []string
+
+	for _, word := range words {
+		if strings.HasPrefix(word, "#") {
+			tag := strings.TrimPrefix(word, "#")
+			if tag != "" && !tagMap[tag] {
+				tagMap[tag] = true
+				tags = append(tags, tag)
+			}
+		}
+	}
+
+	// Remove tags section from original string
+	cleanedString := strings.TrimSpace(tagsRegex.ReplaceAllString(input, "\n"))
+
+	return tags, cleanedString
 }
