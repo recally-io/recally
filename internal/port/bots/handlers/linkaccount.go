@@ -1,28 +1,20 @@
 package handlers
 
 import (
-	"context"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
+	"recally/internal/pkg/logger"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
 	tele "gopkg.in/telebot.v3"
 )
 
 func (h *Handler) LinkAccountHandler(c tele.Context) error {
-	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
-
-	tx, ok := contexts.Get[pgx.Tx](ctx, contexts.ContextKeyTx)
-	if !ok {
-		_ = c.Reply("Failed to get dbtx from context")
-		return nil
-	}
-
-	userID, ok := contexts.Get[string](ctx, contexts.ContextKeyUserID)
-	if !ok {
-		_ = c.Reply("Failed to get userID from context")
-		return nil
+	ctx, user, tx, err := h.initHandlerRequest(c)
+	if err != nil {
+		logger.FromContext(ctx).Error("init request error", "err", err)
+		_ = c.Reply("Failed to processing message, please retry.")
+		return err
 	}
 
 	token := strings.TrimSpace(strings.TrimPrefix(c.Text(), "/linkaccount"))
@@ -31,10 +23,11 @@ func (h *Handler) LinkAccountHandler(c tele.Context) error {
 		return nil
 	}
 
+	tgUserID, _ := contexts.Get[string](ctx, contexts.ContextKeyUserID)
 	oAuthUser := auth.OAuth2User{
 		Provider: "telegram",
-		ID:       userID,
-		Name:     c.Sender().Username,
+		ID:       tgUserID,
+		Name:     user.Username,
 	}
 
 	if err := h.authService.LinkAccount(ctx, tx, oAuthUser, token); err != nil {

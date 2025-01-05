@@ -174,3 +174,33 @@ SELECT $1,
 FROM content_tags ct
 WHERE ct.name = ANY ($2 :: text[])
   AND ct.user_id = $3;
+
+-- name: IncreaseTagsUsageCount :exec
+UPDATE
+    content_tags
+SET usage_count = usage_count + 1
+WHERE name = ANY ($1 :: text[])
+  AND user_id = $2;
+
+-- name: DecreaseTagsUsageCount :exec
+UPDATE
+  content_tags
+SET usage_count = usage_count - 1
+WHERE name = ANY ($1 :: text[])
+  AND user_id = $2;
+
+
+-- name: UnLinkContentWithTags :exec
+-- $1: content_id, $2: text[], $3: user_id
+DELETE FROM content_tags_mapping
+WHERE content_id = $1
+  AND tag_id IN (SELECT id
+                 FROM content_tags
+                 WHERE name = ANY ($2 :: text[])
+                   AND user_id = $3);
+
+-- name: ListExistingTagsByTags :many
+SELECT name
+FROM content_tags
+WHERE name = ANY ($1 :: text[])
+  AND user_id = $2;

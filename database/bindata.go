@@ -389,7 +389,7 @@ func _000008_comprehensive_bookmarksDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000008_comprehensive_bookmarks.down.sql", size: 650, mode: os.FileMode(420), modTime: time.Unix(1736003219, 0)}
+	info := bindataFileInfo{name: "000008_comprehensive_bookmarks.down.sql", size: 650, mode: os.FileMode(420), modTime: time.Unix(1736065371, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -409,7 +409,7 @@ func _000008_comprehensive_bookmarksUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000008_comprehensive_bookmarks.up.sql", size: 4309, mode: os.FileMode(420), modTime: time.Unix(1736003763, 0)}
+	info := bindataFileInfo{name: "000008_comprehensive_bookmarks.up.sql", size: 4309, mode: os.FileMode(420), modTime: time.Unix(1736065371, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -429,7 +429,7 @@ func _000009_migrate_bookmarks_dataDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000009_migrate_bookmarks_data.down.sql", size: 0, mode: os.FileMode(420), modTime: time.Unix(1736003091, 0)}
+	info := bindataFileInfo{name: "000009_migrate_bookmarks_data.down.sql", size: 0, mode: os.FileMode(420), modTime: time.Unix(1736065371, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -449,7 +449,7 @@ func _000009_migrate_bookmarks_dataUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000009_migrate_bookmarks_data.up.sql", size: 516, mode: os.FileMode(420), modTime: time.Unix(1736003096, 0)}
+	info := bindataFileInfo{name: "000009_migrate_bookmarks_data.up.sql", size: 516, mode: os.FileMode(420), modTime: time.Unix(1736065371, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
