@@ -53,6 +53,17 @@ type BookmarkDTO struct {
 
 type ContentType string
 
+const (
+	ContentTypeBookmark   ContentType = "bookmark"
+	ContentTypePDF        ContentType = "pdf"
+	ContentTypeEPUB       ContentType = "epub"
+	ContentTypeRSS        ContentType = "rss"
+	ContentTypeNewsletter ContentType = "newsletter"
+	ContentTypeImage      ContentType = "image"
+	ContentTypePodcast    ContentType = "podcast"
+	ContentTypeVideo      ContentType = "video"
+)
+
 type ContentDTO struct {
 	ID          uuid.UUID   `json:"id"`
 	UserID      uuid.UUID   `json:"user_id"`
@@ -70,6 +81,19 @@ type ContentDTO struct {
 	IsFavorite  bool        `json:"is_favorite,omitempty"`
 	CreatedAt   time.Time   `json:"created_at"`
 	UpdatedAt   time.Time   `json:"updated_at"`
+}
+
+func loadTag(dbTags interface{}) []string {
+	if dbTags != nil {
+		tags := make([]string, 0, len(dbTags.([]interface{})))
+		for _, tag := range dbTags.([]interface{}) {
+			if str, ok := tag.(string); ok {
+				tags = append(tags, str)
+			}
+		}
+		return tags
+	}
+	return nil
 }
 
 func (c *ContentDTO) Load(dbo *db.Content) {
@@ -111,9 +135,7 @@ func (c *ContentDTO) LoadWithTags(dbo *db.GetContentRow) {
 	c.IsFavorite = dbo.IsFavorite.Bool
 	c.CreatedAt = dbo.CreatedAt.Time
 	c.UpdatedAt = dbo.UpdatedAt.Time
-	if (dbo.Tags) != nil {
-		c.Tags = dbo.Tags.([]string)
-	}
+	c.Tags = loadTag(dbo.Tags)
 
 	if dbo.Metadata != nil {
 		if err := json.Unmarshal(dbo.Metadata, &c.Metadata); err != nil {
@@ -138,9 +160,7 @@ func (c *ContentDTO) LoadWithTagsAndTotalCount(dbo *db.ListContentsRow) {
 	c.IsFavorite = dbo.IsFavorite.Bool
 	c.CreatedAt = dbo.CreatedAt.Time
 	c.UpdatedAt = dbo.UpdatedAt.Time
-	// if (dbo.Tags) != nil {
-	// 	c.Tags = dbo.Tags.([]string)
-	// }
+	c.Tags = loadTag(dbo.Tags)
 
 	if dbo.Metadata != nil {
 		if err := json.Unmarshal(dbo.Metadata, &c.Metadata); err != nil {

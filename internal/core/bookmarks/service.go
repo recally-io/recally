@@ -42,12 +42,11 @@ func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *ContentDTO) (*Con
 		Url:    pgtype.Text{String: dto.URL, Valid: true},
 		UserID: dto.UserID,
 	})
+	if err != nil && !db.IsNotFoundError(err) {
+		return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
+	}
 	if isExisting {
 		return nil, fmt.Errorf("%w, id: %s", ErrDuplicate, dto.URL)
-	}
-
-	if !db.IsNotFoundError(err) {
-		return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
 	}
 
 	// create content

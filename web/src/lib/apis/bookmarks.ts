@@ -28,13 +28,16 @@ export interface Metadata {
 export interface Bookmark {
 	id: string;
 	userId: string;
-	url: string;
+	type: string;
+	url?: string;
+	domain?: string;
 	title?: string;
+	description?: string;
 	summary?: string;
 	content?: string;
+	tags?: string[];
 	html?: string;
 	metadata?: Metadata;
-	screenshot?: string;
 	created_at: string;
 	updated_at: string;
 }

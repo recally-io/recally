@@ -212,6 +212,7 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 		UserID:   user.ID,
 		URL:      req.URL,
 		Metadata: req.Metadata,
+		Type:     bookmarks.ContentTypeBookmark,
 	}
 
 	created, err := h.service.Create(ctx, tx, bookmark)
