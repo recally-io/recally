@@ -128,7 +128,7 @@ func (h *bookmarksHandler) listTags(c echo.Context) error {
 
 	tags, err := cache.RunInCache[[]bookmarks.TagDTO](ctx, cache.MemCache,
 		cache.NewCacheKey("bookmarks", "tags"),
-		5*time.Minute,
+		time.Minute,
 		func() (*[]bookmarks.TagDTO, error) {
 			t, err := h.service.ListTags(ctx, tx, user.ID)
 			if err != nil {
@@ -163,7 +163,7 @@ func (h *bookmarksHandler) listDomains(c echo.Context) error {
 
 	domains, err := cache.RunInCache[[]bookmarks.DomainDTO](ctx, cache.MemCache,
 		cache.NewCacheKey("bookmarks", "domains"),
-		5*time.Minute,
+		time.Minute,
 		func() (*[]bookmarks.DomainDTO, error) {
 			d, err := h.service.ListDomains(ctx, tx, user.ID)
 			if err != nil {
