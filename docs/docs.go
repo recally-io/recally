@@ -2760,7 +2760,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                                            "$ref": "#/definitions/bookmarks.ContentDTO"
                                         }
                                     }
                                 }
@@ -2920,6 +2920,154 @@ const docTemplate = `{
                 }
             }
         },
+        "/bookmarks/domains": {
+            "get": {
+                "description": "Lists all domains from user's bookmarks",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookmarks"
+                ],
+                "summary": "List Domains",
+                "responses": {
+                    "200": {
+                        "description": "Success - Returns array of domains with counts",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/bookmarks.DomainDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/bookmarks/tags": {
+            "get": {
+                "description": "Lists all tags for a user's bookmarks",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookmarks"
+                ],
+                "summary": "List Tags",
+                "responses": {
+                    "200": {
+                        "description": "Success - Returns array of tags with counts",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/bookmarks.TagDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/bookmarks/{bookmark-id}": {
             "get": {
                 "description": "Gets a specific bookmark by ID",
@@ -2954,7 +3102,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                                            "$ref": "#/definitions/bookmarks.ContentDTO"
                                         }
                                     }
                                 }
@@ -3077,7 +3225,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                                            "$ref": "#/definitions/bookmarks.ContentDTO"
                                         }
                                     }
                                 }
@@ -3298,7 +3446,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                                            "$ref": "#/definitions/bookmarks.ContentDTO"
                                         }
                                     }
                                 }
@@ -4470,19 +4618,19 @@ const docTemplate = `{
                 }
             }
         },
-        "bookmarks.BookmarkDTO": {
+        "bookmarks.ContentDTO": {
             "type": "object",
             "properties": {
                 "content": {
                     "type": "string"
                 },
-                "content_embedding": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    }
-                },
                 "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "domain": {
                     "type": "string"
                 },
                 "html": {
@@ -4491,22 +4639,28 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "is_favorite": {
+                    "type": "boolean"
+                },
                 "metadata": {
                     "$ref": "#/definitions/bookmarks.Metadata"
                 },
-                "screenshot": {
+                "s3_key": {
                     "type": "string"
                 },
                 "summary": {
                     "type": "string"
                 },
-                "summary_embedding": {
+                "tags": {
                     "type": "array",
                     "items": {
-                        "type": "number"
+                        "type": "string"
                     }
                 },
                 "title": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -4516,6 +4670,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "bookmarks.DomainDTO": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -4578,6 +4743,17 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "bookmarks.TagDTO": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -4712,7 +4888,7 @@ const docTemplate = `{
                 "bookmarks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/bookmarks.BookmarkDTO"
+                        "$ref": "#/definitions/bookmarks.ContentDTO"
                     }
                 },
                 "limit": {

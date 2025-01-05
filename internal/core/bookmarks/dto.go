@@ -51,6 +51,161 @@ type BookmarkDTO struct {
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
+type ContentType string
+
+const (
+	ContentTypeBookmark   ContentType = "bookmark"
+	ContentTypePDF        ContentType = "pdf"
+	ContentTypeEPUB       ContentType = "epub"
+	ContentTypeRSS        ContentType = "rss"
+	ContentTypeNewsletter ContentType = "newsletter"
+	ContentTypeImage      ContentType = "image"
+	ContentTypePodcast    ContentType = "podcast"
+	ContentTypeVideo      ContentType = "video"
+)
+
+type ContentDTO struct {
+	ID          uuid.UUID   `json:"id"`
+	UserID      uuid.UUID   `json:"user_id"`
+	Type        ContentType `json:"type"`
+	URL         string      `json:"url,omitempty"`
+	Domain      string      `json:"domain,omitempty"`
+	S3Key       string      `json:"s3_key,omitempty"`
+	Title       string      `json:"title"`
+	Description string      `json:"description,omitempty"`
+	Tags        []string    `json:"tags,omitempty"`
+	Summary     string      `json:"summary,omitempty"`
+	Content     string      `json:"content,omitempty"`
+	HTML        string      `json:"html,omitempty"`
+	Metadata    Metadata    `json:"metadata,omitempty"`
+	IsFavorite  bool        `json:"is_favorite,omitempty"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
+}
+
+func loadTag(dbTags interface{}) []string {
+	if dbTags != nil {
+		tags := make([]string, 0, len(dbTags.([]interface{})))
+		for _, tag := range dbTags.([]interface{}) {
+			if str, ok := tag.(string); ok {
+				tags = append(tags, str)
+			}
+		}
+		return tags
+	}
+	return nil
+}
+
+func (c *ContentDTO) Load(dbo *db.Content) {
+	c.ID = dbo.ID
+	c.UserID = dbo.UserID
+	c.Type = ContentType(dbo.Type)
+	c.URL = dbo.Url.String
+	c.Domain = dbo.Domain.String
+	c.S3Key = dbo.S3Key.String
+	c.Title = dbo.Title
+	c.Description = dbo.Description.String
+	c.Summary = dbo.Summary.String
+	c.Content = dbo.Content.String
+	c.HTML = dbo.Html.String
+	c.IsFavorite = dbo.IsFavorite.Bool
+	c.CreatedAt = dbo.CreatedAt.Time
+	c.UpdatedAt = dbo.UpdatedAt.Time
+
+	if dbo.Metadata != nil {
+		if err := json.Unmarshal(dbo.Metadata, &c.Metadata); err != nil {
+			logger.Default.Warn("failed to unmarshal Content metadata",
+				"err", err, "metadata", string(dbo.Metadata))
+		}
+	}
+}
+
+func (c *ContentDTO) LoadWithTags(dbo *db.GetContentRow) {
+	c.ID = dbo.ID
+	c.UserID = dbo.UserID
+	c.Type = ContentType(dbo.Type)
+	c.URL = dbo.Url.String
+	c.Domain = dbo.Domain.String
+	c.S3Key = dbo.S3Key.String
+	c.Title = dbo.Title
+	c.Description = dbo.Description.String
+	c.Summary = dbo.Summary.String
+	c.Content = dbo.Content.String
+	c.HTML = dbo.Html.String
+	c.IsFavorite = dbo.IsFavorite.Bool
+	c.CreatedAt = dbo.CreatedAt.Time
+	c.UpdatedAt = dbo.UpdatedAt.Time
+	c.Tags = loadTag(dbo.Tags)
+
+	if dbo.Metadata != nil {
+		if err := json.Unmarshal(dbo.Metadata, &c.Metadata); err != nil {
+			logger.Default.Warn("failed to unmarshal Content metadata",
+				"err", err, "metadata", string(dbo.Metadata))
+		}
+	}
+}
+
+func (c *ContentDTO) LoadWithTagsAndTotalCount(dbo *db.ListContentsRow) {
+	c.ID = dbo.ID
+	c.UserID = dbo.UserID
+	c.Type = ContentType(dbo.Type)
+	c.URL = dbo.Url.String
+	c.Domain = dbo.Domain.String
+	c.S3Key = dbo.S3Key.String
+	c.Title = dbo.Title
+	c.Description = dbo.Description.String
+	c.Summary = dbo.Summary.String
+	c.Content = dbo.Content.String
+	c.HTML = dbo.Html.String
+	c.IsFavorite = dbo.IsFavorite.Bool
+	c.CreatedAt = dbo.CreatedAt.Time
+	c.UpdatedAt = dbo.UpdatedAt.Time
+	c.Tags = loadTag(dbo.Tags)
+
+	if dbo.Metadata != nil {
+		if err := json.Unmarshal(dbo.Metadata, &c.Metadata); err != nil {
+			logger.Default.Warn("failed to unmarshal Content metadata",
+				"err", err, "metadata", string(dbo.Metadata))
+		}
+	}
+}
+
+func (c *ContentDTO) Dump() db.CreateContentParams {
+	metadata, _ := json.Marshal(c.Metadata)
+	return db.CreateContentParams{
+		UserID:      c.UserID,
+		Type:        string(c.Type),
+		Title:       c.Title,
+		Description: pgtype.Text{String: c.Description, Valid: c.Description != ""},
+		Url:         pgtype.Text{String: c.URL, Valid: c.URL != ""},
+		Domain:      pgtype.Text{String: c.Domain, Valid: c.Domain != ""},
+		S3Key:       pgtype.Text{String: c.S3Key, Valid: c.S3Key != ""},
+		Summary:     pgtype.Text{String: c.Summary, Valid: c.Summary != ""},
+		Content:     pgtype.Text{String: c.Content, Valid: c.Content != ""},
+		Html:        pgtype.Text{String: c.HTML, Valid: c.HTML != ""},
+		IsFavorite:  pgtype.Bool{Bool: c.IsFavorite, Valid: true},
+		Metadata:    metadata,
+	}
+}
+
+func (c *ContentDTO) DumpToUpdateParams() db.UpdateContentParams {
+	metadata, _ := json.Marshal(c.Metadata)
+	return db.UpdateContentParams{
+		ID:          c.ID,
+		UserID:      c.UserID,
+		Title:       pgtype.Text{String: c.Title, Valid: c.Title != ""},
+		Description: pgtype.Text{String: c.Description, Valid: c.Description != ""},
+		Url:         pgtype.Text{String: c.URL, Valid: c.URL != ""},
+		Domain:      pgtype.Text{String: c.Domain, Valid: c.Domain != ""},
+		S3Key:       pgtype.Text{String: c.S3Key, Valid: c.S3Key != ""},
+		Summary:     pgtype.Text{String: c.Summary, Valid: c.Summary != ""},
+		Content:     pgtype.Text{String: c.Content, Valid: c.Content != ""},
+		Html:        pgtype.Text{String: c.HTML, Valid: c.HTML != ""},
+		IsFavorite:  pgtype.Bool{Bool: c.IsFavorite, Valid: true},
+		Metadata:    metadata,
+	}
+}
+
 // Load converts a database object to a domain object
 func (b *BookmarkDTO) Load(dbo *db.Bookmark) {
 	b.ID = dbo.Uuid
