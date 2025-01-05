@@ -163,37 +163,48 @@ definitions:
       summary_options:
         $ref: '#/definitions/processor.SummaryConfig'
     type: object
-  bookmarks.BookmarkDTO:
+  bookmarks.ContentDTO:
     properties:
       content:
         type: string
-      content_embedding:
-        items:
-          type: number
-        type: array
       created_at:
+        type: string
+      description:
+        type: string
+      domain:
         type: string
       html:
         type: string
       id:
         type: string
+      is_favorite:
+        type: boolean
       metadata:
         $ref: '#/definitions/bookmarks.Metadata'
-      screenshot:
+      s3_key:
         type: string
       summary:
         type: string
-      summary_embedding:
+      tags:
         items:
-          type: number
+          type: string
         type: array
       title:
+        type: string
+      type:
         type: string
       updated_at:
         type: string
       url:
         type: string
       user_id:
+        type: string
+    type: object
+  bookmarks.DomainDTO:
+    properties:
+      count:
+        type: integer
+      name:
         type: string
     type: object
   bookmarks.Highlight:
@@ -235,6 +246,13 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  bookmarks.TagDTO:
+    properties:
+      count:
+        type: integer
+      name:
+        type: string
     type: object
   httpserver.JSONResult:
     description: JSONResult represents the structure of the JSON response.
@@ -326,7 +344,7 @@ definitions:
     properties:
       bookmarks:
         items:
-          $ref: '#/definitions/bookmarks.BookmarkDTO'
+          $ref: '#/definitions/bookmarks.ContentDTO'
         type: array
       limit:
         type: integer
@@ -2091,7 +2109,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  $ref: '#/definitions/bookmarks.ContentDTO'
               type: object
         "400":
           description: Bad Request
@@ -2196,7 +2214,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  $ref: '#/definitions/bookmarks.ContentDTO'
               type: object
         "400":
           description: Bad Request
@@ -2263,7 +2281,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  $ref: '#/definitions/bookmarks.ContentDTO'
               type: object
         "400":
           description: Bad Request
@@ -2331,7 +2349,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkDTO'
+                  $ref: '#/definitions/bookmarks.ContentDTO'
               type: object
         "400":
           description: Bad Request
@@ -2370,6 +2388,86 @@ paths:
                   type: object
               type: object
       summary: Refresh Bookmark
+      tags:
+      - Bookmarks
+  /bookmarks/domains:
+    get:
+      consumes:
+      - application/json
+      description: Lists all domains from user's bookmarks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success - Returns array of domains with counts
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/bookmarks.DomainDTO'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Domains
+      tags:
+      - Bookmarks
+  /bookmarks/tags:
+    get:
+      consumes:
+      - application/json
+      description: Lists all tags for a user's bookmarks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success - Returns array of tags with counts
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/bookmarks.TagDTO'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: List Tags
       tags:
       - Bookmarks
   /files/{id}:

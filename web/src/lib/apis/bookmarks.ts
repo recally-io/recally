@@ -28,13 +28,16 @@ export interface Metadata {
 export interface Bookmark {
 	id: string;
 	userId: string;
-	url: string;
+	type: string;
+	url?: string;
+	domain?: string;
 	title?: string;
+	description?: string;
 	summary?: string;
 	content?: string;
+	tags?: string[];
 	html?: string;
 	metadata?: Metadata;
-	screenshot?: string;
 	created_at: string;
 	updated_at: string;
 }
@@ -44,6 +47,16 @@ export interface ListBookmarksResponse {
 	total: number;
 	limit: number;
 	offset: number;
+}
+
+export interface Tag {
+	name: string;
+	count: number;
+}
+
+export interface Domain {
+	name: string;
+	count: number;
 }
 
 interface BookmarkCreateInput {
@@ -100,6 +113,10 @@ const api = {
 			method: "POST",
 			body: JSON.stringify(input),
 		}),
+
+	listTags: () => fetcher<Tag[]>("/api/v1/bookmarks/tags"),
+
+	listDomains: () => fetcher<Domain[]>("/api/v1/bookmarks/domains"),
 };
 
 // SWR Hooks
@@ -112,6 +129,14 @@ export function useBookmarks(limit = 20, offset = 0, filter = "", query = "") {
 
 export function useBookmark(id: string) {
 	return useSWR<Bookmark>(id ? ["bookmark", id] : null, () => api.get(id));
+}
+
+export function useTags() {
+	return useSWR<Tag[]>("bookmarkTags", () => api.listTags());
+}
+
+export function useDomains() {
+	return useSWR<Domain[]>("bookmarkDomains", () => api.listDomains());
 }
 
 // Mutation Hooks

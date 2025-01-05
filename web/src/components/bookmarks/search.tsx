@@ -12,29 +12,26 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { useDomains, useTags } from "@/lib/apis/bookmarks";
 import { ChevronDown, Search, X } from "lucide-react";
 import { useState } from "react";
 
 import type { BookmarkSearch } from "@/components/bookmarks/types";
 
 export interface SearchToken {
-	type: "domain" | "category" | "type";
+	type: "domain" | "tag" | "type";
 	value: string;
 }
 
-const filterOptions = [
-	{
-		label: "Types",
-		options: ["bookmark", "rss", "newsletter"],
-	},
-	{
-		label: "Domains",
-		options: [],
-	},
-	{
-		label: "Categories",
-		options: ["article", "video", "podcast", "image", "pdf", "ebook"],
-	},
+const typeOptions = [
+	"Bookmark",
+	"PDF",
+	"EPUB",
+	"RSS",
+	"Newsletter",
+	"Image",
+	"Video",
+	"Podcast",
 ];
 
 interface SearchTokenProps {
@@ -43,11 +40,16 @@ interface SearchTokenProps {
 	onRemove: () => void;
 }
 
+interface FilterOption {
+	value: string;
+	count?: number;
+}
+
 interface FilterButtonProps {
 	label: string;
-	options: string[];
+	options: (string | FilterOption)[];
 	onSelect: (value: string) => void;
-	selectedTokens: SearchToken[]; // Add this new prop
+	selectedTokens: SearchToken[];
 }
 
 const SearchToken: React.FC<SearchTokenProps> = ({
@@ -73,15 +75,16 @@ const FilterButton: React.FC<FilterButtonProps> = ({
 	const [open, setOpen] = useState(false);
 	const [search, setSearch] = useState("");
 
-	const filtered = options.filter((option) =>
-		option.toLowerCase().includes(search.toLowerCase()),
-	);
+	const filtered = options.filter((option) => {
+		const value = typeof option === "string" ? option : option.value;
+		return value.toLowerCase().includes(search.toLowerCase());
+	});
 
-	const isOptionSelected = (option: string) =>
+	const isOptionSelected = (optionValue: string) =>
 		selectedTokens.some(
 			(token) =>
 				token.type.toLowerCase() === label.toLowerCase() &&
-				token.value.toLowerCase() === option.toLowerCase(),
+				token.value.toLowerCase() === optionValue.toLowerCase(),
 		);
 
 	return (
@@ -106,13 +109,17 @@ const FilterButton: React.FC<FilterButtonProps> = ({
 						<CommandEmpty>No results found.</CommandEmpty>
 						<CommandGroup heading={label}>
 							{filtered.map((option) => {
-								const isSelected = isOptionSelected(option);
+								const value =
+									typeof option === "string" ? option : option.value;
+								const count =
+									typeof option === "string" ? undefined : option.count;
+								const isSelected = isOptionSelected(value);
 								return (
 									<CommandItem
-										key={option}
+										key={value}
 										onSelect={() => {
 											if (!isSelected) {
-												onSelect(option);
+												onSelect(value);
 												setOpen(false);
 											}
 										}}
@@ -121,7 +128,10 @@ const FilterButton: React.FC<FilterButtonProps> = ({
 											isSelected ? "opacity-50 cursor-not-allowed" : ""
 										}
 									>
-										<span>{option}</span>
+										<span className="flex-1">{value}</span>
+										{count !== undefined && (
+											<span className="text-xs text-gray-500">({count})</span>
+										)}
 										{isSelected && (
 											<span className="ml-2 text-xs text-gray-500">
 												(selected)
@@ -144,6 +154,24 @@ interface SearchBoxProps {
 }
 
 const SearchBox: React.FC<SearchBoxProps> = ({ search, onSearch }) => {
+	const { data: tags } = useTags();
+	const { data: domains } = useDomains();
+
+	const filterOptions = [
+		{
+			label: "Type",
+			options: typeOptions,
+		},
+		{
+			label: "Domain",
+			options: domains?.map((d) => ({ value: d.name, count: d.count })) || [],
+		},
+		{
+			label: "Tag",
+			options: tags?.map((t) => ({ value: t.name, count: t.count })) || [],
+		},
+	];
+
 	const [tokens, setTokens] = useState<SearchToken[]>(
 		search.filters.map((token) => {
 			const [type, value] = token.split(":");

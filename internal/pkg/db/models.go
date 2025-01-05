@@ -143,6 +143,56 @@ type Cache struct {
 	UpdatedAt pgtype.Timestamp
 }
 
+type Content struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Type        string
+	Title       string
+	Description pgtype.Text
+	Url         pgtype.Text
+	Domain      pgtype.Text
+	S3Key       pgtype.Text
+	Summary     pgtype.Text
+	Content     pgtype.Text
+	Html        pgtype.Text
+	Metadata    []byte
+	IsFavorite  pgtype.Bool
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type ContentFolder struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Name      string
+	ParentID  pgtype.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type ContentFoldersMapping struct {
+	ContentID uuid.UUID
+	FolderID  uuid.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type ContentTag struct {
+	ID         uuid.UUID
+	Name       string
+	UserID     uuid.UUID
+	UsageCount pgtype.Int4
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
+type ContentTagsMapping struct {
+	ContentID uuid.UUID
+	TagID     uuid.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
 type User struct {
 	ID                  int32
 	Uuid                uuid.UUID

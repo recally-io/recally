@@ -39,6 +39,7 @@ type DatabaseConfig struct {
 	User     string `env:"USER" envDefault:"postgres"`
 	Password string `env:"PASSWORD" envDefault:"postgres"`
 	Database string `env:"DATABASE" envDefault:"postgres"`
+	DEBUG    bool   `env:"DEBUG" envDefault:"false"` // Enable debug mode to log all SQL queries
 }
 
 func (db DatabaseConfig) URL() string {
