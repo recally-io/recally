@@ -78,11 +78,20 @@ interface BookmarkRefreshInput {
 
 // API Functions
 const api = {
-	list: (filter = "", query = "", limit = 20, offset = 0) =>
-		// filter=category:article;type:rss
-		fetcher<ListBookmarksResponse>(
-			`/api/v1/bookmarks?limit=${limit}&offset=${offset}&query=${query}&filter=${filter}`,
-		),
+	list: (filters: string[] = [], query = "", limit = 20, offset = 0) => {
+		const params = new URLSearchParams();
+		params.set("limit", limit.toString());
+		params.set("offset", offset.toString());
+		params.set("query", query);
+		// Append each filter separately
+		for (const filter of filters) {
+			params.append("filter", filter);
+		}
+
+		const url = `/api/v1/bookmarks?${params.toString()}`;
+		console.log("api.list", url);
+		return fetcher<ListBookmarksResponse>(url);
+	},
 
 	create: (input: BookmarkCreateInput) =>
 		fetcher<Bookmark>("/api/v1/bookmarks", {
@@ -120,10 +129,16 @@ const api = {
 };
 
 // SWR Hooks
-export function useBookmarks(limit = 20, offset = 0, filter = "", query = "") {
+export function useBookmarks(
+	limit = 20,
+	offset = 0,
+	filters: string[] = [],
+	query = "",
+) {
+	console.log("useBookmarks", filters, query, limit, offset);
 	return useSWR<ListBookmarksResponse>(
-		["bookmarks", filter, query, limit, offset],
-		() => api.list(filter, query, limit, offset),
+		["bookmarks", filters, query, limit, offset],
+		() => api.list(filters, query, limit, offset),
 	);
 }
 

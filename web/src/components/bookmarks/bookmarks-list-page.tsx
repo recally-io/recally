@@ -39,7 +39,7 @@ export default function BookmarksListView({
 	const { data, isLoading } = useBookmarks(
 		limit,
 		offset,
-		search.filters.join(";"),
+		search.filters,
 		search.query,
 	);
 	const bookmarks = data?.bookmarks ?? [];

@@ -21,7 +21,7 @@ import (
 type BookmarkService interface {
 	Create(ctx context.Context, tx db.DBTX, dto *bookmarks.ContentDTO) (*bookmarks.ContentDTO, error)
 	Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.ContentDTO, error)
-	List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter, query string, limit, offset int32) ([]*bookmarks.ContentDTO, int64, error)
+	List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter []string, query string, limit, offset int32) ([]*bookmarks.ContentDTO, int64, error)
 	ListTags(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]bookmarks.TagDTO, error)
 	ListDomains(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]bookmarks.DomainDTO, error)
 	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.ContentDTO) (*bookmarks.ContentDTO, error)
@@ -53,10 +53,10 @@ func registerBookmarkHandlers(e *echo.Group, s *Service) {
 }
 
 type listBookmarksRequest struct {
-	Limit  int32  `query:"limit" validate:"min=1,max=100"`
-	Offset int32  `query:"offset" validate:"min=0"`
-	Filter string `query:"filter"` // filter=category:article;type:rss
-	Query  string `query:"query"`  // query=keyword
+	Limit  int32    `query:"limit" validate:"min=1,max=100"`
+	Offset int32    `query:"offset" validate:"min=0"`
+	Filter []string `query:"filter"` // filter=category:article;type:rss
+	Query  string   `query:"query"`  // query=keyword
 }
 
 type listBookmarksResponse struct {
