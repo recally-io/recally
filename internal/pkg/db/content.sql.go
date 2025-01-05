@@ -118,6 +118,24 @@ func (q *Queries) CreateContentTag(ctx context.Context, db DBTX, arg CreateConte
 	return i, err
 }
 
+const decreaseTagsUsageCount = `-- name: DecreaseTagsUsageCount :exec
+UPDATE
+  content_tags
+SET usage_count = usage_count - 1
+WHERE name = ANY ($1 :: text[])
+  AND user_id = $2
+`
+
+type DecreaseTagsUsageCountParams struct {
+	Column1 []string
+	UserID  uuid.UUID
+}
+
+func (q *Queries) DecreaseTagsUsageCount(ctx context.Context, db DBTX, arg DecreaseTagsUsageCountParams) error {
+	_, err := db.Exec(ctx, decreaseTagsUsageCount, arg.Column1, arg.UserID)
+	return err
+}
+
 const deleteContent = `-- name: DeleteContent :exec
 DELETE
 FROM content
@@ -227,6 +245,24 @@ func (q *Queries) GetContent(ctx context.Context, db DBTX, arg GetContentParams)
 		&i.Tags,
 	)
 	return i, err
+}
+
+const increaseTagsUsageCount = `-- name: IncreaseTagsUsageCount :exec
+UPDATE
+    content_tags
+SET usage_count = usage_count + 1
+WHERE name = ANY ($1 :: text[])
+  AND user_id = $2
+`
+
+type IncreaseTagsUsageCountParams struct {
+	Column1 []string
+	UserID  uuid.UUID
+}
+
+func (q *Queries) IncreaseTagsUsageCount(ctx context.Context, db DBTX, arg IncreaseTagsUsageCountParams) error {
+	_, err := db.Exec(ctx, increaseTagsUsageCount, arg.Column1, arg.UserID)
+	return err
 }
 
 const isContentExistWithURL = `-- name: IsContentExistWithURL :one
@@ -447,6 +483,38 @@ func (q *Queries) ListContents(ctx context.Context, db DBTX, arg ListContentsPar
 	return items, nil
 }
 
+const listExistingTagsByTags = `-- name: ListExistingTagsByTags :many
+SELECT name
+FROM content_tags
+WHERE name = ANY ($1 :: text[])
+  AND user_id = $2
+`
+
+type ListExistingTagsByTagsParams struct {
+	Column1 []string
+	UserID  uuid.UUID
+}
+
+func (q *Queries) ListExistingTagsByTags(ctx context.Context, db DBTX, arg ListExistingTagsByTagsParams) ([]string, error) {
+	rows, err := db.Query(ctx, listExistingTagsByTags, arg.Column1, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTagsByUser = `-- name: ListTagsByUser :many
 SELECT ct.id, ct.name, ct.user_id, ct.usage_count, ct.created_at, ct.updated_at
 FROM content_tags ct
@@ -497,6 +565,27 @@ type OwnerTransferContentParams struct {
 
 func (q *Queries) OwnerTransferContent(ctx context.Context, db DBTX, arg OwnerTransferContentParams) error {
 	_, err := db.Exec(ctx, ownerTransferContent, arg.ID, arg.UserID, arg.UserID_2)
+	return err
+}
+
+const unLinkContentWithTags = `-- name: UnLinkContentWithTags :exec
+DELETE FROM content_tags_mapping
+WHERE content_id = $1
+  AND tag_id IN (SELECT id
+                 FROM content_tags
+                 WHERE name = ANY ($2 :: text[])
+                   AND user_id = $3)
+`
+
+type UnLinkContentWithTagsParams struct {
+	ContentID uuid.UUID
+	Column2   []string
+	UserID    uuid.UUID
+}
+
+// $1: content_id, $2: text[], $3: user_id
+func (q *Queries) UnLinkContentWithTags(ctx context.Context, db DBTX, arg UnLinkContentWithTagsParams) error {
+	_, err := db.Exec(ctx, unLinkContentWithTags, arg.ContentID, arg.Column2, arg.UserID)
 	return err
 }
 

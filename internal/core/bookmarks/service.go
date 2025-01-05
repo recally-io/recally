@@ -13,6 +13,7 @@ import (
 	"recally/internal/pkg/webreader/processor"
 	"recally/internal/pkg/webreader/reader"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -58,23 +59,7 @@ func (s *Service) Create(ctx context.Context, tx db.DBTX, dto *ContentDTO) (*Con
 	dto.Load(&c)
 
 	if len(dto.Tags) > 0 {
-		// create tags
-		for _, tag := range dto.Tags {
-			if _, err := s.dao.CreateContentTag(ctx, tx, db.CreateContentTagParams{
-				Name:   tag,
-				UserID: dto.UserID,
-			}); err != nil {
-				logger.FromContext(ctx).Error("failed to create tag", "err", err, "content_id", c.ID, "tag", tag)
-			}
-		}
-		// link content with tags
-		if err := s.dao.LinkContentWithTags(ctx, tx, db.LinkContentWithTagsParams{
-			ContentID: c.ID,
-			Column2:   dto.Tags,
-			UserID:    dto.UserID,
-		}); err != nil {
-			logger.FromContext(ctx).Error("failed to link tags with content", "err", err, "content_id", c.ID, "tags", dto.Tags)
-		}
+		s.linkContentTags(ctx, tx, []string{}, dto.Tags, c.ID, dto.UserID)
 	}
 	return dto, nil
 }
@@ -311,27 +296,10 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 	} else {
 		tags, summary := parseTagsFromSummary(content.Summary)
 		if len(tags) > 0 {
-			// create tags
-			for _, tag := range tags {
-				if _, err := s.dao.CreateContentTag(ctx, tx, db.CreateContentTagParams{
-					Name:   tag,
-					UserID: user.ID,
-				}); err != nil {
-					logger.FromContext(ctx).Error("failed to create tag", "err", err, "content_id", id, "tag", tag)
-				}
-			}
-			// link content with tags
-			if err := s.dao.LinkContentWithTags(ctx, tx, db.LinkContentWithTagsParams{
-				ContentID: id,
-				Column2:   tags,
-				UserID:    user.ID,
-			}); err != nil {
-				logger.FromContext(ctx).Error("failed to link tags with content", "err", err, "content_id", id, "tags", tags)
-			}
-			dto.Summary = summary
+			s.linkContentTags(ctx, tx, dto.Tags, tags, id, userID)
 		}
+		dto.Summary = summary
 	}
-
 	return s.Update(ctx, tx, id, userID, dto)
 }
 
@@ -387,4 +355,89 @@ func parseTagsFromSummary(input string) ([]string, string) {
 	cleanedString := strings.TrimSpace(tagsRegex.ReplaceAllString(input, "\n"))
 
 	return tags, cleanedString
+}
+
+func (s *Service) linkContentTags(ctx context.Context, tx db.DBTX, originTags, newTags []string, contentID, userID uuid.UUID) {
+	// create tags if not exist
+	// list existing tags
+	existingTags, err := s.dao.ListExistingTagsByTags(ctx, tx, db.ListExistingTagsByTagsParams{
+		Column1: newTags,
+		UserID:  userID,
+	})
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to list existing tags", "err", err, "content_id", contentID, "tags", newTags)
+		return
+	}
+	for _, tag := range newTags {
+		if slices.Contains(existingTags, tag) {
+			continue
+		}
+		if _, err := s.dao.CreateContentTag(ctx, tx, db.CreateContentTagParams{
+			Name:   tag,
+			UserID: userID,
+		}); err != nil {
+			logger.FromContext(ctx).Error("failed to create tag", "err", err, "content_id", contentID, "tag", tag)
+		}
+	}
+
+	// link content with new tags
+	existingDBContentTags, err := s.dao.ListContentTags(ctx, tx, db.ListContentTagsParams{
+		ContentID: contentID,
+		UserID:    userID,
+	})
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to list content tags", "err", err, "content_id", contentID)
+		return
+	}
+
+	newLinkedTags := make([]string, 0)
+	existingContentTags := loadTag(existingDBContentTags)
+	for _, tag := range newTags {
+		if !slices.Contains(existingContentTags, tag) {
+			newLinkedTags = append(newLinkedTags, tag)
+		}
+	}
+
+	if err := s.dao.LinkContentWithTags(ctx, tx, db.LinkContentWithTagsParams{
+		ContentID: contentID,
+		Column2:   newLinkedTags,
+		UserID:    userID,
+	}); err != nil {
+		logger.FromContext(ctx).Error("failed to link tags with content", "err", err, "content_id", contentID, "tags", newTags)
+	}
+
+	// update tag usage count
+	if err := s.dao.IncreaseTagsUsageCount(ctx, tx, db.IncreaseTagsUsageCountParams{
+		Column1: existingContentTags,
+		UserID:  userID,
+	}); err != nil {
+		logger.FromContext(ctx).Error("failed to increase tag usage count", "err", err, "content_id", contentID, "tags", newTags)
+	}
+
+	// decrease tag usage count that in original but not in new
+	removedTags := make([]string, 0)
+	for _, tag := range originTags {
+		if !slices.Contains(newTags, tag) {
+			removedTags = append(removedTags, tag)
+		}
+	}
+
+	// unlink content with origin tags
+	if err := s.dao.UnLinkContentWithTags(ctx, tx, db.UnLinkContentWithTagsParams{
+		ContentID: contentID,
+		Column2:   removedTags,
+		UserID:    userID,
+	}); err != nil {
+		logger.FromContext(ctx).Error("failed to unlink tags with content", "err", err, "content_id", contentID, "tags", removedTags)
+	}
+
+	// update tag usage count
+	if err := s.dao.DecreaseTagsUsageCount(ctx, tx, db.DecreaseTagsUsageCountParams{
+		Column1: newTags,
+		UserID:  userID,
+	}); err != nil {
+		logger.FromContext(ctx).Error("failed to increase tag usage count", "err", err, "content_id", contentID, "tags", removedTags)
+	}
+
+	logger.FromContext(ctx).Info("link content with tags", "content_id", contentID, "new_tags", newTags, "origin_tags", originTags, "removed_tags", removedTags)
 }
