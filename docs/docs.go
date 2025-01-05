@@ -4661,7 +4661,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
+                    "$ref": "#/definitions/bookmarks.ContentType"
                 },
                 "updated_at": {
                     "type": "string"
@@ -4673,6 +4673,29 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "bookmarks.ContentType": {
+            "type": "string",
+            "enum": [
+                "bookmark",
+                "pdf",
+                "epub",
+                "rss",
+                "newsletter",
+                "image",
+                "podcast",
+                "video"
+            ],
+            "x-enum-varnames": [
+                "ContentTypeBookmark",
+                "ContentTypePDF",
+                "ContentTypeEPUB",
+                "ContentTypeRSS",
+                "ContentTypeNewsletter",
+                "ContentTypeImage",
+                "ContentTypePodcast",
+                "ContentTypeVideo"
+            ]
         },
         "bookmarks.DomainDTO": {
             "type": "object",
