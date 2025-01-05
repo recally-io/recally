@@ -30,7 +30,6 @@ function RouteComponent() {
 	useEffect(() => {
 		const handleCallback = async () => {
 			if (state && code) {
-				console.log("OAuth Callback:", state, code);
 				await handleOAuthCallback();
 			}
 		};
@@ -39,8 +38,7 @@ function RouteComponent() {
 
 	const handleOAuthCallback = async () => {
 		if (state && code) {
-			const data = await oauthCallback(provider.toLowerCase(), code, state);
-			console.log("OAuth Callback data:", data);
+			await oauthCallback(provider.toLowerCase(), code, state);
 			router.navigate({ to: ROUTES.HOME });
 		}
 	};
