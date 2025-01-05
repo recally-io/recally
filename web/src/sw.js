@@ -26,7 +26,6 @@ self.addEventListener("fetch", (event) => {
 
 				try {
 					const resp = await saveBookmark(link);
-					console.log("Bookmark saved:", resp);
 					return Response.redirect("/bookmarks", 303);
 				} catch (error) {
 					return new Response(error.message, {

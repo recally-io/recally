@@ -89,7 +89,6 @@ const api = {
 		}
 
 		const url = `/api/v1/bookmarks?${params.toString()}`;
-		console.log("api.list", url);
 		return fetcher<ListBookmarksResponse>(url);
 	},
 
@@ -135,7 +134,6 @@ export function useBookmarks(
 	filters: string[] = [],
 	query = "",
 ) {
-	console.log("useBookmarks", filters, query, limit, offset);
 	return useSWR<ListBookmarksResponse>(
 		["bookmarks", filters, query, limit, offset],
 		() => api.list(filters, query, limit, offset),

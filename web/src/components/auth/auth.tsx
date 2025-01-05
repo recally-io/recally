@@ -88,7 +88,6 @@ export default function AuthComponent({ mode }: { mode: string }) {
 
 	const handleOAuthLogin = async (provider: string) => {
 		const resp = await oauthLogin(provider);
-		console.log("OAuth Login response:", resp);
 		window.location.href = resp.url;
 	};
 
