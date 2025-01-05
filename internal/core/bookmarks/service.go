@@ -12,6 +12,7 @@ import (
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
 	"recally/internal/pkg/webreader/reader"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -95,6 +96,34 @@ func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*C
 	return &dto, nil
 }
 
+func parseListFilter(filter string) (domains, contentTypes, tags []string) {
+	if filter == "" {
+		return
+	}
+
+	domains = make([]string, 0)
+	contentTypes = make([]string, 0)
+	tags = make([]string, 0)
+
+	// Parse filter=category:article;type:rss
+	parts := strings.Split(filter, ";")
+	for _, part := range parts {
+		kv := strings.Split(part, ":")
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "domain":
+			domains = append(domains, kv[1])
+		case "type":
+			contentTypes = append(contentTypes, kv[1])
+		case "tag":
+			tags = append(tags, kv[1])
+		}
+	}
+	return
+}
+
 // ListBookmarks retrieves a paginated list of bookmarks for a user
 func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter, query string, limit, offset int32) ([]*ContentDTO, int64, error) {
 	if limit <= 0 || limit > 100 {
@@ -104,11 +133,15 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter
 		offset = 0
 	}
 
+	domains, contentTypes, tags := parseListFilter(filter)
 	totalCount := int64(0)
 	cs, err := s.dao.ListContents(ctx, tx, db.ListContentsParams{
-		UserID: userID,
-		Limit:  limit,
-		Offset: offset,
+		UserID:  userID,
+		Limit:   limit,
+		Offset:  offset,
+		Domains: domains,
+		Types:   contentTypes,
+		Tags:    tags,
 	})
 
 	dtos := make([]*ContentDTO, 0, len(cs))
@@ -120,6 +153,47 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter
 		totalCount = c.TotalCount
 	}
 	return dtos, totalCount, err
+}
+
+type TagDTO struct {
+	Name  string `json:"name"`
+	Count int64  `json:"count"`
+}
+
+func (s *Service) ListTags(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]TagDTO, error) {
+	tags, err := s.dao.ListTagsByUser(ctx, tx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list tags for user '%s': %w", userID.String(), err)
+	}
+
+	tagsList := make([]TagDTO, 0, len(tags))
+	for _, tag := range tags {
+		tagsList = append(tagsList, TagDTO{
+			Name:  tag.Name,
+			Count: int64(tag.UsageCount.Int32),
+		})
+	}
+	return tagsList, nil
+}
+
+type DomainDTO struct {
+	Name  string `json:"name"`
+	Count int64  `json:"count"`
+}
+
+func (s *Service) ListDomains(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]DomainDTO, error) {
+	domains, err := s.dao.ListContentDomains(ctx, tx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list domains for user '%s': %w", userID.String(), err)
+	}
+	tags := make([]DomainDTO, 0, len(domains))
+	for _, domain := range domains {
+		tags = append(tags, DomainDTO{
+			Name:  domain.Domain.String,
+			Count: domain.Count,
+		})
+	}
+	return tags, nil
 }
 
 // UpdateBookmark updates an existing bookmark, PUT full update

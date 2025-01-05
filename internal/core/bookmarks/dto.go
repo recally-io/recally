@@ -138,9 +138,9 @@ func (c *ContentDTO) LoadWithTagsAndTotalCount(dbo *db.ListContentsRow) {
 	c.IsFavorite = dbo.IsFavorite.Bool
 	c.CreatedAt = dbo.CreatedAt.Time
 	c.UpdatedAt = dbo.UpdatedAt.Time
-	if (dbo.Tags) != nil {
-		c.Tags = dbo.Tags.([]string)
-	}
+	// if (dbo.Tags) != nil {
+	// 	c.Tags = dbo.Tags.([]string)
+	// }
 
 	if dbo.Metadata != nil {
 		if err := json.Unmarshal(dbo.Metadata, &c.Metadata); err != nil {

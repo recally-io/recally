@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
+	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -20,6 +22,8 @@ type BookmarkService interface {
 	Create(ctx context.Context, tx db.DBTX, dto *bookmarks.ContentDTO) (*bookmarks.ContentDTO, error)
 	Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.ContentDTO, error)
 	List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter, query string, limit, offset int32) ([]*bookmarks.ContentDTO, int64, error)
+	ListTags(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]bookmarks.TagDTO, error)
+	ListDomains(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]bookmarks.DomainDTO, error)
 	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.ContentDTO) (*bookmarks.ContentDTO, error)
 	Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
@@ -44,6 +48,8 @@ func registerBookmarkHandlers(e *echo.Group, s *Service) {
 	g.PUT("/:bookmark-id", h.updateBookmark)
 	g.DELETE("/:bookmark-id", h.deleteBookmark)
 	g.POST("/:bookmark-id/refresh", h.refreshBookmark)
+	g.GET("/tags", h.listTags)
+	g.GET("/domains", h.listDomains)
 }
 
 type listBookmarksRequest struct {
@@ -100,6 +106,76 @@ func (h *bookmarksHandler) listBookmarks(c echo.Context) error {
 		Limit:     req.Limit,
 		Offset:    req.Offset,
 	})
+}
+
+// listTags handles GET /bookmarks/tags
+// @Summary List Tags
+// @Description Lists all tags for a user's bookmarks
+// @Tags Bookmarks
+// @Accept json
+// @Produce json
+// @Success 200 {object} JSONResult{data=[]bookmarks.TagDTO} "Success - Returns array of tags with counts"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /bookmarks/tags [get]
+func (h *bookmarksHandler) listTags(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	tx, user, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	tags, err := cache.RunInCache[[]bookmarks.TagDTO](ctx, cache.MemCache,
+		cache.NewCacheKey("bookmarks", "tags"),
+		5*time.Minute,
+		func() (*[]bookmarks.TagDTO, error) {
+			t, err := h.service.ListTags(ctx, tx, user.ID)
+			if err != nil {
+				return nil, err
+			}
+			return &t, nil
+		})
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, tags)
+}
+
+// listDomains handles GET /bookmarks/domains
+// @Summary List Domains
+// @Description Lists all domains from user's bookmarks
+// @Tags Bookmarks
+// @Accept json
+// @Produce json
+// @Success 200 {object} JSONResult{data=[]bookmarks.DomainDTO} "Success - Returns array of domains with counts"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /bookmarks/domains [get]
+func (h *bookmarksHandler) listDomains(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	tx, user, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	domains, err := cache.RunInCache[[]bookmarks.DomainDTO](ctx, cache.MemCache,
+		cache.NewCacheKey("bookmarks", "domains"),
+		5*time.Minute,
+		func() (*[]bookmarks.DomainDTO, error) {
+			d, err := h.service.ListDomains(ctx, tx, user.ID)
+			if err != nil {
+				return nil, err
+			}
+			return &d, nil
+		})
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, domains)
 }
 
 type createBookmarkRequest struct {

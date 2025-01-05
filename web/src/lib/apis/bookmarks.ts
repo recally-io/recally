@@ -46,6 +46,16 @@ export interface ListBookmarksResponse {
 	offset: number;
 }
 
+export interface Tag {
+	name: string;
+	count: number;
+}
+
+export interface Domain {
+	name: string;
+	count: number;
+}
+
 interface BookmarkCreateInput {
 	url: string;
 	metadata?: Metadata;
@@ -100,6 +110,10 @@ const api = {
 			method: "POST",
 			body: JSON.stringify(input),
 		}),
+
+	listTags: () => fetcher<Tag[]>("/api/v1/bookmarks/tags"),
+
+	listDomains: () => fetcher<Domain[]>("/api/v1/bookmarks/domains"),
 };
 
 // SWR Hooks
@@ -112,6 +126,14 @@ export function useBookmarks(limit = 20, offset = 0, filter = "", query = "") {
 
 export function useBookmark(id: string) {
 	return useSWR<Bookmark>(id ? ["bookmark", id] : null, () => api.get(id));
+}
+
+export function useTags() {
+	return useSWR<Tag[]>("bookmarkTags", () => api.listTags());
+}
+
+export function useDomains() {
+	return useSWR<Domain[]>("bookmarkDomains", () => api.listDomains());
 }
 
 // Mutation Hooks

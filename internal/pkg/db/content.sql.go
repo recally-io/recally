@@ -13,12 +13,31 @@ import (
 )
 
 const createContent = `-- name: CreateContent :one
-INSERT INTO content (
-    user_id, type, title, description, url, domain,
-    s3_key, summary, content, html, metadata, is_favorite
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-) RETURNING id, user_id, type, title, description, url, domain, s3_key, summary, content, html, metadata, is_favorite, created_at, updated_at
+INSERT INTO content (user_id,
+                     type,
+                     title,
+                     description,
+                     url,
+                     domain,
+                     s3_key,
+                     summary,
+                     content,
+                     html,
+                     metadata,
+                     is_favorite)
+VALUES ($1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10,
+        $11,
+        $12)
+RETURNING id, user_id, type, title, description, url, domain, s3_key, summary, content, html, metadata, is_favorite, created_at, updated_at
 `
 
 type CreateContentParams struct {
@@ -73,10 +92,10 @@ func (q *Queries) CreateContent(ctx context.Context, db DBTX, arg CreateContentP
 }
 
 const createContentTag = `-- name: CreateContentTag :one
-INSERT INTO content_tags (name, user_id) 
+INSERT INTO content_tags (name, user_id)
 VALUES ($1, $2)
-ON CONFLICT (name, user_id) DO UPDATE 
-SET usage_count = content_tags.usage_count + 1
+ON CONFLICT (name, user_id) DO UPDATE
+    SET usage_count = content_tags.usage_count + 1
 RETURNING id, name, user_id, usage_count, created_at, updated_at
 `
 
@@ -100,8 +119,10 @@ func (q *Queries) CreateContentTag(ctx context.Context, db DBTX, arg CreateConte
 }
 
 const deleteContent = `-- name: DeleteContent :exec
-DELETE FROM content 
-WHERE id = $1 AND user_id = $2
+DELETE
+FROM content
+WHERE id = $1
+  AND user_id = $2
 `
 
 type DeleteContentParams struct {
@@ -115,8 +136,10 @@ func (q *Queries) DeleteContent(ctx context.Context, db DBTX, arg DeleteContentP
 }
 
 const deleteContentTag = `-- name: DeleteContentTag :exec
-DELETE FROM content_tags 
-WHERE id = $1 AND user_id = $2
+DELETE
+FROM content_tags
+WHERE id = $1
+  AND user_id = $2
 `
 
 type DeleteContentTagParams struct {
@@ -130,7 +153,8 @@ func (q *Queries) DeleteContentTag(ctx context.Context, db DBTX, arg DeleteConte
 }
 
 const deleteContentsByUser = `-- name: DeleteContentsByUser :exec
-DELETE FROM content 
+DELETE
+FROM content
 WHERE user_id = $1
 `
 
@@ -140,16 +164,19 @@ func (q *Queries) DeleteContentsByUser(ctx context.Context, db DBTX, userID uuid
 }
 
 const getContent = `-- name: GetContent :one
-SELECT 
-    c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at,
-    COALESCE(
-        array_agg(ct.name) FILTER (WHERE ct.name IS NOT NULL),
-        ARRAY[]::VARCHAR[]
-    ) as tags
+SELECT c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at,
+       COALESCE(
+                       array_agg(ct.name) FILTER (
+                   WHERE
+                   ct.name IS NOT NULL
+                   ),
+                       ARRAY [] :: VARCHAR[]
+       ) as tags
 FROM content c
-LEFT JOIN content_tags_mapping ctm ON c.id = ctm.content_id
-LEFT JOIN content_tags ct ON ctm.tag_id = ct.id
-WHERE c.id = $1 AND c.user_id = $2 
+         LEFT JOIN content_tags_mapping ctm ON c.id = ctm.content_id
+         LEFT JOIN content_tags ct ON ctm.tag_id = ct.id
+WHERE c.id = $1
+  AND c.user_id = $2
 GROUP BY c.id
 LIMIT 1
 `
@@ -203,10 +230,10 @@ func (q *Queries) GetContent(ctx context.Context, db DBTX, arg GetContentParams)
 }
 
 const isContentExistWithURL = `-- name: IsContentExistWithURL :one
-SELECT EXISTS (
-    SELECT 1 FROM content 
-    WHERE url = $1 AND user_id = $2
-)
+SELECT EXISTS (SELECT 1
+               FROM content
+               WHERE url = $1
+                 AND user_id = $2)
 `
 
 type IsContentExistWithURLParams struct {
@@ -223,9 +250,11 @@ func (q *Queries) IsContentExistWithURL(ctx context.Context, db DBTX, arg IsCont
 
 const linkContentWithTags = `-- name: LinkContentWithTags :exec
 INSERT INTO content_tags_mapping (content_id, tag_id)
-SELECT $1, ct.id
+SELECT $1,
+       ct.id
 FROM content_tags ct
-WHERE ct.name = ANY($2::text[]) AND ct.user_id = $3
+WHERE ct.name = ANY ($2 :: text[])
+  AND ct.user_id = $3
 `
 
 type LinkContentWithTagsParams struct {
@@ -240,11 +269,46 @@ func (q *Queries) LinkContentWithTags(ctx context.Context, db DBTX, arg LinkCont
 	return err
 }
 
+const listContentDomains = `-- name: ListContentDomains :many
+SELECT domain, count(*) as count
+FROM content
+WHERE user_id = $1 
+AND domain IS NOT NULL
+GROUP BY domain
+ORDER BY count DESC, domain ASC
+`
+
+type ListContentDomainsRow struct {
+	Domain pgtype.Text
+	Count  int64
+}
+
+func (q *Queries) ListContentDomains(ctx context.Context, db DBTX, userID uuid.UUID) ([]ListContentDomainsRow, error) {
+	rows, err := db.Query(ctx, listContentDomains, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListContentDomainsRow
+	for rows.Next() {
+		var i ListContentDomainsRow
+		if err := rows.Scan(&i.Domain, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listContentTags = `-- name: ListContentTags :one
 SELECT ARRAY_AGG(ct.name) as tags
 FROM content_tags ct
-JOIN content_tags_mapping ctm ON ct.id = ctm.tag_id
-WHERE ctm.content_id = $1 AND ct.user_id = $2
+         JOIN content_tags_mapping ctm ON ct.id = ctm.tag_id
+WHERE ctm.content_id = $1
+  AND ct.user_id = $2
 `
 
 type ListContentTagsParams struct {
@@ -260,30 +324,62 @@ func (q *Queries) ListContentTags(ctx context.Context, db DBTX, arg ListContentT
 }
 
 const listContents = `-- name: ListContents :many
-WITH total AS (
-    SELECT COUNT(*) AS total_count 
-    FROM content 
-    WHERE user_id = $1
-)
-SELECT 
-    c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at, t.total_count,
-    COALESCE(
-        array_agg(ct.name) FILTER (WHERE ct.name IS NOT NULL),
-        ARRAY[]::VARCHAR[]
-    ) as tags
-FROM content c, total t
-LEFT JOIN content_tags_mapping ctm ON c.id = ctm.content_id
-LEFT JOIN content_tags ct ON ctm.tag_id = ct.id
-WHERE c.user_id = $1 
-GROUP BY c.id
+WITH total AS (SELECT COUNT(*) AS total_count
+               FROM content AS tc
+                        LEFT JOIN content_tags_mapping AS tctm ON tc.id = tctm.content_id
+                        LEFT JOIN content_tags AS tct ON tctm.tag_id = tct.id
+               WHERE tc.user_id = $1
+                 AND (
+                   $4 :: text[] IS NULL
+                       OR tc.domain = ANY ($4 :: text[])
+                   )
+                 AND (
+                   $5 :: text[] IS NULL
+                       OR tc.type = ANY ($5 :: text[])
+                   )
+                 AND (
+                   $6 :: text[] IS NULL
+                       OR tct.name = ANY ($6 :: text[])
+                   ))
+SELECT c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at,
+       t.total_count,
+       COALESCE(
+                       array_agg(ct.name) FILTER (
+                   WHERE
+                   ct.name IS NOT NULL
+                   ),
+                       ARRAY [] :: VARCHAR[]
+       ) AS tags
+FROM content AS c
+         CROSS JOIN total AS t
+         LEFT JOIN content_tags_mapping AS ctm ON c.id = ctm.content_id
+         LEFT JOIN content_tags AS ct ON ctm.tag_id = ct.id
+WHERE c.user_id = $1
+  AND (
+    $4 :: text[] IS NULL
+        OR c.domain = ANY ($4 :: text[])
+    )
+  AND (
+    $5 :: text[] IS NULL
+        OR c.type = ANY ($5 :: text[])
+    )
+  AND (
+    $6 :: text[] IS NULL
+        OR ct.name = ANY ($6 :: text[])
+    )
+GROUP BY c.id,
+         t.total_count
 ORDER BY c.created_at DESC
 LIMIT $2 OFFSET $3
 `
 
 type ListContentsParams struct {
-	UserID uuid.UUID
-	Limit  int32
-	Offset int32
+	UserID  uuid.UUID
+	Limit   int32
+	Offset  int32
+	Domains []string
+	Types   []string
+	Tags    []string
 }
 
 type ListContentsRow struct {
@@ -307,7 +403,14 @@ type ListContentsRow struct {
 }
 
 func (q *Queries) ListContents(ctx context.Context, db DBTX, arg ListContentsParams) ([]ListContentsRow, error) {
-	rows, err := db.Query(ctx, listContents, arg.UserID, arg.Limit, arg.Offset)
+	rows, err := db.Query(ctx, listContents,
+		arg.UserID,
+		arg.Limit,
+		arg.Offset,
+		arg.Domains,
+		arg.Types,
+		arg.Tags,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +448,7 @@ func (q *Queries) ListContents(ctx context.Context, db DBTX, arg ListContentsPar
 }
 
 const listTagsByUser = `-- name: ListTagsByUser :many
-SELECT ct.id, ct.name, ct.user_id, ct.usage_count, ct.created_at, ct.updated_at 
+SELECT ct.id, ct.name, ct.user_id, ct.usage_count, ct.created_at, ct.updated_at
 FROM content_tags ct
 WHERE ct.user_id = $1
 ORDER BY ct.usage_count DESC
@@ -379,9 +482,11 @@ func (q *Queries) ListTagsByUser(ctx context.Context, db DBTX, userID uuid.UUID)
 }
 
 const ownerTransferContent = `-- name: OwnerTransferContent :exec
-UPDATE content 
-SET user_id = $2 
-WHERE id = $1 AND user_id = $3
+UPDATE
+    content
+SET user_id = $2
+WHERE id = $1
+  AND user_id = $3
 `
 
 type OwnerTransferContentParams struct {
@@ -396,19 +501,20 @@ func (q *Queries) OwnerTransferContent(ctx context.Context, db DBTX, arg OwnerTr
 }
 
 const updateContent = `-- name: UpdateContent :one
-UPDATE content 
-SET 
-    title = COALESCE($3, title),
+UPDATE
+    content
+SET title       = COALESCE($3, title),
     description = COALESCE($4, description),
-    url = COALESCE($5, url),
-    domain = COALESCE($6, domain),
-    s3_key = COALESCE($7, s3_key),
-    summary = COALESCE($8, summary),
-    content = COALESCE($9, content),
-    html = COALESCE($10, html),
-    metadata = COALESCE($11, metadata),
+    url         = COALESCE($5, url),
+    domain      = COALESCE($6, domain),
+    s3_key      = COALESCE($7, s3_key),
+    summary     = COALESCE($8, summary),
+    content     = COALESCE($9, content),
+    html        = COALESCE($10, html),
+    metadata    = COALESCE($11, metadata),
     is_favorite = COALESCE($12, is_favorite)
-WHERE id = $1 AND user_id = $2
+WHERE id = $1
+  AND user_id = $2
 RETURNING id, user_id, type, title, description, url, domain, s3_key, summary, content, html, metadata, is_favorite, created_at, updated_at
 `
 
