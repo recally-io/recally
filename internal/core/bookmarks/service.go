@@ -83,8 +83,8 @@ func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*C
 	return &dto, nil
 }
 
-func parseListFilter(filter string) (domains, contentTypes, tags []string) {
-	if filter == "" {
+func parseListFilter(filters []string) (domains, contentTypes, tags []string) {
+	if len(filters) == 0 {
 		return
 	}
 
@@ -93,8 +93,7 @@ func parseListFilter(filter string) (domains, contentTypes, tags []string) {
 	tags = make([]string, 0)
 
 	// Parse filter=category:article;type:rss
-	parts := strings.Split(filter, ";")
-	for _, part := range parts {
+	for _, part := range filters {
 		kv := strings.Split(part, ":")
 		if len(kv) != 2 {
 			continue
@@ -108,11 +107,20 @@ func parseListFilter(filter string) (domains, contentTypes, tags []string) {
 			tags = append(tags, kv[1])
 		}
 	}
+	if len(domains) == 0 {
+		domains = nil
+	}
+	if len(contentTypes) == 0 {
+		contentTypes = nil
+	}
+	if len(tags) == 0 {
+		tags = nil
+	}
 	return
 }
 
 // ListBookmarks retrieves a paginated list of bookmarks for a user
-func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter, query string, limit, offset int32) ([]*ContentDTO, int64, error) {
+func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filters []string, query string, limit, offset int32) ([]*ContentDTO, int64, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 50 // Default limit
 	}
@@ -120,7 +128,7 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter
 		offset = 0
 	}
 
-	domains, contentTypes, tags := parseListFilter(filter)
+	domains, contentTypes, tags := parseListFilter(filters)
 	totalCount := int64(0)
 	cs, err := s.dao.ListContents(ctx, tx, db.ListContentsParams{
 		UserID:  userID,
