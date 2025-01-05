@@ -107,7 +107,7 @@ export default function BookmarksListView({
 	};
 
 	return (
-		<SidebarProvider>
+		<SidebarProvider defaultOpen={false}>
 			<BookmarksSidebar />
 			<SidebarInset>
 				<div className="flex flex-col h-full">

@@ -25,13 +25,13 @@ export interface SearchToken {
 
 const typeOptions = [
 	"Bookmark",
-	"PDF",
-	"EPUB",
-	"RSS",
-	"Newsletter",
-	"Image",
-	"Video",
-	"Podcast",
+	// "PDF",
+	// "EPUB",
+	// "RSS",
+	// "Newsletter",
+	// "Image",
+	// "Video",
+	// "Podcast",
 ];
 
 interface SearchTokenProps {

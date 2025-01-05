@@ -118,24 +118,6 @@ func (q *Queries) CreateContentTag(ctx context.Context, db DBTX, arg CreateConte
 	return i, err
 }
 
-const decreaseTagsUsageCount = `-- name: DecreaseTagsUsageCount :exec
-UPDATE
-  content_tags
-SET usage_count = usage_count - 1
-WHERE name = ANY ($1 :: text[])
-  AND user_id = $2
-`
-
-type DecreaseTagsUsageCountParams struct {
-	Column1 []string
-	UserID  uuid.UUID
-}
-
-func (q *Queries) DecreaseTagsUsageCount(ctx context.Context, db DBTX, arg DecreaseTagsUsageCountParams) error {
-	_, err := db.Exec(ctx, decreaseTagsUsageCount, arg.Column1, arg.UserID)
-	return err
-}
-
 const deleteContent = `-- name: DeleteContent :exec
 DELETE
 FROM content
@@ -247,24 +229,6 @@ func (q *Queries) GetContent(ctx context.Context, db DBTX, arg GetContentParams)
 	return i, err
 }
 
-const increaseTagsUsageCount = `-- name: IncreaseTagsUsageCount :exec
-UPDATE
-    content_tags
-SET usage_count = usage_count + 1
-WHERE name = ANY ($1 :: text[])
-  AND user_id = $2
-`
-
-type IncreaseTagsUsageCountParams struct {
-	Column1 []string
-	UserID  uuid.UUID
-}
-
-func (q *Queries) IncreaseTagsUsageCount(ctx context.Context, db DBTX, arg IncreaseTagsUsageCountParams) error {
-	_, err := db.Exec(ctx, increaseTagsUsageCount, arg.Column1, arg.UserID)
-	return err
-}
-
 const isContentExistWithURL = `-- name: IsContentExistWithURL :one
 SELECT EXISTS (SELECT 1
                FROM content
@@ -339,8 +303,8 @@ func (q *Queries) ListContentDomains(ctx context.Context, db DBTX, userID uuid.U
 	return items, nil
 }
 
-const listContentTags = `-- name: ListContentTags :one
-SELECT ARRAY_AGG(ct.name) as tags
+const listContentTags = `-- name: ListContentTags :many
+SELECT ct.name
 FROM content_tags ct
          JOIN content_tags_mapping ctm ON ct.id = ctm.tag_id
 WHERE ctm.content_id = $1
@@ -352,11 +316,24 @@ type ListContentTagsParams struct {
 	UserID    uuid.UUID
 }
 
-func (q *Queries) ListContentTags(ctx context.Context, db DBTX, arg ListContentTagsParams) (interface{}, error) {
-	row := db.QueryRow(ctx, listContentTags, arg.ContentID, arg.UserID)
-	var tags interface{}
-	err := row.Scan(&tags)
-	return tags, err
+func (q *Queries) ListContentTags(ctx context.Context, db DBTX, arg ListContentTagsParams) ([]string, error) {
+	rows, err := db.Query(ctx, listContentTags, arg.ContentID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listContents = `-- name: ListContents :many
@@ -516,29 +493,28 @@ func (q *Queries) ListExistingTagsByTags(ctx context.Context, db DBTX, arg ListE
 }
 
 const listTagsByUser = `-- name: ListTagsByUser :many
-SELECT ct.id, ct.name, ct.user_id, ct.usage_count, ct.created_at, ct.updated_at
+SELECT ct.name, count(*) as count
 FROM content_tags ct
 WHERE ct.user_id = $1
-ORDER BY ct.usage_count DESC
+GROUP BY ct.name
+ORDER BY count DESC
 `
 
-func (q *Queries) ListTagsByUser(ctx context.Context, db DBTX, userID uuid.UUID) ([]ContentTag, error) {
+type ListTagsByUserRow struct {
+	Name  string
+	Count int64
+}
+
+func (q *Queries) ListTagsByUser(ctx context.Context, db DBTX, userID uuid.UUID) ([]ListTagsByUserRow, error) {
 	rows, err := db.Query(ctx, listTagsByUser, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ContentTag
+	var items []ListTagsByUserRow
 	for rows.Next() {
-		var i ContentTag
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.UserID,
-			&i.UsageCount,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
+		var i ListTagsByUserRow
+		if err := rows.Scan(&i.Name, &i.Count); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

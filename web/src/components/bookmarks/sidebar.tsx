@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
 import { Link } from "@tanstack/react-router";
-import { Bookmark, Settings2 } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import ThemeToggle from "../theme-toggle";
 
 export function BookmarksSidebar({
@@ -27,8 +27,8 @@ export function BookmarksSidebar({
 					<SidebarMenuItem>
 						<SidebarMenuButton size="lg" asChild>
 							<Link to={ROUTES.HOME}>
-								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-									<Bookmark className="size-4" />
+								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-background text-foreground">
+									<img src="/logo.svg" alt="Recally logo" className="size-4" />
 								</div>
 								<div className="flex flex-col gap-0.5 leading-none">
 									<span className="font-semibold">Recally</span>

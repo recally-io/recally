@@ -2,6 +2,7 @@ package bookmarks
 
 import (
 	"encoding/json"
+	"net/url"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 	"time"
@@ -172,6 +173,12 @@ func (c *ContentDTO) LoadWithTagsAndTotalCount(dbo *db.ListContentsRow) {
 
 func (c *ContentDTO) Dump() db.CreateContentParams {
 	metadata, _ := json.Marshal(c.Metadata)
+
+	if (c.Domain == "") && (c.URL != "") {
+		u, _ := url.Parse(c.URL)
+		c.Domain = u.Host
+	}
+
 	return db.CreateContentParams{
 		UserID:      c.UserID,
 		Type:        string(c.Type),
