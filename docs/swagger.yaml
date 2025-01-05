@@ -192,7 +192,7 @@ definitions:
       title:
         type: string
       type:
-        type: string
+        $ref: '#/definitions/bookmarks.ContentType'
       updated_at:
         type: string
       url:
@@ -200,6 +200,26 @@ definitions:
       user_id:
         type: string
     type: object
+  bookmarks.ContentType:
+    enum:
+    - bookmark
+    - pdf
+    - epub
+    - rss
+    - newsletter
+    - image
+    - podcast
+    - video
+    type: string
+    x-enum-varnames:
+    - ContentTypeBookmark
+    - ContentTypePDF
+    - ContentTypeEPUB
+    - ContentTypeRSS
+    - ContentTypeNewsletter
+    - ContentTypeImage
+    - ContentTypePodcast
+    - ContentTypeVideo
   bookmarks.DomainDTO:
     properties:
       count:
