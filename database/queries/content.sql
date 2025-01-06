@@ -1,5 +1,5 @@
 -- name: ListContents :many
-WITH total AS (SELECT COUNT(*) AS total_count
+WITH total AS (SELECT COUNT( DISTINCT tc.*) AS total_count
                FROM content AS tc
                         LEFT JOIN content_tags_mapping AS tctm ON tc.id = tctm.content_id
                         LEFT JOIN content_tags AS tct ON tctm.tag_id = tct.id
