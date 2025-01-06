@@ -137,6 +137,7 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter
 		Domains: domains,
 		Types:   contentTypes,
 		Tags:    tags,
+		Query:   pgtype.Text{String: query, Valid: query != ""},
 	})
 
 	dtos := make([]*ContentDTO, 0, len(cs))

@@ -1,5 +1,6 @@
 -- name: ListContents :many
-WITH total AS (SELECT COUNT( DISTINCT tc.*) AS total_count
+WITH total AS (
+  SELECT COUNT( DISTINCT tc.*) AS total_count
                FROM content AS tc
                         LEFT JOIN content_tags_mapping AS tctm ON tc.id = tctm.content_id
                         LEFT JOIN content_tags AS tct ON tctm.tag_id = tct.id
@@ -15,7 +16,16 @@ WITH total AS (SELECT COUNT( DISTINCT tc.*) AS total_count
                  AND (
                    sqlc.narg('tags') :: text[] IS NULL
                        OR tct.name = ANY (sqlc.narg('tags') :: text[])
-                   ))
+                   )
+                AND (
+                  sqlc.narg('query') :: text IS NULL
+                      OR tc.title @@@ sqlc.narg('query')
+                      OR tc.description @@@ sqlc.narg('query')
+                      OR tc.summary @@@ sqlc.narg('query')
+                      OR tc.content @@@ sqlc.narg('query')
+                      OR tc.metadata @@@ sqlc.narg('query')
+                    )
+)
 SELECT c.*,
        t.total_count,
        COALESCE(
@@ -41,6 +51,14 @@ WHERE c.user_id = $1
   AND (
     sqlc.narg('tags') :: text[] IS NULL
         OR ct.name = ANY (sqlc.narg('tags') :: text[])
+    )
+  AND (
+    sqlc.narg('query') :: text IS NULL
+        OR c.title @@@ sqlc.narg('query')
+        OR c.description @@@ sqlc.narg('query')
+        OR c.summary @@@ sqlc.narg('query')
+        OR c.content @@@ sqlc.narg('query')
+        OR c.metadata @@@ sqlc.narg('query')
     )
 GROUP BY c.id,
          t.total_count

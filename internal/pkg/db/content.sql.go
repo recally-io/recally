@@ -337,7 +337,8 @@ func (q *Queries) ListContentTags(ctx context.Context, db DBTX, arg ListContentT
 }
 
 const listContents = `-- name: ListContents :many
-WITH total AS (SELECT COUNT( DISTINCT tc.*) AS total_count
+WITH total AS (
+  SELECT COUNT( DISTINCT tc.*) AS total_count
                FROM content AS tc
                         LEFT JOIN content_tags_mapping AS tctm ON tc.id = tctm.content_id
                         LEFT JOIN content_tags AS tct ON tctm.tag_id = tct.id
@@ -353,7 +354,16 @@ WITH total AS (SELECT COUNT( DISTINCT tc.*) AS total_count
                  AND (
                    $6 :: text[] IS NULL
                        OR tct.name = ANY ($6 :: text[])
-                   ))
+                   )
+                AND (
+                  $7 :: text IS NULL
+                      OR tc.title @@@ $7
+                      OR tc.description @@@ $7
+                      OR tc.summary @@@ $7
+                      OR tc.content @@@ $7
+                      OR tc.metadata @@@ $7
+                    )
+)
 SELECT c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at,
        t.total_count,
        COALESCE(
@@ -380,6 +390,14 @@ WHERE c.user_id = $1
     $6 :: text[] IS NULL
         OR ct.name = ANY ($6 :: text[])
     )
+  AND (
+    $7 :: text IS NULL
+        OR c.title @@@ $7
+        OR c.description @@@ $7
+        OR c.summary @@@ $7
+        OR c.content @@@ $7
+        OR c.metadata @@@ $7
+    )
 GROUP BY c.id,
          t.total_count
 ORDER BY c.created_at DESC
@@ -393,6 +411,7 @@ type ListContentsParams struct {
 	Domains []string
 	Types   []string
 	Tags    []string
+	Query   pgtype.Text
 }
 
 type ListContentsRow struct {
@@ -423,6 +442,7 @@ func (q *Queries) ListContents(ctx context.Context, db DBTX, arg ListContentsPar
 		arg.Domains,
 		arg.Types,
 		arg.Tags,
+		arg.Query,
 	)
 	if err != nil {
 		return nil, err
