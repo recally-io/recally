@@ -513,8 +513,9 @@ func (q *Queries) ListExistingTagsByTags(ctx context.Context, db DBTX, arg ListE
 }
 
 const listTagsByUser = `-- name: ListTagsByUser :many
-SELECT ct.name, count(*) as count
+SELECT ct.name, count(ctm.*) as count
 FROM content_tags ct
+  JOIN content_tags_mapping ctm ON ct.id = ctm.tag_id
 WHERE ct.user_id = $1
 GROUP BY ct.name
 ORDER BY count DESC
