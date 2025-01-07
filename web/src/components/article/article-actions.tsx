@@ -31,12 +31,9 @@ import {
 	Trash2,
 } from "lucide-react";
 
-// Define fetcher types
-export type FetcherType = "http" | "jina" | "browser";
-
 interface ArticleActionsProps {
 	onDelete: () => Promise<void>;
-	onRefetch: (type: FetcherType) => Promise<void>;
+	onRefetch: (type: string) => Promise<void>;
 	onRegenerateSummary: () => Promise<void>;
 	onShare: () => Promise<void>;
 	onUnshare: () => Promise<void>;
@@ -52,7 +49,7 @@ interface ArticleActionsProps {
 
 interface RefreshDropdownMenuProps {
 	isLoading: boolean;
-	onRefetch: (type: FetcherType) => Promise<void>;
+	onRefetch: (type: string) => Promise<void>;
 	onRegenerateSummary: () => Promise<void>;
 }
 
@@ -75,7 +72,9 @@ const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
 				<DropdownMenuItem onClick={async () => await props.onRefetch("http")}>
 					<Globe className="mr-2 h-4 w-4" /> HTTP Fetcher
 				</DropdownMenuItem>
-				<DropdownMenuItem onClick={async () => await props.onRefetch("jina")}>
+				<DropdownMenuItem
+					onClick={async () => await props.onRefetch("jinaReader")}
+				>
 					<Database className="mr-2 h-4 w-4" /> Jina Fetcher
 				</DropdownMenuItem>
 				<DropdownMenuItem

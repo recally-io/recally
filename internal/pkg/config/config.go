@@ -58,6 +58,7 @@ type GoogleSearchConfig struct {
 }
 
 type S3Config struct {
+	Enabled         bool   `env:"ENABLED" envDefault:"false"`
 	Endpoint        string `env:"ENDPOINT"`
 	AccessKeyID     string `env:"ACCESS_KEY_ID"`
 	SecretAccessKey string `env:"SECRET_ACCESS_KEY"`

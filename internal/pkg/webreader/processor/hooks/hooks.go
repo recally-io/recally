@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/webreader"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
@@ -20,25 +21,34 @@ func init() {
 }
 
 func GetMarkdownBeforeHooks(host string) []md.BeforeHook {
-	hooks, ok := mdBeforeHooks[host]
-	if !ok {
-		return []md.BeforeHook{}
+	hooks := []md.BeforeHook{}
+
+	imageHook := &ImageHook{}
+	if config.Settings.S3.Enabled {
+		hooks = append(hooks, imageHook.UploadToS3)
 	}
-	return hooks
+
+	domainHooks, ok := mdBeforeHooks[host]
+	if !ok {
+		return hooks
+	}
+	return append(domainHooks, hooks...)
 }
 
 func GetMarkdownAfterHooks(host string) []md.Afterhook {
-	hooks, ok := mdAfterHooks[host]
+	hooks := []md.Afterhook{}
+	domainHooks, ok := mdAfterHooks[host]
 	if !ok {
-		return []md.Afterhook{}
+		return hooks
 	}
-	return hooks
+	return append(domainHooks, hooks...)
 }
 
 func GetReadabilityHooks(host string) []ReadabilityHook {
-	hooks, ok := readabilityHooks[host]
+	hooks := []ReadabilityHook{}
+	domainHooks, ok := readabilityHooks[host]
 	if !ok {
-		return []ReadabilityHook{}
+		return hooks
 	}
-	return hooks
+	return append(domainHooks, hooks...)
 }

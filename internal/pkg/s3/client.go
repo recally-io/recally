@@ -27,6 +27,18 @@ var corsRules = []cors.Rule{
 	},
 }
 
+var DefaultClient *Client
+
+func init() {
+	if config.Settings.S3.Enabled {
+		if client, err := New(config.Settings.S3); err != nil {
+			logger.Default.Error("failed to initialize s3 client", "err", err)
+		} else {
+			DefaultClient = client
+		}
+	}
+}
+
 func New(cfg config.S3Config) (*Client, error) {
 	client, err := minio.New(cfg.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKeyID, cfg.SecretAccessKey, ""),
@@ -43,8 +55,8 @@ func New(cfg config.S3Config) (*Client, error) {
 	return c, nil
 }
 
-func (c *Client) Upload(ctx context.Context, objectKey string, reader io.Reader, size int64) (minio.UploadInfo, error) {
-	info, err := c.PutObject(ctx, c.bucketName, objectKey, reader, size, minio.PutObjectOptions{})
+func (c *Client) Upload(ctx context.Context, objectKey string, reader io.Reader, size int64, opts minio.PutObjectOptions) (minio.UploadInfo, error) {
+	info, err := c.PutObject(ctx, c.bucketName, objectKey, reader, size, opts)
 	if err != nil {
 		return minio.UploadInfo{}, fmt.Errorf("s3: failed to upload file: %w", err)
 	}

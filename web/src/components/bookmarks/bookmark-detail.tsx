@@ -1,7 +1,4 @@
-import {
-	ArticleActions,
-	type FetcherType,
-} from "@/components/article/article-actions";
+import { ArticleActions } from "@/components/article/article-actions";
 import { ArticleReader } from "@/components/bookmarks/bookmark-content";
 import { BookmarksSidebar } from "@/components/bookmarks/sidebar";
 import {
@@ -50,7 +47,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 		return <div className="container mx-auto p-4">Loading...</div>;
 	}
 
-	const handleRefetch = async (fetcherType: FetcherType) => {
+	const handleRefetch = async (fetcherType: string) => {
 		try {
 			setIsLoading(true);
 			await refreshBookmark(bookmark.id, {

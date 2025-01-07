@@ -1,16 +1,15 @@
-import type { FetcherType } from "@/components/article/article-actions";
 import { ArticleHeader } from "@/components/article/article-header";
 import { ArticleSummary } from "@/components/article/article-summary";
 import MarkdownRenderer from "@/components/markdown-render";
+import { Badge } from "@/components/ui/badge";
 import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
 import type React from "react";
 import { Separator } from "../ui/separator";
-import { Badge } from "@/components/ui/badge";
 
 interface ArticleReaderProps {
 	bookmark: BookmarkType;
 	onDelete?: (id: string) => Promise<void>;
-	onRefetch?: (id: string, fetcherType: FetcherType) => Promise<void>;
+	onRefetch?: (id: string, fetcherType: string) => Promise<void>;
 	onRegenerateSummary?: (id: string) => Promise<void>;
 }
 
