@@ -423,7 +423,7 @@ func (h *bookmarksHandler) deleteUserBookmarks(c echo.Context) error {
 
 type refreshBookmarkRequest struct {
 	BookmarkID        uuid.UUID `param:"bookmark-id" validate:"required,uuid4"`
-	Fetcher           string    `json:"fetcher" validate:"omitempty,oneof=http jina browser"`
+	Fetcher           string    `json:"fetcher" validate:"omitempty,oneof=http jinaReader browser"`
 	RegenerateSummary bool      `json:"regenerate_summary"`
 }
 

@@ -5379,7 +5379,7 @@ const docTemplate = `{
                     "type": "string",
                     "enum": [
                         "http",
-                        "jina",
+                        "jinaReader",
                         "browser"
                     ]
                 },

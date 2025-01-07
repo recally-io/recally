@@ -404,7 +404,7 @@ definitions:
       fetcher:
         enum:
         - http
-        - jina
+        - jinaReader
         - browser
         type: string
       regenerate_summary:

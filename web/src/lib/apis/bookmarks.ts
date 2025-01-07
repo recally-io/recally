@@ -78,7 +78,7 @@ interface ShareContentUpdateInput {
 }
 
 interface BookmarkRefreshInput {
-	fetcher?: "http" | "jina" | "browser";
+	fetcher?: string;
 	regenerate_summary?: boolean;
 }
 
