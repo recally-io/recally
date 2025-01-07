@@ -23,6 +23,8 @@ export interface Metadata {
 	favicon?: string;
 	cover?: string;
 	image?: string;
+
+	share?: ShareContent;
 }
 
 export interface Bookmark {
@@ -71,9 +73,24 @@ interface BookmarkUpdateInput {
 	metadata?: Metadata;
 }
 
+interface ShareContentUpdateInput {
+	expires_at: string;
+}
+
 interface BookmarkRefreshInput {
 	fetcher?: "http" | "jina" | "browser";
 	regenerate_summary?: boolean;
+}
+
+export interface ShareBookmarkRequest {
+	expires_at: string;
+}
+
+export interface ShareContent {
+	id: string;
+	content_id: string;
+	expires_at?: string;
+	created_at: string;
 }
 
 // API Functions
@@ -125,6 +142,26 @@ const api = {
 	listTags: () => fetcher<Tag[]>("/api/v1/bookmarks/tags"),
 
 	listDomains: () => fetcher<Domain[]>("/api/v1/bookmarks/domains"),
+
+	shareContent: (id: string, request: ShareBookmarkRequest) =>
+		fetcher<ShareContent>(`/api/v1/bookmarks/${id}/share`, {
+			method: "POST",
+			body: JSON.stringify(request),
+		}),
+
+	getSharedContent: (token: string) =>
+		fetcher<Bookmark>(`/api/v1/shared/${token}`),
+
+	updateSharedContent: (id: string, input: ShareContentUpdateInput) =>
+		fetcher<Bookmark>(`/api/v1/bookmarks/${id}/share`, {
+			method: "PUT",
+			body: JSON.stringify(input),
+		}),
+
+	unshareContent: (id: string) =>
+		fetcher<void>(`/api/v1/bookmarks/${id}/share`, {
+			method: "DELETE",
+		}),
 };
 
 // SWR Hooks
@@ -150,6 +187,10 @@ export function useTags() {
 
 export function useDomains() {
 	return useSWR<Domain[]>("bookmarkDomains", () => api.listDomains());
+}
+
+export function useSharedContent(token: string) {
+	return useSWR<Bookmark>("sharedContent", () => api.getSharedContent(token));
 }
 
 // Mutation Hooks
@@ -190,6 +231,29 @@ export function useBookmarkMutations() {
 			mutate(["bookmark", id]);
 			invalidateBookmarks();
 			return bookmark;
+		},
+	};
+}
+
+export function useShareContentMutations() {
+	const { mutate } = useSWRConfig();
+
+	return {
+		shareContent: async (id: string, request: ShareBookmarkRequest) => {
+			const response = await api.shareContent(id, request);
+			mutate(["bookmark", id]);
+			return response;
+		},
+
+		unshareContent: async (id: string) => {
+			await api.unshareContent(id);
+			mutate(["bookmark", id]);
+		},
+
+		updateSharedContent: async (id: string, input: ShareContentUpdateInput) => {
+			const response = await api.updateSharedContent(id, input);
+			mutate(["bookmark", id]);
+			return response;
 		},
 	};
 }

@@ -200,6 +200,21 @@ definitions:
       user_id:
         type: string
     type: object
+  bookmarks.ContentShareDTO:
+    properties:
+      content_id:
+        type: string
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
   bookmarks.ContentType:
     enum:
     - bookmark
@@ -260,6 +275,8 @@ definitions:
         type: string
       published_at:
         type: string
+      share:
+        $ref: '#/definitions/bookmarks.ContentShareDTO'
       site_name:
         type: string
       tags:
@@ -404,6 +421,15 @@ definitions:
       username:
         type: string
     type: object
+  httpserver.shareBookmarkRequest:
+    properties:
+      bookmarkID:
+        type: string
+      expires_at:
+        type: string
+    required:
+    - bookmarkID
+    type: object
   httpserver.updateAssistantRequest:
     properties:
       assistantId:
@@ -441,6 +467,16 @@ definitions:
         type: string
     required:
     - bookmarkID
+    type: object
+  httpserver.updateSharedBookmarkRequest:
+    properties:
+      bookmarkID:
+        type: string
+      expires_at:
+        type: string
+    required:
+    - bookmarkID
+    - expires_at
     type: object
   httpserver.updateUserInfoRequest:
     properties:
@@ -2408,6 +2444,227 @@ paths:
                   type: object
               type: object
       summary: Refresh Bookmark
+      tags:
+      - Bookmarks
+  /bookmarks/{bookmark-id}/share:
+    delete:
+      consumes:
+      - application/json
+      description: Revokes sharing access for a bookmark
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: bookmark-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Delete Shared Bookmark
+      tags:
+      - Bookmarks
+    get:
+      consumes:
+      - application/json
+      description: Gets sharing information for a bookmark
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/bookmarks.ContentDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Get Shared Bookmark
+      tags:
+      - Bookmarks
+    post:
+      consumes:
+      - application/json
+      description: Creates a shareable link for a bookmark
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: bookmark-id
+        required: true
+        type: string
+      - description: Share options
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.shareBookmarkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/bookmarks.ContentDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Share Bookmark
+      tags:
+      - Bookmarks
+    put:
+      consumes:
+      - application/json
+      description: Updates sharing settings for a bookmark
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: bookmark-id
+        required: true
+        type: string
+      - description: Update options
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.updateSharedBookmarkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/bookmarks.ContentDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Update Shared Bookmark
       tags:
       - Bookmarks
   /bookmarks/domains:

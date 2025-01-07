@@ -33,6 +33,8 @@ type Metadata struct {
 
 	Tags       []string    `json:"tags,omitempty"`
 	Highlights []Highlight `json:"highlights,omitempty"`
+
+	Share *ContentShareDTO `json:"share,omitempty"`
 }
 
 // BookmarkDTO represents the domain model for a bookmark
@@ -373,5 +375,34 @@ func WithMetadata(metadata Metadata) BookmarkOption {
 func WithScreenshot(screenshot string) BookmarkOption {
 	return func(b *BookmarkDTO) {
 		b.Screenshot = screenshot
+	}
+}
+
+type ContentShareDTO struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	ContentID uuid.UUID `json:"content_id"`
+	ExpiresAt time.Time `json:"expires_at,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (c *ContentShareDTO) Load(dbo *db.ContentShare) {
+	c.ID = dbo.ID
+	c.UserID = dbo.UserID
+	c.ContentID = dbo.ContentID.Bytes
+	c.ExpiresAt = dbo.ExpiresAt.Time
+	c.CreatedAt = dbo.CreatedAt.Time
+	c.UpdatedAt = dbo.UpdatedAt.Time
+}
+
+func (c *ContentShareDTO) Dump() db.CreateShareContentParams {
+	return db.CreateShareContentParams{
+		UserID:    c.UserID,
+		ContentID: pgtype.UUID{Bytes: c.ContentID, Valid: c.ContentID != uuid.Nil},
+		ExpiresAt: pgtype.Timestamptz{
+			Time:  c.ExpiresAt,
+			Valid: !c.ExpiresAt.IsZero(),
+		},
 	}
 }

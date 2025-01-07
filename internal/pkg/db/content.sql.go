@@ -118,6 +118,32 @@ func (q *Queries) CreateContentTag(ctx context.Context, db DBTX, arg CreateConte
 	return i, err
 }
 
+const createShareContent = `-- name: CreateShareContent :one
+INSERT INTO content_share (user_id, content_id, expires_at)
+VALUES ($1, $2, $3)
+RETURNING id, user_id, content_id, expires_at, created_at, updated_at
+`
+
+type CreateShareContentParams struct {
+	UserID    uuid.UUID
+	ContentID pgtype.UUID
+	ExpiresAt pgtype.Timestamptz
+}
+
+func (q *Queries) CreateShareContent(ctx context.Context, db DBTX, arg CreateShareContentParams) (ContentShare, error) {
+	row := db.QueryRow(ctx, createShareContent, arg.UserID, arg.ContentID, arg.ExpiresAt)
+	var i ContentShare
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ContentID,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const deleteContent = `-- name: DeleteContent :exec
 DELETE
 FROM content
@@ -160,6 +186,35 @@ WHERE user_id = $1
 
 func (q *Queries) DeleteContentsByUser(ctx context.Context, db DBTX, userID uuid.UUID) error {
 	_, err := db.Exec(ctx, deleteContentsByUser, userID)
+	return err
+}
+
+const deleteExpiredShareContent = `-- name: DeleteExpiredShareContent :exec
+DELETE
+FROM content_share
+WHERE expires_at < now()
+`
+
+func (q *Queries) DeleteExpiredShareContent(ctx context.Context, db DBTX) error {
+	_, err := db.Exec(ctx, deleteExpiredShareContent)
+	return err
+}
+
+const deleteShareContent = `-- name: DeleteShareContent :exec
+DELETE FROM content_share cs
+USING content c
+WHERE cs.content_id = c.id
+  AND c.id = $1
+  AND c.user_id = $2
+`
+
+type DeleteShareContentParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteShareContent(ctx context.Context, db DBTX, arg DeleteShareContentParams) error {
+	_, err := db.Exec(ctx, deleteShareContent, arg.ID, arg.UserID)
 	return err
 }
 
@@ -225,6 +280,65 @@ func (q *Queries) GetContent(ctx context.Context, db DBTX, arg GetContentParams)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Tags,
+	)
+	return i, err
+}
+
+const getShareContent = `-- name: GetShareContent :one
+SELECT id, user_id, content_id, expires_at, created_at, updated_at
+FROM content_share
+WHERE content_id = $1
+  AND user_id = $2
+`
+
+type GetShareContentParams struct {
+	ContentID pgtype.UUID
+	UserID    uuid.UUID
+}
+
+// info about the shared content
+func (q *Queries) GetShareContent(ctx context.Context, db DBTX, arg GetShareContentParams) (ContentShare, error) {
+	row := db.QueryRow(ctx, getShareContent, arg.ContentID, arg.UserID)
+	var i ContentShare
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ContentID,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getSharedContent = `-- name: GetSharedContent :one
+SELECT c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at
+FROM content_share AS cs
+  JOIN content AS c ON cs.content_id = c.id
+WHERE cs.id = $1
+  AND cs.expires_at is NULL OR cs.expires_at > now()
+`
+
+// get the shared content from content table
+func (q *Queries) GetSharedContent(ctx context.Context, db DBTX, id uuid.UUID) (Content, error) {
+	row := db.QueryRow(ctx, getSharedContent, id)
+	var i Content
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Title,
+		&i.Description,
+		&i.Url,
+		&i.Domain,
+		&i.S3Key,
+		&i.Summary,
+		&i.Content,
+		&i.Html,
+		&i.Metadata,
+		&i.IsFavorite,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -512,6 +626,58 @@ func (q *Queries) ListExistingTagsByTags(ctx context.Context, db DBTX, arg ListE
 	return items, nil
 }
 
+const listShareContent = `-- name: ListShareContent :many
+SELECT c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at
+FROM content_share AS cs
+  JOIN content AS c ON cs.content_id = c.id
+WHERE cs.user_id = $1
+  AND cs.expires_at is NULL OR cs.expires_at > now()
+ORDER BY cs.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListShareContentParams struct {
+	UserID uuid.UUID
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) ListShareContent(ctx context.Context, db DBTX, arg ListShareContentParams) ([]Content, error) {
+	rows, err := db.Query(ctx, listShareContent, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Content
+	for rows.Next() {
+		var i Content
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Type,
+			&i.Title,
+			&i.Description,
+			&i.Url,
+			&i.Domain,
+			&i.S3Key,
+			&i.Summary,
+			&i.Content,
+			&i.Html,
+			&i.Metadata,
+			&i.IsFavorite,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTagsByUser = `-- name: ListTagsByUser :many
 SELECT ct.name, count(ctm.*) as count
 FROM content_tags ct
@@ -649,6 +815,36 @@ func (q *Queries) UpdateContent(ctx context.Context, db DBTX, arg UpdateContentP
 		&i.Html,
 		&i.Metadata,
 		&i.IsFavorite,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateShareContent = `-- name: UpdateShareContent :one
+UPDATE content_share cs
+SET expires_at = $3
+FROM content c
+WHERE cs.content_id = c.id
+  AND c.id = $1
+  AND c.user_id = $2
+RETURNING cs.id, cs.user_id, cs.content_id, cs.expires_at, cs.created_at, cs.updated_at
+`
+
+type UpdateShareContentParams struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	ExpiresAt pgtype.Timestamptz
+}
+
+func (q *Queries) UpdateShareContent(ctx context.Context, db DBTX, arg UpdateShareContentParams) (ContentShare, error) {
+	row := db.QueryRow(ctx, updateShareContent, arg.ID, arg.UserID, arg.ExpiresAt)
+	var i ContentShare
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ContentID,
+		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
