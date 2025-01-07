@@ -15,6 +15,7 @@ import { Route as IndexImport } from "./routes/index";
 import { Route as SettingsIndexImport } from "./routes/settings/index";
 import { Route as BookmarksIndexImport } from "./routes/bookmarks/index";
 import { Route as AuthIndexImport } from "./routes/auth/index";
+import { Route as ShareIdImport } from "./routes/share/$id";
 import { Route as SettingsSummaryImport } from "./routes/settings/summary";
 import { Route as SettingsProfileImport } from "./routes/settings/profile";
 import { Route as BookmarksIdImport } from "./routes/bookmarks/$id";
@@ -45,6 +46,12 @@ const BookmarksIndexRoute = BookmarksIndexImport.update({
 const AuthIndexRoute = AuthIndexImport.update({
 	id: "/auth/",
 	path: "/auth/",
+	getParentRoute: () => rootRoute,
+} as any);
+
+const ShareIdRoute = ShareIdImport.update({
+	id: "/share/$id",
+	path: "/share/$id",
 	getParentRoute: () => rootRoute,
 } as any);
 
@@ -130,6 +137,13 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof SettingsSummaryImport;
 			parentRoute: typeof rootRoute;
 		};
+		"/share/$id": {
+			id: "/share/$id";
+			path: "/share/$id";
+			fullPath: "/share/$id";
+			preLoaderRoute: typeof ShareIdImport;
+			parentRoute: typeof rootRoute;
+		};
 		"/auth/": {
 			id: "/auth/";
 			path: "/auth";
@@ -170,6 +184,7 @@ export interface FileRoutesByFullPath {
 	"/bookmarks/$id": typeof BookmarksIdRoute;
 	"/settings/profile": typeof SettingsProfileRoute;
 	"/settings/summary": typeof SettingsSummaryRoute;
+	"/share/$id": typeof ShareIdRoute;
 	"/auth": typeof AuthIndexRoute;
 	"/bookmarks": typeof BookmarksIndexRoute;
 	"/settings": typeof SettingsIndexRoute;
@@ -183,6 +198,7 @@ export interface FileRoutesByTo {
 	"/bookmarks/$id": typeof BookmarksIdRoute;
 	"/settings/profile": typeof SettingsProfileRoute;
 	"/settings/summary": typeof SettingsSummaryRoute;
+	"/share/$id": typeof ShareIdRoute;
 	"/auth": typeof AuthIndexRoute;
 	"/bookmarks": typeof BookmarksIndexRoute;
 	"/settings": typeof SettingsIndexRoute;
@@ -197,6 +213,7 @@ export interface FileRoutesById {
 	"/bookmarks/$id": typeof BookmarksIdRoute;
 	"/settings/profile": typeof SettingsProfileRoute;
 	"/settings/summary": typeof SettingsSummaryRoute;
+	"/share/$id": typeof ShareIdRoute;
 	"/auth/": typeof AuthIndexRoute;
 	"/bookmarks/": typeof BookmarksIndexRoute;
 	"/settings/": typeof SettingsIndexRoute;
@@ -212,6 +229,7 @@ export interface FileRouteTypes {
 		| "/bookmarks/$id"
 		| "/settings/profile"
 		| "/settings/summary"
+		| "/share/$id"
 		| "/auth"
 		| "/bookmarks"
 		| "/settings"
@@ -224,6 +242,7 @@ export interface FileRouteTypes {
 		| "/bookmarks/$id"
 		| "/settings/profile"
 		| "/settings/summary"
+		| "/share/$id"
 		| "/auth"
 		| "/bookmarks"
 		| "/settings"
@@ -236,6 +255,7 @@ export interface FileRouteTypes {
 		| "/bookmarks/$id"
 		| "/settings/profile"
 		| "/settings/summary"
+		| "/share/$id"
 		| "/auth/"
 		| "/bookmarks/"
 		| "/settings/"
@@ -250,6 +270,7 @@ export interface RootRouteChildren {
 	BookmarksIdRoute: typeof BookmarksIdRoute;
 	SettingsProfileRoute: typeof SettingsProfileRoute;
 	SettingsSummaryRoute: typeof SettingsSummaryRoute;
+	ShareIdRoute: typeof ShareIdRoute;
 	AuthIndexRoute: typeof AuthIndexRoute;
 	BookmarksIndexRoute: typeof BookmarksIndexRoute;
 	SettingsIndexRoute: typeof SettingsIndexRoute;
@@ -263,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
 	BookmarksIdRoute: BookmarksIdRoute,
 	SettingsProfileRoute: SettingsProfileRoute,
 	SettingsSummaryRoute: SettingsSummaryRoute,
+	ShareIdRoute: ShareIdRoute,
 	AuthIndexRoute: AuthIndexRoute,
 	BookmarksIndexRoute: BookmarksIndexRoute,
 	SettingsIndexRoute: SettingsIndexRoute,
@@ -285,6 +307,7 @@ export const routeTree = rootRoute
         "/bookmarks/$id",
         "/settings/profile",
         "/settings/summary",
+        "/share/$id",
         "/auth/",
         "/bookmarks/",
         "/settings/",
@@ -308,6 +331,9 @@ export const routeTree = rootRoute
     },
     "/settings/summary": {
       "filePath": "settings/summary.tsx"
+    },
+    "/share/$id": {
+      "filePath": "share/$id.tsx"
     },
     "/auth/": {
       "filePath": "auth/index.tsx"

@@ -63,5 +63,9 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("shared bookmark not found"))
 	}
 
+	// remove sensitive information
+	bookmark.ID = uuid.Nil
+	bookmark.UserID = uuid.Nil
+
 	return JsonResponse(c, http.StatusOK, bookmark)
 }
