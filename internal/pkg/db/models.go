@@ -177,6 +177,15 @@ type ContentFoldersMapping struct {
 	UpdatedAt pgtype.Timestamptz
 }
 
+type ContentShare struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	ContentID pgtype.UUID
+	ExpiresAt pgtype.Timestamptz
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
 type ContentTag struct {
 	ID         uuid.UUID
 	Name       string

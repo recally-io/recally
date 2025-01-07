@@ -20,15 +20,27 @@ import {
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import { useBookmark, useBookmarkMutations } from "@/lib/apis/bookmarks";
+import {
+	useBookmark,
+	useBookmarkMutations,
+	useShareContentMutations,
+} from "@/lib/apis/bookmarks";
 import { ROUTES } from "@/lib/router";
 import { useState } from "react";
+
+// Add this near the top of the file, before the component
+const getShareUrl = (shareId?: string) => {
+	const host = window.location.origin;
+	return shareId ? `${host}/share/${shareId}` : undefined;
+};
 
 export default function BookmarkDetailPage({ id }: { id: string }) {
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const { deleteBookmark, refreshBookmark } = useBookmarkMutations();
+	const { shareContent, unshareContent, updateSharedContent } =
+		useShareContentMutations();
 
 	const { data: bookmark, error } = useBookmark(id);
 	if (error) {
@@ -102,6 +114,108 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 		}
 	};
 
+	const handleShare = async () => {
+		try {
+			setIsLoading(true);
+			const expiresAt = new Date();
+			expiresAt.setDate(expiresAt.getDate() + 7); // Share for 7 days
+			await shareContent(bookmark.id, {
+				expires_at: expiresAt.toISOString(),
+			});
+			toast({
+				title: "Success",
+				description: "Article shared successfully",
+			});
+			handleCopyLink();
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to share article",
+				variant: "destructive",
+			});
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleUnshare = async () => {
+		try {
+			setIsLoading(true);
+			await unshareContent(bookmark.id);
+			toast({
+				title: "Success",
+				description: "Article unshared successfully",
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to unshare article",
+				variant: "destructive",
+			});
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleCopyLink = async () => {
+		try {
+			setIsLoading(true);
+			const shareUrl = getShareUrl(bookmark.metadata?.share?.id);
+			if (shareUrl) {
+				await navigator.clipboard.writeText(shareUrl);
+				toast({
+					title: "Success",
+					description: "Share link copied to clipboard",
+				});
+			}
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to copy share link",
+				variant: "destructive",
+			});
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleUpdateExpiration = async (date: Date) => {
+		try {
+			setIsLoading(true);
+			await updateSharedContent(bookmark.id, {
+				expires_at: date.toISOString(),
+			});
+			toast({
+				title: "Success",
+				description: "Share expiration updated successfully",
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to update share expiration",
+				variant: "destructive",
+			});
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const shareStatus = bookmark.metadata?.share
+		? {
+				isShared: true,
+				isExpired: bookmark.metadata.share.expires_at
+					? new Date(bookmark.metadata.share.expires_at) < new Date()
+					: false,
+			}
+		: {
+				isShared: false,
+				isExpired: false,
+			};
+
+	const shareExpireTime = bookmark.metadata?.share?.expires_at
+		? new Date(bookmark.metadata.share.expires_at)
+		: undefined;
+
 	return (
 		<SidebarProvider defaultOpen={false}>
 			<BookmarksSidebar />
@@ -116,7 +230,15 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 								onDelete={async () => setShowDeleteDialog(true)}
 								onRefetch={handleRefetch}
 								onRegenerateSummary={handleRegenerateSummary}
+								onShare={handleShare}
+								onUnshare={handleUnshare}
 								isLoading={isLoading}
+								shareStatus={shareStatus}
+								copyLink={
+									bookmark.metadata?.share?.id ? handleCopyLink : undefined
+								}
+								shareExpireTime={shareExpireTime}
+								onUpdateExpiration={handleUpdateExpiration}
 							/>
 						</div>
 					</header>

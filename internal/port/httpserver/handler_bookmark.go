@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"recally/internal/core/bookmarks"
@@ -30,6 +31,11 @@ type BookmarkService interface {
 	Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcher fetcher.FecherType, regenerateSummary bool) (*bookmarks.ContentDTO, error)
 	FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType) (*bookmarks.ContentDTO, error)
 	SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.ContentDTO, error)
+
+	GetShareContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID) (*bookmarks.ContentShareDTO, error)
+	ShareContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID, expiresAt time.Time) (*bookmarks.ContentShareDTO, error)
+	UpdateSharedContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID, expiresAt time.Time) (*bookmarks.ContentShareDTO, error)
+	DeleteSharedContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID) error
 }
 
 // bookmarkServiceImpl implements BookmarkService
@@ -50,6 +56,12 @@ func registerBookmarkHandlers(e *echo.Group, s *Service) {
 	g.POST("/:bookmark-id/refresh", h.refreshBookmark)
 	g.GET("/tags", h.listTags)
 	g.GET("/domains", h.listDomains)
+
+	// Updated sharing endpoints
+	g.GET("/:bookmark-id/share", h.getShareBookmark)
+	g.POST("/:bookmark-id/share", h.shareBookmark)
+	g.PUT("/:bookmark-id/share", h.updateSharedBookmark)
+	g.DELETE("/:bookmark-id/share", h.deleteSharedBookmark)
 }
 
 type listBookmarksRequest struct {
@@ -448,4 +460,152 @@ func (h *bookmarksHandler) refreshBookmark(c echo.Context) error {
 	}
 
 	return JsonResponse(c, http.StatusOK, bookmark)
+}
+
+type shareBookmarkRequest struct {
+	BookmarkID uuid.UUID `param:"bookmark-id" validate:"required,uuid4"`
+	ExpiresAt  time.Time `json:"expires_at"`
+}
+
+// shareBookmark handles POST /bookmarks/:bookmark-id/share
+// @Summary Share Bookmark
+// @Description Creates a shareable link for a bookmark
+// @Tags Bookmarks
+// @Accept json
+// @Produce json
+// @Param bookmark-id path string true "Bookmark ID"
+// @Param request body shareBookmarkRequest true "Share options"
+// @Success 200 {object} JSONResult{data=bookmarks.ContentDTO} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 404 {object} JSONResult{data=nil} "Not Found"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /bookmarks/{bookmark-id}/share [post]
+func (h *bookmarksHandler) shareBookmark(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	req := new(shareBookmarkRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	shared, err := h.service.ShareContent(ctx, tx, req.BookmarkID, req.ExpiresAt)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, shared)
+}
+
+type updateSharedBookmarkRequest struct {
+	BookmarkID uuid.UUID `param:"bookmark-id" validate:"required,uuid4"`
+	ExpiresAt  time.Time `json:"expires_at" validate:"required"`
+}
+
+// updateSharedBookmark handles PUT /bookmarks/:bookmark-id/share
+// @Summary Update Shared Bookmark
+// @Description Updates sharing settings for a bookmark
+// @Tags Bookmarks
+// @Accept json
+// @Produce json
+// @Param bookmark-id path string true "Bookmark ID"
+// @Param request body updateSharedBookmarkRequest true "Update options"
+// @Success 200 {object} JSONResult{data=bookmarks.ContentDTO} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 404 {object} JSONResult{data=nil} "Not Found"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /bookmarks/{bookmark-id}/share [put]
+func (h *bookmarksHandler) updateSharedBookmark(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(updateSharedBookmarkRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	content, err := h.service.UpdateSharedContent(ctx, tx, req.BookmarkID, req.ExpiresAt)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusOK, content)
+}
+
+// deleteSharedBookmark handles DELETE /bookmarks/:bookmark-id/share
+// @Summary Delete Shared Bookmark
+// @Description Revokes sharing access for a bookmark
+// @Tags Bookmarks
+// @Accept json
+// @Produce json
+// @Param bookmark-id path string true "Bookmark ID"
+// @Success 204 {object} JSONResult{data=nil} "No Content"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /bookmarks/{bookmark-id}/share [delete]
+func (h *bookmarksHandler) deleteSharedBookmark(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	bookmarkID, err := uuid.Parse(c.Param("bookmark-id"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	tx, _, err := initContext(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	if err := h.service.DeleteSharedContent(ctx, tx, bookmarkID); err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	return JsonResponse(c, http.StatusNoContent, nil)
+}
+
+type getShareContentRequest struct {
+	BookmarkID uuid.UUID `param:"bookmark-id" validate:"required,uuid"`
+}
+
+// getSharedBookmark handles GET /bookmarks/:bookmark-id/share
+// @Summary Get Shared Bookmark
+// @Description Gets sharing information for a bookmark
+// @Tags Bookmarks
+// @Accept json
+// @Produce json
+// @Param bookmark-id path string true "Bookmark ID"
+// @Success 200 {object} JSONResult{data=bookmarks.ContentDTO} "Success"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 404 {object} JSONResult{data=nil} "Not Found"
+// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
+// @Router /bookmarks/{bookmark-id}/share [get]
+func (h *bookmarksHandler) getShareBookmark(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	req := new(getShareContentRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+	tx, err := loadTx(ctx)
+	if err != nil {
+		return errors.New("tx not found")
+	}
+
+	cs, err := h.service.GetShareContent(ctx, tx, req.BookmarkID)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	if cs == nil {
+		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("shared bookmark not found"))
+	}
+
+	return JsonResponse(c, http.StatusOK, cs)
 }

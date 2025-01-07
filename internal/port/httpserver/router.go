@@ -30,6 +30,7 @@ func (s *Service) registerRouters() {
 	registerToolsHandlers(v1Api, s)
 	registerFileHandlers(v1Api, s.s3)
 	registerBookmarkHandlers(v1Api, s)
+	registerBookmarkShareHandlers(v1Api, s)
 	registerLLMHandlers(v1Api, s)
 	registerUsersHandlers(v1Api)
 

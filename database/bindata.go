@@ -18,6 +18,8 @@
 // database/migrations/000008_comprehensive_bookmarks.up.sql
 // database/migrations/000009_migrate_bookmarks_data.down.sql
 // database/migrations/000009_migrate_bookmarks_data.up.sql
+// database/migrations/000010_share_content.down.sql
+// database/migrations/000010_share_content.up.sql
 package migrations
 
 import (
@@ -454,6 +456,46 @@ func _000009_migrate_bookmarks_dataUpSql() (*asset, error) {
 	return a, nil
 }
 
+var __000010_share_contentDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x01\x00\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00")
+
+func _000010_share_contentDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000010_share_contentDownSql,
+		"000010_share_content.down.sql",
+	)
+}
+
+func _000010_share_contentDownSql() (*asset, error) {
+	bytes, err := _000010_share_contentDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000010_share_content.down.sql", size: 0, mode: os.FileMode(420), modTime: time.Unix(1736215913, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000010_share_contentUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x9c\x91\x4d\x8e\xa3\x30\x14\x84\xf7\x9c\xe2\x2d\x41\x9a\x1b\x64\xe5\x98\x47\x62\x0d\xb1\x91\x79\x28\xc9\x6c\x2c\x14\x5b\x33\x48\x13\x12\xf1\x23\xe5\xf8\x2d\x13\x13\xba\xa3\x56\x77\xd4\x4b\xa8\xaa\xcf\xe5\x32\xd7\xc8\x08\x81\xd8\x3a\x47\x10\x19\x48\x45\x80\x07\x51\x52\x09\xa7\x4b\x3b\xb8\x76\x30\xfd\xbf\xba\x73\x10\x47\x00\x00\x8d\x85\x71\x6c\x2c\x14\x5a\xec\x98\x3e\xc2\x6f\x3c\x42\x8a\x19\xab\x72\x82\xbf\xae\x35\x5d\xdd\xda\xcb\xd9\x78\x4f\x9c\xfc\x9a\x22\x63\xef\x3a\x33\xe7\x3c\x5e\x56\x79\x0e\x1a\x33\xd4\x28\x39\x96\x93\xa1\x8f\xbd\x1c\x12\xf3\xc1\x73\xe8\x9d\x37\x48\x71\x63\x13\x50\x12\x52\xcc\x91\x10\x38\x2b\x39\x4b\xf1\x9e\x76\xb7\x6b\xd3\xb9\xde\xd4\x03\x90\xd8\x61\x49\x6c\x57\xc0\x5e\xd0\x76\xfa\x84\x3f\x4a\xe2\xa3\xb2\xaf\x12\xce\xec\x5c\x3d\x38\xfb\x52\x8a\x57\x5a\xa3\x24\xf3\x30\x86\x8b\x5e\xed\xcf\x11\x51\xb2\x8a\xa2\xf0\x18\x42\xa6\x78\xf8\xea\x31\x4c\xd8\xd4\x34\xf6\xe6\x67\xf8\x20\xc6\x41\x4c\x56\xaf\xf3\x96\xc5\x3f\x47\x2e\xba\xaf\x99\x6a\x55\x00\x69\xb1\xd9\xa0\xf6\xd8\x80\xbc\xdf\xdf\x3c\x35\x5d\x46\x79\xa6\x3e\xfa\xcd\xa8\x6f\x00\xd3\xc8\x6b\xcc\x94\x46\xa8\x8a\xd4\x27\x9f\x91\x93\x25\x53\x1a\x90\xf1\x2d\x68\xb5\x9f\x7e\xe0\x01\x79\x45\x08\x59\x25\x39\x09\x25\xe7\x83\x16\xb4\x39\x5d\xfe\x8f\xe7\x36\x4e\x56\xd1\x5b\x00\x00\x00\xff\xff\xdf\x96\x6d\x4a\x11\x03\x00\x00")
+
+func _000010_share_contentUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000010_share_contentUpSql,
+		"000010_share_content.up.sql",
+	)
+}
+
+func _000010_share_contentUpSql() (*asset, error) {
+	bytes, err := _000010_share_contentUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000010_share_content.up.sql", size: 785, mode: os.FileMode(420), modTime: time.Unix(1736215913, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -524,6 +566,8 @@ var _bindata = map[string]func() (*asset, error){
 	"000008_comprehensive_bookmarks.up.sql":         _000008_comprehensive_bookmarksUpSql,
 	"000009_migrate_bookmarks_data.down.sql":        _000009_migrate_bookmarks_dataDownSql,
 	"000009_migrate_bookmarks_data.up.sql":          _000009_migrate_bookmarks_dataUpSql,
+	"000010_share_content.down.sql":                 _000010_share_contentDownSql,
+	"000010_share_content.up.sql":                   _000010_share_contentUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -585,6 +629,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"000008_comprehensive_bookmarks.up.sql":         &bintree{_000008_comprehensive_bookmarksUpSql, map[string]*bintree{}},
 	"000009_migrate_bookmarks_data.down.sql":        &bintree{_000009_migrate_bookmarks_dataDownSql, map[string]*bintree{}},
 	"000009_migrate_bookmarks_data.up.sql":          &bintree{_000009_migrate_bookmarks_dataUpSql, map[string]*bintree{}},
+	"000010_share_content.down.sql":                 &bintree{_000010_share_contentDownSql, map[string]*bintree{}},
+	"000010_share_content.up.sql":                   &bintree{_000010_share_contentUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

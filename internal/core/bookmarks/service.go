@@ -80,6 +80,12 @@ func (s *Service) Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*C
 	dto.LoadWithTags(&c)
 	// Clear content and HTML
 	dto.HTML = ""
+
+	// add share content info
+	if sc, err := s.GetShareContent(ctx, tx, id); err == nil {
+		dto.Metadata.Share = sc
+	}
+
 	return &dto, nil
 }
 

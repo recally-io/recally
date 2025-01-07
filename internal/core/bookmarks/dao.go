@@ -36,4 +36,10 @@ type DAO interface {
 	ListExistingTagsByTags(ctx context.Context, db db.DBTX, arg db.ListExistingTagsByTagsParams) ([]string, error)
 	LinkContentWithTags(ctx context.Context, db db.DBTX, arg db.LinkContentWithTagsParams) error
 	UnLinkContentWithTags(ctx context.Context, db db.DBTX, arg db.UnLinkContentWithTagsParams) error
+
+	CreateShareContent(ctx context.Context, db db.DBTX, arg db.CreateShareContentParams) (db.ContentShare, error)
+	DeleteShareContent(ctx context.Context, db db.DBTX, arg db.DeleteShareContentParams) error
+	GetSharedContent(ctx context.Context, db db.DBTX, id uuid.UUID) (db.Content, error)
+	GetShareContent(ctx context.Context, db db.DBTX, arg db.GetShareContentParams) (db.ContentShare, error)
+	UpdateShareContent(ctx context.Context, db db.DBTX, arg db.UpdateShareContentParams) (db.ContentShare, error)
 }
