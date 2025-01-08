@@ -33,24 +33,15 @@ func main() {
 
 	services := make([]Service, 0)
 
-	// init basic services
-	// init db pool
-	pool, err := db.NewPool(ctx, config.Settings.Database.URL())
-	if err != nil {
-		logger.Default.Fatal("failed to create new database pool", "err", err)
-	}
-
-	// init cache service
-	cacheService := cache.NewDBCache(pool)
-
-	llm := llms.New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
-	s3Client, err := s3.New(config.Settings.S3)
-	if err != nil {
-		logger.Default.Fatal("failed to create new s3 client", "err", err)
-	}
+	// init basic services using default config
+	pool := db.DefaultPool
+	cacheService := cache.DefaultDBCache
+	llm := llms.DefaultLLM
+	s3Client := s3.DefaultClient
+	riverQueue := queue.DefaultQueue
 
 	// start queue service
-	queueService, err := queue.NewServer(pool, llm)
+	queueService, err := queue.NewServer(riverQueue)
 	if err != nil {
 		logger.Default.Fatal("failed to create new queue service", "err", err)
 	}

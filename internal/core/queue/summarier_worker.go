@@ -21,8 +21,8 @@ func (SummarierWorkerArgs) Kind() string {
 	return "content_summarier"
 }
 
-func NewSummarierWorker(llm *llms.LLM, dbPool *pgxpool.Pool) *CrawlerWorker {
-	return &CrawlerWorker{
+func NewSummarierWorker(llm *llms.LLM, dbPool *pgxpool.Pool) *SummarierWorker {
+	return &SummarierWorker{
 		llm:    llm,
 		dbPool: dbPool,
 	}

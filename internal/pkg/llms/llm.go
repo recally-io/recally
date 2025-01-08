@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"recally/internal/pkg/cache"
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/tools"
 	"strings"
@@ -15,6 +16,13 @@ import (
 	"github.com/sashabaranov/go-openai"
 	"golang.org/x/sync/errgroup"
 )
+
+
+var DefaultLLM * LLM
+
+func init() {
+	DefaultLLM = New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
+}
 
 const (
 	IntermediateStepTool = "tool"

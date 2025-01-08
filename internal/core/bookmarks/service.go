@@ -292,7 +292,7 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 }
 
 func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*ContentDTO, error) {
-	user, err := auth.LoadUserFromContext(ctx)
+	user, err := auth.LoadUser(ctx, tx, userID)
 	if err != nil {
 		return nil, err
 	}

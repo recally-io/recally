@@ -55,15 +55,14 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 		return err
 	}
 
-	go func() {
-		ctx := logger.CopyContext(ctx)
-		if dto.Content != "" && dto.Summary == "" {
-			dto, err = svc.SummarierContent(ctx, tx, job.Args.ID, job.Args.UserID)
-			if err != nil {
-				logger.FromContext(ctx).Error("failed to summarise content", "err", err)
-			}
-		}
-	}()
+	if result, err := DefaultQueue.Insert(ctx, SummarierWorkerArgs{
+		ID:     dto.ID,
+		UserID: dto.UserID,
+	}, nil); err != nil {
+		logger.FromContext(ctx).Error("failed to insert summaries job", "err", err, "content_id", dto.ID)
+	} else {
+		logger.FromContext(ctx).Info("success inserted summaries job", "result", result, "content_id", dto.ID)
+	}
 
 	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title, "url", dto.URL, "fetcher", job.Args.FetcherName)
 	return nil
