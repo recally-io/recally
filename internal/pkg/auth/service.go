@@ -14,6 +14,8 @@ import (
 
 var ErrUnAuthorized = errors.New("401: username or password or token is invalid")
 
+const DummyUserName = "dummy_user"
+
 type Service struct {
 	dao dto
 }
@@ -26,6 +28,19 @@ func New() *Service {
 
 func (s *Service) GetUserById(ctx context.Context, tx db.DBTX, userId uuid.UUID) (*UserDTO, error) {
 	user, err := s.dao.GetUserById(ctx, tx, userId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	u := new(UserDTO)
+	u.Load(&user)
+	return u, nil
+}
+
+func (s *Service) GetDummyUser(ctx context.Context, tx db.DBTX) (*UserDTO, error) {
+	user, err := s.dao.GetUserByUsername(ctx, tx, pgtype.Text{
+		String: DummyUserName,
+		Valid:  true,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}

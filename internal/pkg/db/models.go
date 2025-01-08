@@ -202,6 +202,21 @@ type ContentTagsMapping struct {
 	UpdatedAt pgtype.Timestamptz
 }
 
+type File struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	OriginalUrl string
+	S3Key       string
+	S3Url       pgtype.Text
+	FileName    pgtype.Text
+	FileType    string
+	FileSize    pgtype.Int8
+	FileHash    pgtype.Text
+	Metadata    []byte
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
 type User struct {
 	ID                  int32
 	Uuid                uuid.UUID

@@ -7,6 +7,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path"
+	"recally/internal/core/files"
+	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/s3"
@@ -16,10 +19,12 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/minio/minio-go/v7"
 )
 
 type ImageHook struct {
+	host     string
 	s3Client *s3.Client
 	pool     *db.Pool
 }
@@ -38,8 +43,9 @@ func WithImageHookDBPoolOption(pool *db.Pool) ImageHookOption {
 	}
 }
 
-func NewImageHook(opts ...ImageHookOption) *ImageHook {
+func NewImageHook(host string, opts ...ImageHookOption) *ImageHook {
 	h := &ImageHook{
+		host:     host,
 		s3Client: s3.DefaultClient,
 		pool:     db.DefaultPool,
 	}
@@ -48,7 +54,6 @@ func NewImageHook(opts ...ImageHookOption) *ImageHook {
 		opt(h)
 	}
 	return h
-
 }
 
 // func (h *ImageHook) ConvertToBase64(selec *goquery.Selection) {
@@ -89,13 +94,40 @@ func (h *ImageHook) UploadToS3(src string) (string, error) {
 	// Validate and parse URL
 	u, err := url.Parse(src)
 	if err != nil {
+		return "", fmt.Errorf("invalid image original source url: %s, %w", src, err)
+	}
+
+	// get absolute URL
+	if u.Scheme == "" {
+		u.Scheme = "http"
+	}
+
+	if u.Host == "" {
+		u.Host = h.host
+	}
+
+	ctx, err := auth.GetContextWithDummyUser(context.Background())
+	if err != nil {
 		return "", err
 	}
-	if u.Scheme == "" || u.Host == "" {
-		return "", fmt.Errorf("invalid URL")
+	file, err := files.DefaultService.GetFileByOriginalURL(ctx, h.pool.Pool, src)
+	if err != nil && !db.IsNotFoundError(err) {
+		return "", fmt.Errorf("failed to get file by original URL: %w", err)
 	}
-	host := u.Host
-	objectKey := fmt.Sprintf("images/%s/%s", host, uuid.New().String())
+
+	// if image already exists, return the URL
+	if file != nil { // file.S3Key is empty if the file is not uploaded to s3
+		logger.Default.Info("file already exists", "url", src, "objectKey", file.S3Key)
+		return file.S3Key, nil
+	}
+
+	// Generate a unique object key
+	dummyUser, _ := auth.LoadUserFromContext(ctx)
+	objectKey := fmt.Sprintf("%s/images/%s/%s", dummyUser.ID.String(), u.Host, uuid.New().String())
+	imgType := path.Ext(u.Path)
+	if imgType != "" {
+		objectKey += imgType
+	}
 
 	// Asynchronously load and upload the image for better performance
 	go func() {
@@ -104,24 +136,23 @@ func (h *ImageHook) UploadToS3(src string) (string, error) {
 		if err != nil {
 			return
 		}
-
-		_, _ = h.UploadImage(img, objectKey, contentType, size)
+		// save file metadata to database
+		if err := db.RunInTransaction(ctx, h.pool.Pool, func(ctx context.Context, tx pgx.Tx) error {
+			_, err = files.DefaultService.UploadToS3(ctx, tx, src, objectKey, bytes.NewReader(img), size, files.UploadOptions{
+				PutObjectOptions: minio.PutObjectOptions{
+					ContentType:  contentType,
+					CacheControl: "max-age=31536000, public",
+				},
+				FileType: files.FileTypeImage,
+			})
+			return err
+		}); err != nil {
+			logger.FromContext(ctx).Error("failed to save file metadata to database", "err", err)
+			return
+		}
+		logger.FromContext(ctx).Info("file metadata saved to database", "objectKey", objectKey)
 	}()
-	return s3.DefaultClient.GetPublicURL(objectKey), nil
-}
-
-func (h *ImageHook) UploadImage(img []byte, objectKey, contentType string, size int64) (string, error) {
-	// Upload image to S3
-	info, err := s3.DefaultClient.Upload(context.Background(), objectKey, bytes.NewReader(img), size, minio.PutObjectOptions{
-		ContentType:  contentType,
-		CacheControl: "max-age=31536000, public",
-	})
-	if err != nil {
-		logger.Default.Error("failed to upload image to s3", "err", err, "objectKey", objectKey, "info", info)
-		return "", err
-	}
-	logger.Default.Info("image uploaded to s3", "objectKey", objectKey)
-	return s3.DefaultClient.GetPublicURL(objectKey), nil
+	return objectKey, nil
 }
 
 func (h *ImageHook) LoadImage(uri string) (img []byte, contentType string, size int64, err error) {

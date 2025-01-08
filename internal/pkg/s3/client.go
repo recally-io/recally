@@ -80,7 +80,10 @@ func (c *Client) Delete(ctx context.Context, objectKey string) error {
 }
 
 func (c *Client) GetPublicURL(objectKey string) string {
-	return fmt.Sprintf("%s/%s/%s", c.publicURL, c.bucketName, objectKey)
+	if c.publicURL != "" {
+		return fmt.Sprintf("%s/%s/%s", c.publicURL, c.bucketName, objectKey)
+	}
+	return fmt.Sprintf("https://%s/files/%s", config.Settings.Service.Fqdn, objectKey)
 }
 
 // PutBucketCors sets the CORS configuration for the bucket if it's not already set.

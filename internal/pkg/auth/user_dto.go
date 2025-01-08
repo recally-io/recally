@@ -4,16 +4,21 @@ import (
 	"encoding/json"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
-	"recally/internal/pkg/webreader/processor"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type SummaryConfig struct {
+	Model    string `json:"model"`
+	Prompt   string `json:"prompt"`
+	Language string `json:"language"`
+}
+
 type UserSettings struct {
-	SummaryOptions      processor.SummaryConfig `json:"summary_options"`
-	IsLinkedTelegramBot bool                    `json:"is_linked_telegram_bot"`
+	SummaryOptions      SummaryConfig `json:"summary_options"`
+	IsLinkedTelegramBot bool          `json:"is_linked_telegram_bot"`
 }
 
 type UserDTO struct {

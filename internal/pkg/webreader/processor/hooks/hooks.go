@@ -24,7 +24,7 @@ func GetMarkdownBeforeHooks(host string) []md.BeforeHook {
 	hooks := []md.BeforeHook{}
 
 	if config.Settings.S3.Enabled {
-		imageHook := NewImageHook()
+		imageHook := NewImageHook(host)
 		hooks = append(hooks, imageHook.Process)
 	}
 
