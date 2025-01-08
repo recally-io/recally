@@ -55,13 +55,16 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 		return err
 	}
 
-	if dto.Content != "" && dto.Summary == "" {
-		dto, err = svc.SummarierContent(ctx, tx, job.Args.ID, job.Args.UserID)
-		if err != nil {
-			logger.FromContext(ctx).Error("failed to summarise content", "err", err)
-			return err
+	go func() {
+		ctx := logger.CopyContext(ctx)
+		if dto.Content != "" && dto.Summary == "" {
+			dto, err = svc.SummarierContent(ctx, tx, job.Args.ID, job.Args.UserID)
+			if err != nil {
+				logger.FromContext(ctx).Error("failed to summarise content", "err", err)
+			}
 		}
-	}
+	}()
+
 	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title, "url", dto.URL, "fetcher", job.Args.FetcherName)
 	return nil
 }
