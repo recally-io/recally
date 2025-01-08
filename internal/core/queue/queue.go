@@ -70,10 +70,9 @@ type Service struct {
 	*Queue
 }
 
-func NewServer(pool *db.Pool, llm *llms.LLM) (*Service, error) {
-	q, err := New(pool, llm)
-	if err != nil {
-		return nil, err
+func NewServer(q *Queue) (*Service, error) {
+	if q == nil {
+		return nil, fmt.Errorf("default queue is nil")
 	}
 	return &Service{
 		Queue: q,

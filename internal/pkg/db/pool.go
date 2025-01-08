@@ -8,6 +8,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+var DefaultPool *Pool
+
+func init() {
+	var err error
+	DefaultPool, err = NewPool(context.Background(), config.Settings.Database.URL())
+	if err != nil {
+		logger.Default.Fatal("failed to create default database pool", "err", err)
+	}
+}
+
 type Pool struct {
 	*pgxpool.Pool
 }

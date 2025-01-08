@@ -491,7 +491,7 @@ func _000010_share_contentUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000010_share_content.up.sql", size: 785, mode: os.FileMode(420), modTime: time.Unix(1736215913, 0)}
+	info := bindataFileInfo{name: "000010_share_content.up.sql", size: 785, mode: os.FileMode(420), modTime: time.Unix(1736265922, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

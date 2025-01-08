@@ -39,15 +39,31 @@ type ImageHook struct{}
 func (h *ImageHook) UploadToS3(selec *goquery.Selection) {
 	selec.Find("img").Each(func(i int, s *goquery.Selection) {
 		src := s.AttrOr("src", "")
-		img, host, imageType, size, err := h.loadImage(src)
+
+		// Validate and parse URL
+		u, err := url.Parse(src)
 		if err != nil {
 			return
 		}
-		logger.Default.Debug("image loaded", "host", host, "imageType", imageType, "size", size)
-		// Upload image to S3
-		objectKey := fmt.Sprintf("images/%s/%s.%s", host, uuid.New().String(), imageType)
+		if u.Scheme == "" || u.Host == "" {
+			return
+		}
+		host := u.Host
+		objectKey := fmt.Sprintf("images/%s/%s", host, uuid.New().String())
+
+		// Asynchronously load and upload the image for better performance
 		go func() {
-			info, err := s3.DefaultClient.Upload(context.Background(), objectKey, bytes.NewReader(img), size, minio.PutObjectOptions{})
+			// Load image
+			img, contentType, size, err := h.loadImage(src)
+			if err != nil {
+				return
+			}
+			logger.Default.Debug("image loaded", "host", host, "contentType", contentType, "size", size)
+			// Upload image to S3
+			info, err := s3.DefaultClient.Upload(context.Background(), objectKey, bytes.NewReader(img), size, minio.PutObjectOptions{
+				ContentType:  contentType,
+				CacheControl: "max-age=31536000, public",
+			})
 			if err != nil {
 				logger.Default.Error("failed to upload image to s3", "err", err, "objectKey", objectKey, "info", info)
 				return
@@ -59,25 +75,15 @@ func (h *ImageHook) UploadToS3(selec *goquery.Selection) {
 	})
 }
 
-func (h *ImageHook) loadImage(uri string) (img []byte, host string, imageType string, size int64, err error) {
+func (h *ImageHook) loadImage(uri string) (img []byte, contentType string, size int64, err error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Validate and parse URL
-	u, err := url.Parse(uri)
-	if err != nil {
-		return nil, "", "", 0, fmt.Errorf("invalid image URL: %w", err)
-	}
-	if u.Scheme == "" || u.Host == "" {
-		return nil, "", "", 0, fmt.Errorf("invalid image URL format: %s", uri)
-	}
-	host = u.Host
-
 	// Create request with context
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
-		return nil, "", "", 0, fmt.Errorf("failed to create request: %w", err)
+		return nil, "", 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	// Add user agent to avoid being blocked
@@ -89,30 +95,29 @@ func (h *ImageHook) loadImage(uri string) (img []byte, host string, imageType st
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, "", "", 0, fmt.Errorf("failed to download image: %w", err)
+		return nil, "", 0, fmt.Errorf("failed to download image: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, "", "", 0, fmt.Errorf("failed to download image: status %s", resp.Status)
+		return nil, "", 0, fmt.Errorf("failed to download image: status %s", resp.Status)
 	}
 
 	// Read with max size limit (e.g., 10MB)
 	const maxSize = 10 * 1024 * 1024
 	img, err = io.ReadAll(io.LimitReader(resp.Body, maxSize))
 	if err != nil {
-		return nil, "", "", 0, fmt.Errorf("failed to read image: %w", err)
+		return nil, "", 0, fmt.Errorf("failed to read image: %w", err)
 	}
 
 	// Determine content type
-	contentType := resp.Header.Get("Content-Type")
+	contentType = resp.Header.Get("Content-Type")
 	if contentType == "" || !strings.HasPrefix(contentType, "image/") {
 		contentType = http.DetectContentType(img)
 		if !strings.HasPrefix(contentType, "image/") {
-			return nil, "", "", 0, fmt.Errorf("invalid content type: %s", contentType)
+			return nil, "", 0, fmt.Errorf("invalid content type: %s", contentType)
 		}
 	}
-	imageType = contentType[strings.Index(contentType, "/")+1:]
 
 	// Get size
 	size = resp.ContentLength
@@ -127,5 +132,5 @@ func (h *ImageHook) loadImage(uri string) (img []byte, host string, imageType st
 		size = int64(len(img))
 	}
 
-	return img, host, imageType, size, nil
+	return img, contentType, size, nil
 }

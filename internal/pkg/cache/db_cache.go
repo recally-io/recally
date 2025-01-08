@@ -10,6 +10,12 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+var DefaultDBCache *DbCache
+
+func init() {
+	DefaultDBCache = NewDBCache(db.DefaultPool)
+}
+
 type CacheKey struct {
 	Domain string
 	Key    string
