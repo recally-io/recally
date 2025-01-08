@@ -151,6 +151,8 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter
 		var dto ContentDTO
 		dto.LoadWithTagsAndTotalCount(&c)
 		dto.HTML = ""
+		dto.Content = ""
+		dto.Summary = ""
 		dtos = append(dtos, &dto)
 		totalCount = c.TotalCount
 	}
