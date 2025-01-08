@@ -17,8 +17,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-
-var DefaultLLM * LLM
+var DefaultLLM *LLM
 
 func init() {
 	DefaultLLM = New(config.Settings.OpenAI.BaseURL, config.Settings.OpenAI.ApiKey)
