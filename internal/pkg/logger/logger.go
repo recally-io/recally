@@ -92,3 +92,22 @@ func buildLogAttrs(ctx context.Context) []slog.Attr {
 	}
 	return attrs
 }
+
+// CopyContext creates a new context with copied values from the original context
+// for the default logging attributes.
+//
+// Parameters:
+//   - ctx: The source context
+//
+// Returns:
+//   - context.Context: A new context with copied values
+func CopyContext(ctx context.Context) context.Context {
+	newCtx := context.Background()
+	for _, key := range defaultLogAttrs {
+		val, ok := contexts.Get[any](ctx, key)
+		if ok {
+			newCtx = contexts.Set(newCtx, key, val)
+		}
+	}
+	return newCtx
+}
