@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -10,11 +11,12 @@ import (
 var MemCache = NewMemCache(12*time.Hour, 24*time.Hour)
 
 type memCache struct {
-	c *cache.Cache
+	c   *cache.Cache
+	mux sync.Mutex
 }
 
 func NewMemCache(defaultExpiration, cleanupInterval time.Duration) *memCache {
-	return &memCache{c: cache.New(defaultExpiration, cleanupInterval)}
+	return &memCache{c: cache.New(defaultExpiration, cleanupInterval), mux: sync.Mutex{}}
 }
 
 func (m *memCache) Set(key CacheKey, value interface{}, expiration time.Duration) {
@@ -22,10 +24,14 @@ func (m *memCache) Set(key CacheKey, value interface{}, expiration time.Duration
 }
 
 func (m *memCache) SetWithContext(ctx context.Context, key CacheKey, value interface{}, expiration time.Duration) {
+	m.mux.Lock()
+	defer m.mux.Unlock()
 	m.Set(key, value, expiration)
 }
 
 func (m *memCache) Get(key CacheKey) (any, bool) {
+	m.mux.Lock()
+	defer m.mux.Unlock()
 	value, ok := m.c.Get(key.String())
 	if !ok {
 		return nil, false

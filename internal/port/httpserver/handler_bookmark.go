@@ -231,7 +231,7 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
-	result, err := h.queue.Insert(ctx, queue.CrawlerWorkerArgs{
+	result, err := h.queue.InsertTx(ctx, tx, queue.CrawlerWorkerArgs{
 		ID:          created.ID,
 		UserID:      created.UserID,
 		FetcherName: fetcher.TypeHttp,

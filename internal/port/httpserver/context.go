@@ -5,20 +5,20 @@ import (
 	"errors"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
-	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
-func loadTx(ctx context.Context) (db.DBTX, error) {
-	tx, ok := contexts.Get[db.DBTX](ctx, contexts.ContextKeyTx)
+func loadTx(ctx context.Context) (pgx.Tx, error) {
+	tx, ok := contexts.Get[pgx.Tx](ctx, contexts.ContextKeyTx)
 	if !ok {
 		return nil, errors.New("tx not found")
 	}
 	return tx, nil
 }
 
-func initContext(ctx context.Context) (db.DBTX, *auth.UserDTO, error) {
+func initContext(ctx context.Context) (pgx.Tx, *auth.UserDTO, error) {
 	tx, err := loadTx(ctx)
 	if err != nil {
 		return nil, nil, errors.New("tx not found")

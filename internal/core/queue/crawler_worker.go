@@ -55,7 +55,7 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 		return err
 	}
 
-	if result, err := DefaultQueue.Insert(ctx, SummarierWorkerArgs{
+	if result, err := DefaultQueue.InsertTx(ctx, tx, SummarierWorkerArgs{
 		ID:     dto.ID,
 		UserID: dto.UserID,
 	}, nil); err != nil {

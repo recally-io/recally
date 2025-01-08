@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"fmt"
+	"recally/internal/pkg/auth"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
@@ -79,23 +80,16 @@ func WithSummaryOptionLanguage(language string) SummaryOption {
 	}
 }
 
-// SummaryConfig contains configuration for the summary processor
-type SummaryConfig struct {
-	Model    string `json:"model"`
-	Prompt   string `json:"prompt"`
-	Language string `json:"language"`
-}
-
 // SummaryProcessor implements content summarization using LLM
 type SummaryProcessor struct {
-	config SummaryConfig
+	config auth.SummaryConfig
 	llm    *llms.LLM
 }
 
 // NewSummaryProcessor creates a new SummaryProcessor with the given configuration
 func NewSummaryProcessor(llm *llms.LLM, opts ...SummaryOption) *SummaryProcessor {
 	p := &SummaryProcessor{
-		config: SummaryConfig{
+		config: auth.SummaryConfig{
 			Model:  config.Settings.OpenAI.Model, // default model
 			Prompt: defaultSummaryPrompt,         // default prompt
 		},

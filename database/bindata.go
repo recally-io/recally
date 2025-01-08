@@ -20,6 +20,8 @@
 // database/migrations/000009_migrate_bookmarks_data.up.sql
 // database/migrations/000010_share_content.down.sql
 // database/migrations/000010_share_content.up.sql
+// database/migrations/000011_create_s3_resources_mapping_table.down.sql
+// database/migrations/000011_create_s3_resources_mapping_table.up.sql
 package migrations
 
 import (
@@ -431,7 +433,7 @@ func _000009_migrate_bookmarks_dataDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000009_migrate_bookmarks_data.down.sql", size: 0, mode: os.FileMode(420), modTime: time.Unix(1736065371, 0)}
+	info := bindataFileInfo{name: "000009_migrate_bookmarks_data.down.sql", size: 0, mode: os.FileMode(420), modTime: time.Unix(1736320654, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -456,7 +458,7 @@ func _000009_migrate_bookmarks_dataUpSql() (*asset, error) {
 	return a, nil
 }
 
-var __000010_share_contentDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x01\x00\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00")
+var __000010_share_contentDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\x09\xf2\x0f\x50\x08\x09\xf2\x74\x77\x77\x0d\x52\xf0\x74\x53\x70\x8d\xf0\x0c\x0e\x09\x56\x28\x2d\x48\x49\x2c\x49\x8d\x4f\xce\xcf\x2b\x49\xcd\x2b\x89\x2f\xce\x48\x2c\x4a\x8d\x87\x08\xa6\xc4\x27\x96\x28\xf8\xfb\x29\xa0\xc8\x59\x73\x81\x0d\xf2\xf4\x73\x71\x8d\x40\x32\x06\x55\x3f\x8c\x97\x99\x12\x9f\x99\x52\x41\x94\x96\xd2\xe2\xd4\x22\x54\xf5\x21\x8e\x4e\x3e\xae\xb8\xd4\x5b\x73\x01\x02\x00\x00\xff\xff\x5f\x7d\xd3\x03\xd0\x00\x00\x00")
 
 func _000010_share_contentDownSqlBytes() ([]byte, error) {
 	return bindataRead(
@@ -471,7 +473,7 @@ func _000010_share_contentDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000010_share_content.down.sql", size: 0, mode: os.FileMode(420), modTime: time.Unix(1736215913, 0)}
+	info := bindataFileInfo{name: "000010_share_content.down.sql", size: 208, mode: os.FileMode(420), modTime: time.Unix(1736320603, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -492,6 +494,46 @@ func _000010_share_contentUpSql() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "000010_share_content.up.sql", size: 785, mode: os.FileMode(420), modTime: time.Unix(1736265922, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000011_create_s3_resources_mapping_tableDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\x09\xf2\x0f\x50\x08\x09\xf2\x74\x77\x77\x0d\x52\xf0\x74\x53\x70\x8d\xf0\x0c\x0e\x09\x56\x28\x2d\x48\x49\x2c\x49\x8d\x4f\xcb\xcc\x49\x2d\x8e\x87\x70\x52\xe2\x13\x4b\x14\xfc\xfd\x14\xc0\x62\xd6\x5c\x60\x8d\x9e\x7e\x2e\xae\x11\x48\xda\x32\x53\x2a\xe2\xf3\x8b\x32\xd3\x33\xf3\x12\x73\xe2\x4b\x8b\x72\xf0\x28\x2b\x36\x26\xa0\x00\x64\x4f\x7c\x46\x62\x71\x06\x21\x35\x25\x95\x05\xa9\x78\xd4\xe4\xa6\x96\x24\xa6\x24\x96\x24\x42\x95\x84\x38\x3a\xf9\xb8\x22\x29\x81\x7a\x07\x10\x00\x00\xff\xff\x5e\x8a\x3b\xdd\x08\x01\x00\x00")
+
+func _000011_create_s3_resources_mapping_tableDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000011_create_s3_resources_mapping_tableDownSql,
+		"000011_create_s3_resources_mapping_table.down.sql",
+	)
+}
+
+func _000011_create_s3_resources_mapping_tableDownSql() (*asset, error) {
+	bytes, err := _000011_create_s3_resources_mapping_tableDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000011_create_s3_resources_mapping_table.down.sql", size: 264, mode: os.FileMode(420), modTime: time.Unix(1736324065, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var __000011_create_s3_resources_mapping_tableUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xac\x54\x4f\x73\xfa\x36\x10\xbd\xfb\x53\xbc\x1b\x66\x06\x2e\xcd\xe4\x94\x93\x31\x82\xb8\x25\x32\x95\xe5\x84\xf4\xa2\x11\x58\x80\x5a\x63\x13\x4b\x6e\x43\x3b\xfd\xee\xbf\x91\x6d\xec\xfc\xbd\xfd\x2e\x30\xda\x7d\xef\x69\xb5\x6f\xd7\xd3\x29\x74\x61\x54\x65\x61\x8f\x0a\x59\x7d\x3a\x5d\x50\x1b\x55\x79\x11\x4d\x08\xe3\x88\x28\x8f\x9b\x80\x81\xef\xfe\x0a\x79\x52\x13\x9c\xa5\x31\xff\x94\x55\x26\x8e\xd2\x1c\x27\x30\x56\xda\xda\x8c\xe1\x3d\x06\xab\x94\x24\xf0\x47\x8d\x90\x70\x84\xd1\x04\xdd\xc9\x61\xdd\x49\xee\xac\xfe\x5b\x8d\xc6\x77\x9e\x37\x9d\x22\xac\x94\xb4\x0a\x12\x56\x6e\x73\x05\x5b\xc2\xd8\xb2\x52\xc8\xa4\x95\x28\xf7\xd8\xeb\x5c\x19\xe8\x02\xc9\x8d\x17\x32\x12\x70\x02\x1e\xcc\x56\x04\xd1\x02\x34\xe6\x20\x9b\x28\xe1\x49\x07\xf3\x3d\x00\xd0\x19\xea\x5a\x67\x58\xb3\xe8\x21\x60\xcf\xf8\x8d\x3c\x63\x4e\x16\x41\xba\xe2\x38\xa8\x42\x54\xb2\xc8\xca\x93\x70\x18\x7f\x3c\x69\x28\xae\x52\x71\xe5\x39\x59\x9a\xae\x56\x60\x64\x41\x18\xa1\x21\x49\xda\x16\xf8\x2e\xdd\x31\xca\x4a\x1f\x74\x21\x73\x51\x57\x39\x38\xd9\xf0\x9e\xd6\xe6\xcd\x8d\xf8\x4b\x5d\xbe\xc9\x5c\x39\x13\x4c\xa7\x30\x37\x38\xd7\xdb\x5c\xef\x90\xb2\x55\x83\x70\x8f\x11\xae\xd3\x2d\x68\x88\xd9\xcb\x59\xe1\x31\x60\xe1\x7d\xc0\xfc\x5f\x6e\x6f\xc7\x1f\xa4\x1b\x90\xd1\xff\x2a\xcc\xa2\x65\x44\xf9\x04\xcd\x05\x2e\xa0\x0b\x6c\x2f\x56\x99\x01\xe7\xfc\x18\xaa\x58\x94\x15\xb2\xfa\x9c\xeb\x9d\xb3\x23\x53\x56\xed\xac\x2e\x8b\x06\x7e\x52\x56\x36\x7e\xfc\x9a\xc4\x74\xd6\xf7\x72\xf4\xdf\xff\xa3\x89\xcb\x3b\x7a\xae\x5e\xb5\x33\xb0\xc7\x3a\x1b\xe5\x41\x35\x02\xbb\xc6\xe4\x4c\x48\x0b\x1e\x3d\x90\x84\x07\x0f\x6b\x3c\x45\xfc\xbe\x39\xe2\x8f\x98\x92\xa1\xeb\x57\xf9\x30\x65\x8c\x50\x2e\x7a\x46\x67\xd5\x39\xfb\x69\x5a\xcd\x4f\x18\xd3\x84\xb3\x20\xa2\x1c\x75\xa1\x5f\x6a\x25\xde\x79\x9b\xd2\xe8\xf7\x94\xf8\x6f\x63\xdd\x08\x7c\x26\x76\xa6\x77\x94\xf6\x34\xf6\xdc\xa4\xbb\x51\x97\x59\x06\x5b\xe9\xc3\x41\x55\x6e\xce\xdb\x87\x34\x7b\xf7\xe6\x4d\xbb\x32\xaf\x4f\x45\x3f\xea\x2c\x5a\x2e\x09\xeb\x00\xa2\x99\x72\x31\xa0\xbd\x19\x59\xc4\x8c\x20\x5d\xcf\x1d\x3a\xa6\xed\x1e\x78\x8b\x98\x81\x04\xe1\x3d\x58\xfc\xe4\x91\x0d\x09\x53\x4e\xb0\x66\x71\x48\xe6\x29\x23\x57\xb5\x41\x47\xb4\xb7\xfa\xdd\x4e\xba\x42\x75\x91\x29\xa3\x0c\xf6\x65\x85\x7d\xa5\x5e\x6a\x55\xd8\xfc\x82\x97\x5a\x55\x5a\x65\x5d\x99\xe6\x5a\x67\x44\xe7\x64\x03\x9d\xbd\xbe\xef\xdd\xb5\x20\xbc\x6f\xdf\xdd\x67\x5a\xb7\x14\x03\xa1\x0d\x7c\x05\x1d\x86\x77\x40\xf7\xb1\x6f\x09\xcd\xea\x7c\x20\xb8\xd8\x57\x84\x7e\x86\x7b\x7c\x9a\x44\x74\x89\x65\x44\xe1\xf7\xc9\x3f\x4d\x59\x6c\xc5\x59\xda\xa3\x28\xcf\xe6\x2b\x9d\xeb\x57\x65\xb8\xb6\x8b\x8c\xef\xbc\x1f\x01\x00\x00\xff\xff\x88\x7d\x5f\x45\x79\x05\x00\x00")
+
+func _000011_create_s3_resources_mapping_tableUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000011_create_s3_resources_mapping_tableUpSql,
+		"000011_create_s3_resources_mapping_table.up.sql",
+	)
+}
+
+func _000011_create_s3_resources_mapping_tableUpSql() (*asset, error) {
+	bytes, err := _000011_create_s3_resources_mapping_tableUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000011_create_s3_resources_mapping_table.up.sql", size: 1401, mode: os.FileMode(420), modTime: time.Unix(1736323995, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -548,26 +590,28 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"000001_create_cache_table.down.sql":            _000001_create_cache_tableDownSql,
-	"000001_create_cache_table.up.sql":              _000001_create_cache_tableUpSql,
-	"000002_create_users_database.down.sql":         _000002_create_users_databaseDownSql,
-	"000002_create_users_database.up.sql":           _000002_create_users_databaseUpSql,
-	"000003_create_assistant_threads.down.sql":      _000003_create_assistant_threadsDownSql,
-	"000003_create_assistant_threads.up.sql":        _000003_create_assistant_threadsUpSql,
-	"000004_assistant_embeddings_add_uuid.down.sql": _000004_assistant_embeddings_add_uuidDownSql,
-	"000004_assistant_embeddings_add_uuid.up.sql":   _000004_assistant_embeddings_add_uuidUpSql,
-	"000005_create_new_bookmarks_tables.down.sql":   _000005_create_new_bookmarks_tablesDownSql,
-	"000005_create_new_bookmarks_tables.up.sql":     _000005_create_new_bookmarks_tablesUpSql,
-	"000006_set_embeddings_to_nullable.down.sql":    _000006_set_embeddings_to_nullableDownSql,
-	"000006_set_embeddings_to_nullable.up.sql":      _000006_set_embeddings_to_nullableUpSql,
-	"000007_new_auth_flows.down.sql":                _000007_new_auth_flowsDownSql,
-	"000007_new_auth_flows.up.sql":                  _000007_new_auth_flowsUpSql,
-	"000008_comprehensive_bookmarks.down.sql":       _000008_comprehensive_bookmarksDownSql,
-	"000008_comprehensive_bookmarks.up.sql":         _000008_comprehensive_bookmarksUpSql,
-	"000009_migrate_bookmarks_data.down.sql":        _000009_migrate_bookmarks_dataDownSql,
-	"000009_migrate_bookmarks_data.up.sql":          _000009_migrate_bookmarks_dataUpSql,
-	"000010_share_content.down.sql":                 _000010_share_contentDownSql,
-	"000010_share_content.up.sql":                   _000010_share_contentUpSql,
+	"000001_create_cache_table.down.sql":                _000001_create_cache_tableDownSql,
+	"000001_create_cache_table.up.sql":                  _000001_create_cache_tableUpSql,
+	"000002_create_users_database.down.sql":             _000002_create_users_databaseDownSql,
+	"000002_create_users_database.up.sql":               _000002_create_users_databaseUpSql,
+	"000003_create_assistant_threads.down.sql":          _000003_create_assistant_threadsDownSql,
+	"000003_create_assistant_threads.up.sql":            _000003_create_assistant_threadsUpSql,
+	"000004_assistant_embeddings_add_uuid.down.sql":     _000004_assistant_embeddings_add_uuidDownSql,
+	"000004_assistant_embeddings_add_uuid.up.sql":       _000004_assistant_embeddings_add_uuidUpSql,
+	"000005_create_new_bookmarks_tables.down.sql":       _000005_create_new_bookmarks_tablesDownSql,
+	"000005_create_new_bookmarks_tables.up.sql":         _000005_create_new_bookmarks_tablesUpSql,
+	"000006_set_embeddings_to_nullable.down.sql":        _000006_set_embeddings_to_nullableDownSql,
+	"000006_set_embeddings_to_nullable.up.sql":          _000006_set_embeddings_to_nullableUpSql,
+	"000007_new_auth_flows.down.sql":                    _000007_new_auth_flowsDownSql,
+	"000007_new_auth_flows.up.sql":                      _000007_new_auth_flowsUpSql,
+	"000008_comprehensive_bookmarks.down.sql":           _000008_comprehensive_bookmarksDownSql,
+	"000008_comprehensive_bookmarks.up.sql":             _000008_comprehensive_bookmarksUpSql,
+	"000009_migrate_bookmarks_data.down.sql":            _000009_migrate_bookmarks_dataDownSql,
+	"000009_migrate_bookmarks_data.up.sql":              _000009_migrate_bookmarks_dataUpSql,
+	"000010_share_content.down.sql":                     _000010_share_contentDownSql,
+	"000010_share_content.up.sql":                       _000010_share_contentUpSql,
+	"000011_create_s3_resources_mapping_table.down.sql": _000011_create_s3_resources_mapping_tableDownSql,
+	"000011_create_s3_resources_mapping_table.up.sql":   _000011_create_s3_resources_mapping_tableUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -611,26 +655,28 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"000001_create_cache_table.down.sql":            &bintree{_000001_create_cache_tableDownSql, map[string]*bintree{}},
-	"000001_create_cache_table.up.sql":              &bintree{_000001_create_cache_tableUpSql, map[string]*bintree{}},
-	"000002_create_users_database.down.sql":         &bintree{_000002_create_users_databaseDownSql, map[string]*bintree{}},
-	"000002_create_users_database.up.sql":           &bintree{_000002_create_users_databaseUpSql, map[string]*bintree{}},
-	"000003_create_assistant_threads.down.sql":      &bintree{_000003_create_assistant_threadsDownSql, map[string]*bintree{}},
-	"000003_create_assistant_threads.up.sql":        &bintree{_000003_create_assistant_threadsUpSql, map[string]*bintree{}},
-	"000004_assistant_embeddings_add_uuid.down.sql": &bintree{_000004_assistant_embeddings_add_uuidDownSql, map[string]*bintree{}},
-	"000004_assistant_embeddings_add_uuid.up.sql":   &bintree{_000004_assistant_embeddings_add_uuidUpSql, map[string]*bintree{}},
-	"000005_create_new_bookmarks_tables.down.sql":   &bintree{_000005_create_new_bookmarks_tablesDownSql, map[string]*bintree{}},
-	"000005_create_new_bookmarks_tables.up.sql":     &bintree{_000005_create_new_bookmarks_tablesUpSql, map[string]*bintree{}},
-	"000006_set_embeddings_to_nullable.down.sql":    &bintree{_000006_set_embeddings_to_nullableDownSql, map[string]*bintree{}},
-	"000006_set_embeddings_to_nullable.up.sql":      &bintree{_000006_set_embeddings_to_nullableUpSql, map[string]*bintree{}},
-	"000007_new_auth_flows.down.sql":                &bintree{_000007_new_auth_flowsDownSql, map[string]*bintree{}},
-	"000007_new_auth_flows.up.sql":                  &bintree{_000007_new_auth_flowsUpSql, map[string]*bintree{}},
-	"000008_comprehensive_bookmarks.down.sql":       &bintree{_000008_comprehensive_bookmarksDownSql, map[string]*bintree{}},
-	"000008_comprehensive_bookmarks.up.sql":         &bintree{_000008_comprehensive_bookmarksUpSql, map[string]*bintree{}},
-	"000009_migrate_bookmarks_data.down.sql":        &bintree{_000009_migrate_bookmarks_dataDownSql, map[string]*bintree{}},
-	"000009_migrate_bookmarks_data.up.sql":          &bintree{_000009_migrate_bookmarks_dataUpSql, map[string]*bintree{}},
-	"000010_share_content.down.sql":                 &bintree{_000010_share_contentDownSql, map[string]*bintree{}},
-	"000010_share_content.up.sql":                   &bintree{_000010_share_contentUpSql, map[string]*bintree{}},
+	"000001_create_cache_table.down.sql":                &bintree{_000001_create_cache_tableDownSql, map[string]*bintree{}},
+	"000001_create_cache_table.up.sql":                  &bintree{_000001_create_cache_tableUpSql, map[string]*bintree{}},
+	"000002_create_users_database.down.sql":             &bintree{_000002_create_users_databaseDownSql, map[string]*bintree{}},
+	"000002_create_users_database.up.sql":               &bintree{_000002_create_users_databaseUpSql, map[string]*bintree{}},
+	"000003_create_assistant_threads.down.sql":          &bintree{_000003_create_assistant_threadsDownSql, map[string]*bintree{}},
+	"000003_create_assistant_threads.up.sql":            &bintree{_000003_create_assistant_threadsUpSql, map[string]*bintree{}},
+	"000004_assistant_embeddings_add_uuid.down.sql":     &bintree{_000004_assistant_embeddings_add_uuidDownSql, map[string]*bintree{}},
+	"000004_assistant_embeddings_add_uuid.up.sql":       &bintree{_000004_assistant_embeddings_add_uuidUpSql, map[string]*bintree{}},
+	"000005_create_new_bookmarks_tables.down.sql":       &bintree{_000005_create_new_bookmarks_tablesDownSql, map[string]*bintree{}},
+	"000005_create_new_bookmarks_tables.up.sql":         &bintree{_000005_create_new_bookmarks_tablesUpSql, map[string]*bintree{}},
+	"000006_set_embeddings_to_nullable.down.sql":        &bintree{_000006_set_embeddings_to_nullableDownSql, map[string]*bintree{}},
+	"000006_set_embeddings_to_nullable.up.sql":          &bintree{_000006_set_embeddings_to_nullableUpSql, map[string]*bintree{}},
+	"000007_new_auth_flows.down.sql":                    &bintree{_000007_new_auth_flowsDownSql, map[string]*bintree{}},
+	"000007_new_auth_flows.up.sql":                      &bintree{_000007_new_auth_flowsUpSql, map[string]*bintree{}},
+	"000008_comprehensive_bookmarks.down.sql":           &bintree{_000008_comprehensive_bookmarksDownSql, map[string]*bintree{}},
+	"000008_comprehensive_bookmarks.up.sql":             &bintree{_000008_comprehensive_bookmarksUpSql, map[string]*bintree{}},
+	"000009_migrate_bookmarks_data.down.sql":            &bintree{_000009_migrate_bookmarks_dataDownSql, map[string]*bintree{}},
+	"000009_migrate_bookmarks_data.up.sql":              &bintree{_000009_migrate_bookmarks_dataUpSql, map[string]*bintree{}},
+	"000010_share_content.down.sql":                     &bintree{_000010_share_contentDownSql, map[string]*bintree{}},
+	"000010_share_content.up.sql":                       &bintree{_000010_share_contentUpSql, map[string]*bintree{}},
+	"000011_create_s3_resources_mapping_table.down.sql": &bintree{_000011_create_s3_resources_mapping_tableDownSql, map[string]*bintree{}},
+	"000011_create_s3_resources_mapping_table.up.sql":   &bintree{_000011_create_s3_resources_mapping_tableUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

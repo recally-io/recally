@@ -34,7 +34,7 @@ func Get[T any](ctx context.Context, c Cache, key CacheKey) (*T, bool) {
 
 func RunInCache[T any](ctx context.Context, c Cache, key CacheKey, expiration time.Duration, f func() (*T, error)) (*T, error) {
 	data, ok := Get[T](ctx, c, key)
-	if ok {
+	if ok && data != nil {
 		return data, nil
 	}
 
