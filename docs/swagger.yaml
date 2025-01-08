@@ -156,12 +156,21 @@ definitions:
           type: string
         type: array
     type: object
+  auth.SummaryConfig:
+    properties:
+      language:
+        type: string
+      model:
+        type: string
+      prompt:
+        type: string
+    type: object
   auth.UserSettings:
     properties:
       is_linked_telegram_bot:
         type: boolean
       summary_options:
-        $ref: '#/definitions/processor.SummaryConfig'
+        $ref: '#/definitions/auth.SummaryConfig'
     type: object
   bookmarks.ContentDTO:
     properties:
@@ -570,15 +579,6 @@ definitions:
       id:
         type: string
       name:
-        type: string
-    type: object
-  processor.SummaryConfig:
-    properties:
-      language:
-        type: string
-      model:
-        type: string
-      prompt:
         type: string
     type: object
   tools.BaseTool:

@@ -5011,6 +5011,20 @@ const docTemplate = `{
                 }
             }
         },
+        "auth.SummaryConfig": {
+            "type": "object",
+            "properties": {
+                "language": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "prompt": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.UserSettings": {
             "type": "object",
             "properties": {
@@ -5018,7 +5032,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "summary_options": {
-                    "$ref": "#/definitions/processor.SummaryConfig"
+                    "$ref": "#/definitions/auth.SummaryConfig"
                 }
             }
         },
@@ -5629,20 +5643,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "processor.SummaryConfig": {
-            "type": "object",
-            "properties": {
-                "language": {
-                    "type": "string"
-                },
-                "model": {
-                    "type": "string"
-                },
-                "prompt": {
                     "type": "string"
                 }
             }
