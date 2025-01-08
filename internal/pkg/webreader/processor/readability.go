@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"recally/internal/core/files"
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/s3"
 	"recally/internal/pkg/webreader"
 	"recally/internal/pkg/webreader/processor/hooks"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/go-shiori/go-readability"
+	"github.com/minio/minio-go/v7"
 )
 
 type ReadabilityProcessor struct{}
@@ -44,7 +48,14 @@ func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.C
 	content.SiteName = article.SiteName
 
 	// Set the cover image
-	content.Cover = article.Image
+	if file, err := files.DefaultService.UploadToS3FromUrl(ctx, db.DefaultPool.Pool, true, "", article.Image, minio.PutObjectOptions{
+		CacheControl: "max-age=31536000, public",
+	}); err != nil {
+		content.Cover = article.Image
+	} else {
+		content.Cover = s3.DefaultClient.GetPublicURL(file.S3Key)
+	}
+
 	content.Favicon = article.Favicon
 
 	// set content

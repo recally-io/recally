@@ -1,16 +1,25 @@
 package files
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
+	"path"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/s3"
+	"recally/internal/pkg/session"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
+	utls "github.com/refraction-networking/utls"
 )
 
 var DefaultService = &Service{
@@ -110,19 +119,14 @@ func (s *Service) DeleteFile(ctx context.Context, tx db.DBTX, id uuid.UUID) erro
 	return nil
 }
 
-type UploadOptions struct {
-	minio.PutObjectOptions
-	FileType FileType
-}
-
-func (s *Service) UploadToS3(ctx context.Context, tx db.DBTX, originalURL, objectKey string, reader io.Reader, size int64, opts UploadOptions) (*DTO, error) {
+func (s *Service) UploadToS3(ctx context.Context, tx db.DBTX, objectKey string, reader io.Reader, metadata *Metadata, opts minio.PutObjectOptions) (*DTO, error) {
 	user, err := auth.LoadUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// check if file exist
-	dto, err := s.GetFileByOriginalURL(ctx, tx, originalURL)
+	dto, err := s.GetFileByOriginalURL(ctx, tx, metadata.OriginalURL)
 	if err != nil && !db.IsNotFoundError(err) {
 		return nil, fmt.Errorf("failed to get file by original URL: %w", err)
 	}
@@ -134,7 +138,11 @@ func (s *Service) UploadToS3(ctx context.Context, tx db.DBTX, originalURL, objec
 	if objectKey == "" {
 		objectKey = fmt.Sprintf("%s/%s", user.ID.String(), uuid.New().String())
 	}
-	info, err := s.s3.Upload(ctx, objectKey, reader, size, opts.PutObjectOptions)
+
+	if opts.ContentType == "" {
+		opts.ContentType = metadata.MIMEType
+	}
+	info, err := s.s3.Upload(ctx, objectKey, reader, metadata.Size, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file to S3: %w", err)
 	}
@@ -142,12 +150,138 @@ func (s *Service) UploadToS3(ctx context.Context, tx db.DBTX, originalURL, objec
 
 	file := NewFile(
 		user.ID,
-		originalURL,
+		metadata.OriginalURL,
 		objectKey,
-		FileTypeImage,
-		WithFileMetadata(Metadata{
-			MIMEType: opts.ContentType,
-			FileSize: size,
-		}))
+		metadata.Type,
+		WithFileMetadata(*metadata))
 	return s.CreateFile(ctx, tx, file)
+}
+
+func (s *Service) UploadToS3FromUrl(ctx context.Context, tx db.DBTX, async bool, host, uri string, opts minio.PutObjectOptions) (*DTO, error) {
+	// Validate and parse URL
+	u, err := url.Parse(uri)
+	if err != nil {
+		return nil, fmt.Errorf("invalid content url: %s, %w", uri, err)
+	}
+
+	// get absolute URL
+	if u.Host == "" {
+		if host == "" {
+			return nil, fmt.Errorf("invalid content url: %s", uri)
+		}
+		u.Host = host
+	}
+	if u.Scheme == "" {
+		u.Scheme = "http"
+	}
+
+	uri = u.String()
+
+	file, err := s.GetFileByOriginalURL(ctx, tx, uri)
+	if err != nil && !db.IsNotFoundError(err) {
+		return nil, fmt.Errorf("failed to get file by original URL: %w", err)
+	}
+	// if image already exists, return the URL
+	if file != nil { // file.S3Key is empty if the file is not uploaded to s3
+		logger.FromContext(ctx).Debug("file already exists", "url", uri, "objectKey", file.S3Key)
+		return file, nil
+	}
+
+	user, err := auth.LoadUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+
+	fileExt := path.Ext(uri)
+	objectKey := fmt.Sprintf("%s/%d/%d/%s/%s%s", user.ID.String(), now.Year(), now.Month(), u.Host, uuid.New().String(), fileExt)
+
+	upload := func(ctx context.Context) (*DTO, error) {
+		contentReader, metadata, err := s.loadContent(ctx, host, uri, fileExt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load content: %w", err)
+		}
+		return s.UploadToS3(ctx, tx, objectKey, contentReader, metadata, opts)
+	}
+
+	if async {
+		go func() {
+			_, err := upload(auth.SetUserToContext(context.Background(), user))
+			if err != nil {
+				logger.Default.Error("failed to upload file to s3", "err", err)
+			}
+		}()
+		return &DTO{
+			S3Key: objectKey,
+		}, nil
+	}
+	return upload(ctx)
+}
+
+func (s *Service) loadContent(ctx context.Context, host, uri, ext string) (io.ReadCloser, *Metadata, error) {
+	metadata := &Metadata{
+		OriginalURL:  uri,
+		OriginalHost: host,
+		Ext:          ext,
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Create request with context
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add user agent to avoid being blocked
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; RecallyBot/1.0)")
+
+	// Perform request
+	sess := session.New(session.WithClientHelloID(utls.HelloChrome_100_PSK), session.WithTimeout(30*time.Second))
+	resp, err := sess.Client.Do(req)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to download content: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, nil, fmt.Errorf("failed to download content: status %s", resp.Status)
+	}
+
+	// Read with max size limit (e.g., 50MB)
+	const maxSize = 50 * 1024 * 1024
+	content, err := io.ReadAll(io.LimitReader(resp.Body, maxSize))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read content: %w", err)
+	}
+
+	// Determine content type
+	contentType := resp.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = http.DetectContentType(content)
+	}
+	metadata.MIMEType = contentType
+
+	if contentType != "" {
+		metadata.Type = strings.Split(contentType, "/")[0]
+	}
+
+	// Get size
+	size := resp.ContentLength
+	if size <= 0 {
+		if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
+			if parsedSize, err := strconv.ParseInt(contentLength, 10, 64); err == nil {
+				size = parsedSize
+			}
+		}
+	}
+	if size <= 0 {
+		size = int64(len(content))
+	}
+	metadata.Size = size
+
+	return io.NopCloser(bytes.NewReader(content)), metadata, nil
 }
