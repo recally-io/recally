@@ -11,15 +11,15 @@ import (
 )
 
 type Metadata struct {
-	MIMEType    string            `json:"mime_type,omitempty"`
-	Description string            `json:"description,omitempty"`
-	Tags        []string          `json:"tags,omitempty"`
-	Properties  map[string]string `json:"properties,omitempty"`
+	OriginalURL  string `json:"url,omitempty"`
+	OriginalHost string `json:"host,omitempty"`
 
-	FileName string   `json:"file_name,omitempty"`
-	FileType FileType `json:"file_type"`
-	FileSize int64    `json:"file_size,omitempty"`
-	FileHash string   `json:"file_hash,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Type     string `json:"type"`
+	Ext      string `json:"ext,omitempty"`
+	Size     int64  `json:"size,omitempty"`
+	Hash     string `json:"hash,omitempty"`
+	MIMEType string `json:"mime_type,omitempty"`
 }
 
 type FileType string
@@ -34,7 +34,7 @@ type DTO struct {
 	S3Key       string    `json:"s3_key"`
 	S3URL       string    `json:"s3_url,omitempty"`
 	FileName    string    `json:"file_name,omitempty"`
-	FileType    FileType  `json:"file_type"`
+	FileType    string    `json:"file_type"`
 	FileSize    int64     `json:"file_size,omitempty"`
 	FileHash    string    `json:"file_hash,omitempty"`
 	Metadata    Metadata  `json:"metadata,omitempty"`
@@ -50,7 +50,7 @@ func (f *DTO) Load(dbo *db.File) {
 	f.S3Key = dbo.S3Key
 	f.S3URL = dbo.S3Url.String
 	f.FileName = dbo.FileName.String
-	f.FileType = FileType(dbo.FileType)
+	f.FileType = dbo.FileType
 	f.FileSize = dbo.FileSize.Int64
 	f.FileHash = dbo.FileHash.String
 	f.CreatedAt = dbo.CreatedAt.Time
@@ -97,7 +97,7 @@ func (f *DTO) DumpToUpdateParams() db.UpdateFileParams {
 type FileOption func(*DTO)
 
 // NewFile creates a new FileDTO with the given options
-func NewFile(userID uuid.UUID, originalURL string, s3Key string, fileType FileType, opts ...FileOption) *DTO {
+func NewFile(userID uuid.UUID, originalURL string, s3Key string, fileType string, opts ...FileOption) *DTO {
 	f := &DTO{
 		ID:          uuid.New(),
 		UserID:      userID,
