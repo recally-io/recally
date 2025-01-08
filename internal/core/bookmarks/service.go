@@ -308,6 +308,11 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 
 	summarier := newSummarier(s.llm, user)
 
+	if len(content.Markwdown) < 1000 {
+		logger.FromContext(ctx).Info("content is too short to summarise")
+		return dto, nil
+	}
+
 	if err := summarier.Process(ctx, content); err != nil {
 		logger.Default.Error("failed to generate summary", "err", err)
 	} else {
