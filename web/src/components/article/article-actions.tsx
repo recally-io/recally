@@ -6,11 +6,13 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import {
 	Tooltip,
 	TooltipContent,
@@ -30,10 +32,11 @@ import {
 	Share,
 	Trash2,
 } from "lucide-react";
+import { useState } from "react";
 
 interface ArticleActionsProps {
 	onDelete: () => Promise<void>;
-	onRefetch: (type: string) => Promise<void>;
+	onRefetch: (type: string, isProxyImage: boolean) => Promise<void>;
 	onRegenerateSummary: () => Promise<void>;
 	onShare: () => Promise<void>;
 	onUnshare: () => Promise<void>;
@@ -49,11 +52,12 @@ interface ArticleActionsProps {
 
 interface RefreshDropdownMenuProps {
 	isLoading: boolean;
-	onRefetch: (type: string) => Promise<void>;
+	onRefetch: (type: string, isProxyImage: boolean) => Promise<void>;
 	onRegenerateSummary: () => Promise<void>;
 }
 
 const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
+	const [isProxyImage, setProxyImage] = useState(false);
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -69,16 +73,40 @@ const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={async () => await props.onRefetch("http")}>
+				<DropdownMenuItem>
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<div className="flex items-center space-x-2">
+									<Switch
+										id="is-proxy-image"
+										onClick={(e) => e.stopPropagation()}
+										checked={isProxyImage}
+										onCheckedChange={setProxyImage}
+									/>
+									<Label htmlFor="is-proxy-image">Proxy Image</Label>
+								</div>
+							</TooltipTrigger>
+							<TooltipContent>
+								Enable this will upload images to S3 to prevent CORS issues
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					onClick={async () => await props.onRefetch("http", isProxyImage)}
+				>
 					<Globe className="mr-2 h-4 w-4" /> HTTP Fetcher
 				</DropdownMenuItem>
 				<DropdownMenuItem
-					onClick={async () => await props.onRefetch("jinaReader")}
+					onClick={async () =>
+						await props.onRefetch("jinaReader", isProxyImage)
+					}
 				>
 					<Database className="mr-2 h-4 w-4" /> Jina Fetcher
 				</DropdownMenuItem>
 				<DropdownMenuItem
-					onClick={async () => await props.onRefetch("browser")}
+					onClick={async () => await props.onRefetch("browser", isProxyImage)}
 				>
 					<Chrome className="mr-2 h-4 w-4" /> Browser Fetcher
 				</DropdownMenuItem>

@@ -80,6 +80,7 @@ interface ShareContentUpdateInput {
 interface BookmarkRefreshInput {
 	fetcher?: string;
 	regenerate_summary?: boolean;
+	is_proxy_image?: boolean;
 }
 
 export interface ShareBookmarkRequest {
