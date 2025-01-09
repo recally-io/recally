@@ -76,8 +76,8 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 						return
 					}
 					_ = processSendError(err)
-					return
 				}
+				return
 			}
 			logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err)
 			if msg, err = editMessage(msg, "Failed to get summary.", false); err != nil {
