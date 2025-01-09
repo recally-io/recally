@@ -209,7 +209,11 @@ func (s *Service) UploadToS3FromUrl(ctx context.Context, tx db.DBTX, async bool,
 		go func() {
 			_, err := upload(auth.SetUserToContext(context.Background(), user))
 			if err != nil {
-				logger.Default.Error("failed to upload file to s3", "err", err)
+				logger.Default.Error("failed to upload file to s3, save the original url", "err", err, "url", uri)
+				file := NewFile(user.ID, uri, objectKey, "unknown")
+				if _, err = s.CreateFile(ctx, tx, file); err != nil {
+					logger.Default.Error("failed to save the original url", "err", err, "url", uri)
+				}
 			}
 		}()
 		return &DTO{
