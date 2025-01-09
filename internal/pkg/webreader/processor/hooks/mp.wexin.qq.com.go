@@ -22,7 +22,7 @@ func NewWeixinMP() *WeixinMP {
 
 func (p *WeixinMP) RegisterHooks() {
 	mdBeforeHooks[p.Host] = append(mdBeforeHooks[p.Host], p.beforeImgHook)
-	readabilityHooks[p.Host] = append(readabilityHooks[p.Host], p.readabilityParsePublishedTimeHook, p.readabilityCoverHook)
+	readabilityBeforeHooks[p.Host] = append(readabilityBeforeHooks[p.Host], p.readabilityParsePublishedTimeHook, p.readabilityCoverHook)
 }
 
 func (p *WeixinMP) beforeImgHook(selec *goquery.Selection) {

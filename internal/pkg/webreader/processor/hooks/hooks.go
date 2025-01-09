@@ -1,7 +1,6 @@
 package hooks
 
 import (
-	"recally/internal/pkg/config"
 	"recally/internal/pkg/webreader"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
@@ -11,9 +10,10 @@ import (
 type ReadabilityHook func(doc *goquery.Document, content *webreader.Content)
 
 var (
-	mdBeforeHooks    = map[string][]md.BeforeHook{}
-	mdAfterHooks     = map[string][]md.Afterhook{}
-	readabilityHooks = map[string][]ReadabilityHook{}
+	mdBeforeHooks          = map[string][]md.BeforeHook{}
+	mdAfterHooks           = map[string][]md.Afterhook{}
+	readabilityBeforeHooks = map[string][]ReadabilityHook{}
+	readabilityAfterHooks  = map[string][]ReadabilityHook{}
 )
 
 func init() {
@@ -22,12 +22,6 @@ func init() {
 
 func GetMarkdownBeforeHooks(host string) []md.BeforeHook {
 	hooks := []md.BeforeHook{}
-
-	if config.Settings.S3.Enabled {
-		imageHook := NewImageHook(host)
-		hooks = append(hooks, imageHook.Process)
-	}
-
 	domainHooks, ok := mdBeforeHooks[host]
 	if !ok {
 		return hooks
@@ -44,9 +38,18 @@ func GetMarkdownAfterHooks(host string) []md.Afterhook {
 	return append(domainHooks, hooks...)
 }
 
-func GetReadabilityHooks(host string) []ReadabilityHook {
+func GetReadabilityBeforeHooks(host string) []ReadabilityHook {
 	hooks := []ReadabilityHook{}
-	domainHooks, ok := readabilityHooks[host]
+	domainHooks, ok := readabilityBeforeHooks[host]
+	if !ok {
+		return hooks
+	}
+	return append(domainHooks, hooks...)
+}
+
+func GetReadabilityAfterHooks(host string) []ReadabilityHook {
+	hooks := []ReadabilityHook{}
+	domainHooks, ok := readabilityAfterHooks[host]
 	if !ok {
 		return hooks
 	}
