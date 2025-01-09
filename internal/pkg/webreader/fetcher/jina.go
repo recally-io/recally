@@ -76,7 +76,7 @@ func NewJinaFetcher(opts ...JinaOption) (*JinaFetcher, error) {
 }
 
 // Fetch implements the Fetcher interface
-func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.Content, error) {
+func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
 	// Prepare the Jina API URL
 	jinaURL := fmt.Sprintf("%s/%s", jinaHost, url)
 
@@ -110,16 +110,18 @@ func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.Content
 	if err := json.NewDecoder(resp.Body).Decode(&jinaResp); err != nil {
 		return nil, fmt.Errorf("decode response: %w", err)
 	}
+	return &webreader.FetchedContent{
+		Reader: io.NopCloser(strings.NewReader(jinaResp.Data.Html)),
 
-	return &webreader.Content{
-		URL:         url,
-		Title:       jinaResp.Data.Title,
-		Description: jinaResp.Data.Description,
-		Text:        jinaResp.Data.Text,
-		Markwdown:   jinaResp.Data.Content,
-		Html:        jinaResp.Data.Html,
-		Image:       jinaResp.Data.ScreenshotUrl,
-		Content:     io.NopCloser(strings.NewReader(jinaResp.Data.Html)),
+		Content: webreader.Content{
+			URL:         url,
+			Title:       jinaResp.Data.Title,
+			Description: jinaResp.Data.Description,
+			Text:        jinaResp.Data.Text,
+			Markwdown:   jinaResp.Data.Content,
+			Html:        jinaResp.Data.Html,
+			Image:       jinaResp.Data.ScreenshotUrl,
+		},
 	}, nil
 }
 
