@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"recally/internal/pkg/auth"
+	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
@@ -15,6 +16,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -261,11 +263,7 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 		return nil, fmt.Errorf("failed to get bookmark by id '%s': %w", id.String(), err)
 	}
 
-	reader, err := reader.New(fetcherType, dto.URL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create reader: %w", err)
-	}
-	content, err := reader.Read(ctx, dto.URL)
+	content, err := s.FetchContentWithCache(ctx, fetcherType, dto.URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
 	}
@@ -291,6 +289,22 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 		dto.Metadata.PublishedAt = *content.PublishedTime
 	}
 	return s.Update(ctx, tx, id, userID, dto)
+}
+
+func (s *Service) FetchContentWithCache(ctx context.Context, fetcherType fetcher.FecherType, uri string) (*webreader.Content, error) {
+	return cache.RunInCache(ctx, cache.DefaultDBCache,
+		cache.NewCacheKey(fmt.Sprintf("WebReader-%s", fetcherType), uri), 24*time.Hour, func() (*webreader.Content, error) {
+			// read the content using jina reader
+			reader, err := reader.New(fetcher.TypeJinaReader, uri)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create reader: %w", err)
+			}
+			content, err := reader.Read(ctx, uri)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read content: %w", err)
+			}
+			return content, nil
+		})
 }
 
 func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*ContentDTO, error) {

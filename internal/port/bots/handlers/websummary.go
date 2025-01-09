@@ -12,7 +12,6 @@ import (
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
-	"recally/internal/pkg/webreader/reader"
 	"regexp"
 	"strings"
 	"time"
@@ -103,25 +102,14 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	summary, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebSummary", url), 24*time.Hour, func() (*string, error) {
 		isSummaryCached = false
 		// cache the content
-		content, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebReader", url), 24*time.Hour, func() (*string, error) {
-			// read the content using jina reader
-			reader, err := reader.New(fetcher.TypeJinaReader, url)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create reader: %w", err)
-			}
-			content, err := reader.Read(ctx, url)
-			if err != nil {
-				return nil, fmt.Errorf("failed to read content: %w", err)
-			}
-			return &content.Markwdown, nil
-		})
+		content, err := h.bookmarkService.FetchContentWithCache(ctx, fetcher.TypeJinaReader, url)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get content: %w", err)
 		}
 
 		// process the summary
 		summarier := processor.NewSummaryProcessor(h.llm, processor.WithSummaryOptionUser(user))
-		summarier.StreamingSummary(ctx, *content, sendToUser)
+		summarier.StreamingSummary(ctx, content.Markwdown, sendToUser)
 		return &resp, nil
 	})
 	if err != nil {
