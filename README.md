@@ -25,7 +25,20 @@ We're not just throwing AI in because it's trendy. Recally uses AI to:
 
 ## Try It Out
 
-Head over to [recally.io](https://recally.io) to give it a spin. It's free while in beta, and we're adding new stuff almost daily based on user feedback.
+Getting started with Recally is super easy:
+
+### 🤖 Quick Save with Telegram
+Just start chatting with our [RecallyReader](https://t.me/RecallyReaderBot) Telegram bot:
+- Send any link to save articles and web pages
+- Get instant AI-powered summaries
+- Access your saved content anywhere
+
+### 🌐 Web Experience
+Head over to [recally.io](https://recally.io) to unlock the full potential:
+- Beautiful reading interface
+- Smart organization with AI-suggested tags
+- Advanced search capabilities
+- Free during beta, with new features added regularly
 
 ## Running Your Own Instance
 
