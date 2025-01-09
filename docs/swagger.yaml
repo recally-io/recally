@@ -2798,6 +2798,51 @@ paths:
       summary: Delete a file
       tags:
       - files
+    get:
+      description: Get a redirect to the file's presigned URL
+      parameters:
+      - description: File ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirect to file URL
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Object not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Redirect to file
+      tags:
+      - files
   /files/presigned-urls:
     get:
       consumes:
@@ -2947,6 +2992,30 @@ paths:
       summary: List Tools
       tags:
       - LLM
+  /shared/files/{key}:
+    head:
+      description: Get metadata for a shared file without downloading it
+      parameters:
+      - description: File key
+        in: path
+        name: key
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Success
+        "404":
+          description: File not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      summary: Get file metadata
+      tags:
+      - files
   /tools/web/reader:
     get:
       consumes:

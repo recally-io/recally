@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"recally/internal/core/bookmarks"
 	"recally/internal/pkg/db"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -18,17 +19,25 @@ type BookmarkShareService interface {
 
 // bookmarkServiceImpl implements BookmarkService
 type bookmarkShareHandler struct {
-	service BookmarkShareService
+	service     BookmarkShareService
+	fileService fileService
 }
 
 func registerBookmarkShareHandlers(e *echo.Group, s *Service) {
 	// no auth middleware
-	h := &bookmarkShareHandler{service: bookmarks.NewService(s.llm)}
-	e.GET("/shared/:token", h.getSharedBookmark)
+	h := &bookmarkShareHandler{service: bookmarks.NewService(s.llm), fileService: s.s3}
+	g := e.Group("/shared")
+	g.GET("/files/:key", h.redirectToFile)
+	g.HEAD("/files/:key", h.getFileMetadata)
+	g.GET("/:token", h.getSharedBookmark)
 }
 
 type getSharedBookmarkRequest struct {
 	Token uuid.UUID `param:"token" validate:"required,uuid"`
+}
+
+type sharedFileRequest struct {
+	Key string `param:"key" validate:"required"`
 }
 
 // getSharedBookmark handles GET /bookmarks/:bookmark-id/share
@@ -68,4 +77,64 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 	bookmark.UserID = uuid.Nil
 
 	return JsonResponse(c, http.StatusOK, bookmark)
+}
+
+// @Summary Redirect to file
+// @Description Get a redirect to the file's presigned URL
+// @Tags files
+// @Produce json
+// @Param id path string true "File ID"
+// @Success 302 {string} string "Redirect to file URL"
+// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
+// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
+// @Failure 404 {object} JSONResult{data=nil} "Object not found"
+// @Router /files/{id} [get]
+func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
+	req := new(sharedFileRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+	// Get presigned URL with 1 hour expiration
+	presignedURL, err := h.fileService.PresignedGetObject(c.Request().Context(), req.Key, time.Hour, nil)
+	if err != nil {
+		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("file not found"))
+	}
+
+	// Redirect to the presigned URL
+	return c.Redirect(http.StatusFound, presignedURL.String())
+}
+
+// @Summary Get file metadata
+// @Description Get metadata for a shared file without downloading it
+// @Tags files
+// @Param key path string true "File key"
+// @Success 200 "Success"
+// @Failure 404 {object} JSONResult{data=nil} "File not found"
+// @Router /shared/files/{key} [head]
+func (h *bookmarkShareHandler) getFileMetadata(c echo.Context) error {
+	req := new(sharedFileRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return err
+	}
+	// Get presigned URL with 1 hour expiration for HEAD request
+	presignedURL, err := h.fileService.PresignedHeadObject(c.Request().Context(), req.Key, time.Hour, nil)
+	if err != nil {
+		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("file not found"))
+	}
+
+	// perform HEAD request
+	resp, err := http.Head(presignedURL.String())
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	defer resp.Body.Close()
+
+	// Copy relevant headers from S3 response to our response
+	for key, values := range resp.Header {
+		for _, value := range values {
+			c.Response().Header().Add(key, value)
+		}
+	}
+
+	return c.NoContent(resp.StatusCode)
 }

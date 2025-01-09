@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/url"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/logger"
 	"time"
@@ -63,12 +64,16 @@ func (c *Client) Upload(ctx context.Context, objectKey string, reader io.Reader,
 	return info, nil
 }
 
-func (c *Client) GetPresignedURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error) {
-	url, err := c.PresignedPutObject(ctx, c.bucketName, objectKey, expiry)
-	if err != nil {
-		return "", fmt.Errorf("s3: failed to get presigned put url: %w", err)
-	}
-	return url.String(), nil
+func (c *Client) PresignedPutObject(ctx context.Context, objectName string, expires time.Duration) (*url.URL, error) {
+	return c.Client.PresignedPutObject(ctx, c.bucketName, objectName, expires)
+}
+
+func (c *Client) PresignedHeadObject(ctx context.Context, objectName string, expires time.Duration, reqParams url.Values) (u *url.URL, err error) {
+	return c.Client.PresignedHeadObject(ctx, c.bucketName, objectName, expires, reqParams)
+}
+
+func (c *Client) PresignedGetObject(ctx context.Context, objectName string, expires time.Duration, reqParams url.Values) (u *url.URL, err error) {
+	return c.Client.PresignedGetObject(ctx, c.bucketName, objectName, expires, reqParams)
 }
 
 func (c *Client) Delete(ctx context.Context, objectKey string) error {
@@ -83,7 +88,8 @@ func (c *Client) GetPublicURL(objectKey string) string {
 	if c.publicURL != "" {
 		return fmt.Sprintf("%s/%s/%s", c.publicURL, c.bucketName, objectKey)
 	}
-	return fmt.Sprintf("https://%s/files/%s", config.Settings.Service.Fqdn, objectKey)
+	// we need fqdn to generate public url
+	return fmt.Sprintf("%s/api/v1/shared/files/%s", config.Settings.Service.Fqdn, objectKey)
 }
 
 // PutBucketCors sets the CORS configuration for the bucket if it's not already set.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,7 +12,9 @@ import (
 )
 
 type fileService interface {
-	GetPresignedURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error)
+	PresignedPutObject(ctx context.Context, objectKey string, expiry time.Duration) (*url.URL, error)
+	PresignedHeadObject(ctx context.Context, objectKey string, expires time.Duration, reqParams url.Values) (u *url.URL, err error)
+	PresignedGetObject(ctx context.Context, objectKey string, expires time.Duration, reqParams url.Values) (u *url.URL, err error)
 	Delete(ctx context.Context, id string) error
 	GetPublicURL(objectKey string) string
 }
@@ -77,14 +80,14 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 		req.Expiration = 3600
 	}
 	expirationDuration := time.Duration(req.Expiration) * time.Second
-	presignedURL, err := h.service.GetPresignedURL(c.Request().Context(), objectKey, expirationDuration)
+	presignedURL, err := h.service.PresignedPutObject(c.Request().Context(), objectKey, expirationDuration)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate presigned URL: %w", err))
 	}
 
 	// Return the presigned URL
 	return JsonResponse(c, http.StatusOK, getPresignedURLsResponse{
-		PresignedURL: presignedURL,
+		PresignedURL: presignedURL.String(),
 		PublicURL:    h.service.GetPublicURL(objectKey),
 	})
 }
