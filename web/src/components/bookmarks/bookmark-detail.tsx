@@ -23,6 +23,7 @@ import {
 	useShareContentMutations,
 } from "@/lib/apis/bookmarks";
 import { ROUTES } from "@/lib/router";
+import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
 // Add this near the top of the file, before the component
@@ -38,7 +39,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 	const { deleteBookmark, refreshBookmark } = useBookmarkMutations();
 	const { shareContent, unshareContent, updateSharedContent } =
 		useShareContentMutations();
-
+	const router = useRouter();
 	const { data: bookmark, error } = useBookmark(id);
 	if (error) {
 		return <div className="container mx-auto p-4">Error loading bookmark</div>;
@@ -98,7 +99,14 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 				title: "Success",
 				description: "Bookmark deleted successfully",
 			});
-			window.location.href = ROUTES.BOOKMARKS;
+			router.navigate({
+				to: ROUTES.BOOKMARKS,
+				search: {
+					page: 1,
+					filters: [],
+					query: "",
+				},
+			});
 		} catch (error) {
 			toast({
 				title: "Error",
