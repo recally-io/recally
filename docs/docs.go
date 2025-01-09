@@ -5519,6 +5519,9 @@ const docTemplate = `{
                         "browser"
                     ]
                 },
+                "is_proxy_image": {
+                    "type": "boolean"
+                },
                 "regenerate_summary": {
                     "type": "boolean"
                 }

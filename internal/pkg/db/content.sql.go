@@ -469,14 +469,6 @@ WITH total AS (
                    $6 :: text[] IS NULL
                        OR tct.name = ANY ($6 :: text[])
                    )
-                AND (
-                  $7 :: text IS NULL
-                      OR tc.title @@@ $7
-                      OR tc.description @@@ $7
-                      OR tc.summary @@@ $7
-                      OR tc.content @@@ $7
-                      OR tc.metadata @@@ $7
-                    )
 )
 SELECT c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at,
        t.total_count,
@@ -504,14 +496,6 @@ WHERE c.user_id = $1
     $6 :: text[] IS NULL
         OR ct.name = ANY ($6 :: text[])
     )
-  AND (
-    $7 :: text IS NULL
-        OR c.title @@@ $7
-        OR c.description @@@ $7
-        OR c.summary @@@ $7
-        OR c.content @@@ $7
-        OR c.metadata @@@ $7
-    )
 GROUP BY c.id,
          t.total_count
 ORDER BY c.created_at DESC
@@ -525,7 +509,6 @@ type ListContentsParams struct {
 	Domains []string
 	Types   []string
 	Tags    []string
-	Query   pgtype.Text
 }
 
 type ListContentsRow struct {
@@ -556,7 +539,6 @@ func (q *Queries) ListContents(ctx context.Context, db DBTX, arg ListContentsPar
 		arg.Domains,
 		arg.Types,
 		arg.Tags,
-		arg.Query,
 	)
 	if err != nil {
 		return nil, err
@@ -729,6 +711,150 @@ type OwnerTransferContentParams struct {
 func (q *Queries) OwnerTransferContent(ctx context.Context, db DBTX, arg OwnerTransferContentParams) error {
 	_, err := db.Exec(ctx, ownerTransferContent, arg.ID, arg.UserID, arg.UserID_2)
 	return err
+}
+
+const searchContentsWithFilter = `-- name: SearchContentsWithFilter :many
+WITH total AS (
+  SELECT COUNT( DISTINCT tc.*) AS total_count
+               FROM content AS tc
+                        LEFT JOIN content_tags_mapping AS tctm ON tc.id = tctm.content_id
+                        LEFT JOIN content_tags AS tct ON tctm.tag_id = tct.id
+               WHERE tc.user_id = $1
+                 AND (
+                   $4 :: text[] IS NULL
+                       OR tc.domain = ANY ($4 :: text[])
+                   )
+                 AND (
+                   $5 :: text[] IS NULL
+                       OR tc.type = ANY ($5 :: text[])
+                   )
+                 AND (
+                   $6 :: text[] IS NULL
+                       OR tct.name = ANY ($6 :: text[])
+                   )
+                AND (
+                  $7 :: text IS NULL
+                      OR tc.title @@@ $7
+                      OR tc.description @@@ $7
+                      OR tc.summary @@@ $7
+                      OR tc.content @@@ $7
+                      OR tc.metadata @@@ $7
+                    )
+)
+SELECT c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_key, c.summary, c.content, c.html, c.metadata, c.is_favorite, c.created_at, c.updated_at,
+       t.total_count,
+       COALESCE(
+                       array_agg(ct.name) FILTER (
+                   WHERE
+                   ct.name IS NOT NULL
+                   ),
+                       ARRAY [] :: VARCHAR[]
+       ) AS tags
+FROM content AS c
+         CROSS JOIN total AS t
+         LEFT JOIN content_tags_mapping AS ctm ON c.id = ctm.content_id
+         LEFT JOIN content_tags AS ct ON ctm.tag_id = ct.id
+WHERE c.user_id = $1
+  AND (
+    $4 :: text[] IS NULL
+        OR c.domain = ANY ($4 :: text[])
+    )
+  AND (
+    $5 :: text[] IS NULL
+        OR c.type = ANY ($5 :: text[])
+    )
+  AND (
+    $6 :: text[] IS NULL
+        OR ct.name = ANY ($6 :: text[])
+    )
+  AND (
+    $7 :: text IS NULL
+        OR c.title @@@ $7
+        OR c.description @@@ $7
+        OR c.summary @@@ $7
+        OR c.content @@@ $7
+        OR c.metadata @@@ $7
+    )
+GROUP BY c.id,
+         t.total_count
+ORDER BY c.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type SearchContentsWithFilterParams struct {
+	UserID  uuid.UUID
+	Limit   int32
+	Offset  int32
+	Domains []string
+	Types   []string
+	Tags    []string
+	Query   pgtype.Text
+}
+
+type SearchContentsWithFilterRow struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Type        string
+	Title       string
+	Description pgtype.Text
+	Url         pgtype.Text
+	Domain      pgtype.Text
+	S3Key       pgtype.Text
+	Summary     pgtype.Text
+	Content     pgtype.Text
+	Html        pgtype.Text
+	Metadata    []byte
+	IsFavorite  pgtype.Bool
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+	TotalCount  int64
+	Tags        interface{}
+}
+
+func (q *Queries) SearchContentsWithFilter(ctx context.Context, db DBTX, arg SearchContentsWithFilterParams) ([]SearchContentsWithFilterRow, error) {
+	rows, err := db.Query(ctx, searchContentsWithFilter,
+		arg.UserID,
+		arg.Limit,
+		arg.Offset,
+		arg.Domains,
+		arg.Types,
+		arg.Tags,
+		arg.Query,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchContentsWithFilterRow
+	for rows.Next() {
+		var i SearchContentsWithFilterRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Type,
+			&i.Title,
+			&i.Description,
+			&i.Url,
+			&i.Domain,
+			&i.S3Key,
+			&i.Summary,
+			&i.Content,
+			&i.Html,
+			&i.Metadata,
+			&i.IsFavorite,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.TotalCount,
+			&i.Tags,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const unLinkContentWithTags = `-- name: UnLinkContentWithTags :exec
