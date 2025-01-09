@@ -102,7 +102,9 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	summary, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebSummary", url), 24*time.Hour, func() (*string, error) {
 		isSummaryCached = false
 		// cache the content
-		content, err := h.bookmarkService.FetchContentWithCache(ctx, fetcher.TypeJinaReader, url)
+		content, err := h.bookmarkService.FetchContentWithCache(ctx, url, fetcher.FetchOptions{
+			FecherType: fetcher.TypeJinaReader,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get content: %w", err)
 		}
@@ -147,9 +149,9 @@ func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, url string, user
 	}
 
 	result, err := h.queue.Insert(ctx, queue.CrawlerWorkerArgs{
-		ID:          bookmark.ID,
-		UserID:      bookmark.UserID,
-		FetcherName: fetcher.TypeJinaReader,
+		ID:           bookmark.ID,
+		UserID:       bookmark.UserID,
+		FetchOptions: fetcher.FetchOptions{FecherType: fetcher.TypeHttp},
 	}, nil)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to insert job", "err", err)

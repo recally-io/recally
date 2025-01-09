@@ -5,12 +5,15 @@ import (
 	"recally/internal/pkg/webreader"
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
+	"recally/internal/pkg/webreader/processor/hooks"
+
+	md "github.com/JohannesKaufmann/html-to-markdown"
 )
 
-func New(fetcherType fetcher.FecherType, host string) (*webreader.Reader, error) {
+func New(host string, opts fetcher.FetchOptions) (*webreader.Reader, error) {
 	var readerFetcher webreader.Fetcher
 	var err error
-	switch fetcherType {
+	switch opts.FecherType {
 	case fetcher.TypeHttp:
 		readerFetcher, err = fetcher.NewHTTPFetcher()
 	case fetcher.TypeJinaReader:
@@ -26,9 +29,15 @@ func New(fetcherType fetcher.FecherType, host string) (*webreader.Reader, error)
 		return nil, fmt.Errorf("fetcher not found")
 	}
 
+	mdBeforeHooks := []md.BeforeHook{}
+	if opts.IsProxyImage {
+		imgHook := hooks.NewImageHook(host)
+		mdBeforeHooks = append(mdBeforeHooks, imgHook.Process)
+	}
+
 	processors := []webreader.Processor{
 		processor.NewReadabilityProcessor(),
-		processor.NewMarkdownProcessor(host),
+		processor.NewMarkdownProcessor(host, processor.WithMarkdownBeforeHook(mdBeforeHooks...)),
 	}
 
 	return webreader.New(readerFetcher, processors...), nil

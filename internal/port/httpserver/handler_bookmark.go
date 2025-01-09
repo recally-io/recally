@@ -28,8 +28,7 @@ type BookmarkService interface {
 	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.ContentDTO) (*bookmarks.ContentDTO, error)
 	Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
-	Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcher fetcher.FecherType, regenerateSummary bool) (*bookmarks.ContentDTO, error)
-	FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType) (*bookmarks.ContentDTO, error)
+	FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetchOptions fetcher.FetchOptions) (*bookmarks.ContentDTO, error)
 	SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.ContentDTO, error)
 
 	GetShareContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID) (*bookmarks.ContentShareDTO, error)
@@ -232,9 +231,9 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 	result, err := h.queue.InsertTx(ctx, tx, queue.CrawlerWorkerArgs{
-		ID:          created.ID,
-		UserID:      created.UserID,
-		FetcherName: fetcher.TypeHttp,
+		ID:           created.ID,
+		UserID:       created.UserID,
+		FetchOptions: fetcher.FetchOptions{FecherType: fetcher.TypeHttp},
 	}, nil)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to insert job", "err", err)
@@ -424,6 +423,7 @@ func (h *bookmarksHandler) deleteUserBookmarks(c echo.Context) error {
 type refreshBookmarkRequest struct {
 	BookmarkID        uuid.UUID `param:"bookmark-id" validate:"required,uuid4"`
 	Fetcher           string    `json:"fetcher" validate:"omitempty,oneof=http jinaReader browser"`
+	IsProxyImage      bool      `json:"is_proxy_image"`
 	RegenerateSummary bool      `json:"regenerate_summary"`
 }
 
@@ -454,9 +454,23 @@ func (h *bookmarksHandler) refreshBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmark, err := h.service.Refresh(ctx, tx, req.BookmarkID, user.ID, fetcher.FecherType(req.Fetcher), req.RegenerateSummary)
-	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err)
+	var bookmark *bookmarks.ContentDTO
+
+	if req.Fetcher != "" {
+		bookmark, err = h.service.FetchContent(ctx, tx, req.BookmarkID, user.ID, fetcher.FetchOptions{
+			FecherType:   fetcher.FecherType(req.Fetcher),
+			IsProxyImage: req.IsProxyImage,
+		})
+		if err != nil {
+			return ErrorResponse(c, http.StatusInternalServerError, err)
+		}
+	}
+
+	if req.RegenerateSummary {
+		bookmark, err = h.service.SummarierContent(ctx, tx, req.BookmarkID, user.ID)
+		if err != nil {
+			return ErrorResponse(c, http.StatusInternalServerError, err)
+		}
 	}
 
 	return JsonResponse(c, http.StatusOK, bookmark)

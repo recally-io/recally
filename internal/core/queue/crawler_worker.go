@@ -14,9 +14,9 @@ import (
 )
 
 type CrawlerWorkerArgs struct {
-	ID          uuid.UUID          `json:"id"`
-	UserID      uuid.UUID          `json:"user_id"`
-	FetcherName fetcher.FecherType `json:"fetcher_name"`
+	ID           uuid.UUID            `json:"id"`
+	UserID       uuid.UUID            `json:"user_id"`
+	FetchOptions fetcher.FetchOptions `json:"fetcher_options"`
 }
 
 func (CrawlerWorkerArgs) Kind() string {
@@ -49,9 +49,9 @@ func (w *CrawlerWorker) Work(ctx context.Context, job *river.Job[CrawlerWorkerAr
 
 func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[CrawlerWorkerArgs]) error {
 	svc := bookmarks.NewService(w.llm)
-	dto, err := svc.FetchContent(ctx, tx, job.Args.ID, job.Args.UserID, job.Args.FetcherName)
+	dto, err := svc.FetchContent(ctx, tx, job.Args.ID, job.Args.UserID, job.Args.FetchOptions)
 	if err != nil {
-		logger.FromContext(ctx).Error("failed to fetch bookmark", "err", err, "id", job.Args.ID, "fetcher", job.Args.FetcherName)
+		logger.FromContext(ctx).Error("failed to fetch bookmark", "err", err, "id", job.Args.ID, "fetch_options", job.Args.FetchOptions)
 		return err
 	}
 
@@ -64,6 +64,6 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 		logger.FromContext(ctx).Info("success inserted summaries job", "result", result, "content_id", dto.ID)
 	}
 
-	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title, "url", dto.URL, "fetcher", job.Args.FetcherName)
+	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title, "url", dto.URL, "fetch_options", job.Args.FetchOptions)
 	return nil
 }

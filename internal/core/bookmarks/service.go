@@ -236,34 +236,13 @@ func (s *Service) DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uu
 	return s.dao.DeleteContentsByUser(ctx, tx, userID)
 }
 
-func (s *Service) Refresh(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType, regenerateSummary bool) (*ContentDTO, error) {
-	var dto *ContentDTO
-	var err error
-
-	if fetcherType != fetcher.TypeNil {
-		dto, err = s.FetchContent(ctx, tx, id, userID, fetcherType)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if regenerateSummary {
-		dto, err = s.SummarierContent(ctx, tx, id, userID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return dto, nil
-}
-
-func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetcherType fetcher.FecherType) (*ContentDTO, error) {
+func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, opts fetcher.FetchOptions) (*ContentDTO, error) {
 	dto, err := s.Get(ctx, tx, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmark by id '%s': %w", id.String(), err)
 	}
 
-	content, err := s.FetchContentWithCache(ctx, fetcherType, dto.URL)
+	content, err := s.FetchContentWithCache(ctx, dto.URL, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
 	}
@@ -291,11 +270,16 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 	return s.Update(ctx, tx, id, userID, dto)
 }
 
-func (s *Service) FetchContentWithCache(ctx context.Context, fetcherType fetcher.FecherType, uri string) (*webreader.Content, error) {
+func (s *Service) FetchContentWithCache(ctx context.Context, uri string, opts fetcher.FetchOptions) (*webreader.Content, error) {
 	return cache.RunInCache(ctx, cache.DefaultDBCache,
-		cache.NewCacheKey(fmt.Sprintf("WebReader-%s", fetcherType), uri), 24*time.Hour, func() (*webreader.Content, error) {
+		cache.NewCacheKey(fmt.Sprintf("WebReader-%s", opts.String()), uri), 24*time.Hour, func() (*webreader.Content, error) {
+			u, err := url.Parse(uri)
+			if err != nil {
+				return nil, fmt.Errorf("invalid url '%s': %w", uri, err)
+			}
+
 			// read the content using jina reader
-			reader, err := reader.New(fetcher.TypeJinaReader, uri)
+			reader, err := reader.New(u.Host, opts)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create reader: %w", err)
 			}

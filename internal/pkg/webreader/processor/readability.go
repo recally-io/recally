@@ -8,10 +8,8 @@ import (
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/s3"
 	"recally/internal/pkg/webreader"
-	"recally/internal/pkg/webreader/processor/hooks"
 	"strings"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/go-shiori/go-readability"
 	"github.com/minio/minio-go/v7"
 )
@@ -34,12 +32,30 @@ func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.C
 		parsedURL = nil
 	}
 
+	// run before hooks
+	// beforeHooks := hooks.GetReadabilityBeforeHooks(parsedURL.Host)
+	// if len(beforeHooks) > 0 {
+	// 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(content.Html))
+	// 	for _, hook := range beforeHooks {
+	// 		hook(doc, content)
+	// 	}
+	// }
+
 	// Use the readability package's FromReader function to parse the HTML content
 	article, err := readability.FromReader(strings.NewReader(content.Html), parsedURL)
 	// If there's an error parsing the HTML content, return the error
 	if err != nil {
 		return fmt.Errorf("failed to parse %s, %v", content.URL, err)
 	}
+
+	// run after hooks
+	// afterHooks := hooks.GetReadabilityAfterHooks(parsedURL.Host)
+	// if len(afterHooks) > 0 {
+	// 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(content.Html))
+	// 	for _, hook := range afterHooks {
+	// 		hook(doc, content)
+	// 	}
+	// }
 
 	// Set meta info
 	content.Title = article.Title
@@ -66,15 +82,6 @@ func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.C
 	// Set the published and modified time
 	content.PublishedTime = article.PublishedTime
 	content.ModifiedTime = article.ModifiedTime
-
-	// run hooks
-	hooks := hooks.GetReadabilityHooks(parsedURL.Host)
-	if len(hooks) > 0 {
-		doc, _ := goquery.NewDocumentFromReader(strings.NewReader(content.Html))
-		for _, hook := range hooks {
-			hook(doc, content)
-		}
-	}
 
 	return nil
 }
