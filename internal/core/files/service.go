@@ -32,9 +32,10 @@ type Service struct {
 	s3  *s3.Client
 }
 
-func NewService(dao DAO) *Service {
+func NewService(s3 *s3.Client) *Service {
 	return &Service{
-		dao: dao,
+		dao: db.New(),
+		s3:  s3,
 	}
 }
 
@@ -147,6 +148,7 @@ func (s *Service) UploadToS3(ctx context.Context, tx db.DBTX, objectKey string, 
 		return nil, fmt.Errorf("failed to upload file to S3: %w", err)
 	}
 	logger.FromContext(ctx).Info("file uploaded to s3", "key", objectKey, "size", info.Size)
+	metadata.IsUploaded = true
 
 	file := NewFile(
 		user.ID,
@@ -210,7 +212,9 @@ func (s *Service) UploadToS3FromUrl(ctx context.Context, tx db.DBTX, async bool,
 			_, err := upload(auth.SetUserToContext(context.Background(), user))
 			if err != nil {
 				logger.Default.Error("failed to upload file to s3, save the original url", "err", err, "url", uri)
-				file := NewFile(user.ID, uri, objectKey, "unknown")
+				file := NewFile(user.ID, uri, objectKey, "unknown", WithFileMetadata(Metadata{
+					IsUploaded: false,
+				}))
 				if _, err = s.CreateFile(ctx, tx, file); err != nil {
 					logger.Default.Error("failed to save the original url", "err", err, "url", uri)
 				}
@@ -288,4 +292,46 @@ func (s *Service) loadContent(ctx context.Context, host, uri, ext string) (io.Re
 	metadata.Size = size
 
 	return io.NopCloser(bytes.NewReader(content)), metadata, nil
+}
+
+func (s *Service) GetPresignedGetObjectURL(ctx context.Context, tx db.DBTX, objectKey string, expires time.Duration, reqParams url.Values) (string, error) {
+	file, err := s.GetFileByS3Key(ctx, tx, objectKey)
+	if err != nil {
+		return "", err
+	}
+	if !file.Metadata.IsUploaded {
+		return file.OriginalURL, nil
+	}
+	u, err := s.s3.PresignedGetObject(ctx, objectKey, expires, reqParams)
+	if err != nil {
+		return "", fmt.Errorf("failed to get presigned get URL: %w", err)
+	}
+	return u.String(), nil
+}
+
+func (s *Service) GetPresignedHeadObjectURL(ctx context.Context, tx db.DBTX, objectKey string, expires time.Duration, reqParams url.Values) (string, error) {
+	file, err := s.GetFileByS3Key(ctx, tx, objectKey)
+	if err != nil {
+		return "", err
+	}
+	if !file.Metadata.IsUploaded {
+		return file.OriginalURL, nil
+	}
+	u, err := s.s3.PresignedHeadObject(ctx, objectKey, expires, reqParams)
+	if err != nil {
+		return "", fmt.Errorf("failed to get presigned head URL: %w", err)
+	}
+	return u.String(), nil
+}
+
+func (s *Service) GetPresignedPutObjectURL(ctx context.Context, objectKey string, expires time.Duration) (string, error) {
+	u, err := s.s3.PresignedPutObject(ctx, objectKey, expires)
+	if err != nil {
+		return "", fmt.Errorf("failed to get presigned head URL: %w", err)
+	}
+	return u.String(), nil
+}
+
+func (s *Service) GetPublicURL(ctx context.Context, objectKey string) string {
+	return s.s3.GetPublicURL(objectKey)
 }

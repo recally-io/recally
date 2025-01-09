@@ -11,6 +11,8 @@ import (
 )
 
 type Metadata struct {
+	IsUploaded bool `json:"is_uploaded,omitempty"` // true if the file is uploaded to S3
+
 	OriginalURL  string `json:"url,omitempty"`
 	OriginalHost string `json:"host,omitempty"`
 
@@ -21,10 +23,6 @@ type Metadata struct {
 	Hash     string `json:"hash,omitempty"`
 	MIMEType string `json:"mime_type,omitempty"`
 }
-
-type FileType string
-
-const FileTypeImage FileType = "image"
 
 // DTO represents the domain model for a file
 type DTO struct {

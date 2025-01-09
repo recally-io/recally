@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
+	"recally/internal/core/files"
+	"recally/internal/pkg/db"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,20 +13,18 @@ import (
 )
 
 type fileService interface {
-	PresignedPutObject(ctx context.Context, objectKey string, expiry time.Duration) (*url.URL, error)
-	PresignedHeadObject(ctx context.Context, objectKey string, expires time.Duration, reqParams url.Values) (u *url.URL, err error)
-	PresignedGetObject(ctx context.Context, objectKey string, expires time.Duration, reqParams url.Values) (u *url.URL, err error)
-	Delete(ctx context.Context, id string) error
-	GetPublicURL(objectKey string) string
+	DeleteFile(ctx context.Context, tx db.DBTX, id uuid.UUID) error
+	GetPublicURL(ctx context.Context, objectKey string) string
+	GetPresignedPutObjectURL(ctx context.Context, objectKey string, expires time.Duration) (string, error)
 }
 
 type fileHandler struct {
 	service fileService
 }
 
-func registerFileHandlers(e *echo.Group, s fileService) {
+func registerFileHandlers(e *echo.Group, s *Service) {
 	h := &fileHandler{
-		service: s,
+		service: files.NewService(s.s3),
 	}
 	files := e.Group("/files", authUserMiddleware())
 	files.GET("/presigned-urls", h.getPresignedURLs)
@@ -80,16 +79,20 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 		req.Expiration = 3600
 	}
 	expirationDuration := time.Duration(req.Expiration) * time.Second
-	presignedURL, err := h.service.PresignedPutObject(c.Request().Context(), objectKey, expirationDuration)
+	presignedURL, err := h.service.GetPresignedPutObjectURL(ctx, objectKey, expirationDuration)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate presigned URL: %w", err))
 	}
 
 	// Return the presigned URL
 	return JsonResponse(c, http.StatusOK, getPresignedURLsResponse{
-		PresignedURL: presignedURL.String(),
-		PublicURL:    h.service.GetPublicURL(objectKey),
+		PresignedURL: presignedURL,
+		PublicURL:    h.service.GetPublicURL(ctx, objectKey),
 	})
+}
+
+type deleteFileRequest struct {
+	ID uuid.UUID `param:"id" validate:"required,uuid"`
 }
 
 // @Summary Delete a file
@@ -103,8 +106,17 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 // @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
 // @Router /files/{id} [delete]
 func (h *fileHandler) deleteFile(c echo.Context) error {
-	id := c.Param("id")
-	err := h.service.Delete(c.Request().Context(), id)
+	ctx := c.Request().Context()
+	req := new(deleteFileRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+	tx, err := loadTx(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	err = h.service.DeleteFile(ctx, tx, req.ID)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to delete file: %w", err))
 	}
