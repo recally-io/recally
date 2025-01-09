@@ -28,7 +28,7 @@ func (s *Service) registerRouters() {
 	registerAuthHandlers(v1Api)
 	registerAssistantHandlers(v1Api, s)
 	registerToolsHandlers(v1Api, s)
-	registerFileHandlers(v1Api, s.s3)
+	registerFileHandlers(v1Api, s)
 	registerBookmarkHandlers(v1Api, s)
 	registerBookmarkShareHandlers(v1Api, s)
 	registerLLMHandlers(v1Api, s)

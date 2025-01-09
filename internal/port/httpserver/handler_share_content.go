@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"recally/internal/core/bookmarks"
+	"recally/internal/core/files"
+	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 	"time"
 
@@ -20,12 +22,12 @@ type BookmarkShareService interface {
 // bookmarkServiceImpl implements BookmarkService
 type bookmarkShareHandler struct {
 	service     BookmarkShareService
-	fileService fileService
+	fileService *files.Service
 }
 
 func registerBookmarkShareHandlers(e *echo.Group, s *Service) {
 	// no auth middleware
-	h := &bookmarkShareHandler{service: bookmarks.NewService(s.llm), fileService: s.s3}
+	h := &bookmarkShareHandler{service: bookmarks.NewService(s.llm), fileService: files.NewService(s.s3)}
 	g := e.Group("/shared")
 	g.GET("/files/:key", h.redirectToFile)
 	g.HEAD("/files/:key", h.getFileMetadata)
@@ -90,18 +92,28 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 // @Failure 404 {object} JSONResult{data=nil} "Object not found"
 // @Router /files/{id} [get]
 func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
+	ctx := c.Request().Context()
 	req := new(sharedFileRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
+	tx, err := loadTx(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	ctx, err = auth.GetContextWithDummyUser(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
 	// Get presigned URL with 1 hour expiration
-	presignedURL, err := h.fileService.PresignedGetObject(c.Request().Context(), req.Key, time.Hour, nil)
+	presignedURL, err := h.fileService.GetPresignedGetObjectURL(ctx, tx, req.Key, time.Hour, nil)
 	if err != nil {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("file not found"))
 	}
 
 	// Redirect to the presigned URL
-	return c.Redirect(http.StatusFound, presignedURL.String())
+	return c.Redirect(http.StatusFound, presignedURL)
 }
 
 // @Summary Get file metadata
@@ -112,18 +124,27 @@ func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
 // @Failure 404 {object} JSONResult{data=nil} "File not found"
 // @Router /shared/files/{key} [head]
 func (h *bookmarkShareHandler) getFileMetadata(c echo.Context) error {
+	ctx := c.Request().Context()
 	req := new(sharedFileRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+	tx, err := loadTx(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	ctx, err = auth.GetContextWithDummyUser(ctx)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err)
+	}
 	// Get presigned URL with 1 hour expiration for HEAD request
-	presignedURL, err := h.fileService.PresignedHeadObject(c.Request().Context(), req.Key, time.Hour, nil)
+	presignedURL, err := h.fileService.GetPresignedHeadObjectURL(ctx, tx, req.Key, time.Hour, nil)
 	if err != nil {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("file not found"))
 	}
 
 	// perform HEAD request
-	resp, err := http.Head(presignedURL.String())
+	resp, err := http.Head(presignedURL)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}

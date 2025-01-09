@@ -56,6 +56,10 @@ func New(cfg config.S3Config) (*Client, error) {
 	return c, nil
 }
 
+func (c *Client) PublicURL() string {
+	return c.publicURL
+}
+
 func (c *Client) Upload(ctx context.Context, objectKey string, reader io.Reader, size int64, opts minio.PutObjectOptions) (minio.UploadInfo, error) {
 	info, err := c.PutObject(ctx, c.bucketName, objectKey, reader, size, opts)
 	if err != nil {
