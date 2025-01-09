@@ -316,7 +316,7 @@ SELECT c.id, c.user_id, c.type, c.title, c.description, c.url, c.domain, c.s3_ke
 FROM content_share AS cs
   JOIN content AS c ON cs.content_id = c.id
 WHERE cs.id = $1
-  AND cs.expires_at is NULL OR cs.expires_at > now()
+  AND (cs.expires_at is NULL OR cs.expires_at > now())
 `
 
 // get the shared content from content table

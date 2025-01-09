@@ -222,7 +222,7 @@ SELECT c.*
 FROM content_share AS cs
   JOIN content AS c ON cs.content_id = c.id
 WHERE cs.id = $1
-  AND cs.expires_at is NULL OR cs.expires_at > now();
+  AND (cs.expires_at is NULL OR cs.expires_at > now());
 
 -- name: GetShareContent :one
 -- info about the shared content
