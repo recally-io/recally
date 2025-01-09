@@ -26,7 +26,14 @@ export function BookmarksSidebar({
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton size="lg" asChild>
-							<Link to={ROUTES.HOME}>
+							<Link
+								to={ROUTES.BOOKMARKS}
+								search={{
+									page: 1,
+									filters: [],
+									query: "",
+								}}
+							>
 								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-background text-foreground">
 									<img src="/logo.svg" alt="Recally logo" className="size-4" />
 								</div>

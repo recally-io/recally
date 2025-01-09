@@ -80,7 +80,14 @@ export default function AuthComponent({ mode }: { mode: string }) {
 					username: formData.name || "",
 				});
 			}
-			await router.navigate({ to: ROUTES.HOME });
+			await router.navigate({
+				to: ROUTES.BOOKMARKS,
+				search: {
+					page: 1,
+					filters: [],
+					query: "",
+				},
+			});
 		} catch (error) {
 			console.error(`${mode} failed:`, error);
 		}
