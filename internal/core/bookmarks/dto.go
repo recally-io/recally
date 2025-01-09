@@ -173,6 +173,31 @@ func (c *ContentDTO) LoadWithTagsAndTotalCount(dbo *db.ListContentsRow) {
 	}
 }
 
+func (c *ContentDTO) LoadWithTagsAndTotalCountFromSearch(dbo *db.SearchContentsWithFilterRow) {
+	c.ID = dbo.ID
+	c.UserID = dbo.UserID
+	c.Type = ContentType(dbo.Type)
+	c.URL = dbo.Url.String
+	c.Domain = dbo.Domain.String
+	c.S3Key = dbo.S3Key.String
+	c.Title = dbo.Title
+	c.Description = dbo.Description.String
+	c.Summary = dbo.Summary.String
+	c.Content = dbo.Content.String
+	c.HTML = dbo.Html.String
+	c.IsFavorite = dbo.IsFavorite.Bool
+	c.CreatedAt = dbo.CreatedAt.Time
+	c.UpdatedAt = dbo.UpdatedAt.Time
+	c.Tags = loadTag(dbo.Tags)
+
+	if dbo.Metadata != nil {
+		if err := json.Unmarshal(dbo.Metadata, &c.Metadata); err != nil {
+			logger.Default.Warn("failed to unmarshal Content metadata",
+				"err", err, "metadata", string(dbo.Metadata))
+		}
+	}
+}
+
 func (c *ContentDTO) Dump() db.CreateContentParams {
 	metadata, _ := json.Marshal(c.Metadata)
 

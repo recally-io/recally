@@ -136,9 +136,46 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter
 		offset = 0
 	}
 
+	// Use List instead of Search if no query provided since Search has worse performance
+	if query != "" {
+		return s.Search(ctx, tx, userID, filters, query, limit, offset)
+	}
+
 	domains, contentTypes, tags := parseListFilter(filters)
 	totalCount := int64(0)
 	cs, err := s.dao.ListContents(ctx, tx, db.ListContentsParams{
+		UserID:  userID,
+		Limit:   limit,
+		Offset:  offset,
+		Domains: domains,
+		Types:   contentTypes,
+		Tags:    tags,
+	})
+
+	dtos := make([]*ContentDTO, 0, len(cs))
+	for _, c := range cs {
+		var dto ContentDTO
+		dto.LoadWithTagsAndTotalCount(&c)
+		dto.HTML = ""
+		dto.Content = ""
+		dto.Summary = ""
+		dtos = append(dtos, &dto)
+		totalCount = c.TotalCount
+	}
+	return dtos, totalCount, err
+}
+
+func (s *Service) Search(ctx context.Context, tx db.DBTX, userID uuid.UUID, filters []string, query string, limit, offset int32) ([]*ContentDTO, int64, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50 // Default limit
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	domains, contentTypes, tags := parseListFilter(filters)
+	totalCount := int64(0)
+	cs, err := s.dao.SearchContentsWithFilter(ctx, tx, db.SearchContentsWithFilterParams{
 		UserID:  userID,
 		Limit:   limit,
 		Offset:  offset,
@@ -151,7 +188,7 @@ func (s *Service) List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter
 	dtos := make([]*ContentDTO, 0, len(cs))
 	for _, c := range cs {
 		var dto ContentDTO
-		dto.LoadWithTagsAndTotalCount(&c)
+		dto.LoadWithTagsAndTotalCountFromSearch(&c)
 		dto.HTML = ""
 		dto.Content = ""
 		dto.Summary = ""

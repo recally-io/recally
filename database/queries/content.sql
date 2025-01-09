@@ -17,6 +17,58 @@ WITH total AS (
                    sqlc.narg('tags') :: text[] IS NULL
                        OR tct.name = ANY (sqlc.narg('tags') :: text[])
                    )
+)
+SELECT c.*,
+       t.total_count,
+       COALESCE(
+                       array_agg(ct.name) FILTER (
+                   WHERE
+                   ct.name IS NOT NULL
+                   ),
+                       ARRAY [] :: VARCHAR[]
+       ) AS tags
+FROM content AS c
+         CROSS JOIN total AS t
+         LEFT JOIN content_tags_mapping AS ctm ON c.id = ctm.content_id
+         LEFT JOIN content_tags AS ct ON ctm.tag_id = ct.id
+WHERE c.user_id = $1
+  AND (
+    sqlc.narg('domains') :: text[] IS NULL
+        OR c.domain = ANY (sqlc.narg('domains') :: text[])
+    )
+  AND (
+    sqlc.narg('types') :: text[] IS NULL
+        OR c.type = ANY (sqlc.narg('types') :: text[])
+    )
+  AND (
+    sqlc.narg('tags') :: text[] IS NULL
+        OR ct.name = ANY (sqlc.narg('tags') :: text[])
+    )
+GROUP BY c.id,
+         t.total_count
+ORDER BY c.created_at DESC
+LIMIT $2 OFFSET $3;
+
+
+-- name: SearchContentsWithFilter :many
+WITH total AS (
+  SELECT COUNT( DISTINCT tc.*) AS total_count
+               FROM content AS tc
+                        LEFT JOIN content_tags_mapping AS tctm ON tc.id = tctm.content_id
+                        LEFT JOIN content_tags AS tct ON tctm.tag_id = tct.id
+               WHERE tc.user_id = $1
+                 AND (
+                   sqlc.narg('domains') :: text[] IS NULL
+                       OR tc.domain = ANY (sqlc.narg('domains') :: text[])
+                   )
+                 AND (
+                   sqlc.narg('types') :: text[] IS NULL
+                       OR tc.type = ANY (sqlc.narg('types') :: text[])
+                   )
+                 AND (
+                   sqlc.narg('tags') :: text[] IS NULL
+                       OR tct.name = ANY (sqlc.narg('tags') :: text[])
+                   )
                 AND (
                   sqlc.narg('query') :: text IS NULL
                       OR tc.title @@@ sqlc.narg('query')

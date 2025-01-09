@@ -32,6 +32,7 @@ type DAO interface {
 	ListTagsByUser(ctx context.Context, db db.DBTX, userID uuid.UUID) ([]db.ListTagsByUserRow, error)
 	OwnerTransferContent(ctx context.Context, db db.DBTX, arg db.OwnerTransferContentParams) error
 	UpdateContent(ctx context.Context, db db.DBTX, arg db.UpdateContentParams) (db.Content, error)
+	SearchContentsWithFilter(ctx context.Context, db db.DBTX, arg db.SearchContentsWithFilterParams) ([]db.SearchContentsWithFilterRow, error)
 
 	ListExistingTagsByTags(ctx context.Context, db db.DBTX, arg db.ListExistingTagsByTagsParams) ([]string, error)
 	LinkContentWithTags(ctx context.Context, db db.DBTX, arg db.LinkContentWithTagsParams) error

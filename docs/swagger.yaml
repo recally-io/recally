@@ -416,6 +416,8 @@ definitions:
         - jinaReader
         - browser
         type: string
+      is_proxy_image:
+        type: boolean
       regenerate_summary:
         type: boolean
     required:
