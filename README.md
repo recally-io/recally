@@ -6,20 +6,42 @@
 
 ## 🚀 Key Features
 
-- **Smart Content Capture**: Save articles, videos, and podcasts with a single click
-- **Flexible Content Fetching**: 
-  - Multiple fetcher support for various content sources
-  - Raw HTTP client for simple pages
-  - [Jina reader](https://github.com/jina-ai/reader) for advanced text extraction
-  - Headless browser for JavaScript-heavy sites
-  - [Crawl4AI](https://github.com/unclecode/crawl4ai) (Coming) for AI-powered content extraction
-- **AI-Powered Organization**:
-  - Automatic tagging and categorization
-  - Semantic search capabilities
-- **Privacy & Control**:
-  - Privacy-first architecture
-  - First class self-hosting support
-  - No tracking or data sharing
+### 📥 Content Integration
+- **Universal Content Support**
+  - Save web articles with one click
+  - [ ] Import PDFs, EPUBs, and documents
+  - [ ] RSS feed reader
+  - [ ] YouTube and Bilibili video synchronization
+  - [ ] Podcast episode archiving
+  - [ ] Newsletter integration
+
+### 🤖 AI-Powered Intelligence
+- **Smart Content Processing**
+  - Automatic summarization and key point extraction
+  - Intelligent tagging and topic detection
+  - Custom AI prompts for personalized analysis
+  - [ ] Multi-language translation support
+  - [ ] Interactive document chat and Q&A
+
+### 🔍 Advanced Search & Discovery
+- **Powerful Search Capabilities**
+  - Real-time full-text search
+  - Filter by source, tags, dates, and more
+  - [ ] Semantic similarity search
+
+### 📚 Content Management
+- **Robust Content Processing**
+  - Multiple fetcher support (HTTP, Jina, Headless browser)
+  - Automatic image preservation
+  - Smart content cleanup and formatting
+
+### 🔐 Privacy & Security
+- **User-First Design**
+  - Self-hosted option available
+  - No third-party tracking
+  - Complete data ownership
+  - [ ] Security audits
+  - [ ] End-to-end encryption for sensitive data
 
 ## 🛠 Installation
 
@@ -48,8 +70,7 @@ open http://localhost:1323
 - **API Server**: [Echo](https://github.com/labstack/echo) - High performance, minimalist Go web framework
 - **Job Queue**: [River](https://github.com/riverqueue/river) - Background job processing
 - **Database**: 
-  - [PostgreSQL](https://www.postgresql.org/) - Primary data store
-  - [PgVector](https://github.com/pgvector/pgvector) - Vector similarity search
+  - [ParadeDB](https://github.com/paradedb/paradedb) - Postgres with Search and Analytics 
 - **Tools**:
   - [Migrate](https://github.com/golang-migrate/migrate) - Database migrations
   - [Sqlc](https://github.com/sqlc-dev/sqlc) - Type-safe SQL
@@ -71,10 +92,27 @@ open http://localhost:1323
 
 We welcome contributions!
 
+## 🙏 Thanks
+
+This project stands on the shoulders of giants. Special thanks to these amazing open-source projects:
+
+- [go-readability](https://github.com/go-shiori/go-readability) - Clean article extraction
+- [html-to-markdown](https://github.com/JohannesKaufmann/html-to-markdown) - HTML to Markdown conversion
+
+And many other open-source projects that make this possible! 💖
+
+## Alternatives
+
+- [Shiori](https://github.com/go-shiori/shiori) - Simple, CLI-focused bookmark manager written in Go
+- [Hoarder](https://github.com/hoarder-app/hoarder) - Self-hostable bookmark manager with AI features
+- [Omnivore](https://omnivore.app) - Open-source read-it-later app with social features (closed now)
+- [Pocket](https://getpocket.com) - Popular commercial bookmarking service by Mozilla
+- [Instapaper](https://www.instapaper.com) - Clean, minimalist read-it-later service
+
 ## 📝 License
 
 See the [LICENSE](LICENSE) file for details.
 
 - **Non-commercial Use**: Free under MIT License terms
-- **Commercial Use**: Contact [license@recally.io](mailto:license@recally.io) for permission
+- **Commercial Use**: Contact [support@recally.io](mailto:support@recally.io) for permission
 
