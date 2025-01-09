@@ -4,7 +4,6 @@ import (
 	"recally/internal/core/assistants"
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
-	"recally/internal/core/workers"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
@@ -18,7 +17,6 @@ type Handler struct {
 	queue *queue.Queue
 
 	authService      *auth.Service
-	toolService      *workers.Worker
 	assistantService *assistants.Service
 	bookmarkService  *bookmarks.Service
 }
@@ -36,7 +34,6 @@ func New(pool *db.Pool, llm *llms.LLM, queue *queue.Queue, opts ...Option) *Hand
 	for _, opt := range opts {
 		opt(h)
 	}
-	h.toolService = workers.New(h.cache)
 
 	return h
 }
