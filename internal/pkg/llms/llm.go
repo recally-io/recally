@@ -42,6 +42,11 @@ type StreamingMessage struct {
 	IntermediateSteps []IntermediateStep `json:"intermediate_steps"`
 }
 
+type StreamingString struct {
+	Content string `json:"content"`
+	Err     error  `json:"err"`
+}
+
 type LLM struct {
 	client       *openai.Client
 	toolMappings map[string]tools.Tool
@@ -125,6 +130,28 @@ func (l *LLM) TextCompletion(ctx context.Context, prompt string, options ...Opti
 	case err := <-errChan:
 		return "", err
 	}
+}
+
+func (l *LLM) StreamingTextCompletion(ctx context.Context, prompt string, streamingFunc func(content StreamingString), options ...Option) {
+	opts := &Options{}
+	for _, o := range options {
+		o(opts)
+	}
+	req := opts.ToChatCompletionRequest()
+	req.Messages = []openai.ChatCompletionMessage{{
+		Role:    openai.ChatMessageRoleUser,
+		Content: prompt,
+	}}
+
+	sendToUser := func(m StreamingMessage) {
+		if m.Choice != nil {
+			streamingFunc(StreamingString{Content: m.Choice.Message.Content, Err: m.Err})
+		} else {
+			streamingFunc(StreamingString{Err: m.Err})
+		}
+	}
+
+	l.GenerateContent(ctx, req.Messages, sendToUser, options...)
 }
 
 func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatCompletionMessage, streamingFunc func(msg StreamingMessage), options ...Option) {

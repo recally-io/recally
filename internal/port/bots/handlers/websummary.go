@@ -6,11 +6,13 @@ import (
 	"io"
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
-	"recally/internal/core/workers"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
+	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
+	"recally/internal/pkg/webreader/processor"
+	"recally/internal/pkg/webreader/reader"
 	"regexp"
 	"strings"
 	"time"
@@ -35,47 +37,53 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	if url == "" {
 		return c.Reply("Please provide a valid URL.")
 	}
-	reader, err := h.toolService.WebSummaryStream(ctx, url)
-	if err != nil {
-		logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err.Error())
-		return c.Reply(fmt.Sprintf("Failed to get summary:\n%s", err.Error()))
-	}
-	defer reader.Close()
 
 	processSendError := func(err error) error {
-		logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err.Error(), "user", user.Username, "text", text)
-		return c.Reply("Failed to send message. " + err.Error())
+		logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
+		err = c.Reply("Failed to send message. " + err.Error())
+		if err != nil {
+			logger.FromContext(ctx).Error("error reply message", "err", err)
+		}
+		return err
 	}
 
 	msg, err := c.Bot().Send(c.Sender(), "Please wait, I'm reading the page.")
 	if err != nil {
 		return processSendError(err)
 	}
+
 	resp := ""
 	chunk := ""
 	chunkSize := 400
-	for {
-		line, err := reader.Stream()
+	isSummaryCached := true
+
+	editMessage := func(msg *tele.Message, text string, format bool) (*tele.Message, error) {
+		if format {
+			return c.Bot().Edit(msg, convertToTGMarkdown(text), tele.ModeMarkdownV2)
+		}
+		return c.Bot().Edit(msg, text)
+	}
+
+	sendToUser := func(stream llms.StreamingString) {
+		line, err := stream.Content, stream.Err
 		chunk += line
 
 		if err != nil {
 			if err == io.EOF {
 				resp += chunk
 				resp = strings.ReplaceAll(resp, "\\n", "\n")
-				cacheKey := cache.NewCacheKey(workers.WebSummaryCacheDomian, url)
-				h.cache.SetWithContext(ctx, cacheKey, resp, 24*time.Hour)
-				if _, err := c.Bot().Edit(msg, convertToTGMarkdown(resp), tele.ModeMarkdownV2); err != nil {
+				if _, err := editMessage(msg, resp, true); err != nil {
 					if strings.Contains(err.Error(), "message is not modified") {
-						return nil
+						return
 					}
-					return processSendError(err)
+					_ = processSendError(err)
+					return
 				}
-				h.saveBookmark(ctx, tx, url, user.ID, resp)
-				return nil
 			}
-			logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err.Error())
-			if _, err := c.Bot().Edit(msg, "Failed to get summary."); err != nil {
-				return processSendError(err)
+			logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err)
+			if msg, err = editMessage(msg, "Failed to get summary.", false); err != nil {
+				_ = processSendError(err)
+				return
 			}
 		}
 
@@ -83,12 +91,54 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 			resp += chunk
 			chunk = ""
 			var newErr error
-			msg, newErr = c.Bot().Edit(msg, resp)
+			msg, newErr = editMessage(msg, resp, false)
 			if newErr != nil {
-				return processSendError(err)
+				_ = processSendError(err)
+				return
 			}
 		}
 	}
+
+	// cache the summary
+	summary, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebSummary", url), 24*time.Hour, func() (*string, error) {
+		isSummaryCached = false
+		// cache the content
+		content, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebReader", url), 24*time.Hour, func() (*string, error) {
+			// read the content using jina reader
+			reader, err := reader.New(fetcher.TypeJinaReader, url)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create reader: %w", err)
+			}
+			content, err := reader.Read(ctx, url)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read content: %w", err)
+			}
+			return &content.Markwdown, nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to get content: %w", err)
+		}
+
+		// process the summary
+		summarier := processor.NewSummaryProcessor(h.llm, processor.WithSummaryOptionUser(user))
+		summarier.StreamingSummary(ctx, *content, sendToUser)
+		return &resp, nil
+	})
+	if err != nil {
+		return processSendError(err)
+	}
+
+	// if summary is cached, just return the cached summary
+	// if not cached, streaming send summary to user and save the bookmark
+	if isSummaryCached {
+		if _, err := editMessage(msg, *summary, true); err != nil {
+			logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
+		}
+	} else {
+		h.saveBookmark(ctx, tx, url, user.ID, resp)
+	}
+
+	return nil
 }
 
 func getUrlFromText(text string) string {

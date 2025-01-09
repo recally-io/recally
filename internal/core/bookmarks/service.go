@@ -308,7 +308,7 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 		Markwdown: dto.Content,
 	}
 
-	summarier := newSummarier(s.llm, user)
+	summarier := processor.NewSummaryProcessor(s.llm, processor.WithSummaryOptionUser(user))
 
 	if len(content.Markwdown) < 1000 {
 		logger.FromContext(ctx).Info("content is too short to summarise")
@@ -327,21 +327,6 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 		dto.Summary = summary
 	}
 	return s.Update(ctx, tx, id, userID, dto)
-}
-
-func newSummarier(llm *llms.LLM, user *auth.UserDTO) *processor.SummaryProcessor {
-	summaryOptions := make([]processor.SummaryOption, 0)
-	if user.Settings.SummaryOptions.Prompt != "" {
-		summaryOptions = append(summaryOptions, processor.WithSummaryOptionPrompt(user.Settings.SummaryOptions.Prompt))
-	}
-	if user.Settings.SummaryOptions.Model != "" {
-		summaryOptions = append(summaryOptions, processor.WithSummaryOptionModel(user.Settings.SummaryOptions.Model))
-	}
-	if user.Settings.SummaryOptions.Language != "" {
-		summaryOptions = append(summaryOptions, processor.WithSummaryOptionLanguage(user.Settings.SummaryOptions.Language))
-	}
-
-	return processor.NewSummaryProcessor(llm, summaryOptions...)
 }
 
 // parseTagsFromSummary extracts tags from a string and returns the tags array and the string without tags

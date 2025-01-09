@@ -80,6 +80,20 @@ func WithSummaryOptionLanguage(language string) SummaryOption {
 	}
 }
 
+func WithSummaryOptionUser(user *auth.UserDTO) SummaryOption {
+	return func(p *SummaryProcessor) {
+		if user.Settings.SummaryOptions.Model != "" {
+			p.config.Model = user.Settings.SummaryOptions.Model
+		}
+		if user.Settings.SummaryOptions.Prompt != "" {
+			p.config.Prompt = user.Settings.SummaryOptions.Prompt
+		}
+		if user.Settings.SummaryOptions.Language != "" {
+			p.config.Language = user.Settings.SummaryOptions.Language
+		}
+	}
+}
+
 // SummaryProcessor implements content summarization using LLM
 type SummaryProcessor struct {
 	config auth.SummaryConfig
@@ -110,17 +124,12 @@ func (p *SummaryProcessor) Name() string {
 
 // Process implements the Processor interface
 func (p *SummaryProcessor) Process(ctx context.Context, content *webreader.Content) error {
-	var prompt strings.Builder
-	if err := summaryPromptTempl.Execute(&prompt, map[string]interface{}{
-		"Prompt":   p.config.Prompt,
-		"Article":  content.Markwdown,
-		"Language": p.config.Language,
-	}); err != nil {
-		return fmt.Errorf("generate summary prompt: %w", err)
+	prompt, err := p.buildPrompt(ctx, content.Markwdown)
+	if err != nil {
+		return err
 	}
-
-	logger.FromContext(ctx).Info("start summary article", "model", p.config.Model, "language", p.config.Language)
-	summary, err := p.llm.TextCompletion(ctx, prompt.String(), llms.WithModel(p.config.Model))
+	logger.FromContext(ctx).Info("start summary article", "model", p.config.Model, "language", p.config.Language, "streaming", false)
+	summary, err := p.llm.TextCompletion(ctx, prompt, llms.WithModel(p.config.Model))
 	if err != nil {
 		return fmt.Errorf("generate summary: %w", err)
 	}
@@ -129,4 +138,29 @@ func (p *SummaryProcessor) Process(ctx context.Context, content *webreader.Conte
 	content.Summary = summary
 
 	return nil
+}
+
+func (p *SummaryProcessor) StreamingSummary(ctx context.Context, content string, streamingFunc func(content llms.StreamingString)) {
+	prompt, err := p.buildPrompt(ctx, content)
+	if err != nil {
+		streamingFunc(llms.StreamingString{
+			Err: err,
+		})
+		return
+	}
+	logger.FromContext(ctx).Info("start streaming summary article", "model", p.config.Model, "language", p.config.Language, "streaming", true)
+	p.llm.StreamingTextCompletion(ctx, prompt, streamingFunc, llms.WithModel(p.config.Model))
+}
+
+func (p *SummaryProcessor) buildPrompt(ctx context.Context, content string) (string, error) {
+	var prompt strings.Builder
+	if err := summaryPromptTempl.Execute(&prompt, map[string]interface{}{
+		"Prompt":   p.config.Prompt,
+		"Article":  content,
+		"Language": p.config.Language,
+	}); err != nil {
+		logger.FromContext(ctx).Error("error generate summary prompt", "err", err)
+		return "", fmt.Errorf("generate summary prompt: %w", err)
+	}
+	return prompt.String(), nil
 }
