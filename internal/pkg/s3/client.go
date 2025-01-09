@@ -73,6 +73,11 @@ func (c *Client) PresignedHeadObject(ctx context.Context, objectName string, exp
 }
 
 func (c *Client) PresignedGetObject(ctx context.Context, objectName string, expires time.Duration, reqParams url.Values) (u *url.URL, err error) {
+	if c.publicURL != "" {
+		uri := fmt.Sprintf("%s/%s/%s", c.publicURL, c.bucketName, objectName)
+		return url.Parse(uri)
+	}
+
 	return c.Client.PresignedGetObject(ctx, c.bucketName, objectName, expires, reqParams)
 }
 
@@ -85,9 +90,6 @@ func (c *Client) Delete(ctx context.Context, objectKey string) error {
 }
 
 func (c *Client) GetPublicURL(objectKey string) string {
-	if c.publicURL != "" {
-		return fmt.Sprintf("%s/%s/%s", c.publicURL, c.bucketName, objectKey)
-	}
 	// we need fqdn to generate public url
 	return fmt.Sprintf("%s/api/v1/shared/files/%s", config.Settings.Service.Fqdn, objectKey)
 }
