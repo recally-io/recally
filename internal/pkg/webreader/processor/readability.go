@@ -58,8 +58,10 @@ func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.C
 
 	content.Favicon = article.Favicon
 
-	// set content
+	// set text content
 	content.Text = article.TextContent
+	// set clean HTML content processed by readability
+	content.Html = article.Content
 
 	// Set the published and modified time
 	content.PublishedTime = article.PublishedTime
