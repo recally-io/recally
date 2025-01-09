@@ -65,7 +65,7 @@ func newBrowserFetcher(cfg BrowserConfig) (*BrowserFetcher, error) {
 }
 
 // Fetch implements the Fetcher interface
-func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Content, error) {
+func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
 	var err error
 	f, err = newBrowserFetcher(f.config)
 	if err != nil {
@@ -97,12 +97,15 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Cont
 	}
 
 	// Create result
-	return &webreader.Content{
-		URL:         url,
-		Content:     io.NopCloser(strings.NewReader(html)),
+	return &webreader.FetchedContent{
+		Reader:      io.NopCloser(strings.NewReader(html)),
 		StatusCode:  http.StatusOK,
 		ContentType: "text/html",
-		Html:        html,
+
+		Content: webreader.Content{
+			URL:  url,
+			Html: html,
+		},
 	}, nil
 }
 

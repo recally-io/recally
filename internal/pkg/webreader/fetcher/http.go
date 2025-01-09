@@ -74,7 +74,7 @@ func NewHTTPFetcher(opts ...HTTPOption) (*HTTPFetcher, error) {
 }
 
 // Fetch implements the Fetcher interface
-func (f *HTTPFetcher) Fetch(ctx context.Context, url string) (*webreader.Content, error) {
+func (f *HTTPFetcher) Fetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
 	var lastErr error
 	retries := f.config.RetryCount + 1
 
@@ -103,7 +103,7 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, url string) (*webreader.Content
 }
 
 // doFetch performs the actual HTTP fetch
-func (f *HTTPFetcher) doFetch(ctx context.Context, url string) (*webreader.Content, error) {
+func (f *HTTPFetcher) doFetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
@@ -120,12 +120,15 @@ func (f *HTTPFetcher) doFetch(ctx context.Context, url string) (*webreader.Conte
 		return nil, fmt.Errorf("http status %d: %s", resp.StatusCode, resp.Status)
 	}
 
-	return &webreader.Content{
-		URL:         url,
-		Content:     resp.Body,
-		StatusCode:  resp.StatusCode,
+	return &webreader.FetchedContent{
+		Reader:      resp.Body,
+		StatusCode:  http.StatusOK,
 		ContentType: resp.Header.Get("Content-Type"),
 		Headers:     resp.Header,
+
+		Content: webreader.Content{
+			URL: url,
+		},
 	}, nil
 }
 
