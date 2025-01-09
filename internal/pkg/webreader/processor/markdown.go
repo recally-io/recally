@@ -3,7 +3,6 @@ package processor
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"recally/internal/pkg/webreader"
 	"recally/internal/pkg/webreader/processor/hooks"
 
@@ -60,12 +59,11 @@ func NewMarkdownProcessor(host string, opts ...MarkdownOption) *MarkdownProcesso
 	}
 
 	// Create converter with configured options
-	u, _ := url.Parse(host)
-	p.conv = md.NewConverter(u.Host, true, &p.config.Options)
+	p.conv = md.NewConverter(host, true, &p.config.Options)
 
 	// Register buildin hooks
-	p.conv.Before(hooks.GetMarkdownBeforeHooks(u.Host)...)
-	p.conv.After(hooks.GetMarkdownAfterHooks(u.Host)...)
+	p.conv.Before(hooks.GetMarkdownBeforeHooks(host)...)
+	p.conv.After(hooks.GetMarkdownAfterHooks(host)...)
 
 	// Register custom hooks
 	if len(p.config.BeforeHooks) > 0 {
