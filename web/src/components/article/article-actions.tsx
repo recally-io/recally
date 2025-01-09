@@ -20,11 +20,13 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-	Bot,
-	Chrome,
+	SiGooglechrome,
+	SiJinja,
+	SiOpenai,
+} from "@icons-pack/react-simple-icons";
+import {
 	Clock,
 	Copy,
-	Database,
 	Globe,
 	Link2,
 	Link2Off,
@@ -60,18 +62,25 @@ const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
 	const [isProxyImage, setProxyImage] = useState(false);
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					variant="ghost"
-					size="icon"
-					disabled={props.isLoading}
-					className="transition-all hover:scale-105"
-				>
-					<RefreshCw
-						className={`h-4 w-4 ${props.isLoading ? "animate-spin" : ""}`}
-					/>
-				</Button>
-			</DropdownMenuTrigger>
+			<TooltipProvider>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								disabled={props.isLoading}
+								className="transition-all hover:scale-105"
+							>
+								<RefreshCw
+									className={`h-4 w-4 ${props.isLoading ? "animate-spin" : ""}`}
+								/>
+							</Button>
+						</DropdownMenuTrigger>
+					</TooltipTrigger>
+					<TooltipContent>Refresh article content</TooltipContent>
+				</Tooltip>
+			</TooltipProvider>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem>
 					<TooltipProvider>
@@ -93,28 +102,66 @@ const RefreshDropdownMenu = (props: RefreshDropdownMenuProps) => {
 						</Tooltip>
 					</TooltipProvider>
 				</DropdownMenuItem>
-				<DropdownMenuItem
-					onClick={async () => await props.onRefetch("http", isProxyImage)}
-				>
-					<Globe className="mr-2 h-4 w-4" /> HTTP Fetcher
-				</DropdownMenuItem>
-				<DropdownMenuItem
-					onClick={async () =>
-						await props.onRefetch("jinaReader", isProxyImage)
-					}
-				>
-					<Database className="mr-2 h-4 w-4" /> Jina Fetcher
-				</DropdownMenuItem>
-				<DropdownMenuItem
-					onClick={async () => await props.onRefetch("browser", isProxyImage)}
-				>
-					<Chrome className="mr-2 h-4 w-4" /> Browser Fetcher
-				</DropdownMenuItem>
-				<DropdownMenuItem
-					onClick={async () => await props.onRegenerateSummary()}
-				>
-					<Bot className="mr-2 h-4 w-4" /> Genrate Summary
-				</DropdownMenuItem>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<DropdownMenuItem
+								onClick={async () =>
+									await props.onRefetch("http", isProxyImage)
+								}
+							>
+								<Globe className="mr-2 h-4 w-4" /> HTTP Fetcher
+							</DropdownMenuItem>
+						</TooltipTrigger>
+						<TooltipContent>
+							Basic HTTP request to fetch the article
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<DropdownMenuItem
+								onClick={async () =>
+									await props.onRefetch("jinaReader", isProxyImage)
+								}
+							>
+								<SiJinja className="mr-2 h-4 w-4" /> Jina Reader
+							</DropdownMenuItem>
+						</TooltipTrigger>
+						<TooltipContent>
+							Use Jina Reader to extract article content
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<DropdownMenuItem
+								onClick={async () =>
+									await props.onRefetch("browser", isProxyImage)
+								}
+							>
+								<SiGooglechrome className="mr-2 h-4 w-4" /> Browser Fetcher
+							</DropdownMenuItem>
+						</TooltipTrigger>
+						<TooltipContent>
+							Use headless browser to fetch JavaScript rendered content
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<DropdownMenuItem
+								onClick={async () => await props.onRegenerateSummary()}
+							>
+								<SiOpenai className="mr-2 h-4 w-4" /> Genrate Summary
+							</DropdownMenuItem>
+						</TooltipTrigger>
+						<TooltipContent>Regenerate article summary using AI</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
@@ -192,50 +239,83 @@ const ShareDropdownMenu = (props: ShareDropdownMenuProps) => {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					variant="ghost"
-					size="icon"
-					className={`transition-all hover:scale-105 ${
-						props.isShared
+			<TooltipProvider>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								className={`transition-all hover:scale-105 ${
+									props.isShared
+										? props.isExpired
+											? "text-muted-foreground"
+											: "text-primary"
+										: ""
+								}`}
+							>
+								{props.isShared ? (
+									props.isExpired ? (
+										<Link2Off className="h-4 w-4" />
+									) : (
+										<Link2 className="h-4 w-4" />
+									)
+								) : (
+									<Share className="h-4 w-4" />
+								)}
+							</Button>
+						</DropdownMenuTrigger>
+					</TooltipTrigger>
+					<TooltipContent>
+						{props.isShared
 							? props.isExpired
-								? "text-muted-foreground"
-								: "text-primary"
-							: ""
-					}`}
-				>
-					{props.isShared ? (
-						props.isExpired ? (
-							<Link2Off className="h-4 w-4" />
-						) : (
-							<Link2 className="h-4 w-4" />
-						)
-					) : (
-						<Share className="h-4 w-4" />
-					)}
-				</Button>
-			</DropdownMenuTrigger>
+								? "Shared link expired"
+								: "Article is shared"
+							: "Share article"}
+					</TooltipContent>
+				</Tooltip>
+			</TooltipProvider>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem
-					onClick={async () =>
-						props.isShared ? await props.onUnshare() : await props.onShare()
-					}
-				>
-					{props.isShared ? (
-						<>
-							<Link2Off className="mr-2 h-4 w-4" /> Unshare
-						</>
-					) : (
-						<>
-							<Share className="mr-2 h-4 w-4" /> Share article
-						</>
-					)}
-				</DropdownMenuItem>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<DropdownMenuItem
+								onClick={async () =>
+									props.isShared
+										? await props.onUnshare()
+										: await props.onShare()
+								}
+							>
+								{props.isShared ? (
+									<>
+										<Link2Off className="mr-2 h-4 w-4" /> Unshare
+									</>
+								) : (
+									<>
+										<Share className="mr-2 h-4 w-4" /> Share article
+									</>
+								)}
+							</DropdownMenuItem>
+						</TooltipTrigger>
+						<TooltipContent>
+							{props.isShared
+								? "Remove shared access"
+								: "Create a shareable link"}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 
 				{props.isShared && !props.isExpired && props.copyLink && (
-					<DropdownMenuItem onClick={props.copyLink}>
-						<Copy className="mr-2 h-4 w-4" /> Copy link
-					</DropdownMenuItem>
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<DropdownMenuItem onClick={props.copyLink}>
+									<Copy className="mr-2 h-4 w-4" /> Copy link
+								</DropdownMenuItem>
+							</TooltipTrigger>
+							<TooltipContent>Copy shared link to clipboard</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 				)}
 
 				{props.isShared && props.onUpdateExpiration && (
