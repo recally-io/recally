@@ -48,12 +48,13 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 		return <div className="container mx-auto p-4">Loading...</div>;
 	}
 
-	const handleRefetch = async (fetcherType: string) => {
+	const handleRefetch = async (fetcherType: string, isProxyImage: boolean) => {
 		try {
 			setIsLoading(true);
 			await refreshBookmark(bookmark.id, {
 				fetcher: fetcherType,
 				regenerate_summary: false,
+				is_proxy_image: isProxyImage,
 			});
 			toast({
 				title: "Success",
