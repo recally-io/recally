@@ -9,10 +9,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/lib/apis/auth";
+import { useAuth, useUser } from "@/lib/apis/auth";
 import { ROUTES } from "@/lib/router";
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link, Navigate, useRouter } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
@@ -56,6 +56,26 @@ export default function AuthComponent({ mode }: { mode: string }) {
 
 	const { login, register, oauthLogin } = useAuth();
 	const router = useRouter();
+
+	const { user, isLoading } = useUser();
+
+	if (isLoading) {
+		// Render a loading indicator or null
+		return null; // or your loading component
+	}
+
+	if (user) {
+		return (
+			<Navigate
+				to={ROUTES.BOOKMARKS}
+				search={{
+					page: 1,
+					filters: [],
+					query: "",
+				}}
+			/>
+		);
+	}
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;

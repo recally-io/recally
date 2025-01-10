@@ -137,6 +137,8 @@ func (l *LLM) StreamingTextCompletion(ctx context.Context, prompt string, stream
 	for _, o := range options {
 		o(opts)
 	}
+	options = append(options, WithStream(true))
+
 	req := opts.ToChatCompletionRequest()
 	req.Messages = []openai.ChatCompletionMessage{{
 		Role:    openai.ChatMessageRoleUser,
