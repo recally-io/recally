@@ -11,7 +11,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/lib/apis/auth";
-import { useLLMs } from "@/lib/apis/llm";
 import { useUsers } from "@/lib/apis/users";
 import { useState } from "react";
 
@@ -26,8 +25,8 @@ const supportedLanguages = [
 export function SummarySettings() {
 	const { updateSettings } = useUsers();
 	const { user } = useUser();
-	const { models } = useLLMs();
-	const [model, setModel] = useState(user?.settings?.summary_options?.model);
+	// const { models } = useLLMs();
+	// const [model, setModel] = useState(user?.settings?.summary_options?.model);
 	const [prompt, setPrompt] = useState(user?.settings?.summary_options?.prompt);
 	const [language, setLanguage] = useState(
 		user?.settings?.summary_options?.language,
@@ -47,7 +46,7 @@ export function SummarySettings() {
 			const settings = {
 				...user.settings,
 				summary_options: {
-					model,
+					model: "",
 					prompt,
 					language,
 				},
@@ -75,7 +74,7 @@ export function SummarySettings() {
 				<CardContent className="pt-6">
 					<h2 className="text-lg font-medium mb-4">Summary Settings</h2>
 					<div className="space-y-6">
-						<div className="grid gap-2">
+						{/* <div className="grid gap-2">
 							<Label htmlFor="model">Model</Label>
 							<Select value={model} onValueChange={setModel}>
 								<SelectTrigger>
@@ -89,7 +88,7 @@ export function SummarySettings() {
 									))}
 								</SelectContent>
 							</Select>
-						</div>
+						</div> */}
 
 						<div className="grid gap-2">
 							<Label htmlFor="prompt">Custom Prompt</Label>

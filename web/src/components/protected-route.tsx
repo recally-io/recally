@@ -1,5 +1,6 @@
 import { useUser } from "@/lib/apis/auth";
 import { ROUTES } from "@/lib/router";
+import { Navigate } from "@tanstack/react-router";
 import type React from "react";
 
 interface ProtectedRouteProps {
@@ -15,8 +16,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 	}
 
 	if (!user) {
-		window.location.href = ROUTES.AUTH_LOGIN;
-		return null;
+		return <Navigate to={ROUTES.AUTH_LOGIN} />;
 	}
 
 	return children;
