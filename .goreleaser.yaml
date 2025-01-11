@@ -30,7 +30,7 @@ builds:
       - -s -w
     hooks:
       pre:
-        - cmd: cd web && bun install && bun run build
+        - cmd: sh -c 'cd web && bun install && bun run build'
           env:
             - NODE_ENV=production
 

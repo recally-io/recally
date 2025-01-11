@@ -40,4 +40,3 @@ jobs:
           NODE_ENV: production
           # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
           # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-   
