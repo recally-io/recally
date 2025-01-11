@@ -156,6 +156,31 @@ definitions:
           type: string
         type: array
     type: object
+  auth.ApiKeyDTO:
+    properties:
+      created_at:
+        type: integer
+      expires_at:
+        type: integer
+      hash:
+        type: string
+      id:
+        type: string
+      last_used_at:
+        type: integer
+      name:
+        type: string
+      prefix:
+        type: string
+      scopes:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: integer
+      user_id:
+        type: string
+    type: object
   auth.SummaryConfig:
     properties:
       language:
@@ -320,6 +345,24 @@ definitions:
         description: Success is a boolean value that indicates whether the request
           was successful.
         type: boolean
+    type: object
+  httpserver.createApiKeyRequest:
+    properties:
+      expires_at:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      prefix:
+        type: string
+      scopes:
+        items:
+          type: string
+        type: array
+    required:
+    - expires_at
+    - name
     type: object
   httpserver.createAssistantRequest:
     properties:
@@ -2886,6 +2929,158 @@ paths:
       summary: Get presigned URLs for file operations
       tags:
       - files
+  /keys:
+    get:
+      consumes:
+      - application/json
+      description: List all API keys for the authenticated user
+      parameters:
+      - description: Filter by key prefix
+        in: query
+        name: prefix
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API keys retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/auth.ApiKeyDTO'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - Bearer: []
+      summary: List API Keys
+      tags:
+      - Auth
+    post:
+      consumes:
+      - application/json
+      description: Create a new API key for the authenticated user
+      parameters:
+      - description: API key creation details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.createApiKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API key created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.ApiKeyDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - Bearer: []
+      summary: Create API Key
+      tags:
+      - Auth
+  /keys/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an API key by ID
+      parameters:
+      - description: API key ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API key deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.JSONResult'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - Bearer: []
+      summary: Delete API Key
+      tags:
+      - Auth
   /llm/models:
     get:
       consumes:

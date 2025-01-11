@@ -20,6 +20,10 @@ type authService interface {
 	AuthByPassword(ctx context.Context, tx db.DBTX, email string, password string) (*auth.UserDTO, error)
 	GenerateJWT(user uuid.UUID) (string, error)
 	ValidateJWT(ctx context.Context, tx db.DBTX, tokenString string) (*auth.UserDTO, int64, error)
+
+	CreateApiKey(ctx context.Context, tx db.DBTX, key *auth.ApiKeyDTO) (*auth.ApiKeyDTO, error)
+	DeleteApiKey(ctx context.Context, tx db.DBTX, id uuid.UUID) error
+	ListApiKeys(ctx context.Context, tx db.DBTX, prefix string, isActive bool) ([]*auth.ApiKeyDTO, error)
 }
 
 type authHandler struct {
@@ -39,6 +43,12 @@ func registerAuthHandlers(e *echo.Group) {
 	auth.POST("/logout", h.logout)
 	auth.POST("/register", h.register)
 	auth.GET("/validate-jwt", h.validateJwtToken)
+
+	// Register API key handlers
+	apiKeys := auth.Group("/keys", authUserMiddleware())
+	apiKeys.POST("", h.createApiKey)
+	apiKeys.GET("", h.listApiKeys)
+	apiKeys.DELETE("/:id", h.deleteApiKey)
 }
 
 func (h *authHandler) oAuthLogin(c echo.Context) error {

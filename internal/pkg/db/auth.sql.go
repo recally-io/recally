@@ -12,48 +12,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createAPIKey = `-- name: CreateAPIKey :one
-INSERT INTO auth_api_keys (
-    user_id, name, key_prefix, key_hash, scopes, 
-    expires_at
-) VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, user_id, name, key_prefix, key_hash, scopes, expires_at, last_used_at, created_at, updated_at
-`
-
-type CreateAPIKeyParams struct {
-	UserID    uuid.UUID
-	Name      string
-	KeyPrefix string
-	KeyHash   string
-	Scopes    []string
-	ExpiresAt pgtype.Timestamptz
-}
-
-func (q *Queries) CreateAPIKey(ctx context.Context, db DBTX, arg CreateAPIKeyParams) (AuthApiKey, error) {
-	row := db.QueryRow(ctx, createAPIKey,
-		arg.UserID,
-		arg.Name,
-		arg.KeyPrefix,
-		arg.KeyHash,
-		arg.Scopes,
-		arg.ExpiresAt,
-	)
-	var i AuthApiKey
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Name,
-		&i.KeyPrefix,
-		&i.KeyHash,
-		&i.Scopes,
-		&i.ExpiresAt,
-		&i.LastUsedAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const createOAuthConnection = `-- name: CreateOAuthConnection :one
 INSERT INTO auth_user_oauth_connections (
     user_id, provider, provider_user_id, provider_email, 
@@ -147,16 +105,6 @@ func (q *Queries) CreateUser(ctx context.Context, db DBTX, arg CreateUserParams)
 	return i, err
 }
 
-const deleteAPIKey = `-- name: DeleteAPIKey :exec
-DELETE FROM auth_api_keys 
-WHERE id = $1
-`
-
-func (q *Queries) DeleteAPIKey(ctx context.Context, db DBTX, id uuid.UUID) error {
-	_, err := db.Exec(ctx, deleteAPIKey, id)
-	return err
-}
-
 const deleteExpiredRevokedTokens = `-- name: DeleteExpiredRevokedTokens :exec
 DELETE FROM auth_revoked_tokens 
 WHERE expires_at < CURRENT_TIMESTAMP
@@ -204,33 +152,6 @@ DELETE FROM users WHERE uuid = $1
 func (q *Queries) DeleteUserById(ctx context.Context, db DBTX, argUuid uuid.UUID) error {
 	_, err := db.Exec(ctx, deleteUserById, argUuid)
 	return err
-}
-
-const getAPIKeyByPrefix = `-- name: GetAPIKeyByPrefix :one
-SELECT id, user_id, name, key_prefix, key_hash, scopes, expires_at, last_used_at, created_at, updated_at FROM auth_api_keys WHERE key_prefix = $1 AND user_id = $2
-`
-
-type GetAPIKeyByPrefixParams struct {
-	KeyPrefix string
-	UserID    uuid.UUID
-}
-
-func (q *Queries) GetAPIKeyByPrefix(ctx context.Context, db DBTX, arg GetAPIKeyByPrefixParams) (AuthApiKey, error) {
-	row := db.QueryRow(ctx, getAPIKeyByPrefix, arg.KeyPrefix, arg.UserID)
-	var i AuthApiKey
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Name,
-		&i.KeyPrefix,
-		&i.KeyHash,
-		&i.Scopes,
-		&i.ExpiresAt,
-		&i.LastUsedAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
 }
 
 const getOAuthConnectionByProviderAndProviderID = `-- name: GetOAuthConnectionByProviderAndProviderID :one
@@ -436,81 +357,6 @@ func (q *Queries) IsTokenRevoked(ctx context.Context, db DBTX, arg IsTokenRevoke
 	return is_revoked, err
 }
 
-const listAPIKeysByUser = `-- name: ListAPIKeysByUser :many
-SELECT id, user_id, name, key_prefix, key_hash, scopes, expires_at, last_used_at, created_at, updated_at FROM auth_api_keys 
-WHERE user_id = $1 
-ORDER BY created_at DESC
-`
-
-func (q *Queries) ListAPIKeysByUser(ctx context.Context, db DBTX, userID uuid.UUID) ([]AuthApiKey, error) {
-	rows, err := db.Query(ctx, listAPIKeysByUser, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []AuthApiKey
-	for rows.Next() {
-		var i AuthApiKey
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.Name,
-			&i.KeyPrefix,
-			&i.KeyHash,
-			&i.Scopes,
-			&i.ExpiresAt,
-			&i.LastUsedAt,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listActiveAPIKeysByUser = `-- name: ListActiveAPIKeysByUser :many
-SELECT id, user_id, name, key_prefix, key_hash, scopes, expires_at, last_used_at, created_at, updated_at FROM auth_api_keys 
-WHERE user_id = $1 
-AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
-ORDER BY created_at DESC
-`
-
-func (q *Queries) ListActiveAPIKeysByUser(ctx context.Context, db DBTX, userID uuid.UUID) ([]AuthApiKey, error) {
-	rows, err := db.Query(ctx, listActiveAPIKeysByUser, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []AuthApiKey
-	for rows.Next() {
-		var i AuthApiKey
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.Name,
-			&i.KeyPrefix,
-			&i.KeyHash,
-			&i.Scopes,
-			&i.ExpiresAt,
-			&i.LastUsedAt,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listOAuthConnectionsByUser = `-- name: ListOAuthConnectionsByUser :many
 SELECT id, user_id, provider, provider_user_id, provider_email, access_token, refresh_token, token_expires_at, provider_data, created_at, updated_at FROM auth_user_oauth_connections 
 WHERE user_id = $1 
@@ -685,17 +531,6 @@ func (q *Queries) RevokeToken(ctx context.Context, db DBTX, arg RevokeTokenParam
 		&i.Reason,
 	)
 	return i, err
-}
-
-const updateAPIKeyLastUsed = `-- name: UpdateAPIKeyLastUsed :exec
-UPDATE auth_api_keys 
-SET last_used_at = CURRENT_TIMESTAMP
-WHERE id = $1
-`
-
-func (q *Queries) UpdateAPIKeyLastUsed(ctx context.Context, db DBTX, id uuid.UUID) error {
-	_, err := db.Exec(ctx, updateAPIKeyLastUsed, id)
-	return err
 }
 
 const updateOAuthConnection = `-- name: UpdateOAuthConnection :one
