@@ -64,7 +64,7 @@ jobs:
         with:
           images: |
             recally/recally
-            # ghcr.io/${{ github.repository }}
+            ghcr.io/${{ github.repository }}
           tags: |
             # https://github.com/docker/metadata-action#tags-input
             # set latest tag for master or main branch
@@ -89,5 +89,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-          cache-from: type=registry,ref=${{ github.repository }}:buildcache
-          cache-to: type=registry,ref=${{ github.repository }}:buildcache,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
