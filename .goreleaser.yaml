@@ -1,0 +1,68 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+
+# The lines below are called `modelines`. See `:help modeline`
+# Feel free to remove those if you don't want/need to use them.
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+    - go install github.com/swaggo/swag/cmd/swag@latest
+    - go install github.com/kevinburke/go-bindata/v4/...@latest
+    - go generate ./...
+    - go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
+    - sqlc generate
+    - swag init -g internal/port/httpserver/router.go
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      # - windows
+      - darwin
+    ldflags:
+      - -s -w
+    hooks:
+      pre:
+        - cmd: cd web && bun install && bun run build
+          env:
+            - NODE_ENV=production
+
+archives:
+  - format: tar.gz
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+    name_template: "checksums.txt"
+snapshot:
+    version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  github:
+    owner: recally-io
+    name: recally
+  name_template: '{{ .Tag }}'
