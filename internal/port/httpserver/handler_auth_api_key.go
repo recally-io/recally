@@ -92,7 +92,7 @@ func (h *authHandler) listApiKeys(c echo.Context) error {
 }
 
 type deleteApiKeyRequest struct {
-	ID uuid.UUID `json:"id" validate:"required,uuid"`
+	ID uuid.UUID `param:"id" validate:"required,uuid"`
 }
 
 // @Summary Delete API Key

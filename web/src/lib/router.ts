@@ -12,6 +12,7 @@ export const ROUTES = {
 	SETTINGS: "/settings",
 	SETTINGS_PROFILE: "/settings/profile",
 	SETTINGS_SUMMARY: "/settings/summary",
+	SETTINGS_API_KEYS: "/settings/api-keys",
 } as const;
 
 // Type for route keys

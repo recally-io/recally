@@ -17,6 +17,23 @@ interface OAuthLoginResponse {
 	url: string;
 }
 
+export interface ApiKey {
+	id: string;
+	name: string;
+	prefix: string;
+	key?: string;
+	scopes: string[];
+	expires_at: number;
+	created_at: number;
+}
+
+export interface CreateApiKeyInput {
+	name: string;
+	prefix?: string;
+	scopes?: string[];
+	expires_at: Date;
+}
+
 // API Functions
 const api = {
 	login: (input: LoginInput) =>
@@ -47,6 +64,25 @@ const api = {
 	OAuthCallback: (provider: string, code: string) => {
 		return fetcher<User>(`/api/v1/oauth/${provider}/callback?code=${code}`);
 	},
+
+	// API Key operations
+	createApiKey: (input: CreateApiKeyInput) =>
+		fetcher<ApiKey>("/api/v1/auth/keys", {
+			method: "POST",
+			body: JSON.stringify(input),
+		}),
+
+	listApiKeys: (prefix?: string, isActive?: boolean) => {
+		const params = new URLSearchParams();
+		if (prefix) params.append("prefix", prefix);
+		if (isActive !== undefined) params.append("is_active", String(isActive));
+		return fetcher<ApiKey[]>(`/api/v1/auth/keys?${params.toString()}`);
+	},
+
+	deleteApiKey: (id: string) =>
+		fetcher<void>(`/api/v1/auth/keys/${id}`, {
+			method: "DELETE",
+		}),
 };
 
 // SWR Hooks
@@ -65,6 +101,39 @@ export function useUser() {
 		isLoading: !error && !data,
 		isError: error,
 		mutate,
+	};
+}
+
+export function useApiKeys(prefix?: string, isActive?: boolean) {
+	const { data, error, mutate } = useSWR<ApiKey[]>(
+		["api-keys", prefix, isActive],
+		() => api.listApiKeys(prefix, isActive),
+	);
+
+	return {
+		keys: data,
+		isLoading: !error && !data,
+		isError: error,
+		mutate,
+	};
+}
+
+export function useApiKeysMutations() {
+	const { mutate: mutateAll } = useApiKeys();
+
+	return {
+		createApiKey: async (input: CreateApiKeyInput) => {
+			const key = await api.createApiKey(input);
+			// Mutate all related queries
+			await mutateAll();
+			return key;
+		},
+
+		deleteApiKey: async (id: string) => {
+			await api.deleteApiKey(id);
+			// Mutate all related queries
+			await mutateAll();
+		},
 	};
 }
 

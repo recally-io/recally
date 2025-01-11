@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ROUTES } from "@/lib/router";
 import { Link } from "@tanstack/react-router";
-import { Bot, Home, Menu, User } from "lucide-react";
+import { Bot, Home, Key, Menu, User } from "lucide-react";
+import ProtectedRoute from "../protected-route";
 
 function SidebarNav() {
 	return (
@@ -28,6 +29,13 @@ function SidebarNav() {
 				<Bot className="h-4 w-4" />
 				Summary
 			</Link>
+			<Link
+				to={ROUTES.SETTINGS_API_KEYS}
+				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
+			>
+				<Key className="h-4 w-4" />
+				API Keys
+			</Link>
 		</nav>
 	);
 }
@@ -36,6 +44,7 @@ export function SettingsPageComponenrt({
 	children,
 }: { children: React.ReactElement }) {
 	return (
+		<ProtectedRoute>
 		<div className="container mx-auto py-10 px-4">
 			<h1 className="text-2xl font-semibold mb-8">Preferences</h1>
 
@@ -56,5 +65,6 @@ export function SettingsPageComponenrt({
 				<div className="w-full">{children}</div>
 			</div>
 		</div>
+		</ProtectedRoute>
 	);
 }
