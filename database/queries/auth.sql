@@ -69,36 +69,6 @@ RETURNING *;
 DELETE FROM auth_user_oauth_connections 
 WHERE user_id = $1 AND provider = $2;
 
--- name: CreateAPIKey :one
-INSERT INTO auth_api_keys (
-    user_id, name, key_prefix, key_hash, scopes, 
-    expires_at
-) VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING *;
-
--- name: GetAPIKeyByPrefix :one
-SELECT * FROM auth_api_keys WHERE key_prefix = $1 AND user_id = $2;
-
--- name: ListAPIKeysByUser :many
-SELECT * FROM auth_api_keys 
-WHERE user_id = $1 
-ORDER BY created_at DESC;
-
--- name: ListActiveAPIKeysByUser :many
-SELECT * FROM auth_api_keys 
-WHERE user_id = $1 
-AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
-ORDER BY created_at DESC;
-
--- name: UpdateAPIKeyLastUsed :exec
-UPDATE auth_api_keys 
-SET last_used_at = CURRENT_TIMESTAMP
-WHERE id = $1;
-
--- name: DeleteAPIKey :exec
-DELETE FROM auth_api_keys 
-WHERE id = $1;
-
 -- name: RevokeToken :one
 INSERT INTO auth_revoked_tokens (
     jti, user_id, expires_at, reason
