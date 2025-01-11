@@ -101,7 +101,7 @@ func (s *Service) CreateApiKey(ctx context.Context, tx db.DBTX, key *ApiKeyDTO) 
 		Name:      dbKey.Name,
 		KeyPrefix: dbKey.KeyPrefix,
 		KeyHash:   fmt.Sprintf("ak-%s", dbKey.KeyHash),
-		Scopes:    dbKey.Scopes,
+		Scopes:    []string{"*"},
 		ExpiresAt: dbKey.ExpiresAt,
 	}
 

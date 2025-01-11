@@ -6,7 +6,6 @@ import (
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -24,13 +23,8 @@ func initContext(ctx context.Context) (pgx.Tx, *auth.UserDTO, error) {
 		return nil, nil, errors.New("tx not found")
 	}
 
-	userId, ok := contexts.Get[uuid.UUID](ctx, contexts.ContextKeyUserID)
+	user, ok := contexts.Get[*auth.UserDTO](ctx, contexts.ContextKeyUser)
 	if !ok {
-		return tx, nil, errors.New("user not found")
-	}
-
-	user, err := auth.New().GetUserById(ctx, tx, userId)
-	if err != nil {
 		return tx, nil, errors.New("user not found")
 	}
 
