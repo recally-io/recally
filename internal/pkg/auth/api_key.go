@@ -23,10 +23,10 @@ type ApiKeyDTO struct {
 	Prefix     string    `json:"prefix"`
 	Hash       string    `json:"hash"`
 	Scopes     []string  `json:"scopes"`
-	ExpiresAt  int64     `json:"expires_at"`
-	LastUsedAt int64     `json:"last_used_at"`
-	CreatedAt  int64     `json:"created_at"`
-	UpdatedAt  int64     `json:"updated_at"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	LastUsedAt time.Time `json:"last_used_at"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 func (t *ApiKeyDTO) Load(d *db.AuthApiKey) {
@@ -37,13 +37,13 @@ func (t *ApiKeyDTO) Load(d *db.AuthApiKey) {
 	t.Hash = d.KeyHash
 	t.Scopes = d.Scopes
 	if d.ExpiresAt.Valid {
-		t.ExpiresAt = d.ExpiresAt.Time.Unix()
+		t.ExpiresAt = d.ExpiresAt.Time
 	}
 	if d.LastUsedAt.Valid {
-		t.LastUsedAt = d.LastUsedAt.Time.Unix()
+		t.LastUsedAt = d.LastUsedAt.Time
 	}
-	t.CreatedAt = d.CreatedAt.Time.Unix()
-	t.UpdatedAt = d.UpdatedAt.Time.Unix()
+	t.CreatedAt = d.CreatedAt.Time
+	t.UpdatedAt = d.UpdatedAt.Time
 }
 
 func (t *ApiKeyDTO) Dump() *db.AuthApiKey {
@@ -55,12 +55,12 @@ func (t *ApiKeyDTO) Dump() *db.AuthApiKey {
 		KeyHash:   t.Hash,
 		Scopes:    t.Scopes,
 		ExpiresAt: pgtype.Timestamptz{
-			Time:  time.Unix(t.ExpiresAt, 0),
-			Valid: t.ExpiresAt > 0,
+			Time:  t.ExpiresAt,
+			Valid: t.ExpiresAt != time.Time{},
 		},
 		LastUsedAt: pgtype.Timestamptz{
-			Time:  time.Unix(t.LastUsedAt, 0),
-			Valid: t.LastUsedAt > 0,
+			Time:  t.LastUsedAt,
+			Valid: t.LastUsedAt != time.Time{},
 		},
 	}
 }
@@ -86,7 +86,7 @@ func (s *Service) generateRandomApiKey(prefix string) string {
 }
 
 func (s *Service) CreateApiKey(ctx context.Context, tx db.DBTX, key *ApiKeyDTO) (*ApiKeyDTO, error) {
-	if key.ExpiresAt <= time.Now().Unix() {
+	if key.ExpiresAt.Before(time.Now()) {
 		return nil, fmt.Errorf("API key expiration time must be in the future")
 	}
 
@@ -132,7 +132,6 @@ func (s *Service) ListApiKeys(ctx context.Context, tx db.DBTX, prefix string, Is
 		Prefix:   pgtype.Text{String: prefix, Valid: prefix != ""},
 		IsActive: pgtype.Bool{Bool: IsActive, Valid: true},
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to list API keys: %w", err)
 	}

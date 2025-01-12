@@ -46,7 +46,7 @@ func (h *authHandler) createApiKey(c echo.Context) error {
 		Name:      req.Name,
 		Prefix:    req.Prefix,
 		Scopes:    req.Scopes,
-		ExpiresAt: req.ExpiresAt.Unix(),
+		ExpiresAt: req.ExpiresAt,
 	})
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to create API key: %w", err))
