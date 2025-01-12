@@ -1,7 +1,7 @@
 import BookmarkList from "@/components/bookmarks/bookmarks-list";
 import type { SearchToken } from "@/components/bookmarks/search";
-import { BookmarksSidebar } from "@/components/bookmarks/sidebar";
 import type { BookmarkSearch, View } from "@/components/bookmarks/types";
+import { SidebarComponent } from "@/components/sidebar/sidebar";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -108,7 +108,7 @@ export default function BookmarksListView({
 
 	return (
 		<SidebarProvider defaultOpen={false}>
-			<BookmarksSidebar />
+			<SidebarComponent />
 			<SidebarInset>
 				<div className="flex flex-col h-full">
 					<header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">

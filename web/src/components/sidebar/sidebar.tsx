@@ -17,7 +17,7 @@ import { Link } from "@tanstack/react-router";
 import { Settings2 } from "lucide-react";
 import ThemeToggle from "../theme-toggle";
 
-export function BookmarksSidebar({
+export function SidebarComponent({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
 	return (

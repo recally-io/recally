@@ -1,6 +1,6 @@
 import { ArticleActions } from "@/components/article/article-actions";
 import { ArticleReader } from "@/components/bookmarks/bookmark-content";
-import { BookmarksSidebar } from "@/components/bookmarks/sidebar";
+import { SidebarComponent } from "@/components/sidebar/sidebar";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -224,7 +224,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 
 	return (
 		<SidebarProvider defaultOpen={false}>
-			<BookmarksSidebar />
+			<SidebarComponent />
 			<SidebarInset className="overflow-auto">
 				<div className="flex flex-col h-full w-full">
 					<header className="flex h-12 shrink-0 items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
