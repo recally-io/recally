@@ -174,7 +174,9 @@ export function ApiKeysSettings() {
 											</Popover>
 										</div>
 									)}
-									<Button onClick={handleCreate}>Create</Button>
+									<div className="flex justify-end">
+										<Button onClick={handleCreate}>Create</Button>
+									</div>
 								</div>
 							</DialogContent>
 						</Dialog>

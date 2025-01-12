@@ -11,7 +11,7 @@ export const ROUTES = {
 
 	SETTINGS: "/settings",
 	SETTINGS_PROFILE: "/settings/profile",
-	SETTINGS_SUMMARY: "/settings/summary",
+	SETTINGS_AI: "/settings/ai",
 	SETTINGS_API_KEYS: "/settings/api-keys",
 } as const;
 
