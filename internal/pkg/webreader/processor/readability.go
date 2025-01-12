@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"recally/internal/core/files"
+	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/s3"
 	"recally/internal/pkg/webreader"
@@ -63,13 +64,18 @@ func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.C
 	content.Description = article.Excerpt
 	content.SiteName = article.SiteName
 
-	// Set the cover image
-	if file, err := files.DefaultService.UploadToS3FromUrl(ctx, db.DefaultPool.Pool, true, "", article.Image, minio.PutObjectOptions{
-		CacheControl: "max-age=31536000, public",
-	}); err != nil {
+	// Set the cover image, default upload to S3, if failed, use the original image
+	dummyUserCtx, err := auth.GetContextWithDummyUser(ctx)
+	if err != nil {
 		content.Cover = article.Image
 	} else {
-		content.Cover = s3.DefaultClient.GetPublicURL(file.S3Key)
+		if file, err := files.DefaultService.UploadToS3FromUrl(dummyUserCtx, db.DefaultPool.Pool, true, "", article.Image, minio.PutObjectOptions{
+			CacheControl: "max-age=31536000, public",
+		}); err != nil {
+			content.Cover = article.Image
+		} else {
+			content.Cover = s3.DefaultClient.GetPublicURL(file.S3Key)
+		}
 	}
 
 	content.Favicon = article.Favicon

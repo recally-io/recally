@@ -4942,10 +4942,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "created_at": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "expires_at": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "hash": {
                     "type": "string"
@@ -4954,7 +4954,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "last_used_at": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -4969,7 +4969,7 @@ const docTemplate = `{
                     }
                 },
                 "updated_at": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "user_id": {
                     "type": "string"

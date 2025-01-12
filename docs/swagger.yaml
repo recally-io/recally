@@ -159,15 +159,15 @@ definitions:
   auth.ApiKeyDTO:
     properties:
       created_at:
-        type: integer
+        type: string
       expires_at:
-        type: integer
+        type: string
       hash:
         type: string
       id:
         type: string
       last_used_at:
-        type: integer
+        type: string
       name:
         type: string
       prefix:
@@ -177,7 +177,7 @@ definitions:
           type: string
         type: array
       updated_at:
-        type: integer
+        type: string
       user_id:
         type: string
     type: object
