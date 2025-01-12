@@ -1,8 +1,8 @@
 import { SettingsPageComponenrt } from "@/components/settings/settings";
-import { SummarySettings } from "@/components/settings/summary";
+import { SummarySettings } from "@/components/settings/ai";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/settings/summary")({
+export const Route = createFileRoute("/settings/ai")({
 	component: RouteComponent,
 });
 

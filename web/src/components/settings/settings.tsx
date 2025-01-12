@@ -18,18 +18,18 @@ function SidebarNav() {
 				Profile
 			</Link>
 			<Link
-				to={ROUTES.SETTINGS_SUMMARY}
-				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
-			>
-				<Bot className="h-4 w-4" />
-				Summary
-			</Link>
-			<Link
 				to={ROUTES.SETTINGS_API_KEYS}
 				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
 			>
 				<Key className="h-4 w-4" />
 				API Keys
+			</Link>
+			<Link
+				to={ROUTES.SETTINGS_AI}
+				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
+			>
+				<Bot className="h-4 w-4" />
+				AI
 			</Link>
 		</nav>
 	);

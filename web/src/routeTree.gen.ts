@@ -17,9 +17,9 @@ import { Route as SettingsIndexImport } from "./routes/settings/index";
 import { Route as BookmarksIndexImport } from "./routes/bookmarks/index";
 import { Route as AuthIndexImport } from "./routes/auth/index";
 import { Route as ShareIdImport } from "./routes/share/$id";
-import { Route as SettingsSummaryImport } from "./routes/settings/summary";
 import { Route as SettingsProfileImport } from "./routes/settings/profile";
 import { Route as SettingsApiKeysImport } from "./routes/settings/api-keys";
+import { Route as SettingsAiImport } from "./routes/settings/ai";
 import { Route as BookmarksIdImport } from "./routes/bookmarks/$id";
 import { Route as AuthRegisterImport } from "./routes/auth/register";
 import { Route as AuthLoginImport } from "./routes/auth/login";
@@ -61,12 +61,6 @@ const ShareIdRoute = ShareIdImport.update({
 	getParentRoute: () => rootRoute,
 } as any);
 
-const SettingsSummaryRoute = SettingsSummaryImport.update({
-	id: "/settings/summary",
-	path: "/settings/summary",
-	getParentRoute: () => rootRoute,
-} as any);
-
 const SettingsProfileRoute = SettingsProfileImport.update({
 	id: "/settings/profile",
 	path: "/settings/profile",
@@ -76,6 +70,12 @@ const SettingsProfileRoute = SettingsProfileImport.update({
 const SettingsApiKeysRoute = SettingsApiKeysImport.update({
 	id: "/settings/api-keys",
 	path: "/settings/api-keys",
+	getParentRoute: () => rootRoute,
+} as any);
+
+const SettingsAiRoute = SettingsAiImport.update({
+	id: "/settings/ai",
+	path: "/settings/ai",
 	getParentRoute: () => rootRoute,
 } as any);
 
@@ -135,6 +135,13 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof BookmarksIdImport;
 			parentRoute: typeof rootRoute;
 		};
+		"/settings/ai": {
+			id: "/settings/ai";
+			path: "/settings/ai";
+			fullPath: "/settings/ai";
+			preLoaderRoute: typeof SettingsAiImport;
+			parentRoute: typeof rootRoute;
+		};
 		"/settings/api-keys": {
 			id: "/settings/api-keys";
 			path: "/settings/api-keys";
@@ -147,13 +154,6 @@ declare module "@tanstack/react-router" {
 			path: "/settings/profile";
 			fullPath: "/settings/profile";
 			preLoaderRoute: typeof SettingsProfileImport;
-			parentRoute: typeof rootRoute;
-		};
-		"/settings/summary": {
-			id: "/settings/summary";
-			path: "/settings/summary";
-			fullPath: "/settings/summary";
-			preLoaderRoute: typeof SettingsSummaryImport;
 			parentRoute: typeof rootRoute;
 		};
 		"/share/$id": {
@@ -201,9 +201,9 @@ export interface FileRoutesByFullPath {
 	"/auth/login": typeof AuthLoginRoute;
 	"/auth/register": typeof AuthRegisterRoute;
 	"/bookmarks/$id": typeof BookmarksIdRoute;
+	"/settings/ai": typeof SettingsAiRoute;
 	"/settings/api-keys": typeof SettingsApiKeysRoute;
 	"/settings/profile": typeof SettingsProfileRoute;
-	"/settings/summary": typeof SettingsSummaryRoute;
 	"/share/$id": typeof ShareIdRoute;
 	"/auth": typeof AuthIndexRoute;
 	"/bookmarks": typeof BookmarksIndexRoute;
@@ -216,9 +216,9 @@ export interface FileRoutesByTo {
 	"/auth/login": typeof AuthLoginRoute;
 	"/auth/register": typeof AuthRegisterRoute;
 	"/bookmarks/$id": typeof BookmarksIdRoute;
+	"/settings/ai": typeof SettingsAiRoute;
 	"/settings/api-keys": typeof SettingsApiKeysRoute;
 	"/settings/profile": typeof SettingsProfileRoute;
-	"/settings/summary": typeof SettingsSummaryRoute;
 	"/share/$id": typeof ShareIdRoute;
 	"/auth": typeof AuthIndexRoute;
 	"/bookmarks": typeof BookmarksIndexRoute;
@@ -232,9 +232,9 @@ export interface FileRoutesById {
 	"/auth/login": typeof AuthLoginRoute;
 	"/auth/register": typeof AuthRegisterRoute;
 	"/bookmarks/$id": typeof BookmarksIdRoute;
+	"/settings/ai": typeof SettingsAiRoute;
 	"/settings/api-keys": typeof SettingsApiKeysRoute;
 	"/settings/profile": typeof SettingsProfileRoute;
-	"/settings/summary": typeof SettingsSummaryRoute;
 	"/share/$id": typeof ShareIdRoute;
 	"/auth/": typeof AuthIndexRoute;
 	"/bookmarks/": typeof BookmarksIndexRoute;
@@ -249,9 +249,9 @@ export interface FileRouteTypes {
 		| "/auth/login"
 		| "/auth/register"
 		| "/bookmarks/$id"
+		| "/settings/ai"
 		| "/settings/api-keys"
 		| "/settings/profile"
-		| "/settings/summary"
 		| "/share/$id"
 		| "/auth"
 		| "/bookmarks"
@@ -263,9 +263,9 @@ export interface FileRouteTypes {
 		| "/auth/login"
 		| "/auth/register"
 		| "/bookmarks/$id"
+		| "/settings/ai"
 		| "/settings/api-keys"
 		| "/settings/profile"
-		| "/settings/summary"
 		| "/share/$id"
 		| "/auth"
 		| "/bookmarks"
@@ -277,9 +277,9 @@ export interface FileRouteTypes {
 		| "/auth/login"
 		| "/auth/register"
 		| "/bookmarks/$id"
+		| "/settings/ai"
 		| "/settings/api-keys"
 		| "/settings/profile"
-		| "/settings/summary"
 		| "/share/$id"
 		| "/auth/"
 		| "/bookmarks/"
@@ -293,9 +293,9 @@ export interface RootRouteChildren {
 	AuthLoginRoute: typeof AuthLoginRoute;
 	AuthRegisterRoute: typeof AuthRegisterRoute;
 	BookmarksIdRoute: typeof BookmarksIdRoute;
+	SettingsAiRoute: typeof SettingsAiRoute;
 	SettingsApiKeysRoute: typeof SettingsApiKeysRoute;
 	SettingsProfileRoute: typeof SettingsProfileRoute;
-	SettingsSummaryRoute: typeof SettingsSummaryRoute;
 	ShareIdRoute: typeof ShareIdRoute;
 	AuthIndexRoute: typeof AuthIndexRoute;
 	BookmarksIndexRoute: typeof BookmarksIndexRoute;
@@ -308,9 +308,9 @@ const rootRouteChildren: RootRouteChildren = {
 	AuthLoginRoute: AuthLoginRoute,
 	AuthRegisterRoute: AuthRegisterRoute,
 	BookmarksIdRoute: BookmarksIdRoute,
+	SettingsAiRoute: SettingsAiRoute,
 	SettingsApiKeysRoute: SettingsApiKeysRoute,
 	SettingsProfileRoute: SettingsProfileRoute,
-	SettingsSummaryRoute: SettingsSummaryRoute,
 	ShareIdRoute: ShareIdRoute,
 	AuthIndexRoute: AuthIndexRoute,
 	BookmarksIndexRoute: BookmarksIndexRoute,
@@ -332,9 +332,9 @@ export const routeTree = rootRoute
         "/auth/login",
         "/auth/register",
         "/bookmarks/$id",
+        "/settings/ai",
         "/settings/api-keys",
         "/settings/profile",
-        "/settings/summary",
         "/share/$id",
         "/auth/",
         "/bookmarks/",
@@ -354,14 +354,14 @@ export const routeTree = rootRoute
     "/bookmarks/$id": {
       "filePath": "bookmarks/$id.tsx"
     },
+    "/settings/ai": {
+      "filePath": "settings/ai.tsx"
+    },
     "/settings/api-keys": {
       "filePath": "settings/api-keys.tsx"
     },
     "/settings/profile": {
       "filePath": "settings/profile.tsx"
-    },
-    "/settings/summary": {
-      "filePath": "settings/summary.tsx"
     },
     "/share/$id": {
       "filePath": "share/$id.tsx"

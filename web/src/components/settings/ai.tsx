@@ -115,13 +115,12 @@ export function SummarySettings() {
 								</SelectContent>
 							</Select>
 						</div>
+						<div className="flex justify-end">
+							<Button onClick={handleSave}>Save Changes</Button>
+						</div>
 					</div>
 				</CardContent>
 			</Card>
-
-			<div className="flex justify-end">
-				<Button onClick={handleSave}>Save Changes</Button>
-			</div>
 		</div>
 	);
 }

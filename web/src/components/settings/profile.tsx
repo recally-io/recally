@@ -147,7 +147,9 @@ export function ProfileSettings() {
 								/>
 							</div>
 						</div>
-						<Button onClick={handleUpdateProfile}>Update Profile</Button>
+						<div className="flex justify-end">
+							<Button onClick={handleUpdateProfile}>Update Profile</Button>
+						</div>
 					</div>
 				</CardContent>
 			</Card>
@@ -185,7 +187,9 @@ export function ProfileSettings() {
 								onChange={(e) => setConfirmPassword(e.target.value)}
 							/>
 						</div>
-						<Button onClick={handleUpdatePassword}>Update Password</Button>
+						<div className="flex justify-end">
+							<Button onClick={handleUpdatePassword}>Update Password</Button>
+						</div>
 					</div>
 				</CardContent>
 			</Card>
