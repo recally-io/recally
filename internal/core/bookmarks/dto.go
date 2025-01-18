@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"recally/internal/pkg/webreader"
 	"time"
 
 	"github.com/google/uuid"
@@ -237,6 +238,29 @@ func (c *ContentDTO) DumpToUpdateParams() db.UpdateContentParams {
 		Html:        pgtype.Text{String: c.HTML, Valid: c.HTML != ""},
 		IsFavorite:  pgtype.Bool{Bool: c.IsFavorite, Valid: true},
 		Metadata:    metadata,
+	}
+}
+
+func (c *ContentDTO) FromReaderContent(article *webreader.Content) {
+	c.Content = article.Markwdown
+	c.Title = article.Title
+	c.HTML = article.Html
+
+	// Update metadata
+	c.Metadata.Author = article.Author
+	c.Metadata.SiteName = article.SiteName
+	c.Metadata.Description = article.Description
+
+	c.Metadata.Cover = article.Cover
+	c.Metadata.Favicon = article.Favicon
+	if article.Cover != "" {
+		c.Metadata.Image = article.Cover
+	} else {
+		c.Metadata.Image = article.Favicon
+	}
+
+	if article.PublishedTime != nil {
+		c.Metadata.PublishedAt = *article.PublishedTime
 	}
 }
 

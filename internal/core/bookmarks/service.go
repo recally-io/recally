@@ -284,26 +284,7 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
 	}
 
-	dto.Content = content.Markwdown
-	dto.Title = content.Title
-	dto.HTML = content.Html
-
-	// Update metadata
-	dto.Metadata.Author = content.Author
-	dto.Metadata.SiteName = content.SiteName
-	dto.Metadata.Description = content.Description
-
-	dto.Metadata.Cover = content.Cover
-	dto.Metadata.Favicon = content.Favicon
-	if content.Cover != "" {
-		dto.Metadata.Image = content.Cover
-	} else {
-		dto.Metadata.Image = content.Favicon
-	}
-
-	if content.PublishedTime != nil {
-		dto.Metadata.PublishedAt = *content.PublishedTime
-	}
+	dto.FromReaderContent(content)
 	return s.Update(ctx, tx, id, userID, dto)
 }
 

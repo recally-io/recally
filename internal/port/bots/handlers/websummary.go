@@ -151,7 +151,7 @@ func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, url string, user
 	result, err := h.queue.Insert(ctx, queue.CrawlerWorkerArgs{
 		ID:           bookmark.ID,
 		UserID:       bookmark.UserID,
-		FetchOptions: fetcher.FetchOptions{FecherType: fetcher.TypeHttp},
+		FetchOptions: fetcher.FetchOptions{FecherType: fetcher.TypeJinaReader}, // use jina reader as we already fetch the content using jina reader, so it will hit the cache
 	}, nil)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to insert job", "err", err)
