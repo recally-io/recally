@@ -17,9 +17,9 @@ func New(host string, opts fetcher.FetchOptions) (*webreader.Reader, error) {
 	case fetcher.TypeHttp:
 		readerFetcher, err = fetcher.NewHTTPFetcher()
 	case fetcher.TypeJinaReader:
-		readerFetcher, err = fetcher.NewJinaFetcher()
+		readerFetcher, err = fetcher.DefaultJinaFetcher()
 	case fetcher.TypeBrowser:
-		readerFetcher, err = fetcher.NewBrowserFetcher()
+		readerFetcher, err = fetcher.DefaultBrowserFetcher()
 	}
 
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"recally/internal/pkg/webreader"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,7 @@ type jinaResponse struct {
 
 // JinaFetcher implements the Fetcher interface using Jina.ai reader
 type JinaFetcher struct {
+	mux    sync.Mutex
 	client *http.Client
 	config JinaConfig
 }
@@ -58,10 +60,13 @@ func WithJinaOptionTimeout(timeout int) JinaOption {
 	}
 }
 
-// NewJinaFetcher creates a new JinaFetcher with the given configuration
-func NewJinaFetcher(opts ...JinaOption) (*JinaFetcher, error) {
+func DefaultJinaFetcher() (*JinaFetcher, error) {
 	config := DefaultJinaConfig()
+	return NewJinaFetcher(config)
+}
 
+// NewJinaFetcher creates a new JinaFetcher with the given configuration
+func NewJinaFetcher(config JinaConfig, opts ...JinaOption) (*JinaFetcher, error) {
 	// Apply all options
 	for _, opt := range opts {
 		opt(&config)
@@ -77,6 +82,8 @@ func NewJinaFetcher(opts ...JinaOption) (*JinaFetcher, error) {
 
 // Fetch implements the Fetcher interface
 func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
+	f.mux.Lock()
+	defer f.mux.Unlock()
 	// Prepare the Jina API URL
 	jinaURL := fmt.Sprintf("%s/%s", jinaHost, url)
 
