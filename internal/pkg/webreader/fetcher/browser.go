@@ -8,6 +8,7 @@ import (
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/webreader"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-rod/rod"
@@ -25,55 +26,57 @@ type BrowserConfig struct {
 
 // BrowserFetcher implements the Fetcher interface using Chrome via go-rod
 type BrowserFetcher struct {
-	config  BrowserConfig
-	browser *rod.Browser
+	mux    sync.Mutex
+	config BrowserConfig
 }
 
-func NewDefaultBrowserConfig() BrowserConfig {
-	return BrowserConfig{
-		Timeout:        60,
-		ControlURL:     config.Settings.BrowserControlUrl,
-		ScrollToBottom: true,
-	}
-}
-
-// NewBrowserFetcher creates a new BrowserFetcher with the given options
-func NewBrowserFetcher(opts ...BroswerOption) (*BrowserFetcher, error) {
-	// Start with default configuration
-	config := NewDefaultBrowserConfig()
-
-	// Apply all options
-	for _, opt := range opts {
-		opt(&config)
-	}
-	return newBrowserFetcher(config)
-}
-
-func newBrowserFetcher(cfg BrowserConfig) (*BrowserFetcher, error) {
+func (f *BrowserFetcher) loadBrowser() (*rod.Browser, error) {
 	// https://go-rod.github.io/#/custom-launch?id=remotely-manage-the-launcher
-	l, err := launcher.NewManaged(cfg.ControlURL)
+	l, err := launcher.NewManaged(f.config.ControlURL)
 	if err != nil {
 		return nil, fmt.Errorf("create new launcher: %w", err)
 	}
 	l.Headless(true).Set("disable-gpu").Set("no-sandbox").Set("disable-dev-shm-usage")
 	browser := rod.New().Client(l.MustClient()).MustConnect()
+	return browser, nil
+}
 
+func NewDefaultBrowserConfig() BrowserConfig {
+	return BrowserConfig{
+		Timeout:        120,
+		ControlURL:     config.Settings.BrowserControlUrl,
+		ScrollToBottom: true,
+	}
+}
+
+func DefaultBrowserFetcher(opts ...BroswerOption) (*BrowserFetcher, error) {
+	config := NewDefaultBrowserConfig()
+	return NewBrowserFetcher(config, opts...)
+}
+
+// NewBrowserFetcher creates a new BrowserFetcher with the given options
+func NewBrowserFetcher(config BrowserConfig, opts ...BroswerOption) (*BrowserFetcher, error) {
+	// Apply all options
+	for _, opt := range opts {
+		opt(&config)
+	}
 	return &BrowserFetcher{
-		config:  cfg,
-		browser: browser,
+		config: config,
 	}, nil
 }
 
 // Fetch implements the Fetcher interface
 func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
-	var err error
-	f, err = newBrowserFetcher(f.config)
+	f.mux.Lock()
+	defer f.mux.Unlock()
+	browser, err := f.loadBrowser()
 	if err != nil {
 		return nil, fmt.Errorf("create new fetcher: %w", err)
 	}
+	defer browser.Close()
 
 	// Create new page
-	page := f.browser.MustPage(url)
+	page := browser.MustPage(url)
 	defer page.MustClose()
 
 	if f.config.UserAgent != "" {
@@ -111,7 +114,7 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Fetc
 
 // Close implements the Fetcher interface
 func (f *BrowserFetcher) Close() error {
-	return f.browser.Close()
+	return nil
 }
 
 // BroswerOption defines a function type for configuring BrowserFetcher
