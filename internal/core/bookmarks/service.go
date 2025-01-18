@@ -289,24 +289,23 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 }
 
 func (s *Service) FetchContentWithCache(ctx context.Context, uri string, opts fetcher.FetchOptions) (*webreader.Content, error) {
-	return cache.RunInCache(ctx, cache.DefaultDBCache,
-		cache.NewCacheKey(fmt.Sprintf("WebReader-%s", opts.String()), uri), 24*time.Hour, func() (*webreader.Content, error) {
-			u, err := url.Parse(uri)
-			if err != nil {
-				return nil, fmt.Errorf("invalid url '%s': %w", uri, err)
-			}
+	u, err := url.Parse(uri)
+	if err != nil {
+		return nil, fmt.Errorf("invalid url '%s': %w", uri, err)
+	}
 
-			// read the content using jina reader
-			reader, err := reader.New(u.Host, opts)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create reader: %w", err)
-			}
-			content, err := reader.Read(ctx, uri)
-			if err != nil {
-				return nil, fmt.Errorf("failed to read content: %w", err)
-			}
-			return content, nil
-		})
+	reader, err := reader.New(u.Host, opts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create reader: %w", err)
+	}
+
+	content, err := cache.RunInCache(ctx, cache.DefaultDBCache, cache.NewCacheKey(fmt.Sprintf("WebReader-%s", opts.FecherType), uri), 24*time.Hour, func() (*webreader.Content, error) {
+		return reader.Fetch(ctx, uri)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch content: %w", err)
+	}
+	return reader.Process(ctx, content)
 }
 
 func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*ContentDTO, error) {

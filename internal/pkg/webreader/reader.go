@@ -71,7 +71,7 @@ func (w *Reader) AddProcessor(p Processor) {
 }
 
 // Read fetches content from the URL and processes it through all processors in sequence
-func (w *Reader) Read(ctx context.Context, url string) (*Content, error) {
+func (w *Reader) Fetch(ctx context.Context, url string) (*Content, error) {
 	// Fetch the content
 	defer w.fetcher.Close()
 	fetchedContent, err := w.fetcher.Fetch(ctx, url)
@@ -79,12 +79,15 @@ func (w *Reader) Read(ctx context.Context, url string) (*Content, error) {
 		return nil, fmt.Errorf("fetch error: %w", err)
 	}
 
-	// Pre-process the content
+	// get raw html content
 	if err := w.preProcess(fetchedContent); err != nil {
 		return nil, fmt.Errorf("pre-process error: %w", err)
 	}
 
-	content := &fetchedContent.Content
+	return &fetchedContent.Content, nil
+}
+
+func (w *Reader) Process(ctx context.Context, content *Content) (*Content, error) {
 	// Post Process the content through each processor in sequence
 	for _, p := range w.processors {
 		if err := p.Process(ctx, content); err != nil {
@@ -93,6 +96,16 @@ func (w *Reader) Read(ctx context.Context, url string) (*Content, error) {
 	}
 
 	return content, nil
+}
+
+// Read fetches content from the URL and processes it through all processors in sequence
+func (w *Reader) Read(ctx context.Context, url string) (*Content, error) {
+	fetchedContent, err := w.Fetch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+
+	return w.Process(ctx, fetchedContent)
 }
 
 func (w *Reader) preProcess(content *FetchedContent) error {
