@@ -125,14 +125,14 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 			setIsLoading(true);
 			const expiresAt = new Date();
 			expiresAt.setDate(expiresAt.getDate() + 7); // Share for 7 days
-			await shareContent(bookmark.id, {
+			const sharedContent = await shareContent(bookmark.id, {
 				expires_at: expiresAt.toISOString(),
 			});
 			toast({
 				title: "Success",
 				description: "Article shared successfully",
 			});
-			handleCopyLink();
+			await handleCopyLink(sharedContent.id);
 		} catch (error) {
 			toast({
 				title: "Error",
@@ -163,10 +163,9 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 		}
 	};
 
-	const handleCopyLink = async () => {
+	const handleCopyLink = async (id?: string) => {
 		try {
-			setIsLoading(true);
-			const shareUrl = getShareUrl(bookmark.metadata?.share?.id);
+			const shareUrl = getShareUrl(id || bookmark.metadata?.share?.id);
 			if (shareUrl) {
 				await navigator.clipboard.writeText(shareUrl);
 				toast({
@@ -180,8 +179,6 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 				description: "Failed to copy share link",
 				variant: "destructive",
 			});
-		} finally {
-			setIsLoading(false);
 		}
 	};
 
@@ -240,9 +237,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 								onUnshare={handleUnshare}
 								isLoading={isLoading}
 								shareStatus={shareStatus}
-								copyLink={
-									bookmark.metadata?.share?.id ? handleCopyLink : undefined
-								}
+								copyLink={handleCopyLink}
 								shareExpireTime={shareExpireTime}
 								onUpdateExpiration={handleUpdateExpiration}
 							/>

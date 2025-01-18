@@ -47,7 +47,7 @@ interface ArticleActionsProps {
 		isShared: boolean;
 		isExpired: boolean;
 	};
-	copyLink?: () => Promise<void>;
+	copyLink?: (id?: string) => Promise<void>;
 	shareExpireTime?: Date;
 	onUpdateExpiration: (date: Date) => Promise<void>;
 }
