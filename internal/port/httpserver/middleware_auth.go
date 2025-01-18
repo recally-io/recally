@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"fmt"
+	"net/http"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 
@@ -13,6 +14,7 @@ func authUserMiddleware() echo.MiddlewareFunc {
 	return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
 		KeyLookup: "cookie:token,header:Authorization",
 		Validator: authValidation,
+		ErrorHandler: authErrorHandler,
 	})
 }
 
@@ -20,6 +22,7 @@ func authAdminMiddleware() echo.MiddlewareFunc {
 	return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
 		KeyLookup: "cookie:token,header:Authorization,header:X-Api-Key",
 		Validator: authValidation,
+		ErrorHandler: authErrorHandler,
 	})
 }
 
@@ -51,4 +54,9 @@ func authValidation(key string, c echo.Context) (bool, error) {
 		return true, nil
 	}
 	return false, fmt.Errorf("invalid key: %w", err)
+}
+
+
+func authErrorHandler(err error, c echo.Context) error {
+	return ErrorResponse(c, http.StatusUnauthorized, err)
 }
