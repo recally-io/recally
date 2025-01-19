@@ -21,7 +21,7 @@ export interface ApiKey {
 	id: string;
 	name: string;
 	prefix: string;
-	key?: string;
+	hash: string;
 	scopes: string[];
 	expires_at: number;
 	created_at: number;
