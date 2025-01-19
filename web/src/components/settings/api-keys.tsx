@@ -28,6 +28,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { CreateApiKeyInput } from "@/lib/apis/auth";
 import { useApiKeys, useApiKeysMutations } from "@/lib/apis/auth";
+import { Check, Copy, Eye, EyeClosed, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export function ApiKeysSettings() {
@@ -40,6 +41,10 @@ export function ApiKeysSettings() {
 		return date;
 	});
 	const [open, setOpen] = useState(false);
+	const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+	const [newApiKey, setNewApiKey] = useState<string>("");
+	const [showApiKey, setShowApiKey] = useState(false);
+	const [copied, setCopied] = useState(false);
 	const { toast } = useToast();
 	const { createApiKey, deleteApiKey } = useApiKeysMutations();
 	const { keys } = useApiKeys();
@@ -62,16 +67,13 @@ export function ApiKeysSettings() {
 				expires_at: neverExpires ? new Date("9999-12-31") : expiresAt,
 			};
 			const newKey = await createApiKey(input);
-			toast({
-				description: "API key created successfully!",
-				duration: 2000,
-			});
+			setNewApiKey(newKey.hash);
+			setOpen(false);
+			setShowSuccessDialog(true);
 			setName("");
 			setPrefix("");
 			setExpiresAt(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000));
 			setNeverExpires(false);
-			setOpen(false);
-			return newKey;
 		} catch (error) {
 			toast({
 				variant: "destructive",
@@ -100,6 +102,24 @@ export function ApiKeysSettings() {
 	const handleDateSelect = (date: Date | undefined) => {
 		if (date) {
 			setExpiresAt(date);
+		}
+	};
+
+	const copyToClipboard = async (text: string) => {
+		try {
+			await navigator.clipboard.writeText(text);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+			toast({
+				description: "API key copied to clipboard",
+				duration: 2000,
+			});
+		} catch (err) {
+			toast({
+				variant: "destructive",
+				description: "Failed to copy API key",
+				duration: 2000,
+			});
 		}
 	};
 
@@ -216,13 +236,20 @@ export function ApiKeysSettings() {
 												: "Active"}
 										</Badge>
 									</TableCell>
-									<TableCell className="text-right">
+									<TableCell className="text-right flex items-center space-x-2">
+										<Button
+											variant="default"
+											size="sm"
+											onClick={() => copyToClipboard(key.hash)}
+										>
+											<Copy />
+										</Button>
 										<Button
 											variant="destructive"
 											size="sm"
 											onClick={() => handleDelete(key.id)}
 										>
-											Delete
+											<Trash2 />
 										</Button>
 									</TableCell>
 								</TableRow>
@@ -231,6 +258,67 @@ export function ApiKeysSettings() {
 					</Table>
 				</CardContent>
 			</Card>
+
+			<Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>API Key Created</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<div className="grid gap-2">
+							<Label>Your API Key</Label>
+							<div className="flex items-center space-x-2">
+								<Input
+									value={newApiKey}
+									type={showApiKey ? "text" : "password"}
+									className="font-mono"
+								/>
+								<Button
+									size="icon"
+									variant="outline"
+									onClick={() => {
+										setShowApiKey(!showApiKey);
+									}}
+								>
+									{showApiKey ? (
+										<EyeClosed className="h-4 w-4" />
+									) : (
+										<Eye className="h-4 w-4" />
+									)}
+								</Button>
+								<Button
+									size="icon"
+									variant="outline"
+									onClick={() => {
+										copyToClipboard(newApiKey);
+										setCopied(true);
+									}}
+								>
+									{copied ? (
+										<Check className="h-4 w-4" />
+									) : (
+										<Copy className="h-4 w-4" />
+									)}
+								</Button>
+							</div>
+							{/* <p className="text-sm text-muted-foreground">
+								Make sure to copy your API key now. You won't be able to see it
+								again!
+							</p> */}
+						</div>
+						<div className="flex justify-end">
+							<Button
+								onClick={() => {
+									setShowSuccessDialog(false);
+									setCopied(false);
+								}}
+							>
+								Done
+							</Button>
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
