@@ -10,9 +10,11 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+const authLookupKey = "cookie:token,header:Authorization,header:X-Api-Key"
+
 func authUserMiddleware() echo.MiddlewareFunc {
 	return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		KeyLookup:    "cookie:token,header:Authorization",
+		KeyLookup:    authLookupKey,
 		Validator:    authValidation,
 		ErrorHandler: authErrorHandler,
 	})
@@ -20,7 +22,7 @@ func authUserMiddleware() echo.MiddlewareFunc {
 
 func authAdminMiddleware() echo.MiddlewareFunc {
 	return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		KeyLookup:    "cookie:token,header:Authorization,header:X-Api-Key",
+		KeyLookup:    authLookupKey,
 		Validator:    authValidation,
 		ErrorHandler: authErrorHandler,
 	})
