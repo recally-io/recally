@@ -190,8 +190,13 @@ func (h *bookmarksHandler) listDomains(c echo.Context) error {
 }
 
 type createBookmarkRequest struct {
-	URL      string             `json:"url" validate:"required,url"`
-	Metadata bookmarks.Metadata `json:"metadata"`
+	URL         string             `json:"url" validate:"required,url"`
+	Title       string             `json:"title"`
+	Description string             `json:"description,omitempty"`
+	Tags        []string           `json:"tags,omitempty"`
+	Content     string             `json:"content,omitempty"`
+	HTML        string             `json:"html,omitempty"`
+	Metadata    bookmarks.Metadata `json:"metadata"`
 }
 
 // createBookmark handles POST /bookmarks
@@ -222,8 +227,12 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	bookmark := &bookmarks.ContentDTO{
 		UserID:   user.ID,
 		URL:      req.URL,
-		Metadata: req.Metadata,
 		Type:     bookmarks.ContentTypeBookmark,
+		Title:    req.Title,
+		Tags:     req.Tags,
+		Content:  req.Content,
+		HTML:     req.HTML,
+		Metadata: req.Metadata,
 	}
 
 	created, err := h.service.Create(ctx, tx, bookmark)

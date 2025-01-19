@@ -278,7 +278,9 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmark by id '%s': %w", id.String(), err)
 	}
-
+	if dto.Content != "" && !opts.Force {
+		return dto, nil
+	}
 	content, err := s.FetchContentWithCache(ctx, dto.URL, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
