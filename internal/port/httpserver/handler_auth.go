@@ -91,16 +91,16 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-// @Summary Login
-// @Description Authenticate a user with email and password
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body loginRequest true "User login details"
-// @Success 200 {object} JSONResult{data=userResponse} "User logged in successfully"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} JSONResult{data=nil} "Internal server error"
-// @Router /auth/login [post]
+// @Summary		Login
+// @Description	Authenticate a user with email and password
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			request	body		loginRequest					true	"User login details"
+// @Success		200		{object}	JSONResult{data=userResponse}	"User logged in successfully"
+// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
+// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
+// @Router			/auth/login [post]
 func (h *authHandler) login(c echo.Context) error {
 	req := new(loginRequest)
 	if err := c.Bind(req); err != nil {
@@ -143,16 +143,16 @@ type userResponse struct {
 	Settings auth.UserSettings `json:"settings"`
 }
 
-// @Summary Register a new user
-// @Description Register a new user with the provided username, email, and password
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body registerRequest true "User registration details"
-// @Success 200 {object} JSONResult{data=userResponse} "User registered successfully"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} JSONResult{data=nil} "Internal server error"
-// @Router /auth/register [post]
+// @Summary		Register a new user
+// @Description	Register a new user with the provided username, email, and password
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			request	body		registerRequest					true	"User registration details"
+// @Success		200		{object}	JSONResult{data=userResponse}	"User registered successfully"
+// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
+// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
+// @Router			/auth/register [post]
 func (h *authHandler) register(c echo.Context) error {
 	req := new(registerRequest)
 	if err := c.Bind(req); err != nil {
@@ -197,15 +197,15 @@ func (h *authHandler) setCookieJwtToken(c echo.Context, token string) {
 	c.SetCookie(cookie)
 }
 
-// @Summary Validate JWT token
-// @Description Validate the JWT token and return the user ID
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Success 200 {object} JSONResult{data=userResponse} "
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal
-// @Router /auth/validate-jwt [get]
+// @Summary		Validate JWT token
+// @Description	Validate the JWT token and return the user ID
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	JSONResult{data=userResponse}	"
+// @Failure		401	{object}	JSONResult{data=nil}			"Unauthorized"
+// @Failure		500	{object}	JSONResult{data=nil}			"Internal
+// @Router			/auth/validate-jwt [get]
 func (h *authHandler) validateJwtToken(c echo.Context) error {
 	ctx := c.Request().Context()
 	tx, err := loadTx(ctx)
@@ -232,15 +232,15 @@ func (h *authHandler) validateJwtToken(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
 
-// @Summary User logout
-// @Description Clear user session by removing JWT token
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Success 200 {object} JSONResult{data=nil} "Successfully logged out"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal server error"
-// @Router /auth/logout [post]
+// @Summary		User logout
+// @Description	Clear user session by removing JWT token
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	JSONResult{data=nil}	"Successfully logged out"
+// @Failure		401	{object}	JSONResult{data=nil}	"Unauthorized"
+// @Failure		500	{object}	JSONResult{data=nil}	"Internal server error"
+// @Router			/auth/logout [post]
 func (h *authHandler) logout(c echo.Context) error {
 	// Remove the token cookie by setting its expiry to a past time
 	cookie := &http.Cookie{

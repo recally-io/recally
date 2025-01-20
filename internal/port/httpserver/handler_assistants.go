@@ -82,16 +82,16 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 // If there is an error while fetching the assistants, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the list of assistants.
 //
-// @Summary List Assistants
-// @Description Lists the assistants for a user
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @success 200 {object} JSONResult{data=[]assistants.AssistantDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants [get]
+//	@Summary		List Assistants
+//	@Description	Lists the assistants for a user
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@success		200	{object}	JSONResult{data=[]assistants.AssistantDTO}	"Success"
+//	@Failure		400	{object}	JSONResult{data=nil}						"Bad Request"
+//	@Failure		401	{object}	JSONResult{data=nil}						"Unauthorized"
+//	@Failure		500	{object}	JSONResult{data=nil}						"Internal Server Error"
+//	@Router			/assistants [get]
 func (h *assistantHandler) listAssistants(c echo.Context) error {
 	ctx := c.Request().Context()
 	tx, user, err := initContext(ctx)
@@ -115,17 +115,17 @@ type getAssistantRequest struct {
 // If there is an error while fetching the assistant, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the assistant.
 
-// @Summary Get Assistant
-// @Description Retrieves an assistant by ID
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Success 200 {object} JSONResult{data=assistants.AssistantDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal
-// @Router /assistants/{assistant-id} [get]
+// @Summary		Get Assistant
+// @Description	Retrieves an assistant by ID
+// @Tags			Assistants
+// @Accept			json
+// @Produce		json
+// @Param			assistant-id	path		string										true	"Assistant ID"
+// @Success		200				{object}	JSONResult{data=assistants.AssistantDTO}	"Success"
+// @Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
+// @Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
+// @Failure		500				{object}	JSONResult{data=nil}						"Internal
+// @Router			/assistants/{assistant-id} [get]
 func (h *assistantHandler) getAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getAssistantRequest)
@@ -159,18 +159,18 @@ type createAssistantRequest struct {
 // If there is an error while creating the assistant, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 201 (Created) and the created assistant.
 //
-// @Summary Create Assistant
-// @Description Creates a new assistant
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant body createAssistantRequest true "Assistant"
-// @Success 201 {object} JSONResult{data=assistants.AssistantDTO} "Created"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants [post]
+//	@Summary		Create Assistant
+//	@Description	Creates a new assistant
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant	body		createAssistantRequest						true	"Assistant"
+//	@Success		201			{object}	JSONResult{data=assistants.AssistantDTO}	"Created"
+//	@Failure		400			{object}	JSONResult{data=nil}						"Bad Request"
+//	@Failure		401			{object}	JSONResult{data=nil}						"Unauthorized"
+//	@Failure		401			{object}	JSONResult{data=nil}						"Unauthorized"
+//	@Failure		500			{object}	JSONResult{data=nil}						"Internal Server Error"
+//	@Router			/assistants [post]
 func (h *assistantHandler) createAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(createAssistantRequest)
@@ -218,18 +218,18 @@ type updateAssistantRequest struct {
 // If there is an error while fetching the assistant, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it updates the assistant with the new values and returns a JSON response with status code 200 (OK) and the updated assistant.
 //
-// @Summary Update Assistant
-// @Description Updates an existing assistant
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param assistant body updateAssistantRequest true "Assistant"
-// @Success 200 {object} JSONResult{data=assistants.AssistantDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id} [put]
+//	@Summary		Update Assistant
+//	@Description	Updates an existing assistant
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string										true	"Assistant ID"
+//	@Param			assistant		body		updateAssistantRequest						true	"Assistant"
+//	@Success		200				{object}	JSONResult{data=assistants.AssistantDTO}	"Success"
+//	@Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}						"Internal Server Error"
+//	@Router			/assistants/{assistant-id} [put]
 func (h *assistantHandler) updateAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -272,17 +272,18 @@ func (h *assistantHandler) updateAssistant(c echo.Context) error {
 }
 
 // deleteAssistant is a handler function that deletes an existing assistant.
-// @Summary Delete Assistant
-// @Description Deletes an existing assistant
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Success 204 {object} JSONResult{data=nil} "No Content"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id} [delete]
+//
+//	@Summary		Delete Assistant
+//	@Description	Deletes an existing assistant
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string					true	"Assistant ID"
+//	@Success		204				{object}	JSONResult{data=nil}	"No Content"
+//	@Failure		400				{object}	JSONResult{data=nil}	"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}	"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}	"Internal Server Error"
+//	@Router			/assistants/{assistant-id} [delete]
 func (h *assistantHandler) deleteAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
 	assistantId := c.Param("assistant-id")
@@ -305,17 +306,17 @@ func (h *assistantHandler) deleteAssistant(c echo.Context) error {
 	return JsonResponse(c, http.StatusNoContent, nil)
 }
 
-// @Summary List Attachments by Assistant
-// @Description Lists attachments for a specific assistant
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Success 200 {object} JSONResult{data=[]assistants.AttachmentDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/attachments [get]
+// @Summary		List Attachments by Assistant
+// @Description	Lists attachments for a specific assistant
+// @Tags			Assistants
+// @Accept			json
+// @Produce		json
+// @Param			assistant-id	path		string										true	"Assistant ID"
+// @Success		200				{object}	JSONResult{data=[]assistants.AttachmentDTO}	"Success"
+// @Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
+// @Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
+// @Failure		500				{object}	JSONResult{data=nil}						"Internal Server Error"
+// @Router			/assistants/{assistant-id}/attachments [get]
 func (h *assistantHandler) listAttachmentsByAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getAssistantRequest)
@@ -345,17 +346,18 @@ type uploadAssistantAttachmentRequest struct {
 }
 
 // uploadAssistantAttachment is a handler function that uploads an attachment to an assistant.
-// @Summary Upload Assistant Attachment
-// @Description Uploads an attachment to an assistant
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Success 201 {object} JSONResult{data=assistants.AttachmentDTO} "Created"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/attachments [post]
+//
+//	@Summary		Upload Assistant Attachment
+//	@Description	Uploads an attachment to an assistant
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string										true	"Assistant ID"
+//	@Success		201				{object}	JSONResult{data=assistants.AttachmentDTO}	"Created"
+//	@Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}						"Internal Server Error"
+//	@Router			/assistants/{assistant-id}/attachments [post]
 func (h *assistantHandler) uploadAssistantAttachment(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -385,18 +387,18 @@ func (h *assistantHandler) uploadAssistantAttachment(c echo.Context) error {
 	return JsonResponse(c, http.StatusCreated, attachment)
 }
 
-// @Summary List Attachments by Thread
-// @Description Lists attachments for a specific thread
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @Success 200 {object} JSONResult{data=[]assistants.AttachmentDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id}/attachments [get]
+// @Summary		List Attachments by Thread
+// @Description	Lists attachments for a specific thread
+// @Tags			Assistants
+// @Accept			json
+// @Produce		json
+// @Param			assistant-id	path		string										true	"Assistant ID"
+// @Param			thread-id		path		string										true	"Thread ID"
+// @Success		200				{object}	JSONResult{data=[]assistants.AttachmentDTO}	"Success"
+// @Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
+// @Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
+// @Failure		500				{object}	JSONResult{data=nil}						"Internal Server Error"
+// @Router			/assistants/{assistant-id}/threads/{thread-id}/attachments [get]
 func (h *assistantHandler) listAttachmentsByThread(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getThreadRequest)
@@ -426,18 +428,19 @@ type uploadThreadAttachmentRequest struct {
 }
 
 // uploadThreadAttachment is a handler function that uploads an attachment to a thread.
-// @Summary Upload Thread Attachment
-// @Description Uploads an attachment to a thread
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @Success 201 {object} JSONResult{data=assistants.AttachmentDTO} "Created"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id}/attachments [post]
+//
+//	@Summary		Upload Thread Attachment
+//	@Description	Uploads an attachment to a thread
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string										true	"Assistant ID"
+//	@Param			thread-id		path		string										true	"Thread ID"
+//	@Success		201				{object}	JSONResult{data=assistants.AttachmentDTO}	"Created"
+//	@Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}						"Internal Server Error"
+//	@Router			/assistants/{assistant-id}/threads/{thread-id}/attachments [post]
 func (h *assistantHandler) uploadThreadAttachment(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -468,15 +471,15 @@ func (h *assistantHandler) uploadThreadAttachment(c echo.Context) error {
 	return JsonResponse(c, http.StatusCreated, attachment)
 }
 
-// @Summary List Models
-// @Description Lists available language models
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Success 200 {object} JSONResult{data=[]llms.Model} "Success"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/models [get]
+// @Summary		List Models
+// @Description	Lists available language models
+// @Tags			Assistants
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	JSONResult{data=[]llms.Model}	"Success"
+// @Failure		401	{object}	JSONResult{data=nil}			"Unauthorized"
+// @Failure		500	{object}	JSONResult{data=nil}			"Internal Server Error"
+// @Router			/assistants/models [get]
 func (h *assistantHandler) listModels(c echo.Context) error {
 	models, err := h.service.ListModels(c.Request().Context())
 	if err != nil {
