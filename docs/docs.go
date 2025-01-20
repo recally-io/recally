@@ -5278,8 +5278,26 @@ const docTemplate = `{
                 "url"
             ],
             "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "html": {
+                    "type": "string"
+                },
                 "metadata": {
                     "$ref": "#/definitions/bookmarks.Metadata"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
                 },
                 "url": {
                     "type": "string"

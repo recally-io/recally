@@ -18,8 +18,12 @@ import { Settings2 } from "lucide-react";
 import ThemeToggle from "../theme-toggle";
 
 export function SidebarComponent({
-	...props
-}: React.ComponentProps<typeof Sidebar>) {
+	children,
+	props,
+}: {
+	children?: React.ReactElement;
+	props?: React.ComponentProps<typeof Sidebar>;
+}) {
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
@@ -46,7 +50,7 @@ export function SidebarComponent({
 				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
-				{/* <BookmarksSidebarContent /> */}
+				{children}
 				<SidebarGroup className="mt-auto">
 					<SidebarMenu>
 						<SidebarMenuItem key="preferences">

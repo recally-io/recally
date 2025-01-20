@@ -1,37 +1,52 @@
 import { SidebarComponent } from "@/components/sidebar/sidebar";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import {
+	SidebarGroup,
+	SidebarInset,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarProvider,
+	SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
 import { Link } from "@tanstack/react-router";
-import { Bot, Key, Menu, User } from "lucide-react";
+import { Bot, Key, User } from "lucide-react";
 import ProtectedRoute from "../protected-route";
 
-function SidebarNav() {
+const items = [
+	{
+		title: "Profile",
+		url: ROUTES.SETTINGS_PROFILE,
+		icon: User,
+	},
+	{
+		title: "API Keys",
+		url: ROUTES.SETTINGS_API_KEYS,
+		icon: Key,
+	},
+	{
+		title: "AI",
+		url: ROUTES.SETTINGS_AI,
+		icon: Bot,
+	},
+];
+
+function sidebarNavContent() {
 	return (
-		<nav className="space-y-2 w-48">
-			<Link
-				to={ROUTES.SETTINGS_PROFILE}
-				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
-			>
-				<User className="h-4 w-4" />
-				Profile
-			</Link>
-			<Link
-				to={ROUTES.SETTINGS_API_KEYS}
-				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
-			>
-				<Key className="h-4 w-4" />
-				API Keys
-			</Link>
-			<Link
-				to={ROUTES.SETTINGS_AI}
-				className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
-			>
-				<Bot className="h-4 w-4" />
-				AI
-			</Link>
-		</nav>
+		<SidebarGroup>
+			<SidebarMenu>
+				{items.map((item) => (
+					<SidebarMenuItem key={item.title}>
+						<SidebarMenuButton tooltip={item.title}>
+							<Link to={item.url} className="flex items-center gap-2">
+								{item.icon && <item.icon />}
+								<span>{item.title}</span>
+							</Link>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				))}
+			</SidebarMenu>
+		</SidebarGroup>
 	);
 }
 
@@ -41,27 +56,18 @@ export function SettingsPageComponenrt({
 	return (
 		<ProtectedRoute>
 			<SidebarProvider defaultOpen={false}>
-				<SidebarComponent />
-				<div className="container mx-auto py-10 px-4">
-					<h1 className="text-2xl font-semibold mb-8">Preferences</h1>
-
-					<div className="flex gap-4">
-						<div className="hidden md:block">
-							<SidebarNav />
-						</div>
-						<Sheet>
-							<SheetTrigger asChild>
-								<Button variant="outline" size="icon" className="md:hidden">
-									<Menu className="h-4 w-4" />
-								</Button>
-							</SheetTrigger>
-							<SheetContent side="left" className="w-64">
-								<SidebarNav />
-							</SheetContent>
-						</Sheet>
-						<div className="w-full">{children}</div>
+				<SidebarComponent>{sidebarNavContent()}</SidebarComponent>
+				<SidebarInset>
+					<div className="flex flex-col container mx-auto h-full">
+						<header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+							<div className="flex items-center gap-1">
+								<SidebarTrigger className="-ml-1" />
+								<h1 className="text-2xl font-semibold">Preferences</h1>
+							</div>
+						</header>
+						<div className="w-full p-2">{children}</div>
 					</div>
-				</div>
+				</SidebarInset>
 			</SidebarProvider>
 		</ProtectedRoute>
 	);

@@ -386,8 +386,20 @@ definitions:
     type: object
   httpserver.createBookmarkRequest:
     properties:
+      content:
+        type: string
+      description:
+        type: string
+      html:
+        type: string
       metadata:
         $ref: '#/definitions/bookmarks.Metadata'
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
       url:
         type: string
     required:
