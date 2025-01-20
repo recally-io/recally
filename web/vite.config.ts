@@ -75,6 +75,14 @@ export default defineConfig({
 				target: "http://localhost:1323",
 				changeOrigin: true,
 			},
+			"/docs/": {
+				target: "http://localhost:1323",
+				changeOrigin: true,
+			},
+			"/swagger/": {
+				target: "http://localhost:1323",
+				changeOrigin: true,
+			},
 		},
 	},
 });

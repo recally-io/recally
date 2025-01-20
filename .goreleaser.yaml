@@ -17,7 +17,7 @@ before:
     - go generate ./...
     - go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
     - sqlc generate
-    - swag init -g internal/port/httpserver/router.go
+    - swag init -g internal/port/httpserver/router.go -o docs/swagger
 
 builds:
   - env:
@@ -31,6 +31,9 @@ builds:
     hooks:
       pre:
         - cmd: sh -c 'cd web && bun install && bun run build'
+          env:
+            - NODE_ENV=production
+        - cmd: sh -c 'cd docs && bun install && bun run docs:build'
           env:
             - NODE_ENV=production
 

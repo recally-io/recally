@@ -32,11 +32,15 @@ generate-spec:
 	# @mkdir -p web/src/sdk && rm -rf web/src/sdk
 	# @openapi-generator generate --skip-validate-spec -i docs/swagger/swagger.yaml -g typescript-fetch -o web/src/sdk
 
-build: build-ui build-go
+build: build-ui build-docs build-go
 
 build-go: generate
 	@echo "Building go..."
 	@go build -o bin/app main.go
+
+build-docs: 
+	@echo "Building docs..."
+	@cd docs && bun run docs:build
 
 build-ui:
 	@echo "Building UI..."

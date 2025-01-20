@@ -1,6 +1,7 @@
 # Use the official Bun image
 # See all versions at https://hub.docker.com/r/oven/bun/tags
-FROM oven/bun:1 AS base
+# Build UI
+FROM oven/bun:1 AS ui-base
 WORKDIR /usr/src/app
 
 # Install dependencies into temp directory
@@ -18,6 +19,26 @@ COPY web .
 ENV NODE_ENV=production
 RUN bun test && bun run build
 
+# Buld docs using Vitepress
+FROM oven/bun:1 AS docs-base
+WORKDIR /usr/src/app
+
+# Install dependencies into temp directory
+# This will cache them and speed up future builds
+COPY docs/package.json docs/bun.lockb /temp/
+RUN cd /temp && bun install --frozen-lockfile && \
+    mkdir -p /usr/src/app/node_modules && \
+    cp -r /temp/node_modules /usr/src/app/ && \
+    rm -rf /temp
+
+# Then copy all (non-ignored) project files into the image
+COPY docs .
+
+# Run tests and build
+ENV NODE_ENV=production
+RUN bun run docs:build
+
+
 # Build Go binary
 FROM golang:1.23-alpine AS build
 WORKDIR /go/src/app
@@ -31,11 +52,12 @@ RUN go mod download
 ENV CGO_ENABLED=0 GOOS=linux
 
 COPY . .
-COPY --from=base /usr/src/app/dist web/dist
+COPY --from=ui-base /usr/src/app/dist web/dist
+COPY --from=docs-base /usr/src/app/.vitepress/dist docs/.vitepress/dist
 RUN go generate ./... && \
     go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/ && \
     sqlc generate && \
-    swag init -g internal/port/httpserver/router.go && \
+    swag init -g internal/port/httpserver/router.go -o docs/swagger && \
     go build -ldflags="-s -w" -o /go/bin/app main.go
 
 # Final stage
