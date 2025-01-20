@@ -40,17 +40,17 @@ type updateUserInfoRequest struct {
 	Phone    string    `json:"phone"`
 }
 
-// @Summary Update user info
-// @Description Update user's username, email, and phone
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param request body updateUserInfoRequest true "User info update details"
-// @Success 200 {object} JSONResult{data=userResponse} "User info updated successfully"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} JSONResult{data=nil} "Internal server error"
-// @Router /auth/user/info [put]
+// @Summary		Update user info
+// @Description	Update user's username, email, and phone
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string							true	"User ID"
+// @Param			request	body		updateUserInfoRequest			true	"User info update details"
+// @Success		200		{object}	JSONResult{data=userResponse}	"User info updated successfully"
+// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
+// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
+// @Router			/auth/user/info [put]
 func (h *usersHandler) updateUserInfo(c echo.Context) error {
 	req := new(updateUserInfoRequest)
 	if err := c.Bind(req); err != nil {
@@ -78,17 +78,17 @@ type updateUserSettingsRequest struct {
 	Settings auth.UserSettings `json:"settings"`
 }
 
-// @Summary Update user settings
-// @Description Update user's settings
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param request body updateUserSettingsRequest true "User settings update"
-// @Success 200 {object} JSONResult{data=userResponse} "User settings updated successfully"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} JSONResult{data=nil} "Internal server error"
-// @Router /auth/user/settings [put]
+// @Summary		Update user settings
+// @Description	Update user's settings
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string							true	"User ID"
+// @Param			request	body		updateUserSettingsRequest		true	"User settings update"
+// @Success		200		{object}	JSONResult{data=userResponse}	"User settings updated successfully"
+// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
+// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
+// @Router			/auth/user/settings [put]
 func (h *usersHandler) updateUserSettings(c echo.Context) error {
 	req := new(updateUserSettingsRequest)
 	if err := c.Bind(req); err != nil {
@@ -118,17 +118,17 @@ type updateUserPasswordRequest struct {
 	Password        string    `json:"password"`
 }
 
-// @Summary Update user password
-// @Description Update user's password
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param request body updateUserPasswordRequest true "User password update"
-// @Success 200 {object} JSONResult{data=userResponse} "User password updated successfully"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 500 {object} JSONResult{data=nil} "Internal server error"
-// @Router /auth/user/password [put]
+// @Summary		Update user password
+// @Description	Update user's password
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string							true	"User ID"
+// @Param			request	body		updateUserPasswordRequest		true	"User password update"
+// @Success		200		{object}	JSONResult{data=userResponse}	"User password updated successfully"
+// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
+// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
+// @Router			/auth/user/password [put]
 func (h *usersHandler) updateUserPassword(c echo.Context) error {
 	req := new(updateUserPasswordRequest)
 	if err := c.Bind(req); err != nil {

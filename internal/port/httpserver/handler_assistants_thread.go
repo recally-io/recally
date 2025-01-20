@@ -20,17 +20,17 @@ import (
 // If there is an error while fetching the threads, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the list of threads.
 //
-// @Summary List Threads
-// @Description Lists the threads for an assistant
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @success 200 {object} JSONResult{data=[]assistants.ThreadDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads [get]
+//	@Summary		List Threads
+//	@Description	Lists the threads for an assistant
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string									true	"Assistant ID"
+//	@success		200				{object}	JSONResult{data=[]assistants.ThreadDTO}	"Success"
+//	@Failure		400				{object}	JSONResult{data=nil}					"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}					"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}					"Internal Server Error"
+//	@Router			/assistants/{assistant-id}/threads [get]
 func (h *assistantHandler) listThreads(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getAssistantRequest)
@@ -66,18 +66,18 @@ type createThreadRequest struct {
 // If there is an error while creating the thread, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 201 (Created) and the created thread.
 //
-// @Summary Create Thread
-// @Description Creates a new thread under an assistant
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread body assistants.ThreadDTO true "Thread"
-// @Success 201 {object} JSONResult{data=assistants.ThreadDTO} "Created"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads [post]
+//	@Summary		Create Thread
+//	@Description	Creates a new thread under an assistant
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string									true	"Assistant ID"
+//	@Param			thread			body		assistants.ThreadDTO					true	"Thread"
+//	@Success		201				{object}	JSONResult{data=assistants.ThreadDTO}	"Created"
+//	@Failure		400				{object}	JSONResult{data=nil}					"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}					"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}					"Internal Server Error"
+//	@Router			/assistants/{assistant-id}/threads [post]
 func (h *assistantHandler) createThread(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(createThreadRequest)
@@ -129,19 +129,20 @@ type updateThreadRequest struct {
 // If the assistant ID or thread ID is not found in the parameters, it returns an error with status code 400 (Bad Request).
 // If there is an error while updating the thread, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the updated thread.
-// @Summary Update Thread
-// @Description Updates an existing thread under an assistant
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @Param thread body assistants.ThreadDTO true "Thread"
-// @Success 200 {object} JSONResult{data=assistants.ThreadDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id} [put]
+//
+//	@Summary		Update Thread
+//	@Description	Updates an existing thread under an assistant
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string									true	"Assistant ID"
+//	@Param			thread-id		path		string									true	"Thread ID"
+//	@Param			thread			body		assistants.ThreadDTO					true	"Thread"
+//	@Success		200				{object}	JSONResult{data=assistants.ThreadDTO}	"Success"
+//	@Failure		400				{object}	JSONResult{data=nil}					"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}					"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}					"Internal Server Error"
+//	@Router			/assistants/{assistant-id}/threads/{thread-id} [put]
 func (h *assistantHandler) updateThread(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(updateThreadRequest)
@@ -193,17 +194,17 @@ type getThreadRequest struct {
 // If there is an error while fetching the thread, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the thread.
 //
-// @Summary Get Thread
-// @Description Retrieves a thread by ID
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param thread-id path string true "Thread ID"
-// @success 200 {object} JSONResult{data=assistants.ThreadDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal
-// @Router /assistants/{assistant-id}/threads/{thread-id} [get]
+//	@Summary		Get Thread
+//	@Description	Retrieves a thread by ID
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			thread-id	path		string									true	"Thread ID"
+//	@success		200			{object}	JSONResult{data=assistants.ThreadDTO}	"Success"
+//	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
+//	@Failure		401			{object}	JSONResult{data=nil}					"Unauthorized"
+//	@Failure		500			{object}	JSONResult{data=nil}					"Internal
+//	@Router			/assistants/{assistant-id}/threads/{thread-id} [get]
 func (h *assistantHandler) getThread(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getThreadRequest)
@@ -234,18 +235,18 @@ func (h *assistantHandler) getThread(c echo.Context) error {
 // If there is an error while deleting the thread, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 204 (No Content).
 
-// @Summary Delete Thread
-// @Description Deletes a thread by ID
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @success 204 {object} JSONResult{data=nil} "No Content"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id} [delete]
+// @Summary		Delete Thread
+// @Description	Deletes a thread by ID
+// @Tags			Assistants
+// @Accept			json
+// @Produce		json
+// @Param			assistant-id	path		string					true	"Assistant ID"
+// @Param			thread-id		path		string					true	"Thread ID"
+// @success		204				{object}	JSONResult{data=nil}	"No Content"
+// @Failure		400				{object}	JSONResult{data=nil}	"Bad Request"
+// @Failure		401				{object}	JSONResult{data=nil}	"Unauthorized"
+// @Failure		500				{object}	JSONResult{data=nil}	"Internal Server Error"
+// @Router			/assistants/{assistant-id}/threads/{thread-id} [delete]
 func (h *assistantHandler) deleteThread(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getThreadRequest)
@@ -269,18 +270,18 @@ func (h *assistantHandler) deleteThread(c echo.Context) error {
 // If there is an error while generating the title, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the generated title.
 
-// @Summary Generate Thread Title
-// @Description Generates a title for a thread based on the conversation
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @success 200 {object} JSONResult{data=string} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id}/generate-title [post]
+// @Summary		Generate Thread Title
+// @Description	Generates a title for a thread based on the conversation
+// @Tags			Assistants
+// @Accept			json
+// @Produce		json
+// @Param			assistant-id	path		string					true	"Assistant ID"
+// @Param			thread-id		path		string					true	"Thread ID"
+// @success		200				{object}	JSONResult{data=string}	"Success"
+// @Failure		400				{object}	JSONResult{data=nil}	"Bad Request"
+// @Failure		401				{object}	JSONResult{data=nil}	"Unauthorized"
+// @Failure		500				{object}	JSONResult{data=nil}	"Internal Server Error"
+// @Router			/assistants/{assistant-id}/threads/{thread-id}/generate-title [post]
 func (h *assistantHandler) generateThreadTitle(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getThreadRequest)
@@ -306,18 +307,18 @@ func (h *assistantHandler) generateThreadTitle(c echo.Context) error {
 // If there is an error while fetching the messages, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the list of messages.
 //
-// @Summary List Thread Messages
-// @Description Lists the messages for a thread
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @success 200 {object} JSONResult{data=[]assistants.MessageDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id}/messages [get]
+//	@Summary		List Thread Messages
+//	@Description	Lists the messages for a thread
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string										true	"Assistant ID"
+//	@Param			thread-id		path		string										true	"Thread ID"
+//	@success		200				{object}	JSONResult{data=[]assistants.MessageDTO}	"Success"
+//	@Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}						"Internal Server Error"
+//	@Router			/assistants/{assistant-id}/threads/{thread-id}/messages [get]
 func (h *assistantHandler) listThreadMessages(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getThreadRequest)
@@ -354,19 +355,19 @@ type createThreadMessageRequest struct {
 // If there is an error while creating the message, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 201 (Created) and the created message.
 //
-// @Summary Create Thread Message
-// @Description Creates a new message in a specified thread
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @Param message body createThreadMessageRequest true "Thread Message"
-// @Success 201 {object} JSONResult{data=assistants.MessageDTO} "Created"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id}/messages [post]
+//	@Summary		Create Thread Message
+//	@Description	Creates a new message in a specified thread
+//	@Tags			Assistants
+//	@Accept			json
+//	@Produce		json
+//	@Param			assistant-id	path		string									true	"Assistant ID"
+//	@Param			thread-id		path		string									true	"Thread ID"
+//	@Param			message			body		createThreadMessageRequest				true	"Thread Message"
+//	@Success		201				{object}	JSONResult{data=assistants.MessageDTO}	"Created"
+//	@Failure		400				{object}	JSONResult{data=nil}					"Bad Request"
+//	@Failure		401				{object}	JSONResult{data=nil}					"Unauthorized"
+//	@Failure		500				{object}	JSONResult{data=nil}					"Internal Server Error"
+//	@Router			/assistants/{assistant-id}/threads/{thread-id}/messages [post]
 func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(createThreadMessageRequest)
@@ -463,19 +464,19 @@ type getThreadMessageRequest struct {
 // If there is an error while deleting the thread message, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 204 (No Content).
 
-// @Summary Delete Thread Message
-// @Description Deletes a thread message by ID
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @Param message-id path string true "Message ID"
-// @success 204 {object} JSONResult{data=nil} "No Content"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [delete]
+// @Summary		Delete Thread Message
+// @Description	Deletes a thread message by ID
+// @Tags			Assistants
+// @Accept			json
+// @Produce		json
+// @Param			assistant-id	path		string					true	"Assistant ID"
+// @Param			thread-id		path		string					true	"Thread ID"
+// @Param			message-id		path		string					true	"Message ID"
+// @success		204				{object}	JSONResult{data=nil}	"No Content"
+// @Failure		400				{object}	JSONResult{data=nil}	"Bad Request"
+// @Failure		401				{object}	JSONResult{data=nil}	"Unauthorized"
+// @Failure		500				{object}	JSONResult{data=nil}	"Internal Server Error"
+// @Router			/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [delete]
 func (h *assistantHandler) deleteThreadMessage(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getThreadMessageRequest)
@@ -511,20 +512,20 @@ type updateThreadMessageRequest struct {
 // If there is an error while updating the thread message, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the updated thread message.
 
-// @Summary Update Thread Message
-// @Description Updates a thread message by ID
-// @Tags Assistants
-// @Accept json
-// @Produce json
-// @Param assistant-id path string true "Assistant ID"
-// @Param thread-id path string true "Thread ID"
-// @Param message-id path string true "Message ID"
-// @Param message body assistants.MessageDTO true "Updated Message"
-// @Success 200 {object} JSONResult{data=assistants.MessageDTO} "Success"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [put]
+// @Summary		Update Thread Message
+// @Description	Updates a thread message by ID
+// @Tags			Assistants
+// @Accept			json
+// @Produce		json
+// @Param			assistant-id	path		string									true	"Assistant ID"
+// @Param			thread-id		path		string									true	"Thread ID"
+// @Param			message-id		path		string									true	"Message ID"
+// @Param			message			body		assistants.MessageDTO					true	"Updated Message"
+// @Success		200				{object}	JSONResult{data=assistants.MessageDTO}	"Success"
+// @Failure		400				{object}	JSONResult{data=nil}					"Bad Request"
+// @Failure		401				{object}	JSONResult{data=nil}					"Unauthorized"
+// @Failure		500				{object}	JSONResult{data=nil}					"Internal Server Error"
+// @Router			/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [put]
 func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(updateThreadMessageRequest)

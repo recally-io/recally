@@ -8,6 +8,7 @@ lint-go:
 	@echo "Linting..."
 	@go mod tidy
 	@golangci-lint run --fix ./...  --enable gofumpt
+	@swag fmt
 
 lint-ui:
 	@echo "Linting web..."

@@ -46,20 +46,20 @@ type getPresignedURLsResponse struct {
 	PublicURL    string `json:"public_url"`
 }
 
-// @Summary Get presigned URLs for file operations
-// @Description Get presigned URLs for uploading or downloading files from S3
-// @Tags files
-// @Accept json
-// @Produce json
-// @Param fileName query string true "Name of the file"
-// @Param fileType query string true "MIME type of the file"
-// @Param action query string false "Action to perform (put or get)" Enums(put, get)
-// @Param expiration query int false "Expiration time in seconds (max 604800)"
-// @Success 200 {object} JSONResult{data=getPresignedURLsResponse} "Created"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /files/presigned-urls [get]
+// @Summary		Get presigned URLs for file operations
+// @Description	Get presigned URLs for uploading or downloading files from S3
+// @Tags			files
+// @Accept			json
+// @Produce		json
+// @Param			fileName	query		string										true	"Name of the file"
+// @Param			fileType	query		string										true	"MIME type of the file"
+// @Param			action		query		string										false	"Action to perform (put or get)"	Enums(put, get)
+// @Param			expiration	query		int											false	"Expiration time in seconds (max 604800)"
+// @Success		200			{object}	JSONResult{data=getPresignedURLsResponse}	"Created"
+// @Failure		400			{object}	JSONResult{data=nil}						"Bad Request"
+// @Failure		401			{object}	JSONResult{data=nil}						"Unauthorized"
+// @Failure		500			{object}	JSONResult{data=nil}						"Internal Server Error"
+// @Router			/files/presigned-urls [get]
 func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getPresignedURLsRequest)
@@ -95,16 +95,16 @@ type deleteFileRequest struct {
 	ID uuid.UUID `param:"id" validate:"required,uuid"`
 }
 
-// @Summary Delete a file
-// @Description Delete a file by its ID
-// @Tags files
-// @Produce json
-// @Param id path string true "File ID"
-// @Success 200 {object} JSONResult{data=nil} "Created"
-// @Failure 400 {object} JSONResult{data=nil} "Bad Request"
-// @Failure 401 {object} JSONResult{data=nil} "Unauthorized"
-// @Failure 500 {object} JSONResult{data=nil} "Internal Server Error"
-// @Router /files/{id} [delete]
+// @Summary		Delete a file
+// @Description	Delete a file by its ID
+// @Tags			files
+// @Produce		json
+// @Param			id	path		string					true	"File ID"
+// @Success		200	{object}	JSONResult{data=nil}	"Created"
+// @Failure		400	{object}	JSONResult{data=nil}	"Bad Request"
+// @Failure		401	{object}	JSONResult{data=nil}	"Unauthorized"
+// @Failure		500	{object}	JSONResult{data=nil}	"Internal Server Error"
+// @Router			/files/{id} [delete]
 func (h *fileHandler) deleteFile(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(deleteFileRequest)
