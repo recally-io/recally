@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"net/http"
+	"recally/docs"
 	"recally/web"
 
 	_ "recally/docs/swagger"
@@ -47,6 +48,12 @@ func (s *Service) registerRouters() {
 
 	// Swagger
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	// Docs
+	e.GET("/docs/*", func(c echo.Context) error {
+		c.Response().Header().Set("Cache-Control", "public, max-age=86400") // Cache for 1 day
+		return echo.WrapHandler(http.StripPrefix("/docs", http.FileServer(docs.StaticHttpFS)))(c)
+	})
 
 	// Web UI
 	s.registerWebUIRouters(e)

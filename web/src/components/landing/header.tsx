@@ -25,12 +25,20 @@ export default function Header() {
 						Pricing
 					</Link>
 					<a
+						href="/docs/"
+						target="_blank"
+						className="text-sm font-medium hover:underline underline-offset-4"
+						rel="noreferrer"
+					>
+						Docs
+					</a>
+					<a
 						href="https://github.com/recally-io/recally"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="flex gap-2 items-center text-sm font-medium hover:underline underline-offset-4"
 					>
-						<SiGithub className="w-4 h-4" /> Github
+						<SiGithub className="w-4 h-4" />
 					</a>
 				</nav>
 				<div className="flex items-center space-x-4">
