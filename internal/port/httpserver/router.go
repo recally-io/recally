@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"recally/web"
 
-	_ "recally/docs"
+	_ "recally/docs/swagger"
 
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
