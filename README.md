@@ -85,7 +85,7 @@ make run  # Starts both backend and frontend with hot-reload
 
 ## 📜 Documentation
 Explore our comprehensive guides:
-- [Documentation](https://recally.io/docs)
+- [Documentation](https://recally.io/docs/)
 - [API Reference](https://recally.io/swagger/index.html)
 
 ## Similar Tools
