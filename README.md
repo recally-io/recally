@@ -30,7 +30,7 @@ Access at `http://localhost:1323`
 ### Core Features
 | Category | Features |
 |----------|----------|
-| 📥 Capture | One-click web saves • [Browser extensions](https://github.com/recally-io/recally-clipper) • [Telegram bot]((https://t.me/RecallyReaderBot)) • PDF import (soon) |
+| 📥 Capture | One-click web saves • [Browser extensions](https://github.com/recally-io/recally-clipper) • [Telegram bot](https://t.me/RecallyReaderBot) • PDF import (soon) |
 | 🧠 Intelligence | AI summarization • Smart tagging • Semantic search • Document Q&A (soon) |
 | 🛡 Privacy | Self-hostable • Zero tracking • Open-source core |
 
