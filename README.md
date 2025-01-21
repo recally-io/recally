@@ -1,139 +1,92 @@
-# Recally
-
-Ever felt overwhelmed trying to keep track of all the interesting stuff you find online? That's exactly why we built Recally. It's a simple tool that helps you save and recall the content that matters to you, powered by AI to make it actually useful.
+# Recally ✨
+**Your AI-Powered Memory Assistant for Digital Content**
 
 ![logo](./web/public/logo.svg)
 
-## 🚀 Quick Start
+Never lose track of valuable content again. Recally helps you capture, organize, and rediscover knowledge with AI-powered efficiency.
 
-1. **Using the Cloud Version**
-   - Visit [recally.io](https://recally.io) to get started immediately
-   - Free during beta period
-   - No installation required
+## 🚀 Get Started in 60 Seconds
 
-2. **Self-Hosting**
-   ```bash
-   git clone https://github.com/recally-io/recally
-   cd recally
-   cp env.example .env    # Configure your settings
-   docker compose up -d
-   ```
-   Visit http://localhost:1323 to start using your instance.
+### Cloud Version (Recommended)
+👉 [recally.io](https://recally.io)  
+- Instant access with Google/GitHub login
+- Free during beta (no credit card required)
+- Always up-to-date
 
-## What's Special About Recally?
+### Self-Hosted Option
+For full control over your data:
+```bash
+git clone https://github.com/recally-io/recally
+cd recally
+cp env.example .env  # Set OpenAI key & DB credentials
+docker compose up -d
+```
+Access at `http://localhost:1323`
 
-### 🎯 Save Anything, Find Everything
-- One-click saving of articles and web pages (and they actually look good when saved!)
-- Coming soon: PDF imports, YouTube videos, and podcast episodes
-- Smart search that actually understands what you're looking for
+> **Note:** Requires [Docker](https://docs.docker.com/get-docker/) and [OpenAI API key](https://platform.openai.com/api-keys)
 
-### 🤖 AI That Makes Sense
-We're not just throwing AI in because it's trendy. Recally uses AI to:
-- Create quick summaries so you remember why you saved something
-- Suggest tags that actually make sense
-- Help you connect ideas across your saved content
-- Let you chat with your documents (coming soon!)
+## 🔥 Why Recally?
 
-### 🔒 Your Content, Your Control
-- Self-host if you want to (yes, we actually made this easy)
-- No sneaky tracking or data sharing
-- Keep everything organized your way
+### Core Features
+| Category | Features |
+|----------|----------|
+| 📥 Capture | One-click web saves • [Browser extensions](https://github.com/recally-io/recally-clipper) • [Telegram bot]((https://t.me/RecallyReaderBot)) • PDF import (soon) |
+| 🧠 Intelligence | AI summarization • Smart tagging • Semantic search • Document Q&A (soon) |
+| 🛡 Privacy | Self-hostable • Zero tracking • Open-source core |
 
-## Try It Out
+### Unique Advantages
+- **AI That Understands Context**  
+  GPT-4 powered analysis that goes beyond keyword matching
+- **Multi-Source Support**  
+  Articles, YouTube videos, podcasts, PDFs - all in one place
+- **True Ownership**  
+  Export all data anytime • No lock-in or ads
 
-Getting started with Recally is super easy:
+## 📱 Capture Content Anywhere
 
-### 🤖 Quick Save with Telegram
-Just start chatting with our [RecallyReader](https://t.me/RecallyReaderBot) Telegram bot:
-- Send any link to save articles and web pages
-- Get instant AI-powered summaries
-- Access your saved content anywhere
+### Browser Extensions
+[![Chrome](https://img.shields.io/badge/Chrome-Extension-brightgreen?logo=googlechrome)](https://chrome.google.com/webstore/detail/heblpkdddipfjdpdgikoledoecohoepp)
+[![Firefox](https://img.shields.io/badge/Firefox-Add_on-FF7139?logo=firefoxbrowser)](https://addons.mozilla.org/addon/recally-clipper/)
 
-### 🌐 Web Experience
-Head over to [recally.io](https://recally.io) to unlock the full potential:
-- Beautiful reading interface
-- Smart organization with AI-suggested tags
-- Advanced search capabilities
-- Free during beta, with new features added regularly
+Features:
+- Save pages with original formatting
+- Highlight key sections
 
-### 🔗 Browser Extensions
-Save content with just one click using our browser extensions [Recally Clipper](https://github.com/recally-io/recally-clipper):
+### Telegram Bot
+[![Telegram Bot](https://img.shields.io/badge/Telegram-RecallyReaderBot-2CA5E0?logo=telegram)](https://t.me/RecallyReaderBot)
 
-- [Chrome Extension](https://chrome.google.com/webstore/detail/heblpkdddipfjdpdgikoledoecohoepp)
-- [Firefox Add-on](https://addons.mozilla.org/addon/recally-clipper/)
+Send any link to:
+- Save instantly to your library
+- Get 3-sentence AI summary
 
-## 🛠 Development Setup
+## 🛠 Developer Zone
 
-1. **Prerequisites**
-   - Go 1.21+
-   - Node.js 18+
-   - Docker and Docker Compose
-   - OpenAI API key (or compatible model)
+### Tech Stack
+**Backend**  
+[![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
+[![Echo](https://img.shields.io/badge/Echo-v4.11-blue)](https://echo.labstack.com/)
+[![ParadeDB](https://img.shields.io/badge/ParadeDB-1.0-orange)](https://www.paradedb.com/)
 
-2. **Local Development**
-   ```bash
-   # Backend
-   cd api
-   go mod download
-   go run main.go
+**Frontend**  
+[![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite)](https://vitejs.dev/)
 
-   # Frontend
-   cd web
-   npm install
-   npm run dev
-   ```
+**AI**  
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT4-purple?logo=openai)](https://openai.com/)
+[![LocalAI](https://img.shields.io/badge/Option-Ollama-blue)](https://ollama.com/)
 
-3. **Environment Variables**
-   Key configurations in `.env`:
-   ```env
-   OPENAI_API_KEY=your_key_here
-   DB_URL=postgresql://user:pass@localhost:5432/recally
-   ```
+### Contribution Guide
+1. Fork & clone repo
+2. Set up dev environment:
+```bash
+make run  # Starts both backend and frontend with hot-reload
+```
+3. Check our [Good First Issues](https://github.com/recally-io/recally/contribute)
 
-## 📚 Documentation
-
-- https://recally.io/docs/
-
-Our REST API is documented using OpenAPI/Swagger:
-- Local: http://localhost:1323/swagger/index.html
-- Cloud: https://recally.io/swagger/index.html
-
-## Under the Hood
-
-We've chosen our tech stack carefully to make Recally fast, reliable, and easy to maintain:
-
-### Backend
-- [Echo](https://github.com/labstack/echo) for the API (because Go is fast and Echo is simple)
-- [River](https://github.com/riverqueue/river) for job processing (rock-solid queue management)
-- [ParadeDB](https://github.com/paradedb/paradedb) (Postgres + search that actually works)
-
-### Frontend
-- [React](https://github.com/facebook/react) (you know it, you love it)
-- [Vite](https://github.com/vitejs/vite) (because waiting for builds is no fun)
-- [TailwindCSS](https://github.com/tailwindlabs/tailwindcss) + [shadcn/ui](https://github.com/shadcn-ui/ui) (beautiful UI without the bloat)
-
-### AI Magic
-We use OpenAI (and compatible models) to make your content more useful through:
-- Smart summaries
-- Intelligent tagging
-- Semantic search that understands context
-
-## Want to Help?
-
-We love contributions! Whether it's:
-- Finding bugs
-- Suggesting features
-- Improving docs
-- Adding code
-
-Just jump in! Check our [issues](https://github.com/recally-io/recally/issues) or start a [PR](https://github.com/recally-io/recally/pulls). We're friendly, promise!
-
-## Standing on Giants
-
-Huge thanks to these amazing projects that make Recally possible:
-- [go-readability](https://github.com/go-shiori/go-readability) for making saved articles beautiful
-- [html-to-markdown](https://github.com/JohannesKaufmann/html-to-markdown) for clean content conversion
-- And many others that deserve a beer 🍺
+## 📜 Documentation
+Explore our comprehensive guides:
+- [Documentation](https://recally.io/docs)
+- [API Reference](https://recally.io/swagger/index.html)
 
 ## Similar Tools
 
@@ -145,11 +98,11 @@ While we love Recally, here are some other great options:
 - [Hoarder](https://github.com/hoarder-app/hoarder) - Self-hostable bookmark manager with AI features
 - [Instapaper](https://www.instapaper.com) - Clean, minimalist read-it-later service
 
-## 📊 Status
-
-[![Go Report Card](https://goreportcard.com/badge/github.com/recally-io/recally)](https://goreportcard.com/report/github.com/recally-io/recally)
-[![License](https://img.shields.io/badge/license-AGPL%20v3-blue.svg)](LICENSE)
-
 ## License
+- **Non-commercial**: [AGPLv3](LICENSE)
+- **Commercial**: Contact [sales@recally.io](mailto:sales@recally.io) for enterprise licensing
 
-Free for personal use under [GNU AGPLv3](https://choosealicense.com/licenses/agpl-3.0/). For commercial stuff, drop us a line at [support@recally.io](mailto:support@recally.io).
+---
+
+> Made with ♥ by Recally Team
+> Proudly open-core since 2024
