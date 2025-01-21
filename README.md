@@ -4,6 +4,22 @@ Ever felt overwhelmed trying to keep track of all the interesting stuff you find
 
 ![logo](./web/public/logo.svg)
 
+## 🚀 Quick Start
+
+1. **Using the Cloud Version**
+   - Visit [recally.io](https://recally.io) to get started immediately
+   - Free during beta period
+   - No installation required
+
+2. **Self-Hosting**
+   ```bash
+   git clone https://github.com/recally-io/recally
+   cd recally
+   cp env.example .env    # Configure your settings
+   docker compose up -d
+   ```
+   Visit http://localhost:1323 to start using your instance.
+
 ## What's Special About Recally?
 
 ### 🎯 Save Anything, Find Everything
@@ -40,21 +56,47 @@ Head over to [recally.io](https://recally.io) to unlock the full potential:
 - Advanced search capabilities
 - Free during beta, with new features added regularly
 
-## Running Your Own Instance
+### 🔗 Browser Extensions
+Save content with just one click using our browser extensions [Recally Clipper](https://github.com/recally-io/recally-clipper):
 
-```bash
-# Just three steps to get started:
-git clone https://github.com/recally-io/recally
-cd recally
+- [Chrome Extension](https://chrome.google.com/webstore/detail/heblpkdddipfjdpdgikoledoecohoepp)
+- [Firefox Add-on](https://addons.mozilla.org/addon/recally-clipper/)
 
-# Set up your environment (we've added comments to make it clear)
-cp env.example .env
-# Edit .env with your settings
+## 🛠 Development Setup
 
-docker compose up -d
-```
+1. **Prerequisites**
+   - Go 1.21+
+   - Node.js 18+
+   - Docker and Docker Compose
+   - OpenAI API key (or compatible model)
 
-Then just open http://localhost:1323 and you're good to go!
+2. **Local Development**
+   ```bash
+   # Backend
+   cd api
+   go mod download
+   go run main.go
+
+   # Frontend
+   cd web
+   npm install
+   npm run dev
+   ```
+
+3. **Environment Variables**
+   Key configurations in `.env`:
+   ```env
+   OPENAI_API_KEY=your_key_here
+   DB_URL=postgresql://user:pass@localhost:5432/recally
+   ```
+
+## 📚 Documentation
+
+- https://recally.io/docs/
+
+Our REST API is documented using OpenAPI/Swagger:
+- Local: http://localhost:1323/swagger/index.html
+- Cloud: https://recally.io/swagger/index.html
 
 ## Under the Hood
 
@@ -103,6 +145,11 @@ While we love Recally, here are some other great options:
 - [Hoarder](https://github.com/hoarder-app/hoarder) - Self-hostable bookmark manager with AI features
 - [Instapaper](https://www.instapaper.com) - Clean, minimalist read-it-later service
 
+## 📊 Status
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/recally-io/recally)](https://goreportcard.com/report/github.com/recally-io/recally)
+[![License](https://img.shields.io/badge/license-AGPL%20v3-blue.svg)](LICENSE)
+
 ## License
 
-Free for personal use under MIT. For commercial stuff, drop us a line at [support@recally.io](mailto:support@recally.io).
+Free for personal use under [GNU AGPLv3](https://choosealicense.com/licenses/agpl-3.0/). For commercial stuff, drop us a line at [support@recally.io](mailto:support@recally.io).
