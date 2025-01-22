@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"recally/internal/pkg/config"
+	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader"
 	"strings"
 	"sync"
@@ -15,6 +16,16 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 )
+
+var DefaultBrowserFetcher *BrowserFetcher
+
+func init() {
+	var err error
+	DefaultBrowserFetcher, err = defaultBrowserFetcher()
+	if err != nil {
+		logger.Default.Error("create default browser fetcher", "err", err)
+	}
+}
 
 // BrowserConfig extends the base Config with browser-specific options
 type BrowserConfig struct {
@@ -49,7 +60,7 @@ func NewDefaultBrowserConfig() BrowserConfig {
 	}
 }
 
-func DefaultBrowserFetcher(opts ...BroswerOption) (*BrowserFetcher, error) {
+func defaultBrowserFetcher(opts ...BroswerOption) (*BrowserFetcher, error) {
 	config := NewDefaultBrowserConfig()
 	return NewBrowserFetcher(config, opts...)
 }
