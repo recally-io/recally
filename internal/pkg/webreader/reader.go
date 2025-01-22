@@ -109,6 +109,9 @@ func (w *Reader) Read(ctx context.Context, url string) (*Content, error) {
 }
 
 func (w *Reader) preProcess(content *FetchedContent) error {
+	if content.Reader == nil {
+		return nil
+	}
 	rawContent, err := io.ReadAll(content.Reader)
 	if err != nil {
 		return fmt.Errorf("failed to read content: %w", err)

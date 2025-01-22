@@ -11,6 +11,10 @@ import (
 )
 
 func New(host string, opts fetcher.FetchOptions) (*webreader.Reader, error) {
+	if host == "x.com" || host == "twitter.com" {
+		return webreader.New(fetcher.NewTwitterFetcher()), nil
+	}
+
 	var readerFetcher webreader.Fetcher
 	var err error
 	switch opts.FecherType {
