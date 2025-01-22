@@ -23,6 +23,8 @@ RUN bun test && bun run build
 FROM oven/bun:1 AS docs-base
 WORKDIR /usr/src/app
 
+RUN apt update && apt install -y git
+
 # Install dependencies into temp directory
 # This will cache them and speed up future builds
 COPY docs/package.json docs/bun.lockb /temp/
