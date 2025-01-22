@@ -1,0 +1,39 @@
+name: Deploy to Dokploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker image tag to deploy'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+      DOKPLOY_HOST: ${{ secrets.DOKPLOY_HOST }}
+      DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
+
+    steps:
+      - name: Update Docker Provider
+        run: |
+          curl -X POST "${{ env.DOKPLOY_HOST }}/api/application.saveDockerProvider" \
+          -H "Authorization: Bearer ${{ env.DOKPLOY_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "dockerImage": "ghcr.io/recally-io/recally:${{ github.event.inputs.tag }}",
+            "applicationId": "${{ env.DOKPLOY_APP_ID }}"
+          }'
+
+      - name: Trigger Deployment
+        run: |
+          curl -X POST "${{ env.DOKPLOY_HOST }}/api/application.deploy" \
+          -H "Authorization: Bearer ${{ env.DOKPLOY_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -H "accept: application/json" \
+          -d '{
+            "applicationId": "${{ env.DOKPLOY_APP_ID }}"
+          }'
