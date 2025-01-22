@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader"
 	"strings"
 	"sync"
@@ -15,6 +16,16 @@ import (
 const (
 	jinaHost = "https://r.jina.ai"
 )
+
+var DefaultJinaFetcher *JinaFetcher
+
+func init() {
+	var err error
+	DefaultJinaFetcher, err = defaultJinaFetcher()
+	if err != nil {
+		logger.Default.Error("create default Jina fetcher", "err", err)
+	}
+}
 
 // JinaConfig extends the base Config with Jina-specific options
 type JinaConfig struct {
@@ -60,7 +71,7 @@ func WithJinaOptionTimeout(timeout int) JinaOption {
 	}
 }
 
-func DefaultJinaFetcher() (*JinaFetcher, error) {
+func defaultJinaFetcher() (*JinaFetcher, error) {
 	config := DefaultJinaConfig()
 	return NewJinaFetcher(config)
 }
