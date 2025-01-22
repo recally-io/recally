@@ -46,7 +46,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		return err
 	}
 
-	msg, err := c.Bot().Send(c.Sender(), "Please wait, I'm reading the page.")
+	msg, err := c.Bot().Reply(c.Message(), "Please wait, I'm reading the page.")
 	if err != nil {
 		return processSendError(err)
 	}
