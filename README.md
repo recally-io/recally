@@ -5,6 +5,60 @@
 
 Never lose track of valuable content again. Recally helps you capture, organize, and rediscover knowledge with AI-powered efficiency.
 
+## ⚡ Key Features
+
+### 📚 Content Capture & Types
+- **🌐 Web Content**
+  - ✅ Browser extension for one-click saving
+  - ✅ Telegram bot integration for mobile capture
+  - ✅ Direct in-app article addition
+  - ✅ Automatic markdown conversion
+  - ✅ Smart CORS image proxy
+
+- **💬 Social Media**
+  - ✅ Twitter thread unrolling and saving
+  - ⌛ Instagram post archiving
+  - ⌛ LinkedIn article saving
+
+- **📱 Rich Media**
+  - ⌛ YouTube video saving & transcription
+  - ⌛ PDF document storage & analysis
+  - ⌛ Podcast archiving & transcription
+  - ⌛ EPUB book organization
+
+### 🧠 AI-Powered Knowledge Management
+- **🤖 Automated Processing**
+  - ✅ Smart summarization with key points
+  - ✅ Intelligent tag suggestions
+  - ✅ Content categorization
+  - ⌛ RAG-powered knowledge base
+  - ⌛ Interactive document Q&A
+
+- **🔍 Discovery & Search**
+  - ✅ Lightning-fast full-text search
+  - ✅ Smart filtering by tags/domains
+  - ⌛ Semantic search across content
+  - ⌛ Related content suggestions
+
+### 🔌 Integration Ecosystem
+- **🌍 Browser Extensions**
+  - ✅ [![Chrome](https://img.shields.io/badge/Chrome-Extension-brightgreen?logo=googlechrome)](https://chrome.google.com/webstore/detail/heblpkdddipfjdpdgikoledoecohoepp)
+  - ✅ [![Firefox](https://img.shields.io/badge/Firefox-Add_on-FF7139?logo=firefoxbrowser)](https://addons.mozilla.org/addon/recally-clipper/)
+  - ⌛ Safari extension
+
+- **📱 Mobile & Messaging**
+  - ✅ [![Telegram Bot](https://img.shields.io/badge/Telegram-RecallyReaderBot-2CA5E0?logo=telegram)](https://t.me/RecallyReaderBot)
+  - ⌛ Mobile apps (iOS/Android)
+
+- **📝 Note-Taking Apps**
+  - ⌛ Notion sync
+  - ⌛ Obsidian plugin
+
+- **📰 Content Sources**
+  - ⌛ RSS feed integration
+  - ⌛ Newsletter management
+  - ⌛ Email forwarding
+
 ## 🚀 Get Started in 60 Seconds
 
 ### Cloud Version (Recommended)
@@ -24,40 +78,6 @@ docker compose up -d
 Access at `http://localhost:1323`
 
 > **Note:** Requires [Docker](https://docs.docker.com/get-docker/) and [OpenAI API key](https://platform.openai.com/api-keys)
-
-## 🔥 Why Recally?
-
-### Core Features
-| Category | Features |
-|----------|----------|
-| 📥 Capture | One-click web saves • [Browser extensions](https://github.com/recally-io/recally-clipper) • [Telegram bot](https://t.me/RecallyReaderBot) • PDF import (soon) |
-| 🧠 Intelligence | AI summarization • Smart tagging • Semantic search • Document Q&A (soon) |
-| 🛡 Privacy | Self-hostable • Zero tracking • Open-source core |
-
-### Unique Advantages
-- **AI That Understands Context**  
-  GPT-4 powered analysis that goes beyond keyword matching
-- **Multi-Source Support**  
-  Articles, YouTube videos, podcasts, PDFs - all in one place
-- **True Ownership**  
-  Export all data anytime • No lock-in or ads
-
-## 📱 Capture Content Anywhere
-
-### Browser Extensions
-[![Chrome](https://img.shields.io/badge/Chrome-Extension-brightgreen?logo=googlechrome)](https://chrome.google.com/webstore/detail/heblpkdddipfjdpdgikoledoecohoepp)
-[![Firefox](https://img.shields.io/badge/Firefox-Add_on-FF7139?logo=firefoxbrowser)](https://addons.mozilla.org/addon/recally-clipper/)
-
-Features:
-- Save pages with original formatting
-- Highlight key sections
-
-### Telegram Bot
-[![Telegram Bot](https://img.shields.io/badge/Telegram-RecallyReaderBot-2CA5E0?logo=telegram)](https://t.me/RecallyReaderBot)
-
-Send any link to:
-- Save instantly to your library
-- Get 3-sentence AI summary
 
 ## 🛠 Developer Zone
 
@@ -88,15 +108,17 @@ Explore our comprehensive guides:
 - [Documentation](https://recally.io/docs/)
 - [API Reference](https://recally.io/swagger/index.html)
 
-## Similar Tools
+## Comparison with Similar Tools
 
-While we love Recally, here are some other great options:
-- [Shiori](https://github.com/go-shiori/shiori) - Great for CLI lovers
-- [Omnivore](https://omnivore.app) - RIP, you were awesome
-- [Pocket](https://getpocket.com) - The OG save-for-later app
-- [Readwise Reader](https://readwise.io) - The king of highlights
-- [Hoarder](https://github.com/hoarder-app/hoarder) - Self-hostable bookmark manager with AI features
-- [Instapaper](https://www.instapaper.com) - Clean, minimalist read-it-later service
+| Feature | Recally | Pocket | Instapaper | Shiori | Omnivore | Readwise Reader | Hoarder |
+|---------|---------|--------|------------|---------|-----------|----------------|---------|
+| 🌐 Web Article Saving | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 🧵 Twitter Thread Support | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| 🤖 AI Summarization | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 🏷️ Smart Tagging | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 🖼️ CORS Image Proxy | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| 🛠️ Self-Hosted Option | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
+| 📱 Mobile Support | ✅  | ✅ | ✅ | ❌ | ✅ | ✅ |  ✅ |
 
 ## License
 - **Non-commercial**: [AGPLv3](LICENSE)
@@ -104,5 +126,5 @@ While we love Recally, here are some other great options:
 
 ---
 
-> Made with ♥ by Recally Team
+> Made with ♥ by Recally Team  
 > Proudly open-core since 2024
