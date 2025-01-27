@@ -1,17 +1,20 @@
 CREATE TABLE bookmark_content(
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     type VARCHAR(50) NOT NULL, -- type of bookmark_content(bookmark, pdf, epub, image, podcast, video, etc.)
-    title TEXT NOT NULL,
+    url TEXT NOT NULL, -- URL of the bookmark
+    user_id uuid DEFAULT NULL, -- when user is null, this content is shared, when it's not null, it will belong to the user
+    title TEXT,
     description TEXT,
-    url TEXT, -- URL of the bookmark
     domain TEXT, -- domain of the URL
     s3_key TEXT, -- S3 key for storing raw content like pdf, epub, video, etc.
     summary TEXT, -- AI generated summary
     content TEXT, -- content in markdown format
     html TEXT, -- html content for web page
+    tags VARCHAR(50)[] DEFAULT '{}', -- tags for the content by default empty array
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(url, user_id)
   );
 
 -- Indexes
@@ -31,7 +34,7 @@ CREATE TRIGGER update_bookmark_content_updated_at BEFORE UPDATE ON bookmark_cont
 DROP TABLE IF EXISTS bookmarks;
 CREATE TABLE bookmarks (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(uuid),
+    user_id UUID REFERENCES users(uuid) ON DELETE CASCADE,
     content_id UUID REFERENCES bookmark_content(id),
     is_favorite BOOLEAN DEFAULT FALSE,
     is_archive BOOLEAN DEFAULT FALSE,
@@ -50,28 +53,27 @@ CREATE INDEX idx_bookmarks_metadata ON bookmarks USING gin(metadata jsonb_path_o
 CREATE TRIGGER update_bookmarks_updated_at BEFORE UPDATE ON bookmarks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
-
--- bookmark_content_tags table
-CREATE TABLE bookmark_content_tags (
+-- bookmark_tags table
+CREATE TABLE bookmark_tags (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) NOT NULL,
-    user_id uuid NOT NULL REFERENCES users(uuid),
+    user_id uuid NOT NULL REFERENCES users(uuid) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, name)
   );
 
-CREATE UNIQUE INDEX uidx_bookmark_content_user_id_name ON bookmark_content_tags(user_id, name);
-CREATE INDEX idx_bookmark_content_tags_name ON bookmark_content_tags(name);
-CREATE TRIGGER update_bookmark_content_tags_updated_at BEFORE UPDATE ON bookmark_content_tags FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_bookmark_tags_name ON bookmark_tags(name);
+CREATE TRIGGER update_bookmark_tags_updated_at BEFORE UPDATE ON bookmark_tags FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- -- bookmark_content tags relationship
-CREATE TABLE bookmark_content_tags_mapping(
-    content_id uuid REFERENCES bookmark_content(id) ON DELETE CASCADE,
-    tag_id uuid REFERENCES bookmark_content_tags(id) ON DELETE CASCADE,
+CREATE TABLE bookmark_tags_mapping(
+    bookmark_id uuid REFERENCES bookmarks(id) ON DELETE CASCADE,
+    tag_id uuid REFERENCES bookmark_tags(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-    PRIMARY KEY(content_id, tag_id)
+    PRIMARY KEY(bookmark_id, tag_id)
   );
 
-CREATE INDEX idx_bookmark_content_tags_mapping_tag_id ON bookmark_content_tags_mapping(tag_id);
-CREATE TRIGGER update_bookmark_content_tags_mapping_updated_at BEFORE UPDATE ON bookmark_content_tags_mapping FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_bookmark_tags_mapping_tag_id ON bookmark_tags_mapping(tag_id);
+CREATE TRIGGER update_bookmark_tags_mapping_updated_at BEFORE UPDATE ON bookmark_tags_mapping FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

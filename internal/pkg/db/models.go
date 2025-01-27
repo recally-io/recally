@@ -132,20 +132,22 @@ type Bookmark struct {
 type BookmarkContent struct {
 	ID          uuid.UUID
 	Type        string
-	Title       string
+	Url         string
+	UserID      pgtype.UUID
+	Title       pgtype.Text
 	Description pgtype.Text
-	Url         pgtype.Text
 	Domain      pgtype.Text
 	S3Key       pgtype.Text
 	Summary     pgtype.Text
 	Content     pgtype.Text
 	Html        pgtype.Text
+	Tags        []string
 	Metadata    []byte
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }
 
-type BookmarkContentTag struct {
+type BookmarkTag struct {
 	ID        uuid.UUID
 	Name      string
 	UserID    uuid.UUID
@@ -153,11 +155,11 @@ type BookmarkContentTag struct {
 	UpdatedAt pgtype.Timestamptz
 }
 
-type BookmarkContentTagsMapping struct {
-	ContentID uuid.UUID
-	TagID     uuid.UUID
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+type BookmarkTagsMapping struct {
+	BookmarkID uuid.UUID
+	TagID      uuid.UUID
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
 }
 
 type Cache struct {
