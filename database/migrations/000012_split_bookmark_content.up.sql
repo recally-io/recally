@@ -77,3 +77,23 @@ CREATE TABLE bookmark_tags_mapping(
 
 CREATE INDEX idx_bookmark_tags_mapping_tag_id ON bookmark_tags_mapping(tag_id);
 CREATE TRIGGER update_bookmark_tags_mapping_updated_at BEFORE UPDATE ON bookmark_tags_mapping FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+
+CREATE TABLE bookmark_share (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES users(uuid),
+    bookmark_id uuid REFERENCES bookmarks(id) ON DELETE CASCADE,
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(userid, bookmark_id)
+);
+
+CREATE INDEX  idx_bookmark_share_user_id ON bookmark_share(user_id);
+CREATE INDEX idx_bookmark_share_content_id ON bookmark_share(bookmark_id);
+
+DROP TRIGGER IF EXISTS update_bookmark_share_updated_at ON bookmark_share;
+CREATE TRIGGER update_bookmark_share_updated_at
+    BEFORE UPDATE ON bookmark_share
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();

@@ -16,7 +16,7 @@ import (
 )
 
 type BookmarkShareService interface {
-	GetSharedContent(ctx context.Context, tx db.DBTX, sharedID uuid.UUID) (*bookmarks.ContentDTO, error)
+	GetBookmarkShareContent(ctx context.Context, tx db.DBTX, sharedID uuid.UUID) (*bookmarks.BookmarkContentDTO, error)
 }
 
 // bookmarkServiceImpl implements BookmarkService
@@ -50,7 +50,7 @@ type sharedFileRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			token	path		string									true	"Bookmark ID"
-//	@Success		200		{object}	JSONResult{data=bookmarks.ContentDTO}	"Success"
+//	@Success		200		{object}	JSONResult{data=bookmarks.BookmarkContentDTO}	"Success"
 //	@Failure		400		{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		404		{object}	JSONResult{data=nil}					"Not Found"
 //	@Failure		500		{object}	JSONResult{data=nil}					"Internal Server Error"
@@ -67,7 +67,7 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 		return errors.New("tx not found")
 	}
 
-	bookmark, err := h.service.GetSharedContent(ctx, tx, req.Token)
+	bookmark, err := h.service.GetBookmarkShareContent(ctx, tx, req.Token)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}

@@ -20,21 +20,23 @@ import (
 
 // BookmarkService defines operations for managing bookmarks
 type BookmarkService interface {
-	Create(ctx context.Context, tx db.DBTX, dto *bookmarks.ContentDTO) (*bookmarks.ContentDTO, error)
-	Get(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.ContentDTO, error)
-	List(ctx context.Context, tx db.DBTX, userID uuid.UUID, filter []string, query string, limit, offset int32) ([]*bookmarks.ContentDTO, int64, error)
+	ListBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID, filters []string, query string, limit, offset int32) ([]bookmarks.BookmarkDTO, int64, error)
+	CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, dto *bookmarks.BookmarkContentDTO) (*bookmarks.BookmarkDTO, error)
+	GetBookmarkWithContent(ctx context.Context, tx db.DBTX, userId, id uuid.UUID) (*bookmarks.BookmarkWithContentDTO, error)
+	UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, id uuid.UUID, content *bookmarks.BookmarkContentDTO) (*bookmarks.BookmarkDTO, error)
+	DeleteBookmark(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
+	DeleteBookmarksByUser(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
+
+	FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, opts fetcher.FetchOptions) (*bookmarks.BookmarkContentDTO, error)
+	SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.BookmarkContentDTO, error)
+
 	ListTags(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]bookmarks.TagDTO, error)
 	ListDomains(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]bookmarks.DomainDTO, error)
-	Update(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, dto *bookmarks.ContentDTO) (*bookmarks.ContentDTO, error)
-	Delete(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
-	DeleteUserBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
-	FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, fetchOptions fetcher.FetchOptions) (*bookmarks.ContentDTO, error)
-	SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*bookmarks.ContentDTO, error)
 
-	GetShareContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID) (*bookmarks.ContentShareDTO, error)
-	ShareContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID, expiresAt time.Time) (*bookmarks.ContentShareDTO, error)
-	UpdateSharedContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID, expiresAt time.Time) (*bookmarks.ContentShareDTO, error)
-	DeleteSharedContent(ctx context.Context, tx db.DBTX, contentID uuid.UUID) error
+	GetBookmarkShareContent(ctx context.Context, tx db.DBTX, sharedID uuid.UUID) (*bookmarks.BookmarkContentDTO, error)
+	CreateBookmarkShare(ctx context.Context, tx db.DBTX, userID uuid.UUID, contentID uuid.UUID, expiresAt time.Time) (*bookmarks.BookmarkShareDTO, error)
+	UpdateSharedContent(ctx context.Context, tx db.DBTX, userID uuid.UUID, contentID uuid.UUID, expiresAt time.Time) (*bookmarks.BookmarkShareDTO, error)
+	DeleteSharedContent(ctx context.Context, tx db.DBTX, userID uuid.UUID, contentID uuid.UUID) error
 }
 
 // bookmarkServiceImpl implements BookmarkService
@@ -71,7 +73,7 @@ type listBookmarksRequest struct {
 }
 
 type listBookmarksResponse struct {
-	Bookmarks []*bookmarks.ContentDTO `json:"bookmarks"`
+	Bookmarks []bookmarks.BookmarkDTO `json:"bookmarks"`
 	Total     int64                   `json:"total"`
 	Limit     int32                   `json:"limit"`
 	Offset    int32                   `json:"offset"`
@@ -107,7 +109,7 @@ func (h *bookmarksHandler) listBookmarks(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmarks, total, err := h.service.List(ctx, tx, user.ID, req.Filter, req.Query, req.Limit, req.Offset)
+	bookmarks, total, err := h.service.ListBookmarks(ctx, tx, user.ID, req.Filter, req.Query, req.Limit, req.Offset)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
@@ -139,7 +141,7 @@ func (h *bookmarksHandler) listTags(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	tags, err := cache.RunInCache[[]bookmarks.TagDTO](ctx, cache.MemCache,
+	tags, err := cache.RunInCache(ctx, cache.MemCache,
 		cache.NewCacheKey("bookmarks", "tags"),
 		time.Minute,
 		func() (*[]bookmarks.TagDTO, error) {
@@ -175,7 +177,7 @@ func (h *bookmarksHandler) listDomains(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	domains, err := cache.RunInCache[[]bookmarks.DomainDTO](ctx, cache.MemCache,
+	domains, err := cache.RunInCache(ctx, cache.MemCache,
 		cache.NewCacheKey("bookmarks", "domains"),
 		time.Minute,
 		func() (*[]bookmarks.DomainDTO, error) {
@@ -193,13 +195,13 @@ func (h *bookmarksHandler) listDomains(c echo.Context) error {
 }
 
 type createBookmarkRequest struct {
-	URL         string             `json:"url" validate:"required,url"`
-	Title       string             `json:"title"`
-	Description string             `json:"description,omitempty"`
-	Tags        []string           `json:"tags,omitempty"`
-	Content     string             `json:"content,omitempty"`
-	HTML        string             `json:"html,omitempty"`
-	Metadata    bookmarks.Metadata `json:"metadata"`
+	URL         string                            `json:"url" validate:"required,url"`
+	Title       string                            `json:"title"`
+	Description string                            `json:"description,omitempty"`
+	Tags        []string                          `json:"tags,omitempty"`
+	Content     string                            `json:"content,omitempty"`
+	HTML        string                            `json:"html,omitempty"`
+	Metadata    bookmarks.BookmarkContentMetadata `json:"metadata"`
 }
 
 // createBookmark handles POST /bookmarks
@@ -210,7 +212,7 @@ type createBookmarkRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			bookmark	body		createBookmarkRequest					true	"Bookmark to create"
-//	@Success		201			{object}	JSONResult{data=bookmarks.ContentDTO}	"Created"
+//	@Success		201			{object}	JSONResult{data=bookmarks.BookmarkDTO}	"Created"
 //	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		401			{object}	JSONResult{data=nil}					"Unauthorized"
 //	@Failure		500			{object}	JSONResult{data=nil}					"Internal Server Error"
@@ -228,18 +230,18 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmark := &bookmarks.ContentDTO{
+	bookmark := &bookmarks.BookmarkContentDTO{
 		UserID:   user.ID,
 		URL:      req.URL,
 		Type:     bookmarks.ContentTypeBookmark,
 		Title:    req.Title,
 		Tags:     req.Tags,
 		Content:  req.Content,
-		HTML:     req.HTML,
+		Html:     req.HTML,
 		Metadata: req.Metadata,
 	}
 
-	created, err := h.service.Create(ctx, tx, bookmark)
+	created, err := h.service.CreateBookmark(ctx, tx, user.ID, bookmark)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
@@ -268,7 +270,7 @@ type getBookmarkRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			bookmark-id	path		string									true	"Bookmark ID"
-//	@Success		200			{object}	JSONResult{data=bookmarks.ContentDTO}	"Success"
+//	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkWithContentDTO}	"Success"
 //	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		401			{object}	JSONResult{data=nil}					"Unauthorized"
 //	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
@@ -287,7 +289,7 @@ func (h *bookmarksHandler) getBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmark, err := h.service.Get(ctx, tx, req.BookmarkID, user.ID)
+	bookmark, err := h.service.GetBookmarkWithContent(ctx, tx, req.BookmarkID, user.ID)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
@@ -299,11 +301,11 @@ func (h *bookmarksHandler) getBookmark(c echo.Context) error {
 }
 
 type updateBookmarkRequest struct {
-	BookmarkID uuid.UUID          `param:"bookmark-id" validate:"required,uuid4"`
-	Summary    string             `json:"summary"`
-	Content    string             `json:"content"`
-	HTML       string             `json:"html"`
-	Metadata   bookmarks.Metadata `json:"metadata"`
+	BookmarkID uuid.UUID                         `param:"bookmark-id" validate:"required,uuid4"`
+	Summary    string                            `json:"summary"`
+	Content    string                            `json:"content"`
+	HTML       string                            `json:"html"`
+	Metadata   bookmarks.BookmarkContentMetadata `json:"metadata"`
 }
 
 // updateBookmark handles PUT /bookmarks/:bookmark-id
@@ -315,7 +317,7 @@ type updateBookmarkRequest struct {
 //	@Produce		json
 //	@Param			bookmark-id	path		string									true	"Bookmark ID"
 //	@Param			bookmark	body		updateBookmarkRequest					true	"Updated bookmark data"
-//	@Success		200			{object}	JSONResult{data=bookmarks.ContentDTO}	"Success"
+//	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkDTO}	"Success"
 //	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		401			{object}	JSONResult{data=nil}					"Unauthorized"
 //	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
@@ -334,7 +336,7 @@ func (h *bookmarksHandler) updateBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmark := &bookmarks.ContentDTO{
+	bookmark := &bookmarks.BookmarkContentDTO{
 		ID:     req.BookmarkID,
 		UserID: user.ID,
 	}
@@ -348,10 +350,10 @@ func (h *bookmarksHandler) updateBookmark(c echo.Context) error {
 	}
 
 	if req.HTML != "" {
-		bookmark.HTML = req.HTML
+		bookmark.Html = req.HTML
 	}
 
-	updated, err := h.service.Update(ctx, tx, req.BookmarkID, user.ID, bookmark)
+	updated, err := h.service.UpdateBookmark(ctx, tx, user.ID, req.BookmarkID, bookmark)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
@@ -388,7 +390,7 @@ func (h *bookmarksHandler) deleteBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	if err := h.service.Delete(ctx, tx, bookmarkID, user.ID); err != nil {
+	if err := h.service.DeleteBookmark(ctx, tx, bookmarkID, user.ID); err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
@@ -430,7 +432,7 @@ func (h *bookmarksHandler) deleteUserBookmarks(c echo.Context) error {
 		return ErrorResponse(c, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
 	}
 
-	if err := h.service.DeleteUserBookmarks(ctx, tx, req.UserID); err != nil {
+	if err := h.service.DeleteBookmarksByUser(ctx, tx, req.UserID); err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
@@ -453,7 +455,7 @@ type refreshBookmarkRequest struct {
 //	@Produce		json
 //	@Param			bookmark-id	path		string									true	"Bookmark ID"
 //	@Param			request		body		refreshBookmarkRequest					true	"Refresh options"
-//	@Success		200			{object}	JSONResult{data=bookmarks.ContentDTO}	"Success"
+//	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkDTO}	"Success"
 //	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		401			{object}	JSONResult{data=nil}					"Unauthorized"
 //	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
@@ -472,10 +474,10 @@ func (h *bookmarksHandler) refreshBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	var bookmark *bookmarks.ContentDTO
+	var content *bookmarks.BookmarkContentDTO
 
 	if req.Fetcher != "" {
-		bookmark, err = h.service.FetchContent(ctx, tx, req.BookmarkID, user.ID, fetcher.FetchOptions{
+		content, err = h.service.FetchContent(ctx, tx, req.BookmarkID, user.ID, fetcher.FetchOptions{
 			FecherType:   fetcher.FecherType(req.Fetcher),
 			IsProxyImage: req.IsProxyImage,
 		})
@@ -485,13 +487,13 @@ func (h *bookmarksHandler) refreshBookmark(c echo.Context) error {
 	}
 
 	if req.RegenerateSummary {
-		bookmark, err = h.service.SummarierContent(ctx, tx, req.BookmarkID, user.ID)
+		content, err = h.service.SummarierContent(ctx, tx, req.BookmarkID, user.ID)
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, err)
 		}
 	}
 
-	return JsonResponse(c, http.StatusOK, bookmark)
+	return JsonResponse(c, http.StatusOK, content)
 }
 
 type shareBookmarkRequest struct {
@@ -508,7 +510,7 @@ type shareBookmarkRequest struct {
 //	@Produce		json
 //	@Param			bookmark-id	path		string									true	"Bookmark ID"
 //	@Param			request		body		shareBookmarkRequest					true	"Share options"
-//	@Success		200			{object}	JSONResult{data=bookmarks.ContentDTO}	"Success"
+//	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkShareDTO}	"Success"
 //	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		401			{object}	JSONResult{data=nil}					"Unauthorized"
 //	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
@@ -522,12 +524,12 @@ func (h *bookmarksHandler) shareBookmark(c echo.Context) error {
 		return err
 	}
 
-	tx, _, err := initContext(ctx)
+	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	shared, err := h.service.ShareContent(ctx, tx, req.BookmarkID, req.ExpiresAt)
+	shared, err := h.service.CreateBookmarkShare(ctx, tx, user.ID, req.BookmarkID, req.ExpiresAt)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
@@ -549,7 +551,7 @@ type updateSharedBookmarkRequest struct {
 //	@Produce		json
 //	@Param			bookmark-id	path		string									true	"Bookmark ID"
 //	@Param			request		body		updateSharedBookmarkRequest				true	"Update options"
-//	@Success		200			{object}	JSONResult{data=bookmarks.ContentDTO}	"Success"
+//	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkShareDTO}	"Success"
 //	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
 //	@Failure		500			{object}	JSONResult{data=nil}					"Internal Server Error"
@@ -561,12 +563,12 @@ func (h *bookmarksHandler) updateSharedBookmark(c echo.Context) error {
 		return err
 	}
 
-	tx, _, err := initContext(ctx)
+	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	content, err := h.service.UpdateSharedContent(ctx, tx, req.BookmarkID, req.ExpiresAt)
+	content, err := h.service.UpdateSharedContent(ctx, tx, user.ID, req.BookmarkID, req.ExpiresAt)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
@@ -594,12 +596,12 @@ func (h *bookmarksHandler) deleteSharedBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	tx, _, err := initContext(ctx)
+	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	if err := h.service.DeleteSharedContent(ctx, tx, bookmarkID); err != nil {
+	if err := h.service.DeleteSharedContent(ctx, tx, user.ID, bookmarkID); err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
@@ -618,7 +620,7 @@ type getShareContentRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			bookmark-id	path		string									true	"Bookmark ID"
-//	@Success		200			{object}	JSONResult{data=bookmarks.ContentDTO}	"Success"
+//	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkContentDTO}	"Success"
 //	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
 //	@Failure		500			{object}	JSONResult{data=nil}					"Internal Server Error"
@@ -635,7 +637,7 @@ func (h *bookmarksHandler) getShareBookmark(c echo.Context) error {
 		return errors.New("tx not found")
 	}
 
-	cs, err := h.service.GetShareContent(ctx, tx, req.BookmarkID)
+	cs, err := h.service.GetBookmarkShareContent(ctx, tx, req.BookmarkID)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}

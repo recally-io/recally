@@ -59,90 +59,6 @@ func (q *Queries) CreateBookmark(ctx context.Context, db DBTX, arg CreateBookmar
 	return i, err
 }
 
-const createBookmarkContent = `-- name: CreateBookmarkContent :one
-INSERT INTO bookmark_content (
-  type, title, description, user_id, url, domain, s3_key,
-  summary, content, html, metadata
-)
-VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
-)
-RETURNING id, type, url, user_id, title, description, domain, s3_key, summary, content, html, tags, metadata, created_at, updated_at
-`
-
-type CreateBookmarkContentParams struct {
-	Type        string
-	Title       pgtype.Text
-	Description pgtype.Text
-	UserID      pgtype.UUID
-	Url         string
-	Domain      pgtype.Text
-	S3Key       pgtype.Text
-	Summary     pgtype.Text
-	Content     pgtype.Text
-	Html        pgtype.Text
-	Metadata    []byte
-}
-
-func (q *Queries) CreateBookmarkContent(ctx context.Context, db DBTX, arg CreateBookmarkContentParams) (BookmarkContent, error) {
-	row := db.QueryRow(ctx, createBookmarkContent,
-		arg.Type,
-		arg.Title,
-		arg.Description,
-		arg.UserID,
-		arg.Url,
-		arg.Domain,
-		arg.S3Key,
-		arg.Summary,
-		arg.Content,
-		arg.Html,
-		arg.Metadata,
-	)
-	var i BookmarkContent
-	err := row.Scan(
-		&i.ID,
-		&i.Type,
-		&i.Url,
-		&i.UserID,
-		&i.Title,
-		&i.Description,
-		&i.Domain,
-		&i.S3Key,
-		&i.Summary,
-		&i.Content,
-		&i.Html,
-		&i.Tags,
-		&i.Metadata,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const createBookmarkTag = `-- name: CreateBookmarkTag :one
-INSERT INTO bookmark_tags (name, user_id)
-VALUES ($1, $2)
-RETURNING id, name, user_id, created_at, updated_at
-`
-
-type CreateBookmarkTagParams struct {
-	Name   string
-	UserID uuid.UUID
-}
-
-func (q *Queries) CreateBookmarkTag(ctx context.Context, db DBTX, arg CreateBookmarkTagParams) (BookmarkTag, error) {
-	row := db.QueryRow(ctx, createBookmarkTag, arg.Name, arg.UserID)
-	var i BookmarkTag
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.UserID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const deleteBookmark = `-- name: DeleteBookmark :exec
 DELETE FROM bookmarks
 WHERE id = $1 AND user_id = $2
@@ -158,22 +74,6 @@ func (q *Queries) DeleteBookmark(ctx context.Context, db DBTX, arg DeleteBookmar
 	return err
 }
 
-const deleteBookmarkTag = `-- name: DeleteBookmarkTag :exec
-DELETE FROM bookmark_tags
-WHERE id = $1
-  AND user_id = $2
-`
-
-type DeleteBookmarkTagParams struct {
-	ID     uuid.UUID
-	UserID uuid.UUID
-}
-
-func (q *Queries) DeleteBookmarkTag(ctx context.Context, db DBTX, arg DeleteBookmarkTagParams) error {
-	_, err := db.Exec(ctx, deleteBookmarkTag, arg.ID, arg.UserID)
-	return err
-}
-
 const deleteBookmarksByUser = `-- name: DeleteBookmarksByUser :exec
 DELETE FROM bookmarks
 WHERE user_id = $1
@@ -184,7 +84,7 @@ func (q *Queries) DeleteBookmarksByUser(ctx context.Context, db DBTX, userID pgt
 	return err
 }
 
-const getBookmark = `-- name: GetBookmark :one
+const getBookmarkWithContent = `-- name: GetBookmarkWithContent :one
 SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.is_public, b.reading_progress, b.metadata, b.created_at, b.updated_at,
        bc.id, bc.type, bc.url, bc.user_id, bc.title, bc.description, bc.domain, bc.s3_key, bc.summary, bc.content, bc.html, bc.tags, bc.metadata, bc.created_at, bc.updated_at,
        COALESCE(
@@ -201,12 +101,12 @@ GROUP BY b.id, bc.id
 LIMIT 1
 `
 
-type GetBookmarkParams struct {
+type GetBookmarkWithContentParams struct {
 	ID     uuid.UUID
 	UserID pgtype.UUID
 }
 
-type GetBookmarkRow struct {
+type GetBookmarkWithContentRow struct {
 	ID              uuid.UUID
 	UserID          pgtype.UUID
 	ContentID       pgtype.UUID
@@ -235,9 +135,9 @@ type GetBookmarkRow struct {
 	Tags_2          interface{}
 }
 
-func (q *Queries) GetBookmark(ctx context.Context, db DBTX, arg GetBookmarkParams) (GetBookmarkRow, error) {
-	row := db.QueryRow(ctx, getBookmark, arg.ID, arg.UserID)
-	var i GetBookmarkRow
+func (q *Queries) GetBookmarkWithContent(ctx context.Context, db DBTX, arg GetBookmarkWithContentParams) (GetBookmarkWithContentRow, error) {
+	row := db.QueryRow(ctx, getBookmarkWithContent, arg.ID, arg.UserID)
+	var i GetBookmarkWithContentRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -269,21 +169,6 @@ func (q *Queries) GetBookmark(ctx context.Context, db DBTX, arg GetBookmarkParam
 	return i, err
 }
 
-const isBookmarkContentExistWithURL = `-- name: IsBookmarkContentExistWithURL :one
-SELECT EXISTS (
-  SELECT 1
-  FROM bookmark_content bc
-  WHERE bc.url = $1
-)
-`
-
-func (q *Queries) IsBookmarkContentExistWithURL(ctx context.Context, db DBTX, url string) (bool, error) {
-	row := db.QueryRow(ctx, isBookmarkContentExistWithURL, url)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
-}
-
 const isBookmarkExistWithURL = `-- name: IsBookmarkExistWithURL :one
 SELECT EXISTS (
   SELECT 1
@@ -304,25 +189,6 @@ func (q *Queries) IsBookmarkExistWithURL(ctx context.Context, db DBTX, arg IsBoo
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
-}
-
-const linkBookmarkWithTags = `-- name: LinkBookmarkWithTags :exec
-INSERT INTO bookmark_tags_mapping (bookmark_id, tag_id)
-SELECT $1, bt.id
-FROM bookmark_tags bt
-WHERE bt.name = ANY ($2::text[])
-  AND bt.user_id = $3
-`
-
-type LinkBookmarkWithTagsParams struct {
-	BookmarkID uuid.UUID
-	Column2    []string
-	UserID     uuid.UUID
-}
-
-func (q *Queries) LinkBookmarkWithTags(ctx context.Context, db DBTX, arg LinkBookmarkWithTagsParams) error {
-	_, err := db.Exec(ctx, linkBookmarkWithTags, arg.BookmarkID, arg.Column2, arg.UserID)
-	return err
 }
 
 const listBookmarkDomains = `-- name: ListBookmarkDomains :many
@@ -360,58 +226,6 @@ func (q *Queries) ListBookmarkDomains(ctx context.Context, db DBTX, userID pgtyp
 	return items, nil
 }
 
-const listBookmarkTagsByBookmarkId = `-- name: ListBookmarkTagsByBookmarkId :many
-SELECT bt.name
-FROM bookmark_tags bt
-  JOIN bookmark_tags_mapping btm ON bt.id = btm.tag_id
-WHERE btm.bookmark_id = $1
-`
-
-func (q *Queries) ListBookmarkTagsByBookmarkId(ctx context.Context, db DBTX, bookmarkID uuid.UUID) ([]string, error) {
-	rows, err := db.Query(ctx, listBookmarkTagsByBookmarkId, bookmarkID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []string
-	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			return nil, err
-		}
-		items = append(items, name)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listBookmarkTagsByUser = `-- name: ListBookmarkTagsByUser :many
-SELECT name FROM bookmark_tags
-WHERE user_id = $1
-`
-
-func (q *Queries) ListBookmarkTagsByUser(ctx context.Context, db DBTX, userID uuid.UUID) ([]string, error) {
-	rows, err := db.Query(ctx, listBookmarkTagsByUser, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []string
-	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			return nil, err
-		}
-		items = append(items, name)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listBookmarks = `-- name: ListBookmarks :many
 WITH total AS (
   SELECT COUNT(DISTINCT b.*) AS total_count
@@ -425,7 +239,6 @@ WITH total AS (
     AND ($6::text[] IS NULL OR bct.name = ANY($6::text[]))
 )
 SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.is_public, b.reading_progress, b.metadata, b.created_at, b.updated_at,
-       bc.id, bc.type, bc.url, bc.user_id, bc.title, bc.description, bc.domain, bc.s3_key, bc.summary, bc.content, bc.html, bc.tags, bc.metadata, bc.created_at, bc.updated_at,
        t.total_count,
        COALESCE(
          array_agg(bct.name) FILTER (WHERE bct.name IS NOT NULL),
@@ -465,23 +278,8 @@ type ListBookmarksRow struct {
 	Metadata        []byte
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
-	ID_2            uuid.UUID
-	Type            string
-	Url             string
-	UserID_2        pgtype.UUID
-	Title           pgtype.Text
-	Description     pgtype.Text
-	Domain          pgtype.Text
-	S3Key           pgtype.Text
-	Summary         pgtype.Text
-	Content         pgtype.Text
-	Html            pgtype.Text
-	Tags            []string
-	Metadata_2      []byte
-	CreatedAt_2     pgtype.Timestamptz
-	UpdatedAt_2     pgtype.Timestamptz
 	TotalCount      int64
-	Tags_2          interface{}
+	Tags            interface{}
 }
 
 func (q *Queries) ListBookmarks(ctx context.Context, db DBTX, arg ListBookmarksParams) ([]ListBookmarksRow, error) {
@@ -511,59 +309,12 @@ func (q *Queries) ListBookmarks(ctx context.Context, db DBTX, arg ListBookmarksP
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.ID_2,
-			&i.Type,
-			&i.Url,
-			&i.UserID_2,
-			&i.Title,
-			&i.Description,
-			&i.Domain,
-			&i.S3Key,
-			&i.Summary,
-			&i.Content,
-			&i.Html,
-			&i.Tags,
-			&i.Metadata_2,
-			&i.CreatedAt_2,
-			&i.UpdatedAt_2,
 			&i.TotalCount,
-			&i.Tags_2,
+			&i.Tags,
 		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listExistingBookmarkTagsByTags = `-- name: ListExistingBookmarkTagsByTags :many
-SELECT name
-FROM bookmark_tags
-WHERE name = ANY ($1::text[])
-  AND user_id = $2
-`
-
-type ListExistingBookmarkTagsByTagsParams struct {
-	Column1 []string
-	UserID  uuid.UUID
-}
-
-func (q *Queries) ListExistingBookmarkTagsByTags(ctx context.Context, db DBTX, arg ListExistingBookmarkTagsByTagsParams) ([]string, error) {
-	rows, err := db.Query(ctx, listExistingBookmarkTagsByTags, arg.Column1, arg.UserID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []string
-	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			return nil, err
-		}
-		items = append(items, name)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -610,7 +361,6 @@ WITH total AS (
     )
 )
 SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.is_public, b.reading_progress, b.metadata, b.created_at, b.updated_at,
-       bc.id, bc.type, bc.url, bc.user_id, bc.title, bc.description, bc.domain, bc.s3_key, bc.summary, bc.content, bc.html, bc.tags, bc.metadata, bc.created_at, bc.updated_at,
        t.total_count,
        COALESCE(
          array_agg(bct.name) FILTER (WHERE bct.name IS NOT NULL),
@@ -659,23 +409,8 @@ type SearchBookmarksRow struct {
 	Metadata        []byte
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
-	ID_2            uuid.UUID
-	Type            string
-	Url             string
-	UserID_2        pgtype.UUID
-	Title           pgtype.Text
-	Description     pgtype.Text
-	Domain          pgtype.Text
-	S3Key           pgtype.Text
-	Summary         pgtype.Text
-	Content         pgtype.Text
-	Html            pgtype.Text
-	Tags            []string
-	Metadata_2      []byte
-	CreatedAt_2     pgtype.Timestamptz
-	UpdatedAt_2     pgtype.Timestamptz
 	TotalCount      int64
-	Tags_2          interface{}
+	Tags            interface{}
 }
 
 func (q *Queries) SearchBookmarks(ctx context.Context, db DBTX, arg SearchBookmarksParams) ([]SearchBookmarksRow, error) {
@@ -706,23 +441,8 @@ func (q *Queries) SearchBookmarks(ctx context.Context, db DBTX, arg SearchBookma
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.ID_2,
-			&i.Type,
-			&i.Url,
-			&i.UserID_2,
-			&i.Title,
-			&i.Description,
-			&i.Domain,
-			&i.S3Key,
-			&i.Summary,
-			&i.Content,
-			&i.Html,
-			&i.Tags,
-			&i.Metadata_2,
-			&i.CreatedAt_2,
-			&i.UpdatedAt_2,
 			&i.TotalCount,
-			&i.Tags_2,
+			&i.Tags,
 		); err != nil {
 			return nil, err
 		}
@@ -732,26 +452,6 @@ func (q *Queries) SearchBookmarks(ctx context.Context, db DBTX, arg SearchBookma
 		return nil, err
 	}
 	return items, nil
-}
-
-const unLinkBookmarkWithTags = `-- name: UnLinkBookmarkWithTags :exec
-DELETE FROM bookmark_tags_mapping
-WHERE bookmark_id = $1
-  AND tag_id IN (SELECT id
-                 FROM bookmark_tags
-                 WHERE name = ANY ($2::text[])
-                   AND user_id = $3)
-`
-
-type UnLinkBookmarkWithTagsParams struct {
-	BookmarkID uuid.UUID
-	Column2    []string
-	UserID     uuid.UUID
-}
-
-func (q *Queries) UnLinkBookmarkWithTags(ctx context.Context, db DBTX, arg UnLinkBookmarkWithTagsParams) error {
-	_, err := db.Exec(ctx, unLinkBookmarkWithTags, arg.BookmarkID, arg.Column2, arg.UserID)
-	return err
 }
 
 const updateBookmark = `-- name: UpdateBookmark :one
@@ -795,65 +495,6 @@ func (q *Queries) UpdateBookmark(ctx context.Context, db DBTX, arg UpdateBookmar
 		&i.IsArchive,
 		&i.IsPublic,
 		&i.ReadingProgress,
-		&i.Metadata,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const updateBookmarkContent = `-- name: UpdateBookmarkContent :one
-UPDATE bookmark_content
-SET title = COALESCE($2, title),
-    description = COALESCE($3, description),
-    domain = COALESCE($4, domain),
-    s3_key = COALESCE($5, s3_key),
-    summary = COALESCE($6, summary),
-    content = COALESCE($7, content),
-    html = COALESCE($8, html),
-    metadata = COALESCE($9, metadata)
-WHERE id = $1
-RETURNING id, type, url, user_id, title, description, domain, s3_key, summary, content, html, tags, metadata, created_at, updated_at
-`
-
-type UpdateBookmarkContentParams struct {
-	ID          uuid.UUID
-	Title       pgtype.Text
-	Description pgtype.Text
-	Domain      pgtype.Text
-	S3Key       pgtype.Text
-	Summary     pgtype.Text
-	Content     pgtype.Text
-	Html        pgtype.Text
-	Metadata    []byte
-}
-
-func (q *Queries) UpdateBookmarkContent(ctx context.Context, db DBTX, arg UpdateBookmarkContentParams) (BookmarkContent, error) {
-	row := db.QueryRow(ctx, updateBookmarkContent,
-		arg.ID,
-		arg.Title,
-		arg.Description,
-		arg.Domain,
-		arg.S3Key,
-		arg.Summary,
-		arg.Content,
-		arg.Html,
-		arg.Metadata,
-	)
-	var i BookmarkContent
-	err := row.Scan(
-		&i.ID,
-		&i.Type,
-		&i.Url,
-		&i.UserID,
-		&i.Title,
-		&i.Description,
-		&i.Domain,
-		&i.S3Key,
-		&i.Summary,
-		&i.Content,
-		&i.Html,
-		&i.Tags,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,

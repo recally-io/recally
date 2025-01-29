@@ -2760,7 +2760,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.ContentDTO"
+                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
                                         }
                                     }
                                 }
@@ -3102,7 +3102,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.ContentDTO"
+                                            "$ref": "#/definitions/bookmarks.BookmarkWithContentDTO"
                                         }
                                     }
                                 }
@@ -3225,7 +3225,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.ContentDTO"
+                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
                                         }
                                     }
                                 }
@@ -3446,7 +3446,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.ContentDTO"
+                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
                                         }
                                     }
                                 }
@@ -3562,7 +3562,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.ContentDTO"
+                                            "$ref": "#/definitions/bookmarks.BookmarkContentDTO"
                                         }
                                     }
                                 }
@@ -3667,7 +3667,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.ContentDTO"
+                                            "$ref": "#/definitions/bookmarks.BookmarkShareDTO"
                                         }
                                     }
                                 }
@@ -3772,7 +3772,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.ContentDTO"
+                                            "$ref": "#/definitions/bookmarks.BookmarkShareDTO"
                                         }
                                     }
                                 }
@@ -5001,7 +5001,7 @@ const docTemplate = `{
                 }
             }
         },
-        "bookmarks.ContentDTO": {
+        "bookmarks.BookmarkContentDTO": {
             "type": "object",
             "properties": {
                 "content": {
@@ -5022,11 +5022,8 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "is_favorite": {
-                    "type": "boolean"
-                },
                 "metadata": {
-                    "$ref": "#/definitions/bookmarks.Metadata"
+                    "$ref": "#/definitions/bookmarks.BookmarkContentMetadata"
                 },
                 "s3_key": {
                     "type": "string"
@@ -5057,10 +5054,100 @@ const docTemplate = `{
                 }
             }
         },
-        "bookmarks.ContentShareDTO": {
+        "bookmarks.BookmarkContentMetadata": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "favicon": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "published_at": {
+                    "type": "string"
+                },
+                "site_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "bookmarks.BookmarkDTO": {
             "type": "object",
             "properties": {
                 "content_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_archive": {
+                    "type": "boolean"
+                },
+                "is_favorite": {
+                    "type": "boolean"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/bookmarks.BookmarkMetadata"
+                },
+                "reading_progress": {
+                    "type": "integer"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "bookmarks.BookmarkMetadata": {
+            "type": "object",
+            "properties": {
+                "highlights": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bookmarks.Highlight"
+                    }
+                },
+                "last_read_at": {
+                    "type": "string"
+                },
+                "reading_progress": {
+                    "type": "integer"
+                },
+                "share": {
+                    "$ref": "#/definitions/bookmarks.BookmarkShareDTO"
+                }
+            }
+        },
+        "bookmarks.BookmarkShareDTO": {
+            "type": "object",
+            "properties": {
+                "bookmark_id": {
                     "type": "string"
                 },
                 "created_at": {
@@ -5071,6 +5158,50 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "bookmarks.BookmarkWithContentDTO": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "$ref": "#/definitions/bookmarks.BookmarkContentDTO"
+                },
+                "content_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_archive": {
+                    "type": "boolean"
+                },
+                "is_favorite": {
+                    "type": "boolean"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/bookmarks.BookmarkMetadata"
+                },
+                "reading_progress": {
+                    "type": "integer"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
@@ -5131,50 +5262,6 @@ const docTemplate = `{
                 },
                 "text": {
                     "type": "string"
-                }
-            }
-        },
-        "bookmarks.Metadata": {
-            "type": "object",
-            "properties": {
-                "author": {
-                    "type": "string"
-                },
-                "cover": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "favicon": {
-                    "type": "string"
-                },
-                "highlights": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/bookmarks.Highlight"
-                    }
-                },
-                "image": {
-                    "type": "string"
-                },
-                "published_at": {
-                    "type": "string"
-                },
-                "share": {
-                    "$ref": "#/definitions/bookmarks.ContentShareDTO"
-                },
-                "site_name": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -5288,7 +5375,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "metadata": {
-                    "$ref": "#/definitions/bookmarks.Metadata"
+                    "$ref": "#/definitions/bookmarks.BookmarkContentMetadata"
                 },
                 "tags": {
                     "type": "array",
@@ -5364,7 +5451,7 @@ const docTemplate = `{
                 "bookmarks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/bookmarks.ContentDTO"
+                        "$ref": "#/definitions/bookmarks.BookmarkDTO"
                     }
                 },
                 "limit": {
@@ -5493,7 +5580,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "metadata": {
-                    "$ref": "#/definitions/bookmarks.Metadata"
+                    "$ref": "#/definitions/bookmarks.BookmarkContentMetadata"
                 },
                 "summary": {
                     "type": "string"

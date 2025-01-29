@@ -147,6 +147,15 @@ type BookmarkContent struct {
 	UpdatedAt   pgtype.Timestamptz
 }
 
+type BookmarkShare struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	BookmarkID pgtype.UUID
+	ExpiresAt  pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
 type BookmarkTag struct {
 	ID        uuid.UUID
 	Name      string
