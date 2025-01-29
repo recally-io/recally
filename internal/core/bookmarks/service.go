@@ -11,7 +11,7 @@ import (
 )
 
 type Service struct {
-	dao *db.Queries
+	dao DAO
 	llm *llms.LLM
 }
 
@@ -49,7 +49,7 @@ type DomainDTO struct {
 }
 
 func (s *Service) ListDomains(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]DomainDTO, error) {
-	domains, err := s.dao.ListBookmarkDomains(ctx, tx, pgtype.UUID{Bytes: userID, Valid: true})
+	domains, err := s.dao.ListBookmarkDomainsByUser(ctx, tx, pgtype.UUID{Bytes: userID, Valid: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list domains for user '%s': %w", userID.String(), err)
 	}

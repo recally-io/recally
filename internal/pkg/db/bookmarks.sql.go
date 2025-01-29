@@ -191,7 +191,7 @@ func (q *Queries) IsBookmarkExistWithURL(ctx context.Context, db DBTX, arg IsBoo
 	return exists, err
 }
 
-const listBookmarkDomains = `-- name: ListBookmarkDomains :many
+const listBookmarkDomainsByUser = `-- name: ListBookmarkDomainsByUser :many
 SELECT bc.domain, count(*) as cnt
 FROM bookmarks b
   JOIN bookmark_content bc ON b.content_id = bc.id
@@ -201,20 +201,20 @@ GROUP BY bc.domain
 ORDER BY cnt DESC, domain ASC
 `
 
-type ListBookmarkDomainsRow struct {
+type ListBookmarkDomainsByUserRow struct {
 	Domain pgtype.Text
 	Cnt    int64
 }
 
-func (q *Queries) ListBookmarkDomains(ctx context.Context, db DBTX, userID pgtype.UUID) ([]ListBookmarkDomainsRow, error) {
-	rows, err := db.Query(ctx, listBookmarkDomains, userID)
+func (q *Queries) ListBookmarkDomainsByUser(ctx context.Context, db DBTX, userID pgtype.UUID) ([]ListBookmarkDomainsByUserRow, error) {
+	rows, err := db.Query(ctx, listBookmarkDomainsByUser, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListBookmarkDomainsRow
+	var items []ListBookmarkDomainsByUserRow
 	for rows.Next() {
-		var i ListBookmarkDomainsRow
+		var i ListBookmarkDomainsByUserRow
 		if err := rows.Scan(&i.Domain, &i.Cnt); err != nil {
 			return nil, err
 		}

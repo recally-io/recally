@@ -138,7 +138,7 @@ SET
     updated_at = CURRENT_TIMESTAMP
 WHERE user_id = $1;
 
--- name: ListBookmarkDomains :many
+-- name: ListBookmarkDomainsByUser :many
 SELECT bc.domain, count(*) as cnt
 FROM bookmarks b
   JOIN bookmark_content bc ON b.content_id = bc.id

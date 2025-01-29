@@ -82,16 +82,16 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, bookmark)
 }
 
-//	@Summary		Redirect to file
-//	@Description	Get a redirect to the file's presigned URL
-//	@Tags			files
-//	@Produce		json
-//	@Param			id	path		string					true	"File ID"
-//	@Success		302	{string}	string					"Redirect to file URL"
-//	@Failure		400	{object}	JSONResult{data=nil}	"Bad Request"
-//	@Failure		401	{object}	JSONResult{data=nil}	"Unauthorized"
-//	@Failure		404	{object}	JSONResult{data=nil}	"Object not found"
-//	@Router			/files/{id} [get]
+// @Summary		Redirect to file
+// @Description	Get a redirect to the file's presigned URL
+// @Tags			files
+// @Produce		json
+// @Param			id	path		string					true	"File ID"
+// @Success		302	{string}	string					"Redirect to file URL"
+// @Failure		400	{object}	JSONResult{data=nil}	"Bad Request"
+// @Failure		401	{object}	JSONResult{data=nil}	"Unauthorized"
+// @Failure		404	{object}	JSONResult{data=nil}	"Object not found"
+// @Router			/files/{id} [get]
 func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(sharedFileRequest)
@@ -117,13 +117,13 @@ func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
 	return c.Redirect(http.StatusFound, presignedURL)
 }
 
-//	@Summary		Get file metadata
-//	@Description	Get metadata for a shared file without downloading it
-//	@Tags			files
-//	@Param			key	path	string	true	"File key"
-//	@Success		200	"Success"
-//	@Failure		404	{object}	JSONResult{data=nil}	"File not found"
-//	@Router			/shared/files/{key} [head]
+// @Summary		Get file metadata
+// @Description	Get metadata for a shared file without downloading it
+// @Tags			files
+// @Param			key	path	string	true	"File key"
+// @Success		200	"Success"
+// @Failure		404	{object}	JSONResult{data=nil}	"File not found"
+// @Router			/shared/files/{key} [head]
 func (h *bookmarkShareHandler) getFileMetadata(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(sharedFileRequest)
