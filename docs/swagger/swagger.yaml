@@ -244,8 +244,6 @@ definitions:
         type: string
       favicon:
         type: string
-      image:
-        type: string
       published_at:
         type: string
       site_name:
@@ -253,6 +251,8 @@ definitions:
     type: object
   bookmarks.BookmarkDTO:
     properties:
+      content:
+        $ref: '#/definitions/bookmarks.BookmarkContentDTO'
       content_id:
         type: string
       created_at:
@@ -301,35 +301,6 @@ definitions:
         type: string
       id:
         type: string
-      updated_at:
-        type: string
-      user_id:
-        type: string
-    type: object
-  bookmarks.BookmarkWithContentDTO:
-    properties:
-      content:
-        $ref: '#/definitions/bookmarks.BookmarkContentDTO'
-      content_id:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: string
-      is_archive:
-        type: boolean
-      is_favorite:
-        type: boolean
-      is_public:
-        type: boolean
-      metadata:
-        $ref: '#/definitions/bookmarks.BookmarkMetadata'
-      reading_progress:
-        type: integer
-      tags:
-        items:
-          type: string
-        type: array
       updated_at:
         type: string
       user_id:
@@ -2356,7 +2327,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.BookmarkWithContentDTO'
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
               type: object
         "400":
           description: Bad Request

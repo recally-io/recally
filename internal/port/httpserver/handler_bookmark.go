@@ -22,7 +22,7 @@ import (
 type BookmarkService interface {
 	ListBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID, filters []string, query string, limit, offset int32) ([]bookmarks.BookmarkDTO, int64, error)
 	CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, dto *bookmarks.BookmarkContentDTO) (*bookmarks.BookmarkDTO, error)
-	GetBookmarkWithContent(ctx context.Context, tx db.DBTX, userId, id uuid.UUID) (*bookmarks.BookmarkWithContentDTO, error)
+	GetBookmarkWithContent(ctx context.Context, tx db.DBTX, userId, id uuid.UUID) (*bookmarks.BookmarkDTO, error)
 	UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, id uuid.UUID, content *bookmarks.BookmarkContentDTO) (*bookmarks.BookmarkDTO, error)
 	DeleteBookmark(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteBookmarksByUser(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
@@ -270,7 +270,7 @@ type getBookmarkRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			bookmark-id	path		string									true	"Bookmark ID"
-//	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkWithContentDTO}	"Success"
+//	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkDTO}	"Success"
 //	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
 //	@Failure		401			{object}	JSONResult{data=nil}					"Unauthorized"
 //	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
@@ -508,13 +508,13 @@ type shareBookmarkRequest struct {
 //	@Tags			Bookmarks
 //	@Accept			json
 //	@Produce		json
-//	@Param			bookmark-id	path		string									true	"Bookmark ID"
-//	@Param			request		body		shareBookmarkRequest					true	"Share options"
+//	@Param			bookmark-id	path		string										true	"Bookmark ID"
+//	@Param			request		body		shareBookmarkRequest						true	"Share options"
 //	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkShareDTO}	"Success"
-//	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
-//	@Failure		401			{object}	JSONResult{data=nil}					"Unauthorized"
-//	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
-//	@Failure		500			{object}	JSONResult{data=nil}					"Internal Server Error"
+//	@Failure		400			{object}	JSONResult{data=nil}						"Bad Request"
+//	@Failure		401			{object}	JSONResult{data=nil}						"Unauthorized"
+//	@Failure		404			{object}	JSONResult{data=nil}						"Not Found"
+//	@Failure		500			{object}	JSONResult{data=nil}						"Internal Server Error"
 //	@Router			/bookmarks/{bookmark-id}/share [post]
 func (h *bookmarksHandler) shareBookmark(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -549,12 +549,12 @@ type updateSharedBookmarkRequest struct {
 //	@Tags			Bookmarks
 //	@Accept			json
 //	@Produce		json
-//	@Param			bookmark-id	path		string									true	"Bookmark ID"
-//	@Param			request		body		updateSharedBookmarkRequest				true	"Update options"
+//	@Param			bookmark-id	path		string										true	"Bookmark ID"
+//	@Param			request		body		updateSharedBookmarkRequest					true	"Update options"
 //	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkShareDTO}	"Success"
-//	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
-//	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
-//	@Failure		500			{object}	JSONResult{data=nil}					"Internal Server Error"
+//	@Failure		400			{object}	JSONResult{data=nil}						"Bad Request"
+//	@Failure		404			{object}	JSONResult{data=nil}						"Not Found"
+//	@Failure		500			{object}	JSONResult{data=nil}						"Internal Server Error"
 //	@Router			/bookmarks/{bookmark-id}/share [put]
 func (h *bookmarksHandler) updateSharedBookmark(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -619,11 +619,11 @@ type getShareContentRequest struct {
 //	@Tags			Bookmarks
 //	@Accept			json
 //	@Produce		json
-//	@Param			bookmark-id	path		string									true	"Bookmark ID"
+//	@Param			bookmark-id	path		string											true	"Bookmark ID"
 //	@Success		200			{object}	JSONResult{data=bookmarks.BookmarkContentDTO}	"Success"
-//	@Failure		400			{object}	JSONResult{data=nil}					"Bad Request"
-//	@Failure		404			{object}	JSONResult{data=nil}					"Not Found"
-//	@Failure		500			{object}	JSONResult{data=nil}					"Internal Server Error"
+//	@Failure		400			{object}	JSONResult{data=nil}							"Bad Request"
+//	@Failure		404			{object}	JSONResult{data=nil}							"Not Found"
+//	@Failure		500			{object}	JSONResult{data=nil}							"Internal Server Error"
 //	@Router			/bookmarks/{bookmark-id}/share [get]
 func (h *bookmarksHandler) getShareBookmark(c echo.Context) error {
 	ctx := c.Request().Context()

@@ -546,7 +546,7 @@ func _000012_split_bookmark_contentDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000012_split_bookmark_content.down.sql", size: 259, mode: os.FileMode(0644), modTime: time.Unix(1738137401, 0)}
+	info := bindataFileInfo{name: "000012_split_bookmark_content.down.sql", size: 259, mode: os.FileMode(0644), modTime: time.Unix(1738162357, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x18, 0xd, 0x5e, 0x4f, 0x9, 0xc5, 0x5e, 0x30, 0xd6, 0x3a, 0xd1, 0x4d, 0xdb, 0x8b, 0xfb, 0x31, 0x19, 0xb5, 0x81, 0xb9, 0x82, 0x4f, 0x56, 0x20, 0x2b, 0x5f, 0x9d, 0x23, 0x26, 0xb1, 0xf0, 0xb}}
 	return a, nil
 }
@@ -566,7 +566,7 @@ func _000012_split_bookmark_contentUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000012_split_bookmark_content.up.sql", size: 4835, mode: os.FileMode(0644), modTime: time.Unix(1738137330, 0)}
+	info := bindataFileInfo{name: "000012_split_bookmark_content.up.sql", size: 4835, mode: os.FileMode(0644), modTime: time.Unix(1738162357, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x24, 0xf8, 0x64, 0xc3, 0x2d, 0x98, 0x56, 0xc4, 0x5a, 0x95, 0x7c, 0x3e, 0x87, 0xe6, 0x3, 0xdc, 0x20, 0x8c, 0xfc, 0x6b, 0x6a, 0x27, 0xec, 0xdc, 0x57, 0x7f, 0xd8, 0x64, 0x5b, 0x1e, 0xbf, 0x50}}
 	return a, nil
 }

@@ -26,17 +26,18 @@ type BookmarkMetadata struct {
 }
 
 type BookmarkDTO struct {
-	ID              uuid.UUID        `json:"id"`
-	UserID          uuid.UUID        `json:"user_id"`
-	ContentID       uuid.UUID        `json:"content_id"`
-	IsFavorite      bool             `json:"is_favorite"`
-	IsArchive       bool             `json:"is_archive"`
-	IsPublic        bool             `json:"is_public"`
-	ReadingProgress int              `json:"reading_progress"`
-	Metadata        BookmarkMetadata `json:"metadata"`
-	CreatedAt       time.Time        `json:"created_at"`
-	UpdatedAt       time.Time        `json:"updated_at"`
-	Tags            []string         `json:"tags"`
+	ID              uuid.UUID          `json:"id"`
+	UserID          uuid.UUID          `json:"user_id"`
+	ContentID       uuid.UUID          `json:"content_id"`
+	IsFavorite      bool               `json:"is_favorite"`
+	IsArchive       bool               `json:"is_archive"`
+	IsPublic        bool               `json:"is_public"`
+	ReadingProgress int                `json:"reading_progress"`
+	Metadata        BookmarkMetadata   `json:"metadata"`
+	CreatedAt       time.Time          `json:"created_at"`
+	UpdatedAt       time.Time          `json:"updated_at"`
+	Tags            []string           `json:"tags"`
+	Content         BookmarkContentDTO `json:"content"`
 }
 
 func (b *BookmarkDTO) Load(dbo *db.Bookmark) {
@@ -52,6 +53,48 @@ func (b *BookmarkDTO) Load(dbo *db.Bookmark) {
 
 	if dbo.Metadata != nil {
 		b.Metadata = loadBookmarkMetadata(dbo.Metadata)
+	}
+}
+
+func (b *BookmarkDTO) LoadWithContent(dbo *db.GetBookmarkWithContentRow) {
+	// Load bookmark data
+	b.ID = dbo.ID
+	b.UserID = dbo.UserID.Bytes
+	b.ContentID = dbo.ID_2
+	b.IsFavorite = dbo.IsFavorite.Bool
+	b.IsArchive = dbo.IsArchive.Bool
+	b.IsPublic = dbo.IsPublic.Bool
+	b.ReadingProgress = int(dbo.ReadingProgress.Int32)
+	b.CreatedAt = dbo.CreatedAt.Time
+	b.UpdatedAt = dbo.UpdatedAt.Time
+
+	// Load bookmark metadata
+	if dbo.Metadata != nil {
+		b.Metadata = loadBookmarkMetadata(dbo.Metadata)
+	}
+
+	// Load tags from the aggregated tags field
+	b.Tags = loadBookmarkTags(dbo.Tags)
+
+	// Load content data
+	b.Content.ID = dbo.ID_2
+	b.Content.Type = ContentType(dbo.Type)
+	b.Content.URL = dbo.Url
+	b.Content.UserID = dbo.UserID_2.Bytes
+	b.Content.Title = dbo.Title.String
+	b.Content.Description = dbo.Description.String
+	b.Content.Domain = dbo.Domain.String
+	b.Content.S3Key = dbo.S3Key.String
+	b.Content.Summary = dbo.Summary.String
+	b.Content.Content = dbo.Content.String
+	b.Content.Html = dbo.Html.String
+	b.Content.Tags = dbo.Tags
+	b.Content.CreatedAt = dbo.CreatedAt_2.Time
+	b.Content.UpdatedAt = dbo.UpdatedAt_2.Time
+
+	// Load content metadata
+	if dbo.Metadata_2 != nil {
+		b.Content.Metadata = loadBookmarkContentMetadata(dbo.Metadata_2)
 	}
 }
 
@@ -100,53 +143,6 @@ func (b *BookmarkDTO) DumpToUpdateParams() db.UpdateBookmarkParams {
 			Valid: true,
 		},
 		Metadata: dumpBookmarkMetadata(b.Metadata),
-	}
-}
-
-type BookmarkWithContentDTO struct {
-	BookmarkDTO
-	Content BookmarkContentDTO `json:"content"`
-}
-
-func (d *BookmarkWithContentDTO) Load(dbo *db.GetBookmarkWithContentRow) {
-	// Load bookmark data
-	d.ID = dbo.ID
-	d.UserID = dbo.UserID.Bytes
-	d.ContentID = dbo.ID_2
-	d.IsFavorite = dbo.IsFavorite.Bool
-	d.IsArchive = dbo.IsArchive.Bool
-	d.IsPublic = dbo.IsPublic.Bool
-	d.ReadingProgress = int(dbo.ReadingProgress.Int32)
-	d.CreatedAt = dbo.CreatedAt.Time
-	d.UpdatedAt = dbo.UpdatedAt.Time
-
-	// Load bookmark metadata
-	if dbo.Metadata != nil {
-		d.Metadata = loadBookmarkMetadata(dbo.Metadata)
-	}
-
-	// Load tags from the aggregated tags field
-	d.Tags = loadBookmarkTags(dbo.Tags)
-
-	// Load content data
-	d.Content.ID = dbo.ID_2
-	d.Content.Type = ContentType(dbo.Type)
-	d.Content.URL = dbo.Url
-	d.Content.UserID = dbo.UserID_2.Bytes
-	d.Content.Title = dbo.Title.String
-	d.Content.Description = dbo.Description.String
-	d.Content.Domain = dbo.Domain.String
-	d.Content.S3Key = dbo.S3Key.String
-	d.Content.Summary = dbo.Summary.String
-	d.Content.Content = dbo.Content.String
-	d.Content.Html = dbo.Html.String
-	d.Content.Tags = dbo.Tags
-	d.Content.CreatedAt = dbo.CreatedAt_2.Time
-	d.Content.UpdatedAt = dbo.UpdatedAt_2.Time
-
-	// Load content metadata
-	if dbo.Metadata_2 != nil {
-		d.Content.Metadata = loadBookmarkContentMetadata(dbo.Metadata_2)
 	}
 }
 

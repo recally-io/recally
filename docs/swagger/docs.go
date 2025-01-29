@@ -3102,7 +3102,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/bookmarks.BookmarkWithContentDTO"
+                                            "$ref": "#/definitions/bookmarks.BookmarkDTO"
                                         }
                                     }
                                 }
@@ -5072,9 +5072,6 @@ const docTemplate = `{
                 "favicon": {
                     "type": "string"
                 },
-                "image": {
-                    "type": "string"
-                },
                 "published_at": {
                     "type": "string"
                 },
@@ -5086,6 +5083,9 @@ const docTemplate = `{
         "bookmarks.BookmarkDTO": {
             "type": "object",
             "properties": {
+                "content": {
+                    "$ref": "#/definitions/bookmarks.BookmarkContentDTO"
+                },
                 "content_id": {
                     "type": "string"
                 },
@@ -5158,50 +5158,6 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "bookmarks.BookmarkWithContentDTO": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "$ref": "#/definitions/bookmarks.BookmarkContentDTO"
-                },
-                "content_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_archive": {
-                    "type": "boolean"
-                },
-                "is_favorite": {
-                    "type": "boolean"
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/bookmarks.BookmarkMetadata"
-                },
-                "reading_progress": {
-                    "type": "integer"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "updated_at": {
                     "type": "string"

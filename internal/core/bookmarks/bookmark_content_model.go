@@ -30,7 +30,6 @@ type BookmarkContentMetadata struct {
 	SiteName    string    `json:"site_name,omitempty"`
 	Domain      string    `json:"domain,omitempty"`
 
-	Image   string `json:"image,omitempty"`
 	Favicon string `json:"favicon"`
 	Cover   string `json:"cover,omitempty"`
 }
@@ -156,11 +155,6 @@ func (c *BookmarkContentDTO) FromReaderContent(article *webreader.Content) {
 
 	c.Metadata.Cover = article.Cover
 	c.Metadata.Favicon = article.Favicon
-	if article.Cover != "" {
-		c.Metadata.Image = article.Cover
-	} else {
-		c.Metadata.Image = article.Favicon
-	}
 
 	if article.PublishedTime != nil {
 		c.Metadata.PublishedAt = *article.PublishedTime

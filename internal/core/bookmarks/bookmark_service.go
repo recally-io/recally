@@ -61,7 +61,7 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 		createBookmarkContentParams := dto.Dump()
 		// Set UserID to Nil as this content can be shared
 		createBookmarkContentParams.UserID = pgtype.UUID{Bytes: uuid.Nil, Valid: false}
-		content, err = s.dao.CreateBookmarkContent(ctx, tx, dto.Dump())
+		content, err = s.dao.CreateBookmarkContent(ctx, tx, createBookmarkContentParams)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new bookmark content: %w", err)
 		}
@@ -83,7 +83,7 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 	return &bookmarkDTO, nil
 }
 
-func (s *Service) GetBookmarkWithContent(ctx context.Context, tx db.DBTX, userId, id uuid.UUID) (*BookmarkWithContentDTO, error) {
+func (s *Service) GetBookmarkWithContent(ctx context.Context, tx db.DBTX, userId, id uuid.UUID) (*BookmarkDTO, error) {
 	bookmark, err := s.dao.GetBookmarkWithContent(ctx, tx, db.GetBookmarkWithContentParams{
 		ID:     id,
 		UserID: pgtype.UUID{Bytes: userId, Valid: true},
@@ -91,8 +91,8 @@ func (s *Service) GetBookmarkWithContent(ctx context.Context, tx db.DBTX, userId
 	if err != nil {
 		return nil, err
 	}
-	var result BookmarkWithContentDTO
-	result.Load(&bookmark)
+	var result BookmarkDTO
+	result.LoadWithContent(&bookmark)
 	return &result, nil
 }
 
@@ -199,5 +199,5 @@ func (s *Service) UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 	if _, err = s.UpdateBookmarkContent(ctx, tx, &updateContent); err != nil {
 		return nil, err
 	}
-	return &bookmark.BookmarkDTO, nil
+	return bookmark, nil
 }
