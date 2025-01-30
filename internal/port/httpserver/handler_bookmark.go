@@ -289,7 +289,7 @@ func (h *bookmarksHandler) getBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmark, err := h.service.GetBookmarkWithContent(ctx, tx, req.BookmarkID, user.ID)
+	bookmark, err := h.service.GetBookmarkWithContent(ctx, tx, user.ID, req.BookmarkID)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}

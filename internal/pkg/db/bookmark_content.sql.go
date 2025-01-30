@@ -82,6 +82,36 @@ func (q *Queries) CreateBookmarkContent(ctx context.Context, db DBTX, arg Create
 	return i, err
 }
 
+const getBookmarkContentByBookmarkID = `-- name: GetBookmarkContentByBookmarkID :one
+SELECT bc.id, bc.type, bc.url, bc.user_id, bc.title, bc.description, bc.domain, bc.s3_key, bc.summary, bc.content, bc.html, bc.tags, bc.metadata, bc.created_at, bc.updated_at
+FROM bookmarks b 
+  JOIN bookmark_content bc ON b.content_id = bc.id
+WHERE b.id = $1
+`
+
+func (q *Queries) GetBookmarkContentByBookmarkID(ctx context.Context, db DBTX, id uuid.UUID) (BookmarkContent, error) {
+	row := db.QueryRow(ctx, getBookmarkContentByBookmarkID, id)
+	var i BookmarkContent
+	err := row.Scan(
+		&i.ID,
+		&i.Type,
+		&i.Url,
+		&i.UserID,
+		&i.Title,
+		&i.Description,
+		&i.Domain,
+		&i.S3Key,
+		&i.Summary,
+		&i.Content,
+		&i.Html,
+		&i.Tags,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getBookmarkContentByID = `-- name: GetBookmarkContentByID :one
 SELECT id, type, url, user_id, title, description, domain, s3_key, summary, content, html, tags, metadata, created_at, updated_at
 FROM bookmark_content

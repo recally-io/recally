@@ -58,8 +58,8 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 	// insert summaries job if summary is empty
 	if dto.Summary == "" {
 		if result, err := DefaultQueue.InsertTx(ctx, tx, SummarierWorkerArgs{
-			ID:     dto.ID,
-			UserID: dto.UserID,
+			ID:     job.Args.ID,     // bookmark id
+			UserID: job.Args.UserID, // bookmark user id
 		}, nil); err != nil {
 			logger.FromContext(ctx).Error("failed to insert summaries job", "err", err, "content_id", dto.ID)
 		} else {

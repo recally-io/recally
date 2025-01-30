@@ -117,16 +117,15 @@ type AuthUserOauthConnection struct {
 }
 
 type Bookmark struct {
-	ID              uuid.UUID
-	UserID          pgtype.UUID
-	ContentID       pgtype.UUID
-	IsFavorite      pgtype.Bool
-	IsArchive       pgtype.Bool
-	IsPublic        pgtype.Bool
-	ReadingProgress pgtype.Int4
-	Metadata        []byte
-	CreatedAt       pgtype.Timestamptz
-	UpdatedAt       pgtype.Timestamptz
+	ID         uuid.UUID
+	UserID     pgtype.UUID
+	ContentID  pgtype.UUID
+	IsFavorite bool
+	IsArchive  bool
+	IsPublic   bool
+	Metadata   []byte
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
 }
 
 type BookmarkContent struct {

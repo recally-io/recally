@@ -14,6 +14,8 @@ import (
 const createBookmarkTag = `-- name: CreateBookmarkTag :one
 INSERT INTO bookmark_tags (name, user_id)
 VALUES ($1, $2)
+ON CONFLICT (name, user_id) DO UPDATE
+SET name = EXCLUDED.name
 RETURNING id, name, user_id, created_at, updated_at
 `
 

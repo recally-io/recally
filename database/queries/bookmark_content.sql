@@ -29,6 +29,12 @@ SELECT *
 FROM bookmark_content
 WHERE id = $1;
 
+-- name: GetBookmarkContentByBookmarkID :one
+SELECT bc.*
+FROM bookmarks b 
+  JOIN bookmark_content bc ON b.content_id = bc.id
+WHERE b.id = $1;
+
 -- name: GetBookmarkContentByURL :one
 -- First try to get user specific content, then the shared content
 SELECT *

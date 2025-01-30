@@ -36,10 +36,9 @@ CREATE TABLE bookmarks (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(uuid) ON DELETE CASCADE,
     content_id UUID REFERENCES bookmark_content(id),
-    is_favorite BOOLEAN DEFAULT FALSE,
-    is_archive BOOLEAN DEFAULT FALSE,
-    is_public BOOLEAN DEFAULT FALSE,
-    reading_progress INTEGER DEFAULT 0,
+    is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
+    is_archive BOOLEAN NOT NULL DEFAULT FALSE,
+    is_public BOOLEAN NOT NULL DEFAULT FALSE,
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -86,7 +85,7 @@ CREATE TABLE bookmark_share (
     expires_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(userid, bookmark_id)
+    UNIQUE(user_id, bookmark_id)
 );
 
 CREATE INDEX  idx_bookmark_share_user_id ON bookmark_share(user_id);

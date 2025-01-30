@@ -34,8 +34,8 @@ func (s *Service) CreateBookmarkContent(ctx context.Context, tx db.DBTX, content
 	return result, nil
 }
 
-func (s *Service) GetBookmarkContentByID(ctx context.Context, tx db.DBTX, id uuid.UUID) (*BookmarkContentDTO, error) {
-	dbo, err := s.dao.GetBookmarkContentByID(ctx, tx, id)
+func (s *Service) GetBookmarkContentByBookmarkID(ctx context.Context, tx db.DBTX, bookmarkID uuid.UUID) (*BookmarkContentDTO, error) {
+	dbo, err := s.dao.GetBookmarkContentByBookmarkID(ctx, tx, bookmarkID)
 	if err != nil {
 		return nil, err
 	}
@@ -71,10 +71,10 @@ func (s *Service) UpdateBookmarkContent(ctx context.Context, tx db.DBTX, content
 	return result, nil
 }
 
-func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID, opts fetcher.FetchOptions) (*BookmarkContentDTO, error) {
-	dto, err := s.GetBookmarkContentByID(ctx, tx, id)
+func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, bookmarkID, userID uuid.UUID, opts fetcher.FetchOptions) (*BookmarkContentDTO, error) {
+	dto, err := s.GetBookmarkContentByBookmarkID(ctx, tx, bookmarkID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get bookmark by id '%s': %w", id.String(), err)
+		return nil, fmt.Errorf("failed to get bookmark content by id '%s': %w", bookmarkID.String(), err)
 	}
 	if dto.Content != "" && !opts.Force {
 		return dto, nil
@@ -108,13 +108,13 @@ func (s *Service) FetchContentWithCache(ctx context.Context, uri string, opts fe
 	return reader.Process(ctx, content)
 }
 
-func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) (*BookmarkContentDTO, error) {
+func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, bookmarkID, userID uuid.UUID) (*BookmarkContentDTO, error) {
 	user, err := auth.LoadUser(ctx, tx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	dto, err := s.GetBookmarkContentByID(ctx, tx, id)
+	dto, err := s.GetBookmarkContentByBookmarkID(ctx, tx, bookmarkID)
 	if err != nil {
 		return nil, err
 	}
@@ -135,10 +135,11 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, id, userID u
 	} else {
 		tags, summary := parseTagsFromSummary(content.Summary)
 		if len(tags) > 0 {
-			if err := s.linkContentTags(ctx, tx, dto.Tags, tags, id, userID); err != nil {
+			if err := s.linkContentTags(ctx, tx, dto.Tags, tags, bookmarkID, userID); err != nil {
 				return nil, err
 			}
 		}
+		dto.Tags = tags
 		dto.Summary = summary
 	}
 	return s.UpdateBookmarkContent(ctx, tx, dto)

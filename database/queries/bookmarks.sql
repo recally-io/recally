@@ -3,14 +3,15 @@ WITH total AS (
   SELECT COUNT(DISTINCT b.*) AS total_count
   FROM bookmarks AS b
            JOIN bookmark_content AS bc ON b.content_id = bc.id
-           LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.content_id
+           LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.bookmark_id
            LEFT JOIN bookmark_tags AS bct ON bctm.tag_id = bct.id
   WHERE b.user_id = $1
     AND (sqlc.narg('domains')::text[] IS NULL OR bc.domain = ANY(sqlc.narg('domains')::text[]))
     AND (sqlc.narg('types')::text[] IS NULL OR bc.type = ANY(sqlc.narg('types')::text[]))
     AND (sqlc.narg('tags')::text[] IS NULL OR bct.name = ANY(sqlc.narg('tags')::text[]))
 )
-SELECT b.*,
+SELECT sqlc.embed(b),
+       sqlc.embed(bc),
        t.total_count,
        COALESCE(
          array_agg(bct.name) FILTER (WHERE bct.name IS NOT NULL),
@@ -19,7 +20,7 @@ SELECT b.*,
 FROM bookmarks AS b
          JOIN bookmark_content AS bc ON b.content_id = bc.id
          CROSS JOIN total AS t
-         LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.content_id
+         LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.bookmark_id
          LEFT JOIN bookmark_tags AS bct ON bctm.tag_id = bct.id
 WHERE b.user_id = $1
   AND (sqlc.narg('domains')::text[] IS NULL OR bc.domain = ANY(sqlc.narg('domains')::text[]))
@@ -34,7 +35,7 @@ WITH total AS (
   SELECT COUNT(DISTINCT b.*) AS total_count
   FROM bookmarks AS b
            JOIN bookmark_content AS bc ON b.content_id = bc.id
-           LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.content_id
+           LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.bookmark_id
            LEFT JOIN bookmark_tags AS bct ON bctm.tag_id = bct.id
   WHERE b.user_id = $1
     AND (sqlc.narg('domains')::text[] IS NULL OR bc.domain = ANY(sqlc.narg('domains')::text[]))
@@ -49,7 +50,8 @@ WITH total AS (
       OR bc.metadata @@@ sqlc.narg('query')
     )
 )
-SELECT b.*,
+SELECT sqlc.embed(b),
+       sqlc.embed(bc),
        t.total_count,
        COALESCE(
          array_agg(bct.name) FILTER (WHERE bct.name IS NOT NULL),
@@ -58,7 +60,7 @@ SELECT b.*,
 FROM bookmarks AS b
          JOIN bookmark_content AS bc ON b.content_id = bc.id
          CROSS JOIN total AS t
-         LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.content_id
+         LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.bookmark_id
          LEFT JOIN bookmark_tags AS bct ON bctm.tag_id = bct.id
 WHERE b.user_id = $1
   AND (sqlc.narg('domains')::text[] IS NULL OR bc.domain = ANY(sqlc.narg('domains')::text[]))
@@ -77,15 +79,15 @@ ORDER BY b.created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: GetBookmarkWithContent :one
-SELECT b.*,
-       bc.*,
+SELECT sqlc.embed(b),
+       sqlc.embed(bc),
        COALESCE(
          array_agg(bct.name) FILTER (WHERE bct.name IS NOT NULL),
          ARRAY[]::VARCHAR[]
        ) as tags
 FROM bookmarks b
          JOIN bookmark_content bc ON b.content_id = bc.id
-         LEFT JOIN bookmark_tags_mapping bctm ON bc.id = bctm.content_id
+         LEFT JOIN bookmark_tags_mapping bctm ON bc.id = bctm.bookmark_id
          LEFT JOIN bookmark_tags bct ON bctm.tag_id = bct.id
 WHERE b.id = $1
   AND b.user_id = $2
@@ -104,10 +106,10 @@ SELECT EXISTS (
 -- name: CreateBookmark :one
 INSERT INTO bookmarks (
   user_id, content_id, is_favorite, is_archive,
-  is_public, reading_progress, metadata
+  is_public, metadata
 )
 VALUES (
-  $1, $2, $3, $4, $5, $6, $7
+  $1, $2, $3, $4, $5, $6
 )
 RETURNING *;
 
@@ -116,7 +118,6 @@ UPDATE bookmarks
 SET is_favorite = COALESCE(sqlc.narg('is_favorite'), is_favorite),
     is_archive = COALESCE(sqlc.narg('is_archive'), is_archive),
     is_public = COALESCE(sqlc.narg('is_public'), is_public),
-    reading_progress = COALESCE(sqlc.narg('reading_progress'), reading_progress),
     metadata = COALESCE(sqlc.narg('metadata'), metadata)
 WHERE id = $1
   AND user_id = $2

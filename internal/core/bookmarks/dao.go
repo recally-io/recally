@@ -13,6 +13,7 @@ type DAO interface {
 	IsBookmarkContentExistByURL(ctx context.Context, db db.DBTX, url string) (bool, error)
 	CreateBookmarkContent(ctx context.Context, db db.DBTX, arg db.CreateBookmarkContentParams) (db.BookmarkContent, error)
 	GetBookmarkContentByID(ctx context.Context, db db.DBTX, id uuid.UUID) (db.BookmarkContent, error)
+	GetBookmarkContentByBookmarkID(ctx context.Context, db db.DBTX, id uuid.UUID) (db.BookmarkContent, error)
 	GetBookmarkContentByURL(ctx context.Context, db db.DBTX, arg db.GetBookmarkContentByURLParams) (db.BookmarkContent, error)
 	UpdateBookmarkContent(ctx context.Context, db db.DBTX, arg db.UpdateBookmarkContentParams) (db.BookmarkContent, error)
 
