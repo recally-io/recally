@@ -51,21 +51,21 @@ export default function BookmarkList({
 				className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1"
 			>
 				<Link to={ROUTES.BOOKMARK_DETAIL} params={{ id: bookmark.id }}>
-					{bookmark.metadata?.image && (
+					{bookmark.content.metadata?.cover && (
 						<div className="relative h-48 overflow-hidden">
 							<img
-								src={bookmark.metadata.image}
-								alt={bookmark.title}
+								src={bookmark.content.metadata.cover}
+								alt={bookmark.content.title}
 								className="w-full h-full object-cover"
 							/>
 						</div>
 					)}
 					<CardHeader>
 						<CardTitle className="line-clamp-2 text-lg">
-							{bookmark.title}
+							{bookmark.content.title}
 						</CardTitle>
 						<CardDescription className="line-clamp-1">
-							{bookmark.url}
+							{bookmark.content.url}
 						</CardDescription>
 					</CardHeader>
 
@@ -87,21 +87,21 @@ export default function BookmarkList({
 		return (
 			<Link to={ROUTES.BOOKMARK_DETAIL} params={{ id: bookmark.id }}>
 				<div key={bookmark.id} className="p-4 border rounded-md flex gap-4">
-					{bookmark.metadata?.image && (
+					{bookmark.content.metadata?.cover && (
 						<div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
 							<img
-								src={bookmark.metadata.image}
-								alt={bookmark.title}
+								src={bookmark.content.metadata.cover}
+								alt={bookmark.content.title}
 								className="w-full h-full object-cover"
 							/>
 						</div>
 					)}
 					<div className="flex-grow">
 						<h3 className="text-lg font-semibold line-clamp-1">
-							{bookmark.title}
+							{bookmark.content.title}
 						</h3>
 						<p className="text-sm text-muted-foreground line-clamp-1 break-all">
-							{bookmark.url}
+							{bookmark.content.url}
 						</p>
 						<div className="mt-2 flex flex-wrap gap-1">
 							{bookmark.tags?.map((tag) => (
