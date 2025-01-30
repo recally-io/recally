@@ -1,6 +1,7 @@
 import type * as React from "react";
 
 import { NavUser } from "@/components/sidebar-nav-user";
+import ThemeToggle from "@/components/theme-toggle";
 import {
 	Sidebar,
 	SidebarContent,
@@ -11,11 +12,11 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarRail,
+	SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
 import { Link } from "@tanstack/react-router";
 import { Settings2 } from "lucide-react";
-import ThemeToggle from "../theme-toggle";
 
 export function SidebarComponent({
 	children,
@@ -45,6 +46,14 @@ export function SidebarComponent({
 									<span className="font-semibold">Recally</span>
 								</div>
 							</Link>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+					<SidebarMenuItem>
+						<SidebarMenuButton asChild tooltip="Trigger Sidebar">
+							<div className="flex items-center gap-2">
+								<SidebarTrigger />
+								<span>Trigger Sidebar</span>
+							</div>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>

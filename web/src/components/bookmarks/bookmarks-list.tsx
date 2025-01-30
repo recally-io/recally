@@ -85,8 +85,12 @@ export default function BookmarkList({
 
 	const listView = (bookmark: Bookmark) => {
 		return (
-			<Link to={ROUTES.BOOKMARK_DETAIL} params={{ id: bookmark.id }}>
-				<div key={bookmark.id} className="p-4 border rounded-md flex gap-4">
+			<Link
+				key={bookmark.id}
+				to={ROUTES.BOOKMARK_DETAIL}
+				params={{ id: bookmark.id }}
+			>
+				<div className="p-4 border rounded-md flex gap-4">
 					{bookmark.content.metadata?.cover && (
 						<div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
 							<img
