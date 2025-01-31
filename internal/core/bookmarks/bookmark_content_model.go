@@ -139,6 +139,7 @@ func (b *BookmarkContentDTO) DumpToUpdateParams() db.UpdateBookmarkContentParams
 			String: b.Html,
 			Valid:  b.Html != "",
 		},
+		Tags:     b.Tags,
 		Metadata: dumpBookmarkContentMetadata(b.Metadata),
 	}
 }

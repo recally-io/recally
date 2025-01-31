@@ -267,8 +267,6 @@ definitions:
         type: boolean
       metadata:
         $ref: '#/definitions/bookmarks.BookmarkMetadata'
-      reading_progress:
-        type: integer
       tags:
         items:
           type: string

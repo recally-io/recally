@@ -200,7 +200,8 @@ SET title = COALESCE($2, title),
     summary = COALESCE($5, summary),
     content = COALESCE($6, content),
     html = COALESCE($7, html),
-    metadata = COALESCE($8, metadata)
+    tags = COALESCE($8, tags),
+    metadata = COALESCE($9, metadata)
 WHERE id = $1
 RETURNING id, type, url, user_id, title, description, domain, s3_key, summary, content, html, tags, metadata, created_at, updated_at
 `
@@ -213,6 +214,7 @@ type UpdateBookmarkContentParams struct {
 	Summary     pgtype.Text
 	Content     pgtype.Text
 	Html        pgtype.Text
+	Tags        []string
 	Metadata    []byte
 }
 
@@ -225,6 +227,7 @@ func (q *Queries) UpdateBookmarkContent(ctx context.Context, db DBTX, arg Update
 		arg.Summary,
 		arg.Content,
 		arg.Html,
+		arg.Tags,
 		arg.Metadata,
 	)
 	var i BookmarkContent

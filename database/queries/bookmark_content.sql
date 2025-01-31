@@ -50,6 +50,7 @@ SET title = COALESCE(sqlc.narg('title'), title),
     summary = COALESCE(sqlc.narg('summary'), summary),
     content = COALESCE(sqlc.narg('content'), content),
     html = COALESCE(sqlc.narg('html'), html),
+    tags = COALESCE(sqlc.narg('tags'), tags),
     metadata = COALESCE(sqlc.narg('metadata'), metadata)
 WHERE id = $1
 RETURNING *;

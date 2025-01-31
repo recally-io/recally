@@ -102,7 +102,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	summary, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebSummary", url), 24*time.Hour, func() (*string, error) {
 		isSummaryCached = false
 		// cache the content
-		content, err := h.bookmarkService.FetchContentWithCache(ctx, url, fetcher.FetchOptions{
+		content, err := h.bookmarkService.FetchWebContentWithCache(ctx, url, fetcher.FetchOptions{
 			FecherType: fetcher.TypeJinaReader,
 		})
 		if err != nil {

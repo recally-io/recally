@@ -230,7 +230,7 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	bookmark := &bookmarks.BookmarkContentDTO{
+	bookmarkContent := &bookmarks.BookmarkContentDTO{
 		UserID:   user.ID,
 		URL:      req.URL,
 		Type:     bookmarks.ContentTypeBookmark,
@@ -241,13 +241,13 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 		Metadata: req.Metadata,
 	}
 
-	created, err := h.service.CreateBookmark(ctx, tx, user.ID, bookmark)
+	bookmark, err := h.service.CreateBookmark(ctx, tx, user.ID, bookmarkContent)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 	result, err := h.queue.InsertTx(ctx, tx, queue.CrawlerWorkerArgs{
-		ID:           created.ID,
-		UserID:       created.UserID,
+		ID:           bookmark.ID,
+		UserID:       bookmark.UserID,
 		FetchOptions: fetcher.FetchOptions{FecherType: fetcher.TypeHttp},
 	}, nil)
 	if err != nil {
@@ -255,7 +255,7 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	} else {
 		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
 	}
-	return JsonResponse(c, http.StatusCreated, created)
+	return JsonResponse(c, http.StatusCreated, bookmark)
 }
 
 type getBookmarkRequest struct {

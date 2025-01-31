@@ -5107,9 +5107,6 @@ const docTemplate = `{
                 "metadata": {
                     "$ref": "#/definitions/bookmarks.BookmarkMetadata"
                 },
-                "reading_progress": {
-                    "type": "integer"
-                },
                 "tags": {
                     "type": "array",
                     "items": {

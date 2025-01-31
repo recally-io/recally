@@ -34,29 +34,18 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 		return nil, fmt.Errorf("%w: invalid URL", ErrInvalidInput)
 	}
 
-	// Track if content already exists in the database
-	isContentExist := false
-
 	// Check if bookmark content already exists for this URL and user
 	content, err := s.dao.GetBookmarkContentByURL(ctx, tx, db.GetBookmarkContentByURLParams{
 		Url:    dto.URL,
 		UserID: pgtype.UUID{Bytes: userId, Valid: true},
 	})
-
 	// Handle the response from content lookup
 	if err == nil {
-		isContentExist = true
-	} else if !db.IsNotFoundError(err) {
-		// Return error if it's not a "not found" error
-		return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
-	}
-
-	if isContentExist {
-		if content.UserID.Valid {
-			// If content exists and belongs to a user, return duplicate error
+		// If content exists and belongs to the user, return duplicate error
+		if content.UserID.Valid && content.UserID.Bytes == userId {
 			return nil, fmt.Errorf("%w, id: %s", ErrDuplicate, content.ID)
 		}
-	} else {
+	} else if db.IsNotFoundError(err) {
 		// Create new content if it doesn't exist
 		createBookmarkContentParams := dto.Dump()
 		// Set UserID to Nil as this content can be shared
@@ -65,6 +54,9 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new bookmark content: %w", err)
 		}
+	} else {
+		// return other errors
+		return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
 	}
 
 	// Create the bookmark entry linking user to content
