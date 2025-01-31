@@ -117,20 +117,56 @@ type AuthUserOauthConnection struct {
 }
 
 type Bookmark struct {
-	ID                int32
-	Uuid              uuid.UUID
-	UserID            pgtype.UUID
-	Url               string
-	Title             pgtype.Text
-	Summary           pgtype.Text
-	SummaryEmbeddings *pgv.Vector
-	Content           pgtype.Text
-	ContentEmbeddings *pgv.Vector
-	Html              pgtype.Text
-	Metadata          []byte
-	Screenshot        pgtype.Text
-	CreatedAt         pgtype.Timestamptz
-	UpdatedAt         pgtype.Timestamptz
+	ID         uuid.UUID
+	UserID     pgtype.UUID
+	ContentID  pgtype.UUID
+	IsFavorite bool
+	IsArchive  bool
+	Metadata   []byte
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
+type BookmarkContent struct {
+	ID          uuid.UUID
+	Type        string
+	Url         string
+	UserID      pgtype.UUID
+	Title       pgtype.Text
+	Description pgtype.Text
+	Domain      pgtype.Text
+	S3Key       pgtype.Text
+	Summary     pgtype.Text
+	Content     pgtype.Text
+	Html        pgtype.Text
+	Tags        []string
+	Metadata    []byte
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type BookmarkShare struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	BookmarkID pgtype.UUID
+	ExpiresAt  pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
+type BookmarkTag struct {
+	ID        uuid.UUID
+	Name      string
+	UserID    uuid.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type BookmarkTagsMapping struct {
+	BookmarkID uuid.UUID
+	TagID      uuid.UUID
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
 }
 
 type Cache struct {

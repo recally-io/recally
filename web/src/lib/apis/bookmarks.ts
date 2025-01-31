@@ -10,10 +10,14 @@ export interface Highlight {
 	note?: string;
 }
 
-export interface Metadata {
-	tags?: string[];
-	highlights?: Highlight[];
+export interface BookmarkMetadata {
+	reading_progress?: number;
+	last_read_at?: string;
 
+	highlights?: Highlight[];
+}
+
+export interface BookmarkContentMetadata {
 	author?: string;
 	published_at?: string;
 	description?: string;
@@ -22,14 +26,9 @@ export interface Metadata {
 
 	favicon?: string;
 	cover?: string;
-	image?: string;
-
-	share?: ShareContent;
 }
 
-export interface Bookmark {
-	id: string;
-	userId: string;
+export interface BookmarkContent {
 	type: string;
 	url?: string;
 	domain?: string;
@@ -37,11 +36,23 @@ export interface Bookmark {
 	description?: string;
 	summary?: string;
 	content?: string;
-	tags?: string[];
 	html?: string;
-	metadata?: Metadata;
+	metadata?: BookmarkContentMetadata;
+}
+
+export interface Bookmark {
+	id: string;
+	userId: string;
+	content_id: string;
+	is_favorite: boolean;
+	is_archive: boolean;
+	is_public: boolean;
 	created_at: string;
 	updated_at: string;
+	content: BookmarkContent;
+	metadata?: BookmarkMetadata;
+	tags?: string[];
+	share?: ShareContent;
 }
 
 export interface ListBookmarksResponse {
@@ -63,14 +74,14 @@ export interface Domain {
 
 interface BookmarkCreateInput {
 	url: string;
-	metadata?: Metadata;
+	metadata?: BookmarkContentMetadata;
 }
 
 interface BookmarkUpdateInput {
 	summary?: string;
 	content?: string;
 	html?: string;
-	metadata?: Metadata;
+	metadata?: BookmarkContentMetadata;
 }
 
 interface ShareContentUpdateInput {
@@ -89,7 +100,7 @@ export interface ShareBookmarkRequest {
 
 export interface ShareContent {
 	id: string;
-	content_id: string;
+	bookmark_id: string;
 	expires_at?: string;
 	created_at: string;
 }

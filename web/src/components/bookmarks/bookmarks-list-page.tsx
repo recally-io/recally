@@ -11,11 +11,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-	SidebarInset,
-	SidebarProvider,
-	SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
 import { useRouter } from "@tanstack/react-router";
@@ -109,13 +105,11 @@ export default function BookmarksListView({
 	return (
 		<SidebarProvider defaultOpen={false}>
 			<SidebarComponent />
+			{/* <SidebarComponent>{BookmarksSidebarContent()}</SidebarComponent> */}
 			<SidebarInset>
 				<div className="flex flex-col h-full">
-					<header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-						<div className="flex items-center gap-1">
-							<SidebarTrigger className="-ml-1" />
-							<AddBookmarkModal />
-						</div>
+					<header className="flex h-16 shrink-0 items-center justify-end gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+						<AddBookmarkModal />
 						<ToggleGroup
 							type="single"
 							value={view}
@@ -130,22 +124,24 @@ export default function BookmarksListView({
 							</ToggleGroupItem>
 						</ToggleGroup>
 					</header>
-					{isLoading ? (
-						<div className="flex items-center justify-center h-full">
-							<Loader2 className="size-8 animate-spin" />
-						</div>
-					) : (
-						<BookmarkList
-							bookmarks={bookmarks}
-							total={total}
-							view={view}
-							search={search}
-							currentPage={search.page}
-							onPageChange={handlePageChange}
-							onSearch={handleSearch}
-							itemsPerPage={limit}
-						/>
-					)}
+					<main>
+						{isLoading ? (
+							<div className="flex items-center justify-center h-full">
+								<Loader2 className="size-8 animate-spin" />
+							</div>
+						) : (
+							<BookmarkList
+								bookmarks={bookmarks}
+								total={total}
+								view={view}
+								search={search}
+								currentPage={search.page}
+								onPageChange={handlePageChange}
+								onSearch={handleSearch}
+								itemsPerPage={limit}
+							/>
+						)}
+					</main>
 				</div>
 			</SidebarInset>
 		</SidebarProvider>
