@@ -35,21 +35,21 @@ type BookmarkContentMetadata struct {
 }
 
 type BookmarkContentDTO struct {
-	ID          uuid.UUID               `json:"id"`
-	Type        ContentType             `json:"type"`
-	URL         string                  `json:"url"`
-	UserID      uuid.UUID               `json:"user_id"`
-	Title       string                  `json:"title"`
-	Description string                  `json:"description"`
-	Domain      string                  `json:"domain"`
-	S3Key       string                  `json:"s3_key"`
-	Summary     string                  `json:"summary"`
-	Content     string                  `json:"content"`
-	Html        string                  `json:"html"`
-	Tags        []string                `json:"tags"`
-	Metadata    BookmarkContentMetadata `json:"metadata"`
-	CreatedAt   time.Time               `json:"created_at"`
-	UpdatedAt   time.Time               `json:"updated_at"`
+	ID          uuid.UUID                `json:"id"`
+	Type        ContentType              `json:"type"`
+	URL         string                   `json:"url"`
+	UserID      uuid.UUID                `json:"user_id"`
+	Title       string                   `json:"title"`
+	Description string                   `json:"description"`
+	Domain      string                   `json:"domain"`
+	S3Key       string                   `json:"s3_key"`
+	Summary     string                   `json:"summary"`
+	Content     string                   `json:"content"`
+	Html        string                   `json:"html"`
+	Tags        []string                 `json:"tags"`
+	Metadata    *BookmarkContentMetadata `json:"metadata"`
+	CreatedAt   time.Time                `json:"created_at"`
+	UpdatedAt   time.Time                `json:"updated_at"`
 }
 
 func (b *BookmarkContentDTO) Load(dbo *db.BookmarkContent) {

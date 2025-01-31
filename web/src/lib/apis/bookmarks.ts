@@ -15,7 +15,6 @@ export interface BookmarkMetadata {
 	last_read_at?: string;
 
 	highlights?: Highlight[];
-	share?: ShareContent;
 }
 
 export interface BookmarkContentMetadata {
@@ -48,11 +47,12 @@ export interface Bookmark {
 	is_favorite: boolean;
 	is_archive: boolean;
 	is_public: boolean;
-	metadata?: BookmarkMetadata;
 	created_at: string;
 	updated_at: string;
 	content: BookmarkContent;
+	metadata?: BookmarkMetadata;
 	tags?: string[];
+	share?: ShareContent;
 }
 
 export interface ListBookmarksResponse {

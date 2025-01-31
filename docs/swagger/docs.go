@@ -3651,7 +3651,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/httpserver.updateSharedBookmarkRequest"
+                            "$ref": "#/definitions/httpserver.createBookmarkShareRequest"
                         }
                     }
                 ],
@@ -3756,7 +3756,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/httpserver.shareBookmarkRequest"
+                            "$ref": "#/definitions/httpserver.createBookmarkShareRequest"
                         }
                     }
                 ],
@@ -5107,6 +5107,9 @@ const docTemplate = `{
                 "metadata": {
                     "$ref": "#/definitions/bookmarks.BookmarkMetadata"
                 },
+                "share": {
+                    "$ref": "#/definitions/bookmarks.BookmarkShareDTO"
+                },
                 "tags": {
                     "type": "array",
                     "items": {
@@ -5135,9 +5138,6 @@ const docTemplate = `{
                 },
                 "reading_progress": {
                     "type": "integer"
-                },
-                "share": {
-                    "$ref": "#/definitions/bookmarks.BookmarkShareDTO"
                 }
             }
         },
@@ -5344,6 +5344,20 @@ const docTemplate = `{
                 }
             }
         },
+        "httpserver.createBookmarkShareRequest": {
+            "type": "object",
+            "required": [
+                "bookmarkID"
+            ],
+            "properties": {
+                "bookmarkID": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                }
+            }
+        },
         "httpserver.createThreadMessageRequest": {
             "type": "object",
             "required": [
@@ -5468,20 +5482,6 @@ const docTemplate = `{
                 }
             }
         },
-        "httpserver.shareBookmarkRequest": {
-            "type": "object",
-            "required": [
-                "bookmarkID"
-            ],
-            "properties": {
-                "bookmarkID": {
-                    "type": "string"
-                },
-                "expires_at": {
-                    "type": "string"
-                }
-            }
-        },
         "httpserver.updateAssistantRequest": {
             "type": "object",
             "required": [
@@ -5536,21 +5536,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/bookmarks.BookmarkContentMetadata"
                 },
                 "summary": {
-                    "type": "string"
-                }
-            }
-        },
-        "httpserver.updateSharedBookmarkRequest": {
-            "type": "object",
-            "required": [
-                "bookmarkID",
-                "expires_at"
-            ],
-            "properties": {
-                "bookmarkID": {
-                    "type": "string"
-                },
-                "expires_at": {
                     "type": "string"
                 }
             }

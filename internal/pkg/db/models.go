@@ -122,7 +122,6 @@ type Bookmark struct {
 	ContentID  pgtype.UUID
 	IsFavorite bool
 	IsArchive  bool
-	IsPublic   bool
 	Metadata   []byte
 	CreatedAt  pgtype.Timestamptz
 	UpdatedAt  pgtype.Timestamptz

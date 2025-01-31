@@ -20,7 +20,7 @@ SELECT sqlc.embed(b),
 FROM bookmarks AS b
          JOIN bookmark_content AS bc ON b.content_id = bc.id
          CROSS JOIN total AS t
-         LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.bookmark_id
+         LEFT JOIN bookmark_tags_mapping AS bctm ON b.id = bctm.bookmark_id
          LEFT JOIN bookmark_tags AS bct ON bctm.tag_id = bct.id
 WHERE b.user_id = $1
   AND (sqlc.narg('domains')::text[] IS NULL OR bc.domain = ANY(sqlc.narg('domains')::text[]))
@@ -35,7 +35,7 @@ WITH total AS (
   SELECT COUNT(DISTINCT b.*) AS total_count
   FROM bookmarks AS b
            JOIN bookmark_content AS bc ON b.content_id = bc.id
-           LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.bookmark_id
+           LEFT JOIN bookmark_tags_mapping AS bctm ON b.id = bctm.bookmark_id
            LEFT JOIN bookmark_tags AS bct ON bctm.tag_id = bct.id
   WHERE b.user_id = $1
     AND (sqlc.narg('domains')::text[] IS NULL OR bc.domain = ANY(sqlc.narg('domains')::text[]))
@@ -81,17 +81,19 @@ LIMIT $2 OFFSET $3;
 -- name: GetBookmarkWithContent :one
 SELECT sqlc.embed(b),
        sqlc.embed(bc),
+       sqlc.embed(bs),
        COALESCE(
-         array_agg(bct.name) FILTER (WHERE bct.name IS NOT NULL),
+         array_agg(bt.name) FILTER (WHERE bt.name IS NOT NULL),
          ARRAY[]::VARCHAR[]
        ) as tags
 FROM bookmarks b
          JOIN bookmark_content bc ON b.content_id = bc.id
-         LEFT JOIN bookmark_tags_mapping bctm ON bc.id = bctm.bookmark_id
-         LEFT JOIN bookmark_tags bct ON bctm.tag_id = bct.id
+         LEFT JOIN bookmark_share bs ON bs.bookmark_id = b.id
+         LEFT JOIN bookmark_tags_mapping btm ON btm.bookmark_id = b.id
+         LEFT JOIN bookmark_tags bt ON btm.tag_id = bt.id
 WHERE b.id = $1
   AND b.user_id = $2
-GROUP BY b.id, bc.id
+GROUP BY b.id, bc.id, bs.id
 LIMIT 1;
 
 -- name: IsBookmarkExistWithURL :one
@@ -105,11 +107,10 @@ SELECT EXISTS (
 
 -- name: CreateBookmark :one
 INSERT INTO bookmarks (
-  user_id, content_id, is_favorite, is_archive,
-  is_public, metadata
+  user_id, content_id, is_favorite, is_archive, metadata
 )
 VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5
 )
 RETURNING *;
 
@@ -117,7 +118,6 @@ RETURNING *;
 UPDATE bookmarks
 SET is_favorite = COALESCE(sqlc.narg('is_favorite'), is_favorite),
     is_archive = COALESCE(sqlc.narg('is_archive'), is_archive),
-    is_public = COALESCE(sqlc.narg('is_public'), is_public),
     metadata = COALESCE(sqlc.narg('metadata'), metadata)
 WHERE id = $1
   AND user_id = $2

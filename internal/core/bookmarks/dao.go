@@ -21,6 +21,7 @@ type DAO interface {
 	GetBookmarkWithContent(ctx context.Context, db db.DBTX, arg db.GetBookmarkWithContentParams) (db.GetBookmarkWithContentRow, error)
 	ListBookmarks(ctx context.Context, db db.DBTX, arg db.ListBookmarksParams) ([]db.ListBookmarksRow, error)
 	SearchBookmarks(ctx context.Context, db db.DBTX, arg db.SearchBookmarksParams) ([]db.SearchBookmarksRow, error)
+	UpdateBookmark(ctx context.Context, db db.DBTX, arg db.UpdateBookmarkParams) (db.Bookmark, error)
 	DeleteBookmark(ctx context.Context, db db.DBTX, arg db.DeleteBookmarkParams) error
 	DeleteBookmarksByUser(ctx context.Context, db db.DBTX, userID pgtype.UUID) error
 

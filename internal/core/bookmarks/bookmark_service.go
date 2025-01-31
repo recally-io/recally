@@ -168,28 +168,36 @@ func (s *Service) DeleteBookmarksByUser(ctx context.Context, tx db.DBTX, userId 
 	return s.dao.DeleteBookmarksByUser(ctx, tx, pgtype.UUID{Bytes: userId, Valid: true})
 }
 
-func (s *Service) UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, id uuid.UUID, content *BookmarkContentDTO) (*BookmarkDTO, error) {
+func (s *Service) UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, id uuid.UUID, dto *BookmarkDTO) (*BookmarkDTO, error) {
 	bookmark, err := s.GetBookmarkWithContent(ctx, tx, userId, id)
 	if err != nil {
 		return nil, err
 	}
+	if dto.Content != nil {
+		new := dto.Content
+		old := bookmark.Content
+		// Update content if it's changed
+		if new.Content != "" {
+			old.Content = new.Content
+		}
+		if new.Description != "" {
+			old.Description = new.Description
+		}
+		if new.Html != "" {
+			old.Html = new.Html
+		}
+		if new.Summary != "" {
+			old.Summary = new.Summary
+		}
+		if _, err = s.UpdateBookmarkContent(ctx, tx, old); err != nil {
+			return nil, fmt.Errorf("failed to update bookmark content: %w", err)
+		}
+	}
 
-	updateContent := bookmark.Content
-	// Update content if it's changed
-	if content.Content != "" {
-		updateContent.Content = content.Content
+	dbo, err := s.dao.UpdateBookmark(ctx, tx, dto.DumpToUpdateParams())
+	if err != nil {
+		return nil, fmt.Errorf("failed to update bookmark: %w", err)
 	}
-	if content.Description != "" {
-		updateContent.Description = content.Description
-	}
-	if content.Html != "" {
-		updateContent.Html = content.Html
-	}
-	if content.Summary != "" {
-		updateContent.Summary = content.Summary
-	}
-	if _, err = s.UpdateBookmarkContent(ctx, tx, &updateContent); err != nil {
-		return nil, err
-	}
+	bookmark.Load(&dbo)
 	return bookmark, nil
 }

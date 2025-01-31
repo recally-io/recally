@@ -267,6 +267,8 @@ definitions:
         type: boolean
       metadata:
         $ref: '#/definitions/bookmarks.BookmarkMetadata'
+      share:
+        $ref: '#/definitions/bookmarks.BookmarkShareDTO'
       tags:
         items:
           type: string
@@ -286,8 +288,6 @@ definitions:
         type: string
       reading_progress:
         type: integer
-      share:
-        $ref: '#/definitions/bookmarks.BookmarkShareDTO'
     type: object
   bookmarks.BookmarkShareDTO:
     properties:
@@ -431,6 +431,15 @@ definitions:
     required:
     - url
     type: object
+  httpserver.createBookmarkShareRequest:
+    properties:
+      bookmarkID:
+        type: string
+      expires_at:
+        type: string
+    required:
+    - bookmarkID
+    type: object
   httpserver.createThreadMessageRequest:
     properties:
       assistantId:
@@ -513,15 +522,6 @@ definitions:
       username:
         type: string
     type: object
-  httpserver.shareBookmarkRequest:
-    properties:
-      bookmarkID:
-        type: string
-      expires_at:
-        type: string
-    required:
-    - bookmarkID
-    type: object
   httpserver.updateAssistantRequest:
     properties:
       assistantId:
@@ -559,16 +559,6 @@ definitions:
         type: string
     required:
     - bookmarkID
-    type: object
-  httpserver.updateSharedBookmarkRequest:
-    properties:
-      bookmarkID:
-        type: string
-      expires_at:
-        type: string
-    required:
-    - bookmarkID
-    - expires_at
     type: object
   httpserver.updateUserInfoRequest:
     properties:
@@ -2612,7 +2602,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httpserver.shareBookmarkRequest'
+          $ref: '#/definitions/httpserver.createBookmarkShareRequest'
       produces:
       - application/json
       responses:
@@ -2679,7 +2669,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httpserver.updateSharedBookmarkRequest'
+          $ref: '#/definitions/httpserver.createBookmarkShareRequest'
       produces:
       - application/json
       responses:

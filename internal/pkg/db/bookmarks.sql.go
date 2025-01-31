@@ -14,13 +14,12 @@ import (
 
 const createBookmark = `-- name: CreateBookmark :one
 INSERT INTO bookmarks (
-  user_id, content_id, is_favorite, is_archive,
-  is_public, metadata
+  user_id, content_id, is_favorite, is_archive, metadata
 )
 VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5
 )
-RETURNING id, user_id, content_id, is_favorite, is_archive, is_public, metadata, created_at, updated_at
+RETURNING id, user_id, content_id, is_favorite, is_archive, metadata, created_at, updated_at
 `
 
 type CreateBookmarkParams struct {
@@ -28,7 +27,6 @@ type CreateBookmarkParams struct {
 	ContentID  pgtype.UUID
 	IsFavorite bool
 	IsArchive  bool
-	IsPublic   bool
 	Metadata   []byte
 }
 
@@ -38,7 +36,6 @@ func (q *Queries) CreateBookmark(ctx context.Context, db DBTX, arg CreateBookmar
 		arg.ContentID,
 		arg.IsFavorite,
 		arg.IsArchive,
-		arg.IsPublic,
 		arg.Metadata,
 	)
 	var i Bookmark
@@ -48,7 +45,6 @@ func (q *Queries) CreateBookmark(ctx context.Context, db DBTX, arg CreateBookmar
 		&i.ContentID,
 		&i.IsFavorite,
 		&i.IsArchive,
-		&i.IsPublic,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -82,19 +78,21 @@ func (q *Queries) DeleteBookmarksByUser(ctx context.Context, db DBTX, userID pgt
 }
 
 const getBookmarkWithContent = `-- name: GetBookmarkWithContent :one
-SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.is_public, b.metadata, b.created_at, b.updated_at,
+SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.metadata, b.created_at, b.updated_at,
        bc.id, bc.type, bc.url, bc.user_id, bc.title, bc.description, bc.domain, bc.s3_key, bc.summary, bc.content, bc.html, bc.tags, bc.metadata, bc.created_at, bc.updated_at,
+       bs.id, bs.user_id, bs.bookmark_id, bs.expires_at, bs.created_at, bs.updated_at,
        COALESCE(
-         array_agg(bct.name) FILTER (WHERE bct.name IS NOT NULL),
+         array_agg(bt.name) FILTER (WHERE bt.name IS NOT NULL),
          ARRAY[]::VARCHAR[]
        ) as tags
 FROM bookmarks b
          JOIN bookmark_content bc ON b.content_id = bc.id
-         LEFT JOIN bookmark_tags_mapping bctm ON bc.id = bctm.bookmark_id
-         LEFT JOIN bookmark_tags bct ON bctm.tag_id = bct.id
+         LEFT JOIN bookmark_share bs ON bs.bookmark_id = b.id
+         LEFT JOIN bookmark_tags_mapping btm ON btm.bookmark_id = b.id
+         LEFT JOIN bookmark_tags bt ON btm.tag_id = bt.id
 WHERE b.id = $1
   AND b.user_id = $2
-GROUP BY b.id, bc.id
+GROUP BY b.id, bc.id, bs.id
 LIMIT 1
 `
 
@@ -106,6 +104,7 @@ type GetBookmarkWithContentParams struct {
 type GetBookmarkWithContentRow struct {
 	Bookmark        Bookmark
 	BookmarkContent BookmarkContent
+	BookmarkShare   BookmarkShare
 	Tags            interface{}
 }
 
@@ -118,7 +117,6 @@ func (q *Queries) GetBookmarkWithContent(ctx context.Context, db DBTX, arg GetBo
 		&i.Bookmark.ContentID,
 		&i.Bookmark.IsFavorite,
 		&i.Bookmark.IsArchive,
-		&i.Bookmark.IsPublic,
 		&i.Bookmark.Metadata,
 		&i.Bookmark.CreatedAt,
 		&i.Bookmark.UpdatedAt,
@@ -137,6 +135,12 @@ func (q *Queries) GetBookmarkWithContent(ctx context.Context, db DBTX, arg GetBo
 		&i.BookmarkContent.Metadata,
 		&i.BookmarkContent.CreatedAt,
 		&i.BookmarkContent.UpdatedAt,
+		&i.BookmarkShare.ID,
+		&i.BookmarkShare.UserID,
+		&i.BookmarkShare.BookmarkID,
+		&i.BookmarkShare.ExpiresAt,
+		&i.BookmarkShare.CreatedAt,
+		&i.BookmarkShare.UpdatedAt,
 		&i.Tags,
 	)
 	return i, err
@@ -211,7 +215,7 @@ WITH total AS (
     AND ($5::text[] IS NULL OR bc.type = ANY($5::text[]))
     AND ($6::text[] IS NULL OR bct.name = ANY($6::text[]))
 )
-SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.is_public, b.metadata, b.created_at, b.updated_at,
+SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.metadata, b.created_at, b.updated_at,
        bc.id, bc.type, bc.url, bc.user_id, bc.title, bc.description, bc.domain, bc.s3_key, bc.summary, bc.content, bc.html, bc.tags, bc.metadata, bc.created_at, bc.updated_at,
        t.total_count,
        COALESCE(
@@ -221,7 +225,7 @@ SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.is_public, 
 FROM bookmarks AS b
          JOIN bookmark_content AS bc ON b.content_id = bc.id
          CROSS JOIN total AS t
-         LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.bookmark_id
+         LEFT JOIN bookmark_tags_mapping AS bctm ON b.id = bctm.bookmark_id
          LEFT JOIN bookmark_tags AS bct ON bctm.tag_id = bct.id
 WHERE b.user_id = $1
   AND ($4::text[] IS NULL OR bc.domain = ANY($4::text[]))
@@ -270,7 +274,6 @@ func (q *Queries) ListBookmarks(ctx context.Context, db DBTX, arg ListBookmarksP
 			&i.Bookmark.ContentID,
 			&i.Bookmark.IsFavorite,
 			&i.Bookmark.IsArchive,
-			&i.Bookmark.IsPublic,
 			&i.Bookmark.Metadata,
 			&i.Bookmark.CreatedAt,
 			&i.Bookmark.UpdatedAt,
@@ -325,7 +328,7 @@ WITH total AS (
   SELECT COUNT(DISTINCT b.*) AS total_count
   FROM bookmarks AS b
            JOIN bookmark_content AS bc ON b.content_id = bc.id
-           LEFT JOIN bookmark_tags_mapping AS bctm ON bc.id = bctm.bookmark_id
+           LEFT JOIN bookmark_tags_mapping AS bctm ON b.id = bctm.bookmark_id
            LEFT JOIN bookmark_tags AS bct ON bctm.tag_id = bct.id
   WHERE b.user_id = $1
     AND ($4::text[] IS NULL OR bc.domain = ANY($4::text[]))
@@ -340,7 +343,7 @@ WITH total AS (
       OR bc.metadata @@@ $7
     )
 )
-SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.is_public, b.metadata, b.created_at, b.updated_at,
+SELECT b.id, b.user_id, b.content_id, b.is_favorite, b.is_archive, b.metadata, b.created_at, b.updated_at,
        bc.id, bc.type, bc.url, bc.user_id, bc.title, bc.description, bc.domain, bc.s3_key, bc.summary, bc.content, bc.html, bc.tags, bc.metadata, bc.created_at, bc.updated_at,
        t.total_count,
        COALESCE(
@@ -409,7 +412,6 @@ func (q *Queries) SearchBookmarks(ctx context.Context, db DBTX, arg SearchBookma
 			&i.Bookmark.ContentID,
 			&i.Bookmark.IsFavorite,
 			&i.Bookmark.IsArchive,
-			&i.Bookmark.IsPublic,
 			&i.Bookmark.Metadata,
 			&i.Bookmark.CreatedAt,
 			&i.Bookmark.UpdatedAt,
@@ -445,11 +447,10 @@ const updateBookmark = `-- name: UpdateBookmark :one
 UPDATE bookmarks
 SET is_favorite = COALESCE($3, is_favorite),
     is_archive = COALESCE($4, is_archive),
-    is_public = COALESCE($5, is_public),
-    metadata = COALESCE($6, metadata)
+    metadata = COALESCE($5, metadata)
 WHERE id = $1
   AND user_id = $2
-RETURNING id, user_id, content_id, is_favorite, is_archive, is_public, metadata, created_at, updated_at
+RETURNING id, user_id, content_id, is_favorite, is_archive, metadata, created_at, updated_at
 `
 
 type UpdateBookmarkParams struct {
@@ -457,7 +458,6 @@ type UpdateBookmarkParams struct {
 	UserID     pgtype.UUID
 	IsFavorite pgtype.Bool
 	IsArchive  pgtype.Bool
-	IsPublic   pgtype.Bool
 	Metadata   []byte
 }
 
@@ -467,7 +467,6 @@ func (q *Queries) UpdateBookmark(ctx context.Context, db DBTX, arg UpdateBookmar
 		arg.UserID,
 		arg.IsFavorite,
 		arg.IsArchive,
-		arg.IsPublic,
 		arg.Metadata,
 	)
 	var i Bookmark
@@ -477,7 +476,6 @@ func (q *Queries) UpdateBookmark(ctx context.Context, db DBTX, arg UpdateBookmar
 		&i.ContentID,
 		&i.IsFavorite,
 		&i.IsArchive,
-		&i.IsPublic,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
