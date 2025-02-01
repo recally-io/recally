@@ -26,9 +26,11 @@ export const SharedArticleReader: React.FC<SharedArticleReaderProps> = ({
 			<AuthBanner />
 			<div className="container mx-auto p-4 max-w-4xl">
 				<ArticleHeader
-					title={bookmark.title ?? "Title"}
-					url={bookmark.url || ""}
-					publishedAt={bookmark.metadata?.published_at ?? bookmark.created_at}
+					title={bookmark.content.title ?? "Title"}
+					url={bookmark.content.url || ""}
+					publishedAt={
+						bookmark.content.metadata?.published_at ?? bookmark.created_at
+					}
 				/>
 
 				{/* Tags */}
@@ -44,11 +46,13 @@ export const SharedArticleReader: React.FC<SharedArticleReaderProps> = ({
 
 				<Separator className="my-4" />
 
-				{bookmark.summary && <ArticleSummary summary={bookmark.summary} />}
+				{bookmark.content.summary && (
+					<ArticleSummary summary={bookmark.content.summary} />
+				)}
 
 				{/* Main Content */}
 				<div className="prose dark:prose-invert prose-lg max-w-none">
-					<MarkdownRenderer content={bookmark.content ?? ""} />
+					<MarkdownRenderer content={bookmark.content.content ?? ""} />
 				</div>
 			</div>
 		</>

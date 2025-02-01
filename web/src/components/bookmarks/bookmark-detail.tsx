@@ -11,11 +11,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-	SidebarInset,
-	SidebarProvider,
-	SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import {
 	useBookmark,
@@ -165,7 +161,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 
 	const handleCopyLink = async (id?: string) => {
 		try {
-			const shareUrl = getShareUrl(id || bookmark.metadata?.share?.id);
+			const shareUrl = getShareUrl(id || bookmark.share?.id);
 			if (shareUrl) {
 				await navigator.clipboard.writeText(shareUrl);
 				toast({
@@ -203,20 +199,21 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 		}
 	};
 
-	const shareStatus = bookmark.metadata?.share
-		? {
-				isShared: true,
-				isExpired: bookmark.metadata.share.expires_at
-					? new Date(bookmark.metadata.share.expires_at) < new Date()
-					: false,
-			}
-		: {
-				isShared: false,
-				isExpired: false,
-			};
+	const shareStatus =
+		bookmark.is_public && bookmark.share
+			? {
+					isShared: true,
+					isExpired: bookmark.share.expires_at
+						? new Date(bookmark.share.expires_at) < new Date()
+						: false,
+				}
+			: {
+					isShared: false,
+					isExpired: false,
+				};
 
-	const shareExpireTime = bookmark.metadata?.share?.expires_at
-		? new Date(bookmark.metadata.share.expires_at)
+	const shareExpireTime = bookmark.share?.expires_at
+		? new Date(bookmark.share.expires_at)
 		: undefined;
 
 	return (
@@ -225,9 +222,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 			<SidebarInset className="overflow-auto">
 				<div className="flex flex-col h-full w-full">
 					<header className="flex h-12 shrink-0 items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-						<div className="flex items-center px-4">
-							<SidebarTrigger className="-ml-1" />
-						</div>
+						<div className="flex items-center px-4"></div>
 						<div className="flex items-center px-4">
 							<ArticleActions
 								onDelete={async () => setShowDeleteDialog(true)}

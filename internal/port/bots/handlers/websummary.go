@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"recally/internal/core/bookmarks"
-	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
@@ -98,16 +97,18 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		}
 	}
 
+	var bookmarkContentDTO *bookmarks.BookmarkContentDTO
 	// cache the summary
 	summary, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebSummary", url), 24*time.Hour, func() (*string, error) {
 		isSummaryCached = false
 		// cache the content
-		content, err := h.bookmarkService.FetchContentWithCache(ctx, url, fetcher.FetchOptions{
+		content, err := h.bookmarkService.FetchWebContentWithCache(ctx, url, fetcher.FetchOptions{
 			FecherType: fetcher.TypeJinaReader,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get content: %w", err)
 		}
+		bookmarkContentDTO.FromReaderContent(content)
 
 		// process the summary
 		summarier := processor.NewSummaryProcessor(h.llm, processor.WithSummaryOptionUser(user))
@@ -125,9 +126,9 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 			logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
 		}
 	} else {
-		h.saveBookmark(ctx, tx, url, user.ID, resp)
+		bookmarkContentDTO.Summary = resp
+		h.saveBookmark(ctx, tx, user.ID, bookmarkContentDTO)
 	}
-
 	return nil
 }
 
@@ -135,27 +136,11 @@ func getUrlFromText(text string) string {
 	return urlPattern.FindString(text)
 }
 
-func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, url string, userId uuid.UUID, summary string) {
-	bookmark, err := h.bookmarkService.Create(ctx, tx, &bookmarks.ContentDTO{
-		UserID:    userId,
-		URL:       url,
-		Summary:   summary,
-		CreatedAt: time.Now(),
-	})
+func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, bookmarkContent *bookmarks.BookmarkContentDTO) {
+	bookmark, err := h.bookmarkService.CreateBookmark(ctx, tx, userId, bookmarkContent)
 	if err != nil {
 		logger.FromContext(ctx).Error("save bookmark from reader bot error", "err", err.Error())
 	} else {
-		logger.FromContext(ctx).Info("save bookmark from reader bot", "id", bookmark.ID, "title", bookmark.Title)
-	}
-
-	result, err := h.queue.Insert(ctx, queue.CrawlerWorkerArgs{
-		ID:           bookmark.ID,
-		UserID:       bookmark.UserID,
-		FetchOptions: fetcher.FetchOptions{FecherType: fetcher.TypeJinaReader}, // use jina reader as we already fetch the content using jina reader, so it will hit the cache
-	}, nil)
-	if err != nil {
-		logger.FromContext(ctx).Error("failed to insert job", "err", err)
-	} else {
-		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
+		logger.FromContext(ctx).Info("save bookmark from reader bot", "id", bookmark.ID)
 	}
 }

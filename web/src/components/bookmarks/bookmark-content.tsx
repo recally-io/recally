@@ -20,9 +20,11 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 	return (
 		<>
 			<ArticleHeader
-				title={bookmark.title ?? "Title"}
-				url={bookmark.url || ""}
-				publishedAt={bookmark.metadata?.published_at ?? bookmark.created_at}
+				title={bookmark.content.title ?? "Title"}
+				url={bookmark.content.url || ""}
+				publishedAt={
+					bookmark.content.metadata?.published_at ?? bookmark.created_at
+				}
 			/>
 
 			{/* Tags */}
@@ -38,9 +40,9 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 
 			<Separator className="my-4" />
 
-			{bookmark.summary && (
+			{bookmark.content.summary && (
 				<ArticleSummary
-					summary={bookmark.summary}
+					summary={bookmark.content.summary}
 					onRegenerate={
 						onRegenerateSummary
 							? () => onRegenerateSummary(bookmark.id)
@@ -51,7 +53,7 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 
 			{/* Main Content */}
 			<div className="prose dark:prose-invert prose-lg max-w-none">
-				<MarkdownRenderer content={bookmark.content ?? ""} />
+				<MarkdownRenderer content={bookmark.content.content ?? ""} />
 			</div>
 		</>
 	);
