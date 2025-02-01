@@ -46,7 +46,6 @@ CREATE TABLE bookmarks (
 CREATE INDEX idx_bookmarks_user_created_at ON bookmarks(user_id, created_at);
 CREATE INDEX idx_bookmarks_favorite ON bookmarks(user_id, is_favorite);
 CREATE INDEX idx_bookmarks_archive ON bookmarks(user_id, is_archive);
-CREATE INDEX idx_bookmarks_public ON bookmarks(user_id, is_public);
 CREATE INDEX idx_bookmarks_metadata ON bookmarks USING gin(metadata jsonb_path_ops);
 CREATE TRIGGER update_bookmarks_updated_at BEFORE UPDATE ON bookmarks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
