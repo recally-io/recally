@@ -197,7 +197,7 @@ definitions:
       summary_options:
         $ref: '#/definitions/auth.SummaryConfig'
     type: object
-  bookmarks.ContentDTO:
+  bookmarks.BookmarkContentDTO:
     properties:
       content:
         type: string
@@ -211,10 +211,8 @@ definitions:
         type: string
       id:
         type: string
-      is_favorite:
-        type: boolean
       metadata:
-        $ref: '#/definitions/bookmarks.Metadata'
+        $ref: '#/definitions/bookmarks.BookmarkContentMetadata'
       s3_key:
         type: string
       summary:
@@ -234,9 +232,66 @@ definitions:
       user_id:
         type: string
     type: object
-  bookmarks.ContentShareDTO:
+  bookmarks.BookmarkContentMetadata:
     properties:
+      author:
+        type: string
+      cover:
+        type: string
+      description:
+        type: string
+      domain:
+        type: string
+      favicon:
+        type: string
+      published_at:
+        type: string
+      site_name:
+        type: string
+    type: object
+  bookmarks.BookmarkDTO:
+    properties:
+      content:
+        $ref: '#/definitions/bookmarks.BookmarkContentDTO'
       content_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_archive:
+        type: boolean
+      is_favorite:
+        type: boolean
+      is_public:
+        type: boolean
+      metadata:
+        $ref: '#/definitions/bookmarks.BookmarkMetadata'
+      share:
+        $ref: '#/definitions/bookmarks.BookmarkShareDTO'
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  bookmarks.BookmarkMetadata:
+    properties:
+      highlights:
+        items:
+          $ref: '#/definitions/bookmarks.Highlight'
+        type: array
+      last_read_at:
+        type: string
+      reading_progress:
+        type: integer
+    type: object
+  bookmarks.BookmarkShareDTO:
+    properties:
+      bookmark_id:
         type: string
       created_at:
         type: string
@@ -288,35 +343,6 @@ definitions:
         type: integer
       text:
         type: string
-    type: object
-  bookmarks.Metadata:
-    properties:
-      author:
-        type: string
-      cover:
-        type: string
-      description:
-        type: string
-      domain:
-        type: string
-      favicon:
-        type: string
-      highlights:
-        items:
-          $ref: '#/definitions/bookmarks.Highlight'
-        type: array
-      image:
-        type: string
-      published_at:
-        type: string
-      share:
-        $ref: '#/definitions/bookmarks.ContentShareDTO'
-      site_name:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
     type: object
   bookmarks.TagDTO:
     properties:
@@ -393,7 +419,7 @@ definitions:
       html:
         type: string
       metadata:
-        $ref: '#/definitions/bookmarks.Metadata'
+        $ref: '#/definitions/bookmarks.BookmarkContentMetadata'
       tags:
         items:
           type: string
@@ -404,6 +430,15 @@ definitions:
         type: string
     required:
     - url
+    type: object
+  httpserver.createBookmarkShareRequest:
+    properties:
+      bookmarkID:
+        type: string
+      expires_at:
+        type: string
+    required:
+    - bookmarkID
     type: object
   httpserver.createThreadMessageRequest:
     properties:
@@ -445,7 +480,7 @@ definitions:
     properties:
       bookmarks:
         items:
-          $ref: '#/definitions/bookmarks.ContentDTO'
+          $ref: '#/definitions/bookmarks.BookmarkDTO'
         type: array
       limit:
         type: integer
@@ -487,15 +522,6 @@ definitions:
       username:
         type: string
     type: object
-  httpserver.shareBookmarkRequest:
-    properties:
-      bookmarkID:
-        type: string
-      expires_at:
-        type: string
-    required:
-    - bookmarkID
-    type: object
   httpserver.updateAssistantRequest:
     properties:
       assistantId:
@@ -528,21 +554,11 @@ definitions:
       html:
         type: string
       metadata:
-        $ref: '#/definitions/bookmarks.Metadata'
+        $ref: '#/definitions/bookmarks.BookmarkContentMetadata'
       summary:
         type: string
     required:
     - bookmarkID
-    type: object
-  httpserver.updateSharedBookmarkRequest:
-    properties:
-      bookmarkID:
-        type: string
-      expires_at:
-        type: string
-    required:
-    - bookmarkID
-    - expires_at
     type: object
   httpserver.updateUserInfoRequest:
     properties:
@@ -2194,7 +2210,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.ContentDTO'
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
               type: object
         "400":
           description: Bad Request
@@ -2299,7 +2315,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.ContentDTO'
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
               type: object
         "400":
           description: Bad Request
@@ -2366,7 +2382,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.ContentDTO'
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
               type: object
         "400":
           description: Bad Request
@@ -2434,7 +2450,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.ContentDTO'
+                  $ref: '#/definitions/bookmarks.BookmarkDTO'
               type: object
         "400":
           description: Bad Request
@@ -2539,7 +2555,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.ContentDTO'
+                  $ref: '#/definitions/bookmarks.BookmarkContentDTO'
               type: object
         "400":
           description: Bad Request
@@ -2586,7 +2602,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httpserver.shareBookmarkRequest'
+          $ref: '#/definitions/httpserver.createBookmarkShareRequest'
       produces:
       - application/json
       responses:
@@ -2597,7 +2613,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.ContentDTO'
+                  $ref: '#/definitions/bookmarks.BookmarkShareDTO'
               type: object
         "400":
           description: Bad Request
@@ -2653,7 +2669,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httpserver.updateSharedBookmarkRequest'
+          $ref: '#/definitions/httpserver.createBookmarkShareRequest'
       produces:
       - application/json
       responses:
@@ -2664,7 +2680,7 @@ paths:
             - $ref: '#/definitions/httpserver.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/bookmarks.ContentDTO'
+                  $ref: '#/definitions/bookmarks.BookmarkShareDTO'
               type: object
         "400":
           description: Bad Request
