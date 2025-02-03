@@ -134,20 +134,27 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, bookmarkID, 
 	if err := summarier.Process(ctx, content); err != nil {
 		logger.Default.Error("failed to generate summary", "err", err)
 	} else {
-		tags, summary := parseTagsFromSummary(content.Summary)
+		summary, tags := s.ProcessSummaryTags(ctx, tx, bookmarkID, userID, content.Summary)
 		bookmarkContent.Summary = summary
 		if len(tags) > 0 {
 			bookmarkContent.Tags = tags
-			// link tags in background
-			newUserCtx := auth.SetUserToContext(context.Background(), user)
-			go func() {
-				if err := db.RunInTransaction(newUserCtx, db.DefaultPool.Pool, func(ctx context.Context, tx pgx.Tx) error {
-					return s.linkContentTags(ctx, tx, bookmarkContent.Tags, tags, bookmarkID, userID)
-				}); err != nil {
-					logger.Default.Error("failed to link content tags", "err", err, "bookmark_id", bookmarkID)
-				}
-			}()
 		}
 	}
 	return s.UpdateBookmarkContent(ctx, tx, bookmarkContent)
+}
+
+func (s *Service) ProcessSummaryTags(ctx context.Context, tx db.DBTX, bookmarkID, userID uuid.UUID, summary string) (string, []string) {
+	tags, summary := parseTagsFromSummary(summary)
+	if len(tags) > 0 {
+		// link tags in background
+		newUserCtx := auth.SetUserToContextByUserID(context.Background(), userID)
+		go func() {
+			if err := db.RunInTransaction(newUserCtx, db.DefaultPool.Pool, func(ctx context.Context, tx pgx.Tx) error {
+				return s.linkContentTags(ctx, tx, tags, tags, bookmarkID, userID)
+			}); err != nil {
+				logger.Default.Error("failed to link content tags", "err", err, "bookmark_id", bookmarkID)
+			}
+		}()
+	}
+	return summary, tags
 }

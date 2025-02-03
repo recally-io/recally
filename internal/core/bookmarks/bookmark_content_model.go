@@ -145,6 +145,7 @@ func (b *BookmarkContentDTO) DumpToUpdateParams() db.UpdateBookmarkContentParams
 }
 
 func (c *BookmarkContentDTO) FromReaderContent(article *webreader.Content) {
+	c.URL = article.URL
 	c.Content = article.Markwdown
 	c.Title = article.Title
 	c.Html = article.Html

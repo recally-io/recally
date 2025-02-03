@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 	"recally/internal/core/bookmarks"
+	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
-	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
 	tele "gopkg.in/telebot.v3"
 )
 
@@ -109,6 +111,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 			return nil, fmt.Errorf("failed to get content: %w", err)
 		}
 		bookmarkContentDTO.FromReaderContent(content)
+		bookmarkContentDTO.Type = bookmarks.ContentTypeBookmark
 
 		// process the summary
 		summarier := processor.NewSummaryProcessor(h.llm, processor.WithSummaryOptionUser(user))
@@ -136,11 +139,24 @@ func getUrlFromText(text string) string {
 	return urlPattern.FindString(text)
 }
 
-func (h *Handler) saveBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, bookmarkContent *bookmarks.BookmarkContentDTO) {
+func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID, bookmarkContent *bookmarks.BookmarkContentDTO) {
 	bookmark, err := h.bookmarkService.CreateBookmark(ctx, tx, userId, bookmarkContent)
 	if err != nil {
 		logger.FromContext(ctx).Error("save bookmark from reader bot error", "err", err.Error())
 	} else {
 		logger.FromContext(ctx).Info("save bookmark from reader bot", "id", bookmark.ID)
+	}
+
+	result, err := queue.DefaultQueue.InsertTx(ctx, tx, queue.CrawlerWorkerArgs{
+		ID:           bookmark.ID,
+		UserID:       bookmark.UserID,
+		FetchOptions: fetcher.FetchOptions{FecherType: fetcher.TypeHttp},
+	}, &river.InsertOpts{
+		ScheduledAt: time.Now().Add(time.Second * 5),
+	})
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to insert job", "err", err)
+	} else {
+		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
 	}
 }

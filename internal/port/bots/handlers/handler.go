@@ -12,7 +12,7 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.UserDTO, db.DBTX, error) {
+func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.UserDTO, pgx.Tx, error) {
 	ctx := c.Get(contexts.ContextKeyContext).(context.Context)
 
 	tx, ok := contexts.Get[pgx.Tx](ctx, contexts.ContextKeyTx)

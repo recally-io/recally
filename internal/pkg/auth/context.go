@@ -27,6 +27,14 @@ func SetUserToContext(ctx context.Context, user *UserDTO) context.Context {
 	return ctx
 }
 
+func SetUserToContextByUserID(ctx context.Context, userID uuid.UUID) context.Context {
+	user, err := LoadUserByID(ctx, db.DefaultPool.Pool, userID)
+	if err != nil {
+		return ctx
+	}
+	return SetUserToContext(ctx, user)
+}
+
 func LoadUserByID(ctx context.Context, tx db.DBTX, userID uuid.UUID) (*UserDTO, error) {
 	return New().GetUserById(ctx, tx, userID)
 }
