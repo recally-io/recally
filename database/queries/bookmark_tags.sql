@@ -45,3 +45,10 @@ SELECT bt.name
 FROM bookmark_tags bt
   JOIN bookmark_tags_mapping btm ON bt.id = btm.tag_id
 WHERE btm.bookmark_id = $1;
+
+-- name: OwnerTransferBookmarkTag :exec
+UPDATE bookmark_tags
+SET 
+    user_id = sqlc.narg('new_user_id'),
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = sqlc.narg('user_id');

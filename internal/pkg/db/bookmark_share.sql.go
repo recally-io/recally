@@ -125,6 +125,24 @@ func (q *Queries) GetBookmarkShareContent(ctx context.Context, db DBTX, id uuid.
 	return i, err
 }
 
+const ownerTransferBookmarkShare = `-- name: OwnerTransferBookmarkShare :exec
+UPDATE bookmark_share
+SET 
+    user_id = $1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = $2
+`
+
+type OwnerTransferBookmarkShareParams struct {
+	NewUserID pgtype.UUID
+	UserID    pgtype.UUID
+}
+
+func (q *Queries) OwnerTransferBookmarkShare(ctx context.Context, db DBTX, arg OwnerTransferBookmarkShareParams) error {
+	_, err := db.Exec(ctx, ownerTransferBookmarkShare, arg.NewUserID, arg.UserID)
+	return err
+}
+
 const updateBookmarkShareByBookmarkId = `-- name: UpdateBookmarkShareByBookmarkId :one
 UPDATE bookmark_share bs
 SET expires_at = $3

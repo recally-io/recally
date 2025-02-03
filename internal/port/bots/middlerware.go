@@ -26,7 +26,7 @@ func contextMiddleware() tele.MiddlewareFunc {
 			ctx = contexts.Set(ctx, contexts.ContextKeyLogger, logger)
 			c.Set(contexts.ContextKeyContext, ctx)
 			defer func() {
-				logger.Info("message processed", "duration", time.Since(start).Milliseconds())
+				logger.Info("telegram bot message processed", "duration", time.Since(start).Milliseconds())
 			}()
 			return next(c)
 		}

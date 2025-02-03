@@ -308,18 +308,18 @@ func (q *Queries) ListBookmarks(ctx context.Context, db DBTX, arg ListBookmarksP
 const ownerTransferBookmark = `-- name: OwnerTransferBookmark :exec
 UPDATE bookmarks 
 SET 
-    user_id = $2,
+    user_id = $1,
     updated_at = CURRENT_TIMESTAMP
-WHERE user_id = $1
+WHERE user_id = $2
 `
 
 type OwnerTransferBookmarkParams struct {
-	UserID   pgtype.UUID
-	UserID_2 pgtype.UUID
+	NewUserID pgtype.UUID
+	UserID    pgtype.UUID
 }
 
 func (q *Queries) OwnerTransferBookmark(ctx context.Context, db DBTX, arg OwnerTransferBookmarkParams) error {
-	_, err := db.Exec(ctx, ownerTransferBookmark, arg.UserID, arg.UserID_2)
+	_, err := db.Exec(ctx, ownerTransferBookmark, arg.NewUserID, arg.UserID)
 	return err
 }
 

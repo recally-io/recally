@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createBookmarkTag = `-- name: CreateBookmarkTag :one
@@ -162,6 +163,24 @@ func (q *Queries) ListExistingBookmarkTagsByTags(ctx context.Context, db DBTX, a
 		return nil, err
 	}
 	return items, nil
+}
+
+const ownerTransferBookmarkTag = `-- name: OwnerTransferBookmarkTag :exec
+UPDATE bookmark_tags
+SET 
+    user_id = $1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = $2
+`
+
+type OwnerTransferBookmarkTagParams struct {
+	NewUserID pgtype.UUID
+	UserID    pgtype.UUID
+}
+
+func (q *Queries) OwnerTransferBookmarkTag(ctx context.Context, db DBTX, arg OwnerTransferBookmarkTagParams) error {
+	_, err := db.Exec(ctx, ownerTransferBookmarkTag, arg.NewUserID, arg.UserID)
+	return err
 }
 
 const unLinkBookmarkWithTags = `-- name: UnLinkBookmarkWithTags :exec

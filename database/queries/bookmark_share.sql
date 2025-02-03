@@ -37,3 +37,12 @@ WHERE bs.bookmark_id = b.id
 DELETE
 FROM bookmark_share
 WHERE expires_at < now();
+
+
+-- name: OwnerTransferBookmarkShare :exec
+UPDATE bookmark_share
+SET 
+    user_id = sqlc.narg('new_user_id'),
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = sqlc.narg('user_id');
+

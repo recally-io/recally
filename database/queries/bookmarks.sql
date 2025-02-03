@@ -135,9 +135,9 @@ WHERE user_id = $1;
 -- name: OwnerTransferBookmark :exec
 UPDATE bookmarks 
 SET 
-    user_id = $2,
+    user_id = sqlc.narg('new_user_id'),
     updated_at = CURRENT_TIMESTAMP
-WHERE user_id = $1;
+WHERE user_id = sqlc.narg('user_id');
 
 -- name: ListBookmarkDomainsByUser :many
 SELECT bc.domain, count(*) as cnt

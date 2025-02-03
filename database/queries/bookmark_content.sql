@@ -54,3 +54,10 @@ SET title = COALESCE(sqlc.narg('title'), title),
     metadata = COALESCE(sqlc.narg('metadata'), metadata)
 WHERE id = $1
 RETURNING *;
+
+-- name: OwnerTransferBookmarkContent :exec
+UPDATE bookmark_content
+SET 
+    user_id = sqlc.narg('new_user_id'),
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = sqlc.narg('user_id');

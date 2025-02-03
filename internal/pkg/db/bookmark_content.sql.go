@@ -192,6 +192,24 @@ func (q *Queries) IsBookmarkContentExistByURL(ctx context.Context, db DBTX, url 
 	return exists, err
 }
 
+const ownerTransferBookmarkContent = `-- name: OwnerTransferBookmarkContent :exec
+UPDATE bookmark_content
+SET 
+    user_id = $1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = $2
+`
+
+type OwnerTransferBookmarkContentParams struct {
+	NewUserID pgtype.UUID
+	UserID    pgtype.UUID
+}
+
+func (q *Queries) OwnerTransferBookmarkContent(ctx context.Context, db DBTX, arg OwnerTransferBookmarkContentParams) error {
+	_, err := db.Exec(ctx, ownerTransferBookmarkContent, arg.NewUserID, arg.UserID)
+	return err
+}
+
 const updateBookmarkContent = `-- name: UpdateBookmarkContent :one
 UPDATE bookmark_content
 SET title = COALESCE($2, title),

@@ -32,6 +32,9 @@ type dto interface {
 	UpdateUserById(ctx context.Context, db db.DBTX, arg db.UpdateUserByIdParams) (db.User, error)
 
 	OwnerTransferBookmark(ctx context.Context, db db.DBTX, arg db.OwnerTransferBookmarkParams) error
+	OwnerTransferBookmarkContent(ctx context.Context, db db.DBTX, arg db.OwnerTransferBookmarkContentParams) error
+	OwnerTransferBookmarkShare(ctx context.Context, db db.DBTX, arg db.OwnerTransferBookmarkShareParams) error
+	OwnerTransferBookmarkTag(ctx context.Context, db db.DBTX, arg db.OwnerTransferBookmarkTagParams) error
 
 	CreateAPIKey(ctx context.Context, db db.DBTX, arg db.CreateAPIKeyParams) (db.AuthApiKey, error)
 	DeleteAPIKey(ctx context.Context, db db.DBTX, id uuid.UUID) error
