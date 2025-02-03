@@ -24,6 +24,8 @@
 // 000011_create_s3_resources_mapping_table.up.sql (1.401kB)
 // 000012_split_bookmark_content.down.sql (243B)
 // 000012_split_bookmark_content.up.sql (4.709kB)
+// 000013_migrate_bookmark_content.down.sql (0)
+// 000013_migrate_bookmark_content.up.sql (701B)
 
 package migrations
 
@@ -566,8 +568,48 @@ func _000012_split_bookmark_contentUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000012_split_bookmark_content.up.sql", size: 4709, mode: os.FileMode(0644), modTime: time.Unix(1738420148, 0)}
+	info := bindataFileInfo{name: "000012_split_bookmark_content.up.sql", size: 4709, mode: os.FileMode(0644), modTime: time.Unix(1738571397, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x80, 0xf2, 0x7d, 0xc5, 0xbe, 0xd4, 0xed, 0x74, 0x4d, 0x76, 0xc3, 0x56, 0x8b, 0xfa, 0xc2, 0xe9, 0xbd, 0xdd, 0x89, 0x95, 0x6d, 0x5, 0xc4, 0x46, 0x90, 0xa7, 0x99, 0x22, 0x72, 0x35, 0x6b, 0x8}}
+	return a, nil
+}
+
+var __000013_migrate_bookmark_contentDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x01\x00\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00")
+
+func _000013_migrate_bookmark_contentDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000013_migrate_bookmark_contentDownSql,
+		"000013_migrate_bookmark_content.down.sql",
+	)
+}
+
+func _000013_migrate_bookmark_contentDownSql() (*asset, error) {
+	bytes, err := _000013_migrate_bookmark_contentDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000013_migrate_bookmark_content.down.sql", size: 0, mode: os.FileMode(0644), modTime: time.Unix(1738571233, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55}}
+	return a, nil
+}
+
+var __000013_migrate_bookmark_contentUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xb4\x91\x3f\x6b\xc3\x40\x0c\xc5\xf7\xfb\x14\xda\x92\x82\xb6\x8e\x19\x8b\x0b\x81\x36\x81\xc4\xfb\xa1\xfa\x84\x7b\xd8\xf7\x87\x3b\x79\xf0\xb7\x2f\x75\x6c\xe3\xb6\x6e\xea\xa5\x9b\x10\x7a\x7a\x3f\x3d\x1d\x4f\xd7\xe2\x52\xc2\xf1\x54\x9e\xe1\x2d\x84\xc6\x51\x6a\x74\x15\xbc\xb0\x97\xbd\x35\x08\xd2\x47\x46\xe8\x52\x8b\xd0\x65\x4e\x7a\xe8\x59\x69\x19\xc1\x70\xae\x92\x8d\x62\x83\x47\x30\xc1\x91\xf5\x08\xf9\x51\x37\xdc\x23\xe4\xce\x39\x4a\x3d\xc2\xb8\x0c\xe1\x5d\x5c\x8b\x50\x25\x26\x61\xa3\x49\x10\xba\x68\xc6\xfa\x01\xd4\xb5\x78\x29\x9e\x4a\xf8\xdc\xbf\x9b\x48\x76\xff\xef\x0c\xcf\x97\xf3\xeb\x34\x7a\x50\x4a\xad\x25\x92\x87\x28\x66\x8a\x71\xfa\x56\xaf\xdf\xb3\x3c\x67\xd6\xfd\x3e\xff\x9d\x62\xf5\x2d\x42\xf5\x0d\xc4\x93\xe3\x25\xce\xdf\x08\x9b\x14\x5f\x20\x06\xb7\x7b\x24\xda\x51\x8c\xd6\xd7\xfb\xb9\x3b\x3c\x88\xea\x2d\x4c\xcb\x04\xef\x4b\x7e\x42\x4d\xc6\x07\xf5\x11\x00\x00\xff\xff\x71\x55\x6b\x85\xbd\x02\x00\x00")
+
+func _000013_migrate_bookmark_contentUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__000013_migrate_bookmark_contentUpSql,
+		"000013_migrate_bookmark_content.up.sql",
+	)
+}
+
+func _000013_migrate_bookmark_contentUpSql() (*asset, error) {
+	bytes, err := _000013_migrate_bookmark_contentUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "000013_migrate_bookmark_content.up.sql", size: 701, mode: os.FileMode(0644), modTime: time.Unix(1738571384, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x14, 0x4d, 0xc9, 0x3c, 0xe2, 0x9a, 0xe2, 0xeb, 0xe8, 0x5f, 0x5c, 0x89, 0x26, 0x87, 0x3c, 0xc2, 0x73, 0x6d, 0x50, 0xbc, 0xe, 0x5e, 0x51, 0xd0, 0x56, 0xfa, 0x4e, 0xed, 0x90, 0x58, 0x57, 0x4d}}
 	return a, nil
 }
 
@@ -686,6 +728,8 @@ var _bindata = map[string]func() (*asset, error){
 	"000011_create_s3_resources_mapping_table.up.sql":   _000011_create_s3_resources_mapping_tableUpSql,
 	"000012_split_bookmark_content.down.sql":            _000012_split_bookmark_contentDownSql,
 	"000012_split_bookmark_content.up.sql":              _000012_split_bookmark_contentUpSql,
+	"000013_migrate_bookmark_content.down.sql":          _000013_migrate_bookmark_contentDownSql,
+	"000013_migrate_bookmark_content.up.sql":            _000013_migrate_bookmark_contentUpSql,
 }
 
 // AssetDebug is true if the assets were built with the debug flag enabled.
@@ -758,6 +802,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"000011_create_s3_resources_mapping_table.up.sql":   {_000011_create_s3_resources_mapping_tableUpSql, map[string]*bintree{}},
 	"000012_split_bookmark_content.down.sql":            {_000012_split_bookmark_contentDownSql, map[string]*bintree{}},
 	"000012_split_bookmark_content.up.sql":              {_000012_split_bookmark_contentUpSql, map[string]*bintree{}},
+	"000013_migrate_bookmark_content.down.sql":          {_000013_migrate_bookmark_contentDownSql, map[string]*bintree{}},
+	"000013_migrate_bookmark_content.up.sql":            {_000013_migrate_bookmark_contentUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory.
