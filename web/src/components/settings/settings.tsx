@@ -1,5 +1,6 @@
 import ProtectedRoute from "@/components/protected-route";
 import { SidebarComponent } from "@/components/sidebar/sidebar";
+import { SidebarHeaderTrigger } from "@/components/sidebar/trigger";
 import {
 	SidebarGroup,
 	SidebarInset,
@@ -51,7 +52,9 @@ function sidebarNavContent() {
 
 export function SettingsPageComponenrt({
 	children,
-}: { children: React.ReactElement }) {
+}: {
+	children: React.ReactElement;
+}) {
 	return (
 		<ProtectedRoute>
 			<SidebarProvider defaultOpen={false}>
@@ -59,9 +62,8 @@ export function SettingsPageComponenrt({
 				<SidebarInset>
 					<div className="flex flex-col container mx-auto h-full">
 						<header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-							<div className="flex items-center gap-1">
-								<h1 className="text-2xl font-semibold">Preferences</h1>
-							</div>
+							<SidebarHeaderTrigger />
+							<h1 className="text-2xl px-8 font-semibold">Preferences</h1>
 						</header>
 						<div className="w-full p-2">{children}</div>
 					</div>

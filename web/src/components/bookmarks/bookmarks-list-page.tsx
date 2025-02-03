@@ -2,6 +2,7 @@ import BookmarkList from "@/components/bookmarks/bookmarks-list";
 import type { SearchToken } from "@/components/bookmarks/search";
 import type { BookmarkSearch, View } from "@/components/bookmarks/types";
 import { SidebarComponent } from "@/components/sidebar/sidebar";
+import { SidebarHeaderTrigger } from "@/components/sidebar/trigger";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -27,7 +28,9 @@ function getStoredView(): View {
 
 export default function BookmarksListView({
 	search,
-}: { search: BookmarkSearch }) {
+}: {
+	search: BookmarkSearch;
+}) {
 	const limit = 12; // max 2 columns
 	const offset = (search.page - 1) * limit;
 
@@ -108,21 +111,24 @@ export default function BookmarksListView({
 			{/* <SidebarComponent>{BookmarksSidebarContent()}</SidebarComponent> */}
 			<SidebarInset>
 				<div className="flex flex-col h-full">
-					<header className="flex h-16 shrink-0 items-center justify-end gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-						<AddBookmarkModal />
-						<ToggleGroup
-							type="single"
-							value={view}
-							onValueChange={(value) => setView(value as View)}
-							size="sm"
-						>
-							<ToggleGroupItem value="grid" aria-label="Grid">
-								<Table />
-							</ToggleGroupItem>
-							<ToggleGroupItem value="list" aria-label="List">
-								<List />
-							</ToggleGroupItem>
-						</ToggleGroup>
+					<header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+						<SidebarHeaderTrigger />
+						<div className="flex items-center">
+							<AddBookmarkModal />
+							<ToggleGroup
+								type="single"
+								value={view}
+								onValueChange={(value) => setView(value as View)}
+								size="sm"
+							>
+								<ToggleGroupItem value="grid" aria-label="Grid">
+									<Table />
+								</ToggleGroupItem>
+								<ToggleGroupItem value="list" aria-label="List">
+									<List />
+								</ToggleGroupItem>
+							</ToggleGroup>
+						</div>
 					</header>
 					<main>
 						{isLoading ? (

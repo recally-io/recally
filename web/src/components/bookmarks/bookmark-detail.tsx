@@ -1,6 +1,7 @@
 import { ArticleActions } from "@/components/article/article-actions";
 import { ArticleReader } from "@/components/bookmarks/bookmark-content";
 import { SidebarComponent } from "@/components/sidebar/sidebar";
+import { SidebarHeaderTrigger } from "@/components/sidebar/trigger";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -222,7 +223,9 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 			<SidebarInset className="overflow-auto">
 				<div className="flex flex-col h-full w-full">
 					<header className="flex h-12 shrink-0 items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-						<div className="flex items-center px-4"></div>
+						<div className="flex items-center px-4">
+							<SidebarHeaderTrigger />
+						</div>
 						<div className="flex items-center px-4">
 							<ArticleActions
 								onDelete={async () => setShowDeleteDialog(true)}
