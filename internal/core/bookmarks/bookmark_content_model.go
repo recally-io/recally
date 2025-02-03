@@ -150,12 +150,13 @@ func (c *BookmarkContentDTO) FromReaderContent(article *webreader.Content) {
 	c.Html = article.Html
 
 	// Update metadata
-	c.Metadata.Author = article.Author
-	c.Metadata.SiteName = article.SiteName
-	c.Metadata.Description = article.Description
-
-	c.Metadata.Cover = article.Cover
-	c.Metadata.Favicon = article.Favicon
+	c.Metadata = &BookmarkContentMetadata{
+		Author:      article.Author,
+		SiteName:    article.SiteName,
+		Description: article.Description,
+		Cover:       article.Cover,
+		Favicon:     article.Favicon,
+	}
 
 	if article.PublishedTime != nil {
 		c.Metadata.PublishedAt = *article.PublishedTime

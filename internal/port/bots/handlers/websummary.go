@@ -91,13 +91,13 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 			var newErr error
 			msg, newErr = editMessage(msg, resp, false)
 			if newErr != nil {
-				_ = processSendError(err)
+				_ = processSendError(newErr)
 				return
 			}
 		}
 	}
 
-	var bookmarkContentDTO *bookmarks.BookmarkContentDTO
+	var bookmarkContentDTO bookmarks.BookmarkContentDTO
 	// cache the summary
 	summary, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebSummary", url), 24*time.Hour, func() (*string, error) {
 		isSummaryCached = false
@@ -127,7 +127,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		}
 	} else {
 		bookmarkContentDTO.Summary = resp
-		h.saveBookmark(ctx, tx, user.ID, bookmarkContentDTO)
+		h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO)
 	}
 	return nil
 }
