@@ -103,7 +103,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		isSummaryCached = false
 		// cache the content
 		content, err := h.bookmarkService.FetchWebContentWithCache(ctx, url, fetcher.FetchOptions{
-			FecherType: fetcher.TypeJinaReader,
+			FecherType: fetcher.TypeHttp,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get content: %w", err)
