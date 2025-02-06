@@ -483,6 +483,7 @@ func (h *bookmarksHandler) refreshBookmark(c echo.Context) error {
 		content, err = h.service.FetchContent(ctx, tx, req.BookmarkID, user.ID, fetcher.FetchOptions{
 			FecherType:   fetcher.FecherType(req.Fetcher),
 			IsProxyImage: req.IsProxyImage,
+			Force:        true,
 		})
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, err)
