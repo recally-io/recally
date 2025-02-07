@@ -1,5 +1,6 @@
 import type * as React from "react";
 
+import AddBookmarkModal from "@/components/bookmarks/add-bookmark";
 import { NavUser } from "@/components/sidebar-nav-user";
 import ThemeToggle from "@/components/theme-toggle";
 import {
@@ -53,6 +54,14 @@ export function SidebarComponent({
 							<div className="flex items-center gap-2">
 								<SidebarTrigger />
 								<span>Trigger Sidebar</span>
+							</div>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+					<SidebarMenuItem>
+						<SidebarMenuButton asChild tooltip="Add Bookmark">
+							<div className="flex items-center gap-2">
+								<AddBookmarkModal />
+								<span>Add Bookmark</span>
 							</div>
 						</SidebarMenuButton>
 					</SidebarMenuItem>

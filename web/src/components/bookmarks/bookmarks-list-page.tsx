@@ -3,20 +3,11 @@ import type { SearchToken } from "@/components/bookmarks/search";
 import type { BookmarkSearch, View } from "@/components/bookmarks/types";
 import { SidebarComponent } from "@/components/sidebar/sidebar";
 import { SidebarHeaderTrigger } from "@/components/sidebar/trigger";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useBookmarkMutations, useBookmarks } from "@/lib/apis/bookmarks";
+import { useBookmarks } from "@/lib/apis/bookmarks";
 import { useRouter } from "@tanstack/react-router";
-import { List, Loader2, PlusCircle, Table } from "lucide-react";
+import { List, Loader2, Table } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const VIEW_STORAGE_KEY = "bookmarks-view-preference";
@@ -44,22 +35,11 @@ export default function BookmarksListView({
 	const bookmarks = data?.bookmarks ?? [];
 	const total = data?.total ?? 0;
 
-	const { createBookmark } = useBookmarkMutations();
-	const [open, setOpen] = useState(false);
-	const [url, setUrl] = useState("");
 	const [view, setView] = useState<View>(getStoredView());
 
 	useEffect(() => {
 		localStorage.setItem(VIEW_STORAGE_KEY, view);
 	}, [view]);
-
-	const handleSubmitCreateBookmark = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!url) return;
-		await createBookmark({ url });
-		setUrl("");
-		setOpen(false);
-	};
 
 	const handlePageChange = (page: number) => {
 		router.navigate({
@@ -80,31 +60,6 @@ export default function BookmarksListView({
 		});
 	};
 
-	const AddBookmarkModal = () => {
-		return (
-			<Dialog open={open} onOpenChange={setOpen}>
-				<DialogTrigger asChild>
-					<Button variant="ghost" size="icon" className="h-7 w-7">
-						<PlusCircle className="size-6" />
-					</Button>
-				</DialogTrigger>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Add New Bookmark</DialogTitle>
-					</DialogHeader>
-					<form onSubmit={handleSubmitCreateBookmark} className="space-y-4">
-						<Input
-							placeholder="Enter URL"
-							value={url}
-							onChange={(e) => setUrl(e.target.value)}
-						/>
-						<Button type="submit">Add Bookmark</Button>
-					</form>
-				</DialogContent>
-			</Dialog>
-		);
-	};
-
 	return (
 		<SidebarProvider defaultOpen={false}>
 			<SidebarComponent />
@@ -114,7 +69,6 @@ export default function BookmarksListView({
 					<header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
 						<SidebarHeaderTrigger />
 						<div className="flex items-center">
-							<AddBookmarkModal />
 							<ToggleGroup
 								type="single"
 								value={view}
