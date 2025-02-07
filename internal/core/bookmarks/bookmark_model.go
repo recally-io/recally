@@ -3,6 +3,7 @@ package bookmarks
 import (
 	"encoding/json"
 	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 	"slices"
 	"time"
 
@@ -155,10 +156,14 @@ func loadBookmarkTags(input interface{}) []string {
 }
 
 func loadBookmarkMetadata(input interface{}) *BookmarkMetadata {
-	if metadata, ok := input.(BookmarkMetadata); ok {
-		return &metadata
+	if input == nil {
+		return nil
 	}
-	return nil
+	metadata := BookmarkMetadata{}
+	if err := json.Unmarshal(input.([]byte), &metadata); err != nil {
+		logger.Default.Warn("failed to unmarshal Bookmark metadata", "err", err, "metadata", string(input.(string)))
+	}
+	return &metadata
 }
 
 func dumpBookmarkMetadata(input *BookmarkMetadata) []byte {
@@ -170,10 +175,15 @@ func dumpBookmarkMetadata(input *BookmarkMetadata) []byte {
 }
 
 func loadBookmarkContentMetadata(input interface{}) *BookmarkContentMetadata {
-	if metadata, ok := input.(BookmarkContentMetadata); ok {
-		return &metadata
+	if input == nil {
+		return nil
 	}
-	return nil
+
+	metadata := BookmarkContentMetadata{}
+	if err := json.Unmarshal(input.([]byte), &metadata); err != nil {
+		logger.Default.Warn("failed to unmarshal BookmarkContent metadata", "err", err, "metadata", string(input.([]byte)))
+	}
+	return &metadata
 }
 
 func dumpBookmarkContentMetadata(input *BookmarkContentMetadata) []byte {
