@@ -151,10 +151,13 @@ export default function AddBookmarkModal() {
 				const extension = file?.name?.split(".").pop()?.toLowerCase();
 				const fileType = file?.type || `application/${extension}`;
 
+				// Determine if the file is an image
+				const isImage = fileType.startsWith("image/");
+
 				await createBookmark({
 					url: resp.public_url,
 					title: file?.name || "Untitled",
-					type: extension,
+					type: isImage ? "image" : extension,
 					s3_key: resp.object_key,
 					metadata: {
 						file: {

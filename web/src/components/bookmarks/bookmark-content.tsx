@@ -77,6 +77,14 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 				<EpubViewer fileUrl={fileUrl} />
 			) : bookmark.content.type === "pdf" && fileUrl ? (
 				<PdfViewer fileUrl={fileUrl} />
+			) : bookmark.content.type === "image" ? (
+				<div className="flex justify-center">
+					<img
+						src={fileUrl || bookmark.content.url}
+						alt={bookmark.content.title || "Image"}
+						className="max-w-full h-auto rounded-lg shadow-lg"
+					/>
+				</div>
 			) : (
 				<div className="prose dark:prose-invert prose-lg max-w-none">
 					<MarkdownRenderer content={bookmark.content.content ?? ""} />
