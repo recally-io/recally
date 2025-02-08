@@ -248,6 +248,11 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
+	if req.Type != bookmarks.ContentTypeBookmark {
+		return JsonResponse(c, http.StatusCreated, bookmark)
+	}
+
 	result, err := h.queue.InsertTx(ctx, tx, queue.CrawlerWorkerArgs{
 		ID:           bookmark.ID,
 		UserID:       bookmark.UserID,

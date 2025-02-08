@@ -92,6 +92,7 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, getPresignedURLsResponse{
 		PresignedURL: presignedURL,
 		ObjectKey:    objectKey,
+		PublicURL:    h.service.GetShareURL(ctx, objectKey),
 	})
 }
 

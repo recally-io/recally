@@ -1,5 +1,6 @@
 import { ArticleHeader } from "@/components/article/article-header";
 import { ArticleSummary } from "@/components/article/article-summary";
+import EpubViewer from "@/components/epub-viewer";
 import MarkdownRenderer from "@/components/markdown-render";
 import PdfViewer from "@/components/pdf-viewer";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,7 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 	onRegenerateSummary,
 }) => {
 	const { trigger: getFile } = useGetFile();
-	const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+	const [fileUrl, setFileUrl] = useState<string | null>(null);
 
 	useEffect(() => {
 		const loadPdf = async () => {
@@ -30,7 +31,7 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 					const fileUrl = await getFile({
 						object_key: bookmark.content.s3_key,
 					});
-					setPdfUrl(fileUrl.url);
+					setFileUrl(fileUrl.url);
 				} catch (error) {
 					console.error("Failed to load PDF:", error);
 				}
@@ -72,10 +73,10 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 					}
 				/>
 			)}
-
-			{/* Main Content */}
-			{bookmark.content.type === "pdf" && pdfUrl ? (
-				<PdfViewer fileUrl={pdfUrl} />
+			{bookmark.content.type === "epub" && fileUrl ? (
+				<EpubViewer fileUrl={fileUrl} />
+			) : bookmark.content.type === "pdf" && fileUrl ? (
+				<PdfViewer fileUrl={fileUrl} />
 			) : (
 				<div className="prose dark:prose-invert prose-lg max-w-none">
 					<MarkdownRenderer content={bookmark.content.content ?? ""} />
