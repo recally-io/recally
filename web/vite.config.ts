@@ -20,7 +20,7 @@ export default defineConfig({
 			],
 			strategies: "injectManifest",
 			injectManifest: {
-				maximumFileSizeToCacheInBytes: 3000000
+				maximumFileSizeToCacheInBytes: 5000000
 			},
 			srcDir: "src",
 			filename: "sw.js",
