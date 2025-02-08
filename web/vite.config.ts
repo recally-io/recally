@@ -19,6 +19,9 @@ export default defineConfig({
 				"maskable-icon-512x512.png",
 			],
 			strategies: "injectManifest",
+			injectManifest: {
+				maximumFileSizeToCacheInBytes: 3000000
+			},
 			srcDir: "src",
 			filename: "sw.js",
 			manifest: {

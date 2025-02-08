@@ -23,8 +23,9 @@ type Client struct {
 var corsRules = []cors.Rule{
 	{
 		AllowedHeader: []string{"*"},
-		AllowedMethod: []string{"GET", "PUT"},
+		AllowedMethod: []string{"GET", "PUT", "POST", "DELETE", "HEAD"},
 		AllowedOrigin: []string{"*"},
+		ExposeHeader:  []string{"ETag"},
 	},
 }
 
@@ -98,9 +99,13 @@ func (c *Client) Delete(ctx context.Context, objectKey string) error {
 	return nil
 }
 
-func (c *Client) GetPublicURL(objectKey string) string {
-	// we need fqdn to generate public url
-	return fmt.Sprintf("%s/api/v1/shared/files/%s", config.Settings.Service.Fqdn, objectKey)
+func (c *Client) GetPublicURL(ctx context.Context, objectKey string) (string, error) {
+	u, err := c.PresignedGetObject(ctx, objectKey, time.Hour, nil)
+	if err != nil {
+		return "", fmt.Errorf("s3: failed to get presigned get object: %w", err)
+	}
+
+	return u.String(), nil
 }
 
 // PutBucketCors sets the CORS configuration for the bucket if it's not already set.
@@ -114,7 +119,7 @@ func (c *Client) PutBucketCors(ctx context.Context) error {
 	// Get the current CORS configuration for the bucket
 	bucketCors, err := c.GetBucketCors(context.Background(), c.bucketName)
 	if err == nil && bucketCors != nil && len(bucketCors.CORSRules) > 0 {
-		logger.Default.Debug("bucket cors already set", "bucket", c.bucketName)
+		logger.Default.Debug("bucket cors already set", "bucket", c.bucketName, "cors", bucketCors.CORSRules)
 		return nil
 	}
 

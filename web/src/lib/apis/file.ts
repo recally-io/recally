@@ -14,8 +14,16 @@ export interface GetPresignedURLsResponse {
 	public_url: string;
 }
 
+export interface GetFileRequest {
+	object_key: string;
+}
+
 export interface FileError {
 	message: string;
+}
+
+export interface GetPublicURLResponse {
+	url: string;
 }
 
 // Get presigned URLs for file upload/download
@@ -37,10 +45,25 @@ export const useGetPresignedURLs = () => {
 	});
 };
 
+// Get file URL by object key
+export const useGetFile = () => {
+	return useSWRMutation<
+		GetPublicURLResponse,
+		FileError,
+		string,
+		GetFileRequest
+	>("/api/v1/files/file", async (url, { arg }) => {
+		const queryParams = new URLSearchParams({
+			object_key: arg.object_key,
+		}).toString();
+		return await fetcher(`${url}?${queryParams}`);
+	});
+};
+
 // Delete file by ID
 export const useDeleteFile = () => {
 	return useSWRMutation<void, FileError, string>(
-		"/api/files",
+		"/api/v1/files",
 		async (url, { arg: fileId }) => {
 			return await fetcher(`${url}/${fileId}`);
 		},

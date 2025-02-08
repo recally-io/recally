@@ -47,6 +47,7 @@ export interface BookmarkContent {
 	summary?: string;
 	content?: string;
 	html?: string;
+	s3_key?: string;
 	metadata?: BookmarkContentMetadata;
 }
 

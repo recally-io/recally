@@ -77,7 +77,7 @@ func (h *ImageHook) Process(selec *goquery.Selection) {
 			return
 		}
 
-		s.SetAttr("src", s3.DefaultClient.GetPublicURL(objectKey))
+		s.SetAttr("src", files.DefaultService.GetShareURL(context.Background(), objectKey))
 	})
 }
 

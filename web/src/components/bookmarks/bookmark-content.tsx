@@ -1,10 +1,13 @@
 import { ArticleHeader } from "@/components/article/article-header";
 import { ArticleSummary } from "@/components/article/article-summary";
 import MarkdownRenderer from "@/components/markdown-render";
+import PdfViewer from "@/components/pdf-viewer";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
+import { useGetFile } from "@/lib/apis/file";
 import type React from "react";
-import { Separator } from "../ui/separator";
+import { useEffect, useState } from "react";
 
 interface ArticleReaderProps {
 	bookmark: BookmarkType;
@@ -17,6 +20,25 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 	bookmark,
 	onRegenerateSummary,
 }) => {
+	const { trigger: getFile } = useGetFile();
+	const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+	useEffect(() => {
+		const loadPdf = async () => {
+			if (bookmark.content.s3_key) {
+				try {
+					const fileUrl = await getFile({
+						object_key: bookmark.content.s3_key,
+					});
+					setPdfUrl(fileUrl.url);
+				} catch (error) {
+					console.error("Failed to load PDF:", error);
+				}
+			}
+		};
+		loadPdf();
+	}, [bookmark.content.s3_key, getFile]);
+
 	return (
 		<>
 			<ArticleHeader
@@ -52,9 +74,13 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 			)}
 
 			{/* Main Content */}
-			<div className="prose dark:prose-invert prose-lg max-w-none">
-				<MarkdownRenderer content={bookmark.content.content ?? ""} />
-			</div>
+			{bookmark.content.type === "pdf" && pdfUrl ? (
+				<PdfViewer fileUrl={pdfUrl} />
+			) : (
+				<div className="prose dark:prose-invert prose-lg max-w-none">
+					<MarkdownRenderer content={bookmark.content.content ?? ""} />
+				</div>
+			)}
 		</>
 	);
 };

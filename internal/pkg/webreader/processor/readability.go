@@ -7,7 +7,6 @@ import (
 	"recally/internal/core/files"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
-	"recally/internal/pkg/s3"
 	"recally/internal/pkg/webreader"
 	"strings"
 
@@ -74,7 +73,7 @@ func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.C
 		}); err != nil {
 			content.Cover = article.Image
 		} else {
-			content.Cover = s3.DefaultClient.GetPublicURL(file.S3Key)
+			content.Cover = files.DefaultService.GetShareURL(ctx, file.S3Key)
 		}
 	}
 

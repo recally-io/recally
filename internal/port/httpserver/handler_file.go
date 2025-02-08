@@ -14,7 +14,8 @@ import (
 
 type fileService interface {
 	DeleteFile(ctx context.Context, tx db.DBTX, id uuid.UUID) error
-	GetPublicURL(ctx context.Context, objectKey string) string
+	GetPublicURL(ctx context.Context, objectKey string) (string, error)
+	GetShareURL(ctx context.Context, objectKey string) string
 	GetPresignedPutObjectURL(ctx context.Context, objectKey string, expires time.Duration) (string, error)
 }
 
@@ -29,6 +30,7 @@ func registerFileHandlers(e *echo.Group, s *Service) {
 	files := e.Group("/files", authUserMiddleware())
 	files.GET("/presigned-urls", h.getPresignedURLs)
 	files.DELETE("/:id", h.deleteFile)
+	files.GET("/file", h.getFile)
 }
 
 type getPresignedURLsRequest struct {
@@ -43,6 +45,10 @@ type getPresignedURLsResponse struct {
 	PresignedURL string `json:"presigned_url"`
 	ObjectKey    string `json:"object_key"`
 	PublicURL    string `json:"public_url"`
+}
+
+type getFileRequest struct {
+	ObjectKey string `query:"object_key" validate:"required"`
 }
 
 // @Summary		Get presigned URLs for file operations
@@ -86,7 +92,27 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, getPresignedURLsResponse{
 		PresignedURL: presignedURL,
 		ObjectKey:    objectKey,
-		PublicURL:    h.service.GetPublicURL(ctx, objectKey),
+	})
+}
+
+type getPublicURLResponse struct {
+	URL string `json:"url"`
+}
+
+func (h *fileHandler) getFile(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(getFileRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	publicURL, err := h.service.GetPublicURL(ctx, req.ObjectKey)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get public URL: %w", err))
+	}
+
+	return JsonResponse(c, http.StatusOK, getPublicURLResponse{
+		URL: publicURL,
 	})
 }
 

@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"path"
 	"recally/internal/pkg/auth"
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/s3"
@@ -22,10 +23,7 @@ import (
 	utls "github.com/refraction-networking/utls"
 )
 
-var DefaultService = &Service{
-	dao: db.New(),
-	s3:  s3.DefaultClient,
-}
+var DefaultService = NewService(s3.DefaultClient)
 
 type Service struct {
 	dao DAO
@@ -332,6 +330,12 @@ func (s *Service) GetPresignedPutObjectURL(ctx context.Context, objectKey string
 	return u.String(), nil
 }
 
-func (s *Service) GetPublicURL(ctx context.Context, objectKey string) string {
-	return s.s3.GetPublicURL(objectKey)
+// GetPublicURL returns the public URL of the file
+func (s *Service) GetPublicURL(ctx context.Context, objectKey string) (string, error) {
+	return s.s3.GetPublicURL(ctx, objectKey)
+}
+
+// GetShareURL returns the share URL of the file by proxy API
+func (s *Service) GetShareURL(ctx context.Context, objectKey string) string {
+	return fmt.Sprintf("%s/api/v1/shared/files/%s", config.Settings.Service.Fqdn, objectKey)
 }
