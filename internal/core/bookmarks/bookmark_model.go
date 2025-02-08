@@ -108,6 +108,8 @@ func loadListBookmarks(dbos []db.ListBookmarksRow) []BookmarkDTO {
 		// load bookmaek content
 		var content BookmarkContentDTO
 		content.Load(&dbo.BookmarkContent)
+		content.Content = ""
+		content.Html = ""
 		b.Content = &content
 		// Load tags
 		b.Tags = loadBookmarkTags(dbo.Tags)
@@ -123,6 +125,8 @@ func loadSearchBookmarks(dbos []db.SearchBookmarksRow) []BookmarkDTO {
 		// load bookmaek content
 		var content BookmarkContentDTO
 		content.Load(&dbo.BookmarkContent)
+		content.Content = ""
+		content.Html = ""
 		b.Content = &content
 		// Load tags
 		b.Tags = loadBookmarkTags(dbo.Tags)

@@ -17,6 +17,14 @@ export interface BookmarkMetadata {
 	highlights?: Highlight[];
 }
 
+export interface BookmarkContentFileMetadata {
+	name?: string;
+	extension?: string;
+	mime_type?: string;
+	size?: number;
+	page_count?: number;
+}
+
 export interface BookmarkContentMetadata {
 	author?: string;
 	published_at?: string;
@@ -26,6 +34,8 @@ export interface BookmarkContentMetadata {
 
 	favicon?: string;
 	cover?: string;
+
+	file?: BookmarkContentFileMetadata;
 }
 
 export interface BookmarkContent {
@@ -74,6 +84,12 @@ export interface Domain {
 
 interface BookmarkCreateInput {
 	url: string;
+	title?: string;
+	description?: string;
+	tags?: string[];
+	content?: string;
+	type?: string;
+	s3_key?: string;
 	metadata?: BookmarkContentMetadata;
 }
 

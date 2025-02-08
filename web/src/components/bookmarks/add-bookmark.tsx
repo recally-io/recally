@@ -13,11 +13,17 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useBookmarkMutations } from "@/lib/apis/bookmarks";
+import {
+	type GetPresignedURLsRequest,
+	type GetPresignedURLsResponse,
+	useGetPresignedURLs,
+} from "@/lib/apis/file"; // Import the useGetPresignedURLs hook
 import { cn } from "@/lib/utils";
 import { Link2, PlusCircle, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 
 export default function AddBookmarkModal() {
+	const { trigger: getPresignedUrls } = useGetPresignedURLs();
 	const { createBookmark } = useBookmarkMutations();
 	const { toast } = useToast();
 	const [activeTab, setActiveTab] = useState<"url" | "file">("url");
@@ -40,7 +46,7 @@ export default function AddBookmarkModal() {
 		}
 	};
 
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target?.files?.[0]) {
 			const selectedFile = e.target.files[0];
 			if (selectedFile.size > 50 * 1024 * 1024) {
@@ -53,6 +59,48 @@ export default function AddBookmarkModal() {
 				return;
 			}
 			setFile(selectedFile);
+		}
+	};
+
+	const handleUploadFile = async (
+		selectedFile: File,
+	): Promise<GetPresignedURLsResponse> => {
+		try {
+			console.log(file);
+			const params: GetPresignedURLsRequest = {
+				fileName: selectedFile.name,
+				fileType: selectedFile.type,
+				action: "PUT",
+				expiration: 3600,
+			};
+			// Use the hook's mutate function to fetch presigned URLs
+			const data = await getPresignedUrls(params);
+			if (!data) {
+				throw new Error("Failed to get presigned URL");
+			}
+			const uploadRes = await fetch(data.presigned_url, {
+				method: "PUT",
+				headers: {
+					"Content-Type": selectedFile.type,
+				},
+				body: selectedFile,
+			});
+			if (!uploadRes.ok) {
+				throw new Error("Upload failed");
+			}
+			toast({
+				title: "File uploaded successfully",
+				description: "Your file has been uploaded.",
+				variant: "default",
+			});
+			return data;
+		} catch (error: any) {
+			toast({
+				title: "Upload error",
+				description: error.message || "Failed to upload file",
+				variant: "destructive",
+			});
+			throw error;
 		}
 	};
 
@@ -96,9 +144,27 @@ export default function AddBookmarkModal() {
 				await createBookmark({ url });
 				setUrl("");
 			} else {
-				const formData = new FormData();
-				formData.append("file", file!);
-				await createBookmark({ file: formData });
+				console.log("start upload file");
+				const resp = await handleUploadFile(file!);
+				console.log(resp);
+				// Get file extension and validate it
+				const extension = file?.name?.split(".").pop()?.toLowerCase();
+				const fileType = file?.type || `application/${extension}`;
+
+				await createBookmark({
+					url: resp.public_url,
+					title: file?.name || "Untitled",
+					type: extension,
+					s3_key: resp.object_key,
+					metadata: {
+						file: {
+							name: file?.name || "Untitled",
+							extension: extension || "unknown",
+							mime_type: fileType,
+							size: file?.size || 0,
+						},
+					},
+				});
 				setFile(null);
 				if (fileInputRef.current) {
 					fileInputRef.current.value = "";
@@ -110,6 +176,7 @@ export default function AddBookmarkModal() {
 			});
 			setOpen(false);
 		} catch (error) {
+			console.log(error);
 			toast({
 				title: "Error",
 				description: "Failed to create bookmark. Please try again.",
@@ -263,7 +330,7 @@ export default function AddBookmarkModal() {
 									(activeTab === "file" && !file)
 								}
 							>
-								{isLoading ? "Adding@/components." : "Add Bookmark"}
+								{isLoading ? "Adding..." : "Add Bookmark"}
 							</Button>
 						</div>
 					</form>

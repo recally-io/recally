@@ -448,7 +448,7 @@ func _000009_migrate_bookmarks_dataUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "000009_migrate_bookmarks_data.up.sql", size: 516, mode: os.FileMode(0644), modTime: time.Unix(1736065371, 0)}
+	info := bindataFileInfo{name: "000009_migrate_bookmarks_data.up.sql", size: 516, mode: os.FileMode(0644), modTime: time.Unix(1738937363, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x76, 0xda, 0x9a, 0x43, 0xe6, 0x27, 0x49, 0x69, 0x2b, 0x55, 0xb5, 0x60, 0xe9, 0x3b, 0xf2, 0x50, 0xa5, 0xdf, 0x8f, 0x69, 0x20, 0xc3, 0xb3, 0x94, 0xe3, 0x51, 0x79, 0xfa, 0x84, 0x3c, 0x7e, 0x86}}
 	return a, nil
 }

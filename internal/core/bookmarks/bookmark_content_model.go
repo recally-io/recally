@@ -1,7 +1,6 @@
 package bookmarks
 
 import (
-	"encoding/json"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/webreader"
 	"time"
@@ -19,9 +18,17 @@ const (
 	ContentTypeRSS        ContentType = "rss"
 	ContentTypeNewsletter ContentType = "newsletter"
 	ContentTypeImage      ContentType = "image"
-	ContentTypePodcast    ContentType = "podcast"
+	ContentTypeAudio      ContentType = "audio"
 	ContentTypeVideo      ContentType = "video"
 )
+
+type BookmarkContentFileMetadata struct {
+	Name      string `json:"name,omitempty"`
+	Extension string `json:"extension,omitempty"`
+	MIMEType  string `json:"mime_type,omitempty"`
+	Size      int64  `json:"size,omitempty"`
+	PageCount int    `json:"page_count,omitempty"`
+}
 
 type BookmarkContentMetadata struct {
 	Author      string    `json:"author,omitempty"`
@@ -32,6 +39,8 @@ type BookmarkContentMetadata struct {
 
 	Favicon string `json:"favicon"`
 	Cover   string `json:"cover,omitempty"`
+
+	File BookmarkContentFileMetadata `json:"file,omitempty"`
 }
 
 type BookmarkContentDTO struct {
@@ -74,7 +83,7 @@ func (b *BookmarkContentDTO) Load(dbo *db.BookmarkContent) {
 }
 
 func (b *BookmarkContentDTO) Dump() db.CreateBookmarkContentParams {
-	metadata, _ := json.Marshal(b.Metadata)
+	metadata := dumpBookmarkContentMetadata(b.Metadata)
 
 	return db.CreateBookmarkContentParams{
 		Type:   string(b.Type),

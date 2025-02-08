@@ -194,13 +194,16 @@ func (h *bookmarksHandler) listDomains(c echo.Context) error {
 }
 
 type createBookmarkRequest struct {
-	URL         string                             `json:"url" validate:"required,url"`
-	Title       string                             `json:"title"`
-	Description string                             `json:"description,omitempty"`
-	Tags        []string                           `json:"tags,omitempty"`
-	Content     string                             `json:"content,omitempty"`
-	HTML        string                             `json:"html,omitempty"`
-	Metadata    *bookmarks.BookmarkContentMetadata `json:"metadata"`
+	URL         string   `json:"url" validate:"required,url"`
+	Title       string   `json:"title"`
+	Description string   `json:"description,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
+	Content     string   `json:"content,omitempty"`
+	HTML        string   `json:"html,omitempty"`
+
+	Type     bookmarks.ContentType              `json:"type" validate:"required,oneof=bookmark pdf epub image audio video" default:"bookmark"`
+	S3Key    string                             `json:"s3_key,omitempty"`
+	Metadata *bookmarks.BookmarkContentMetadata `json:"metadata,omitempty"`
 }
 
 // createBookmark handles POST /bookmarks
@@ -232,11 +235,12 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	bookmarkContent := &bookmarks.BookmarkContentDTO{
 		UserID:   user.ID,
 		URL:      req.URL,
-		Type:     bookmarks.ContentTypeBookmark,
+		Type:     req.Type,
 		Title:    req.Title,
 		Tags:     req.Tags,
 		Content:  req.Content,
 		Html:     req.HTML,
+		S3Key:    req.S3Key,
 		Metadata: req.Metadata,
 	}
 

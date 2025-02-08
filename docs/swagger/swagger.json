@@ -5048,6 +5048,26 @@
                 }
             }
         },
+        "bookmarks.BookmarkContentFileMetadata": {
+            "type": "object",
+            "properties": {
+                "extension": {
+                    "type": "string"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "page_count": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "bookmarks.BookmarkContentMetadata": {
             "type": "object",
             "properties": {
@@ -5065,6 +5085,9 @@
                 },
                 "favicon": {
                     "type": "string"
+                },
+                "file": {
+                    "$ref": "#/definitions/bookmarks.BookmarkContentFileMetadata"
                 },
                 "published_at": {
                     "type": "string"
@@ -5167,7 +5190,7 @@
                 "rss",
                 "newsletter",
                 "image",
-                "podcast",
+                "audio",
                 "video"
             ],
             "x-enum-varnames": [
@@ -5177,7 +5200,7 @@
                 "ContentTypeRSS",
                 "ContentTypeNewsletter",
                 "ContentTypeImage",
-                "ContentTypePodcast",
+                "ContentTypeAudio",
                 "ContentTypeVideo"
             ]
         },
@@ -5309,6 +5332,7 @@
         "httpserver.createBookmarkRequest": {
             "type": "object",
             "required": [
+                "type",
                 "url"
             ],
             "properties": {
@@ -5324,6 +5348,9 @@
                 "metadata": {
                     "$ref": "#/definitions/bookmarks.BookmarkContentMetadata"
                 },
+                "s3_key": {
+                    "type": "string"
+                },
                 "tags": {
                     "type": "array",
                     "items": {
@@ -5332,6 +5359,22 @@
                 },
                 "title": {
                     "type": "string"
+                },
+                "type": {
+                    "default": "bookmark",
+                    "enum": [
+                        "bookmark",
+                        "pdf",
+                        "epub",
+                        "image",
+                        "audio",
+                        "video"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/bookmarks.ContentType"
+                        }
+                    ]
                 },
                 "url": {
                     "type": "string"
@@ -5398,6 +5441,9 @@
         "httpserver.getPresignedURLsResponse": {
             "type": "object",
             "properties": {
+                "object_key": {
+                    "type": "string"
+                },
                 "presigned_url": {
                     "type": "string"
                 },

@@ -232,6 +232,19 @@ definitions:
       user_id:
         type: string
     type: object
+  bookmarks.BookmarkContentFileMetadata:
+    properties:
+      extension:
+        type: string
+      mime_type:
+        type: string
+      name:
+        type: string
+      page_count:
+        type: integer
+      size:
+        type: integer
+    type: object
   bookmarks.BookmarkContentMetadata:
     properties:
       author:
@@ -244,6 +257,8 @@ definitions:
         type: string
       favicon:
         type: string
+      file:
+        $ref: '#/definitions/bookmarks.BookmarkContentFileMetadata'
       published_at:
         type: string
       site_name:
@@ -312,7 +327,7 @@ definitions:
     - rss
     - newsletter
     - image
-    - podcast
+    - audio
     - video
     type: string
     x-enum-varnames:
@@ -322,7 +337,7 @@ definitions:
     - ContentTypeRSS
     - ContentTypeNewsletter
     - ContentTypeImage
-    - ContentTypePodcast
+    - ContentTypeAudio
     - ContentTypeVideo
   bookmarks.DomainDTO:
     properties:
@@ -420,15 +435,29 @@ definitions:
         type: string
       metadata:
         $ref: '#/definitions/bookmarks.BookmarkContentMetadata'
+      s3_key:
+        type: string
       tags:
         items:
           type: string
         type: array
       title:
         type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/bookmarks.ContentType'
+        default: bookmark
+        enum:
+        - bookmark
+        - pdf
+        - epub
+        - image
+        - audio
+        - video
       url:
         type: string
     required:
+    - type
     - url
     type: object
   httpserver.createBookmarkShareRequest:
@@ -471,6 +500,8 @@ definitions:
     type: object
   httpserver.getPresignedURLsResponse:
     properties:
+      object_key:
+        type: string
       presigned_url:
         type: string
       public_url:

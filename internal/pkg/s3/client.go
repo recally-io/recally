@@ -49,10 +49,15 @@ func New(cfg config.S3Config) (*Client, error) {
 		return nil, err
 	}
 	c := &Client{Client: client, bucketName: cfg.BucketName, publicURL: cfg.PublicURL}
-	// err = c.PutBucketCors(context.Background())
-	// if err != nil {
-	// 	return nil, err
-	// }
+
+	go func() {
+		err = c.PutBucketCors(context.Background())
+		if err != nil {
+			logger.Default.Error("failed to put bucket cors", "err", err)
+		} else {
+			logger.Default.Info("bucket cors set successfully", "bucket", c.bucketName)
+		}
+	}()
 	return c, nil
 }
 
@@ -109,10 +114,11 @@ func (c *Client) PutBucketCors(ctx context.Context) error {
 	// Get the current CORS configuration for the bucket
 	bucketCors, err := c.GetBucketCors(context.Background(), c.bucketName)
 	if err == nil && bucketCors != nil && len(bucketCors.CORSRules) > 0 {
+		logger.Default.Debug("bucket cors already set", "bucket", c.bucketName)
 		return nil
 	}
 
-	logger.Default.Info("bucket cors not set, setting it", "bucket", c.bucketName)
+	logger.Default.Debug("bucket cors not set, setting it", "bucket", c.bucketName)
 	// Create a new CORS configuration using the predefined rules
 	corsConfig := cors.NewConfig(corsRules)
 	// Set the CORS configuration for the bucket

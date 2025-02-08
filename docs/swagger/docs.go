@@ -5054,6 +5054,26 @@ const docTemplate = `{
                 }
             }
         },
+        "bookmarks.BookmarkContentFileMetadata": {
+            "type": "object",
+            "properties": {
+                "extension": {
+                    "type": "string"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "page_count": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "bookmarks.BookmarkContentMetadata": {
             "type": "object",
             "properties": {
@@ -5071,6 +5091,9 @@ const docTemplate = `{
                 },
                 "favicon": {
                     "type": "string"
+                },
+                "file": {
+                    "$ref": "#/definitions/bookmarks.BookmarkContentFileMetadata"
                 },
                 "published_at": {
                     "type": "string"
@@ -5173,7 +5196,7 @@ const docTemplate = `{
                 "rss",
                 "newsletter",
                 "image",
-                "podcast",
+                "audio",
                 "video"
             ],
             "x-enum-varnames": [
@@ -5183,7 +5206,7 @@ const docTemplate = `{
                 "ContentTypeRSS",
                 "ContentTypeNewsletter",
                 "ContentTypeImage",
-                "ContentTypePodcast",
+                "ContentTypeAudio",
                 "ContentTypeVideo"
             ]
         },
@@ -5315,6 +5338,7 @@ const docTemplate = `{
         "httpserver.createBookmarkRequest": {
             "type": "object",
             "required": [
+                "type",
                 "url"
             ],
             "properties": {
@@ -5330,6 +5354,9 @@ const docTemplate = `{
                 "metadata": {
                     "$ref": "#/definitions/bookmarks.BookmarkContentMetadata"
                 },
+                "s3_key": {
+                    "type": "string"
+                },
                 "tags": {
                     "type": "array",
                     "items": {
@@ -5338,6 +5365,22 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                },
+                "type": {
+                    "default": "bookmark",
+                    "enum": [
+                        "bookmark",
+                        "pdf",
+                        "epub",
+                        "image",
+                        "audio",
+                        "video"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/bookmarks.ContentType"
+                        }
+                    ]
                 },
                 "url": {
                     "type": "string"
@@ -5404,6 +5447,9 @@ const docTemplate = `{
         "httpserver.getPresignedURLsResponse": {
             "type": "object",
             "properties": {
+                "object_key": {
+                    "type": "string"
+                },
                 "presigned_url": {
                     "type": "string"
                 },

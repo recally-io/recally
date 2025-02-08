@@ -32,17 +32,16 @@ func registerFileHandlers(e *echo.Group, s *Service) {
 }
 
 type getPresignedURLsRequest struct {
-	AssistantId uuid.UUID `query:"assistant_id" validate:"required,uuid4"`
-	ThreadId    uuid.UUID `query:"thread_id,omitempty" validate:"omitempty,uuid4"`
-	FileName    string    `query:"file_name" validate:"required"`
-	FileType    string    `query:"file_type" validate:"required"`
-	Action      string    `query:"action" validate:"required,oneof=PUT GET"`
+	FileName string `query:"file_name" validate:"required"`
+	FileType string `query:"file_type" validate:"required"`
+	Action   string `query:"action" validate:"required,oneof=PUT GET"`
 	// Expiration in seconds
 	Expiration int `query:"expiration" validate:"required,min=1,max=604800"`
 }
 
 type getPresignedURLsResponse struct {
 	PresignedURL string `json:"presigned_url"`
+	ObjectKey    string `json:"object_key"`
 	PublicURL    string `json:"public_url"`
 }
 
@@ -71,8 +70,7 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
-	objectKey := fmt.Sprintf("%s/%s/%s/%s-%s", user.ID, req.AssistantId, time.Now().Format("2006-01"), uuid.New().String(), req.FileName)
-	// objectKey := url.PathEscape(fmt.Sprintf("%s/%s/%s/%s", user.ID, req.AssistantId, time.Now().Format("2006-01"), req.FileName))
+	objectKey := fmt.Sprintf("%s/%s/%s-%s", user.ID, time.Now().Format("2006-01"), uuid.New().String(), req.FileName)
 
 	// Default expiration to 1 hour if not provided
 	if req.Expiration == 0 {
@@ -87,6 +85,7 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	// Return the presigned URL
 	return JsonResponse(c, http.StatusOK, getPresignedURLsResponse{
 		PresignedURL: presignedURL,
+		ObjectKey:    objectKey,
 		PublicURL:    h.service.GetPublicURL(ctx, objectKey),
 	})
 }
