@@ -201,7 +201,7 @@ type createBookmarkRequest struct {
 	Content     string   `json:"content,omitempty"`
 	HTML        string   `json:"html,omitempty"`
 
-	Type     bookmarks.ContentType              `json:"type" validate:"required,oneof=bookmark pdf epub image audio video" default:"bookmark"`
+	Type     bookmarks.ContentType              `json:"type" validate:"required,oneof=bookmark pdf epub image audio video"`
 	S3Key    string                             `json:"s3_key,omitempty"`
 	Metadata *bookmarks.BookmarkContentMetadata `json:"metadata,omitempty"`
 }

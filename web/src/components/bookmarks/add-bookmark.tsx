@@ -141,7 +141,7 @@ export default function AddBookmarkModal() {
 		setIsLoading(true);
 		try {
 			if (activeTab === "url") {
-				await createBookmark({ url });
+				await createBookmark({ url: url, type: "bookmark" });
 				setUrl("");
 			} else {
 				console.log("start upload file");
