@@ -13,32 +13,42 @@ import {
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { ROUTES } from "@/lib/router";
-import { Bookmark, ChevronRight, Newspaper } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import {
+	BookImage,
+	Bookmark,
+	BookOpen,
+	ChevronRight,
+	Newspaper,
+} from "lucide-react";
 
 const items = [
 	{
 		title: "Bookmarks",
-		url: "#bookmark",
+		url: ROUTES.BOOKMARKS,
 		icon: Bookmark,
 		isActive: true,
 		items: [
 			{
-				title: "Articles",
+				title: "Bookmarks",
 				icon: Newspaper,
-				url: ROUTES.BOOKMARKS,
 				type: "bookmark",
-				category: "article",
 			},
-			// {
-			// 	title: "EPUBs",
-			// 	icon: BookOpen,
-			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=epub`,
-			// },
-			// {
-			// 	title: "PDFs",
-			// 	icon: BookImage,
-			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=pdf`,
-			// },
+			{
+				title: "EPUBs",
+				icon: BookOpen,
+				type: "epub",
+			},
+			{
+				title: "PDFs",
+				icon: BookImage,
+				type: "pdf",
+			},
+			{
+				title: "Images",
+				icon: BookImage,
+				type: "image",
+			},
 			// {
 			// 	title: "Videos",
 			// 	url: `${ROUTES.BOOKMARKS}?type=bookmark&category=video`,
@@ -59,7 +69,7 @@ export function BookmarksSidebarContent() {
 					<Collapsible
 						key={item.title}
 						asChild
-						defaultOpen={item.isActive}
+						defaultOpen={true}
 						className="group/collapsible"
 					>
 						<SidebarMenuItem>
@@ -75,16 +85,17 @@ export function BookmarksSidebarContent() {
 									{item.items?.map((subItem) => (
 										<SidebarMenuSubItem key={subItem.title}>
 											<SidebarMenuSubButton asChild>
-												{/* <Link
-													to={subItem.url}
-													search={(prev) => ({
-														...prev,
-														filter: `type=${subItem.type},category=${subItem.category}&`,
-													})}
+												<Link
+													to={item.url}
+													search={{
+														query: "",
+														page: 1,
+														filters: [`type:${subItem.type}`],
+													}}
 												>
 													{subItem.icon && <subItem.icon />}
 													<span>{subItem.title}</span>
-												</Link> */}
+												</Link>
 											</SidebarMenuSubButton>
 										</SidebarMenuSubItem>
 									))}
