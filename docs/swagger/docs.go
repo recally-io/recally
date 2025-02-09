@@ -5367,7 +5367,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "default": "bookmark",
                     "enum": [
                         "bookmark",
                         "pdf",

@@ -24,7 +24,7 @@ func parseListFilter(filters []string) (domains, contentTypes, tags []string) {
 		case "domain":
 			domains = append(domains, kv[1])
 		case "type":
-			contentTypes = append(contentTypes, kv[1])
+			contentTypes = append(contentTypes, strings.ToLower(kv[1]))
 		case "tag":
 			tags = append(tags, kv[1])
 		}

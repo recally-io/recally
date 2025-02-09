@@ -71,6 +71,13 @@ export default function BookmarkList({
 
 					<CardContent>
 						<div className="flex flex-wrap gap-1.5">
+							<Badge
+								key={bookmark.content.type}
+								variant="default"
+								className="text-xs"
+							>
+								{bookmark.content.type}
+							</Badge>
 							{bookmark.tags?.map((tag) => (
 								<Badge key={tag} variant="secondary" className="text-xs">
 									{tag}
@@ -108,6 +115,13 @@ export default function BookmarkList({
 							{bookmark.content.url}
 						</p>
 						<div className="mt-2 flex flex-wrap gap-1">
+							<Badge
+								key={bookmark.content.type}
+								variant="default"
+								className="text-xs"
+							>
+								{bookmark.content.type}
+							</Badge>
 							{bookmark.tags?.map((tag) => (
 								<Badge key={tag} variant="secondary" className="text-xs">
 									{tag}

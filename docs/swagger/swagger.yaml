@@ -446,7 +446,6 @@ definitions:
       type:
         allOf:
         - $ref: '#/definitions/bookmarks.ContentType'
-        default: bookmark
         enum:
         - bookmark
         - pdf
