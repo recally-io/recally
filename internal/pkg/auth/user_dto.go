@@ -10,15 +10,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type SummaryConfig struct {
+type AIConfig struct {
 	Model    string `json:"model"`
 	Prompt   string `json:"prompt"`
 	Language string `json:"language"`
 }
 
 type UserSettings struct {
-	SummaryOptions      SummaryConfig `json:"summary_options"`
-	IsLinkedTelegramBot bool          `json:"is_linked_telegram_bot"`
+	SummaryOptions       AIConfig `json:"summary_options"`
+	DescribeImageOptions AIConfig `json:"describe_image_options"`
+	IsLinkedTelegramBot  bool     `json:"is_linked_telegram_bot"`
 }
 
 type UserDTO struct {

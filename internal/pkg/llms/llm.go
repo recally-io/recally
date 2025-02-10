@@ -173,7 +173,7 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 	}
 
 	// dynamically add tools to the request
-	logger.FromContext(ctx).Info("generating content", "tool_names", opts.ToolNames)
+	logger.FromContext(ctx).Info("generating content", "tool_names", opts.ToolNames, "model", req.Model)
 	if len(opts.ToolNames) > 0 {
 		mapping := make(map[string]tools.Tool)
 		for _, name := range opts.ToolNames {

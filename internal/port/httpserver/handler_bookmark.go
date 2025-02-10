@@ -249,7 +249,7 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	if req.Type != bookmarks.ContentTypeBookmark {
+	if req.Type != bookmarks.ContentTypeBookmark && req.Type != bookmarks.ContentTypeImage {
 		return JsonResponse(c, http.StatusCreated, bookmark)
 	}
 

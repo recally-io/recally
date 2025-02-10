@@ -1,6 +1,7 @@
 package bookmarks
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -39,6 +40,15 @@ func parseListFilter(filters []string) (domains, contentTypes, tags []string) {
 		tags = nil
 	}
 	return
+}
+
+func parseXmlContent(content, tag string) string {
+	re := regexp.MustCompile(fmt.Sprintf(`(?s)<%s>(.*?)</%s>`, tag, tag))
+	matches := re.FindStringSubmatch(content)
+	if len(matches) < 2 {
+		return ""
+	}
+	return matches[1]
 }
 
 // parseTagsFromSummary extracts tags from a string and returns the tags array and the string without tags

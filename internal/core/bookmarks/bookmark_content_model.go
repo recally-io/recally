@@ -1,6 +1,8 @@
 package bookmarks
 
 import (
+	"context"
+	"recally/internal/core/files"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/webreader"
 	"time"
@@ -171,4 +173,12 @@ func (c *BookmarkContentDTO) FromReaderContent(article *webreader.Content) {
 	if article.PublishedTime != nil {
 		c.Metadata.PublishedAt = *article.PublishedTime
 	}
+}
+
+func (c *BookmarkContentDTO) GetFilePublicURL(ctx context.Context) (string, error) {
+	if c.S3Key == "" {
+		return c.URL, nil
+	}
+
+	return files.DefaultService.GetPublicURL(ctx, c.S3Key)
 }

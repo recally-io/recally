@@ -96,14 +96,14 @@ func WithSummaryOptionUser(user *auth.UserDTO) SummaryOption {
 
 // SummaryProcessor implements content summarization using LLM
 type SummaryProcessor struct {
-	config auth.SummaryConfig
+	config auth.AIConfig
 	llm    *llms.LLM
 }
 
 // NewSummaryProcessor creates a new SummaryProcessor with the given configuration
 func NewSummaryProcessor(llm *llms.LLM, opts ...SummaryOption) *SummaryProcessor {
 	p := &SummaryProcessor{
-		config: auth.SummaryConfig{
+		config: auth.AIConfig{
 			Model:  config.Settings.OpenAI.Model, // default model
 			Prompt: defaultSummaryPrompt,         // default prompt
 		},

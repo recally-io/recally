@@ -4,18 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"recally/internal/pkg/auth"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
-	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader"
 	"recally/internal/pkg/webreader/fetcher"
-	"recally/internal/pkg/webreader/processor"
 	"recally/internal/pkg/webreader/reader"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -77,9 +73,13 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, bookmarkID, user
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmark content by id '%s': %w", bookmarkID.String(), err)
 	}
-	if bookmarkContent.Content != "" && !opts.Force {
+
+	// if content is not empty and force is false, then return
+	// if content type is not bookmark, then return
+	if (bookmarkContent.Content != "" && !opts.Force) || bookmarkContent.Type != ContentTypeBookmark {
 		return bookmarkContent, nil
 	}
+
 	webContent, err := s.FetchWebContentWithCache(ctx, bookmarkContent.URL, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
@@ -107,54 +107,4 @@ func (s *Service) FetchWebContentWithCache(ctx context.Context, uri string, opts
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
 	}
 	return reader.Process(ctx, content)
-}
-
-func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, bookmarkID, userID uuid.UUID) (*BookmarkContentDTO, error) {
-	user, err := auth.LoadUser(ctx, tx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	bookmarkContent, err := s.GetBookmarkContentByBookmarkID(ctx, tx, bookmarkID)
-	if err != nil {
-		return nil, err
-	}
-
-	content := &webreader.Content{
-		Markwdown: bookmarkContent.Content,
-	}
-
-	summarier := processor.NewSummaryProcessor(s.llm, processor.WithSummaryOptionUser(user))
-
-	if len(content.Markwdown) < 1000 {
-		logger.FromContext(ctx).Info("content is too short to summarise")
-		return bookmarkContent, nil
-	}
-
-	if err := summarier.Process(ctx, content); err != nil {
-		logger.Default.Error("failed to generate summary", "err", err)
-	} else {
-		summary, tags := s.ProcessSummaryTags(ctx, tx, bookmarkID, userID, content.Summary)
-		bookmarkContent.Summary = summary
-		if len(tags) > 0 {
-			bookmarkContent.Tags = tags
-		}
-	}
-	return s.UpdateBookmarkContent(ctx, tx, bookmarkContent)
-}
-
-func (s *Service) ProcessSummaryTags(ctx context.Context, tx db.DBTX, bookmarkID, userID uuid.UUID, summary string) (string, []string) {
-	tags, summary := parseTagsFromSummary(summary)
-	if len(tags) > 0 {
-		// link tags in background
-		newUserCtx := auth.SetUserToContextByUserID(context.Background(), userID)
-		go func() {
-			if err := db.RunInTransaction(newUserCtx, db.DefaultPool.Pool, func(ctx context.Context, tx pgx.Tx) error {
-				return s.linkContentTags(ctx, tx, tags, tags, bookmarkID, userID)
-			}); err != nil {
-				logger.Default.Error("failed to link content tags", "err", err, "bookmark_id", bookmarkID)
-			}
-		}()
-	}
-	return summary, tags
 }

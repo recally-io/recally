@@ -1,5 +1,5 @@
+import { AISettings } from "@/components/settings/ai";
 import { SettingsPageComponenrt } from "@/components/settings/settings";
-import { SummarySettings } from "@/components/settings/ai";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/settings/ai")({
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/settings/ai")({
 function RouteComponent() {
 	return (
 		<SettingsPageComponenrt>
-			<SummarySettings />
+			<AISettings />
 		</SettingsPageComponenrt>
 	);
 }

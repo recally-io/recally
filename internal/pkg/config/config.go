@@ -47,9 +47,10 @@ func (db DatabaseConfig) URL() string {
 }
 
 type OpenAIConfig struct {
-	BaseURL string `env:"BASE_URL" envDefault:"https://api.openai.com"`
-	ApiKey  string `env:"API_KEY,required"`
-	Model   string `env:"MODEL" envDefault:"gpt-4o-mini"`
+	BaseURL     string `env:"BASE_URL" envDefault:"https://api.openai.com"`
+	ApiKey      string `env:"API_KEY,required"`
+	Model       string `env:"MODEL" envDefault:"gpt-4o-mini"`
+	VisionModel string `env:"VISION_MODEL" envDefault:"gpt-4o-mini"`
 }
 
 type GoogleSearchConfig struct {

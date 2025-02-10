@@ -1,14 +1,15 @@
 import { useSWRConfig } from "swr";
 import fetcher from "./fetcher";
 
-export type SummaryConfig = {
-	model?: string;
-	prompt?: string;
-	language?: string;
+export type AISettingsData = {
+	model: string;
+	prompt: string;
+	language: string;
 };
 
 export type UserSettings = {
-	summary_options?: SummaryConfig;
+	summary_options?: AISettingsData;
+	describe_image_options?: AISettingsData;
 	is_linked_telegram_bot?: boolean;
 };
 
