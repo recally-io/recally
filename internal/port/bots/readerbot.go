@@ -33,6 +33,10 @@ func NewReaderBot(cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheS
 			Endpoint: telebot.OnText,
 			Handler:  h.WebSummaryHandler,
 		},
+		{
+			Endpoint: telebot.OnPhoto,
+			Handler:  h.PhotoHandler,
+		},
 	}
 	return NewBot(cfg, pool, handlers, e)
 }

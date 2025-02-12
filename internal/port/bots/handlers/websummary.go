@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"io"
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
@@ -12,7 +11,6 @@ import (
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,18 +36,9 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		return c.Reply("Please provide a valid URL.")
 	}
 
-	processSendError := func(err error) error {
-		logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
-		err = c.Reply("Failed to send message. " + err.Error())
-		if err != nil {
-			logger.FromContext(ctx).Error("error reply message", "err", err)
-		}
-		return err
-	}
-
 	msg, err := c.Bot().Reply(c.Message(), "Please wait, I'm reading the page.")
 	if err != nil {
-		return processSendError(err)
+		return processSendError(ctx, c, err)
 	}
 
 	resp := ""
@@ -57,46 +46,8 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	chunkSize := 400
 	isSummaryCached := true
 
-	editMessage := func(msg *tele.Message, text string, format bool) (*tele.Message, error) {
-		if format {
-			return c.Bot().Edit(msg, convertToTGMarkdown(text), tele.ModeMarkdownV2)
-		}
-		return c.Bot().Edit(msg, text)
-	}
-
 	sendToUser := func(stream llms.StreamingString) {
-		line, err := stream.Content, stream.Err
-		chunk += line
-
-		if err != nil {
-			if err == io.EOF {
-				resp += chunk
-				resp = strings.ReplaceAll(resp, "\\n", "\n")
-				if _, err := editMessage(msg, resp, true); err != nil {
-					if strings.Contains(err.Error(), "message is not modified") {
-						return
-					}
-					_ = processSendError(err)
-				}
-				return
-			}
-			logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err)
-			if msg, err = editMessage(msg, "Failed to get summary.", false); err != nil {
-				_ = processSendError(err)
-				return
-			}
-		}
-
-		if len(chunk) > chunkSize {
-			resp += chunk
-			chunk = ""
-			var newErr error
-			msg, newErr = editMessage(msg, resp, false)
-			if newErr != nil {
-				_ = processSendError(newErr)
-				return
-			}
-		}
+		msg = sendToUser(ctx, c, stream, &resp, &chunk, chunkSize, msg)
 	}
 
 	var bookmarkContentDTO bookmarks.BookmarkContentDTO
@@ -119,13 +70,13 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		return &resp, nil
 	})
 	if err != nil {
-		return processSendError(err)
+		return processSendError(ctx, c, err)
 	}
 
 	// if summary is cached, just return the cached summary
 	// if not cached, streaming send summary to user and save the bookmark
 	if isSummaryCached {
-		if _, err := editMessage(msg, *summary, true); err != nil {
+		if _, err := editMessage(c, msg, *summary, true); err != nil {
 			logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
 		}
 	} else {
