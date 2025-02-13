@@ -43,13 +43,13 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, bookmarkID, 
 	return s.UpdateBookmarkContent(ctx, tx, bookmarkContent)
 }
 
-func (s *Service) SaveContentTags(bookmarkID, userID uuid.UUID, newTags, oldTags []string) {
+func (s *Service) SaveContentTags(bookmarkID, userID uuid.UUID, newTags []string) {
 	if len(newTags) > 0 {
 		// link tags in background
 		newUserCtx := auth.SetUserToContextByUserID(context.Background(), userID)
 		go func() {
 			if err := db.RunInTransaction(newUserCtx, db.DefaultPool.Pool, func(ctx context.Context, tx pgx.Tx) error {
-				return s.linkContentTags(ctx, tx, oldTags, newTags, bookmarkID, userID)
+				return s.linkContentTags(ctx, tx, newTags, bookmarkID, userID)
 			}); err != nil {
 				logger.Default.Error("failed to link content tags", "err", err, "bookmark_id", bookmarkID)
 			}
@@ -76,7 +76,7 @@ func (s *Service) summarierArticleContent(ctx context.Context, bookmarkID uuid.U
 		bookmarkContent.Summary = summary
 		if len(tags) > 0 {
 			bookmarkContent.Tags = tags
-			s.SaveContentTags(bookmarkID, user.ID, tags, []string{})
+			s.SaveContentTags(bookmarkID, user.ID, tags)
 		}
 	}
 	return nil
@@ -117,7 +117,7 @@ func (s *Service) summarierImageContent(ctx context.Context, bookmarkID uuid.UUI
 	summarier.Summary(ctx, imgDataUrl, streamingFunc)
 
 	if len(bookmarkContent.Tags) > 0 {
-		s.SaveContentTags(bookmarkID, user.ID, bookmarkContent.Tags, []string{})
+		s.SaveContentTags(bookmarkID, user.ID, bookmarkContent.Tags)
 	}
 
 	return nil

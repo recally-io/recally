@@ -119,6 +119,7 @@ func (b *BookmarkContentDTO) Dump() db.CreateBookmarkContentParams {
 			String: b.Html,
 			Valid:  b.Html != "",
 		},
+		Tags:     b.Tags,
 		Metadata: metadata,
 	}
 }

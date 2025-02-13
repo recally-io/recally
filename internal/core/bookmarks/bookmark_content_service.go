@@ -22,7 +22,7 @@ func (s *Service) IsBookmarkContentExistByURL(ctx context.Context, tx db.DBTX, u
 
 func (s *Service) CreateBookmarkContent(ctx context.Context, tx db.DBTX, content *BookmarkContentDTO) (*BookmarkContentDTO, error) {
 	// when user save image from url by recally-clipper, we need to upload it to s3 first
-	if content.Type == ContentTypeImage && content.S3Key == "" {
+	if content.S3Key == "" {
 		// upload image to s3
 		file, err := files.DefaultService.CreateFileAndUploadToS3FromUrl(ctx, tx, content.UserID, true, "", content.URL)
 		if err != nil {

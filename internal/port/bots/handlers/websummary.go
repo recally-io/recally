@@ -85,11 +85,9 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		}
 	} else {
 		bookmarkContentDTO.Summary = *summary
-		bookmarkUrl, err := h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO)
-		if err == nil {
-			if _, err := editMessage(c, msg, fmt.Sprintf("%s\n\nOpen Bookmark: %s", *summary, bookmarkUrl), true); err != nil {
-				logger.FromContext(ctx).Error("failed to send message", "err", err)
-			}
+		if _, err = h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO); err != nil {
+			logger.FromContext(ctx).Error("failed to save bookmark", "err", err)
+			return err
 		}
 	}
 	return nil

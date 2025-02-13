@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/files"
@@ -113,11 +112,10 @@ func (h *Handler) PhotoHandler(c tele.Context) error {
 		S3Key:   f.S3Key,
 		Tags:    tags,
 	}
-	bookmarkUrl, err := h.saveBookmark(ctx, tx, user.ID, bookmarkContent)
-	if err == nil {
-		if _, err := editMessage(c, msg, fmt.Sprintf("%s\n\nOpen Bookmark: %s", resp, bookmarkUrl), true); err != nil {
-			logger.FromContext(ctx).Error("failed to send message", "err", err)
-		}
+	if _, err = h.saveBookmark(ctx, tx, user.ID, bookmarkContent); err != nil {
+		logger.FromContext(ctx).Error("failed to save bookmark", "err", err)
+		return err
 	}
+
 	return nil
 }
