@@ -4,18 +4,16 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"recally/internal/core/files"
 	"recally/internal/pkg/auth"
-	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader"
 	"recally/internal/pkg/webreader/processor"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/sashabaranov/go-openai"
 )
 
 func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, bookmarkID, userID uuid.UUID) (*BookmarkContentDTO, error) {
@@ -45,16 +43,7 @@ func (s *Service) SummarierContent(ctx context.Context, tx db.DBTX, bookmarkID, 
 	return s.UpdateBookmarkContent(ctx, tx, bookmarkContent)
 }
 
-func (s *Service) ProcessSummaryTags(bookmarkID, userID uuid.UUID, summary string) (string, []string) {
-	tags, summary := parseTagsFromSummary(summary)
-	if len(tags) > 0 {
-		// link tags in background
-		s.saveContentTags(bookmarkID, userID, tags, []string{})
-	}
-	return summary, tags
-}
-
-func (s *Service) saveContentTags(bookmarkID, userID uuid.UUID, newTags, oldTags []string) {
+func (s *Service) SaveContentTags(bookmarkID, userID uuid.UUID, newTags, oldTags []string) {
 	if len(newTags) > 0 {
 		// link tags in background
 		newUserCtx := auth.SetUserToContextByUserID(context.Background(), userID)
@@ -83,57 +72,31 @@ func (s *Service) summarierArticleContent(ctx context.Context, bookmarkID uuid.U
 	if err := summarier.Process(ctx, content); err != nil {
 		logger.Default.Error("failed to generate summary", "err", err)
 	} else {
-		summary, tags := s.ProcessSummaryTags(bookmarkID, user.ID, content.Summary)
+		summary, tags := summarier.ParseSummaryInfo(content.Summary)
 		bookmarkContent.Summary = summary
 		if len(tags) > 0 {
 			bookmarkContent.Tags = tags
+			s.SaveContentTags(bookmarkID, user.ID, tags, []string{})
 		}
 	}
 	return nil
 }
 
 func (s *Service) summarierImageContent(ctx context.Context, bookmarkID uuid.UUID, user *auth.UserDTO, bookmarkContent *BookmarkContentDTO) error {
-	// get image public url
-	imgUrl, err := bookmarkContent.GetFilePublicURL(ctx)
+	if bookmarkContent.S3Key == "" {
+		return fmt.Errorf("s3 key is empty")
+	}
+
+	imgReader, err := files.DefaultService.LoadFileContentByS3Key(ctx, bookmarkContent.S3Key)
 	if err != nil {
-		return fmt.Errorf("failed to get image public url: %w", err)
+		return fmt.Errorf("failed to load image content: %w", err)
 	}
 
-	prompt := defaultDescribeImagePrompt
-	language := "English"
-	model := config.Settings.OpenAI.VisionModel
-	if user.Settings.DescribeImageOptions.Model != "" {
-		model = user.Settings.DescribeImageOptions.Model
-	}
-	if user.Settings.DescribeImageOptions.Language != "" {
-		language = user.Settings.DescribeImageOptions.Language
-	}
-	if user.Settings.DescribeImageOptions.Prompt != "" {
-		prompt = user.Settings.DescribeImageOptions.Prompt
-	}
-
-	logger.FromContext(ctx).Info("start describe image", "model", model, "language", language)
-
-	messages := []openai.ChatCompletionMessage{
-		{
-			Role:    openai.ChatMessageRoleSystem,
-			Content: prompt,
-		},
-		{
-			Role: openai.ChatMessageRoleUser,
-			MultiContent: []openai.ChatMessagePart{
-				{
-					Type: openai.ChatMessagePartTypeText,
-					Text: fmt.Sprintf("Describe the image in %s", language),
-				},
-				{
-					Type: openai.ChatMessagePartTypeImageURL,
-					ImageURL: &openai.ChatMessageImageURL{
-						URL: imgUrl,
-					},
-				},
-			},
-		},
+	// summarize image
+	summarier := processor.NewSummaryImageProcessor(s.llm, processor.WithSummaryImageOptionUser(user))
+	imgDataUrl, err := summarier.EncodeImage(imgReader, bookmarkContent.Content)
+	if err != nil {
+		return fmt.Errorf("failed to encode image: %w", err)
 	}
 
 	streamingFunc := func(content llms.StreamingMessage) {
@@ -144,23 +107,17 @@ func (s *Service) summarierImageContent(ctx context.Context, bookmarkID uuid.UUI
 
 		if content.Choice != nil {
 			text := content.Choice.Message.Content
-			bookmarkContent.Title = parseXmlContent(text, "title")
-			bookmarkContent.Summary = parseXmlContent(text, "description")
-			tagString := parseXmlContent(text, "tags")
-			tags := []string{}
-			for _, tag := range strings.Split(tagString, ", ") {
-				if tag != "" {
-					tags = append(tags, strings.TrimSpace(tag))
-				}
-			}
+			title, description, tags := summarier.ParseSummaryInfo(text)
+			bookmarkContent.Title = title
+			bookmarkContent.Summary = description
 			bookmarkContent.Tags = tags
 		}
 	}
 
-	s.llm.GenerateContent(ctx, messages, streamingFunc, llms.WithModel(model), llms.WithStream(false))
+	summarier.Summary(ctx, imgDataUrl, streamingFunc)
 
 	if len(bookmarkContent.Tags) > 0 {
-		s.saveContentTags(bookmarkID, user.ID, bookmarkContent.Tags, []string{})
+		s.SaveContentTags(bookmarkID, user.ID, bookmarkContent.Tags, []string{})
 	}
 
 	return nil

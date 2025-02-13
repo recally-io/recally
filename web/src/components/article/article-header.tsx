@@ -9,7 +9,9 @@ export const ArticleHeader: React.FC<ArticleHeaderProps> = ({
 	url,
 	publishedAt,
 }) => {
-	const domain = new URL(url).hostname;
+	const domain = url.startsWith("http")
+		? new URL(url).hostname
+		: window.location.hostname;
 
 	return (
 		<div className="space-y-4">

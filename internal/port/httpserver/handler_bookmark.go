@@ -402,7 +402,7 @@ func (h *bookmarksHandler) deleteBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	if err := h.service.DeleteBookmark(ctx, tx, bookmarkID, user.ID); err != nil {
+	if err := h.service.DeleteBookmark(ctx, tx, user.ID, bookmarkID); err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 

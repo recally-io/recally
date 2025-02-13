@@ -69,7 +69,7 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 
 	// process summary tags if needed
 	if dto.Summary != "" && dto.Tags == nil {
-		_, _ = svc.ProcessSummaryTags(job.Args.ID, job.Args.UserID, dto.Summary)
+		svc.SaveContentTags(job.Args.ID, job.Args.UserID, dto.Tags, []string{})
 	}
 
 	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title, "url", dto.URL, "fetch_options", job.Args.FetchOptions)

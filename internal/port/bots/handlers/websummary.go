@@ -73,6 +73,9 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	if err != nil {
 		return processSendError(ctx, c, err)
 	}
+	var tags []string
+	*summary, tags = processor.NewSummaryProcessor(h.llm).ParseSummaryInfo(*summary)
+	bookmarkContentDTO.Tags = append(bookmarkContentDTO.Tags, tags...)
 
 	// if summary is cached, just return the cached summary
 	// if not cached, streaming send summary to user and save the bookmark
@@ -81,10 +84,10 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 			logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
 		}
 	} else {
-		bookmarkContentDTO.Summary = resp
+		bookmarkContentDTO.Summary = *summary
 		bookmarkUrl, err := h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO)
 		if err == nil {
-			if _, err := editMessage(c, msg, fmt.Sprintf("%s\n\n[Open Bookmark](%s)", resp, bookmarkUrl), true); err != nil {
+			if _, err := editMessage(c, msg, fmt.Sprintf("%s\n\nOpen Bookmark: %s", *summary, bookmarkUrl), true); err != nil {
 				logger.FromContext(ctx).Error("failed to send message", "err", err)
 			}
 		}

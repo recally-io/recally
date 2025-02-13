@@ -44,6 +44,20 @@ export default function BookmarkList({
 }: BookmarkListProps) {
 	const totalPages = Math.ceil(total / itemsPerPage);
 
+	const getCoverUrl = (bookmark: Bookmark) => {
+		if (
+			bookmark.content.type == "bookmark" &&
+			bookmark.content.metadata?.cover
+		) {
+			return bookmark.content.metadata.cover;
+		} else if (bookmark.content.type == "image") {
+			return bookmark.content.url?.startsWith("http")
+				? bookmark.content.url
+				: `https://${window.location.host}/api/v1/files/${bookmark.content.url}`;
+		}
+		return "";
+	};
+
 	const gridView = (bookmark: Bookmark) => {
 		return (
 			<Card
@@ -51,10 +65,10 @@ export default function BookmarkList({
 				className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1"
 			>
 				<Link to={ROUTES.BOOKMARK_DETAIL} params={{ id: bookmark.id }}>
-					{bookmark.content.metadata?.cover && (
+					{getCoverUrl(bookmark) && (
 						<div className="relative h-48 overflow-hidden">
 							<img
-								src={bookmark.content.metadata.cover}
+								src={getCoverUrl(bookmark)}
 								alt={bookmark.content.title}
 								className="w-full h-full object-cover"
 							/>
@@ -98,10 +112,10 @@ export default function BookmarkList({
 				params={{ id: bookmark.id }}
 			>
 				<div className="p-4 border rounded-md flex gap-4">
-					{bookmark.content.metadata?.cover && (
+					{getCoverUrl(bookmark) && (
 						<div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
 							<img
-								src={bookmark.content.metadata.cover}
+								src={getCoverUrl(bookmark)}
 								alt={bookmark.content.title}
 								className="w-full h-full object-cover"
 							/>

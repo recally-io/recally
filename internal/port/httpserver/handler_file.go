@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"recally/internal/core/files"
 	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,7 +31,8 @@ func registerFileHandlers(e *echo.Group, s *Service) {
 	files := e.Group("/files", authUserMiddleware())
 	files.GET("/presigned-urls", h.getPresignedURLs)
 	files.DELETE("/:id", h.deleteFile)
-	files.GET("/file", h.getFile)
+	files.GET("/:key", h.getFile)
+	files.GET("/file", h.getFilePublicURL)
 }
 
 type getPresignedURLsRequest struct {
@@ -99,7 +101,7 @@ type getPublicURLResponse struct {
 	URL string `json:"url"`
 }
 
-func (h *fileHandler) getFile(c echo.Context) error {
+func (h *fileHandler) getFilePublicURL(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(getFileRequest)
 	if err := bindAndValidate(c, req); err != nil {
@@ -114,6 +116,26 @@ func (h *fileHandler) getFile(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, getPublicURLResponse{
 		URL: publicURL,
 	})
+}
+
+type getFileContentRequest struct {
+	ObjectKey string `param:"key" validate:"required"`
+}
+
+func (h *fileHandler) getFile(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(getFileContentRequest)
+	if err := bindAndValidate(c, req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	publicURL, err := h.service.GetPublicURL(ctx, req.ObjectKey)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to get public URL", "err", err)
+		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("file not found"))
+	}
+
+	return c.Redirect(http.StatusFound, publicURL)
 }
 
 type deleteFileRequest struct {

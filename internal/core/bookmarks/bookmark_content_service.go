@@ -31,6 +31,10 @@ func (s *Service) CreateBookmarkContent(ctx context.Context, tx db.DBTX, content
 		content.S3Key = file.S3Key
 	}
 
+	if content.URL == "" {
+		content.URL = content.S3Key
+	}
+
 	params := content.Dump()
 	dbo, err := s.dao.CreateBookmarkContent(ctx, tx, params)
 	if err != nil {

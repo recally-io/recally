@@ -61,11 +61,16 @@ func (s *Service) GetFile(ctx context.Context, tx db.DBTX, id uuid.UUID) (*DTO, 
 	return &file, nil
 }
 
+// LoadFileByS3Key retrieves a file content by S3 key
+func (s *Service) LoadFileContentByS3Key(ctx context.Context, objectKey string) (io.ReadCloser, error) {
+	return s.s3.LoadContent(ctx, objectKey)
+}
+
 // GetFileByS3Key retrieves a file by S3 key
-func (s *Service) GetFileByS3Key(ctx context.Context, tx db.DBTX, userID uuid.UUID, s3Key string) (*DTO, error) {
+func (s *Service) GetFileByS3Key(ctx context.Context, tx db.DBTX, userID uuid.UUID, objectKey string) (*DTO, error) {
 	dummyUserID := auth.DummyUserID()
 	dbo, err := s.dao.GetFileByS3Key(ctx, tx, db.GetFileByS3KeyParams{
-		S3Key:       s3Key,
+		S3Key:       objectKey,
 		UserID:      userID,
 		DummyUserID: pgtype.UUID{Bytes: dummyUserID, Valid: dummyUserID != uuid.Nil},
 	})

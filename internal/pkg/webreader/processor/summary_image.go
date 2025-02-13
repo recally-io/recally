@@ -36,31 +36,31 @@ const defaultSummaryImagePrompt = `You are an expert image analyst with strong s
 </Guidelines>
 
 <OutputFormat>
-## Title
-
+<title>
 [Title here]
+</title>
 
-## Description
-
+<description>
 [Description here]
+</description>
 
-## Tags
-
+<tags>
 [Comma-Separated Tags here]
+</tags>
 </OutputFormat>
 
 <ExampleOutput>
-## Title
-
+<title>
 Sunset Over Mountain Lake
+</title>
 
-## Description
-
+<description>
 A serene alpine lake reflects vibrant orange and pink sunset hues, surrounded by pine-covered slopes. The hyper-realistic digital painting features crisp water reflections and dramatic cloud formations, creating a peaceful yet awe-inspiring atmosphere.
+</description>
 
-## Tags
-
+<tags>
 landscape, sunset, lake, mountains, digital painting
+</tags>
 </ExampleOutput>
 `
 
@@ -167,7 +167,6 @@ func (p *SummaryImageProcessor) process(ctx context.Context, imgURL string, stre
 		},
 	}
 
-	logger.FromContext(ctx).Info("start summary article", "model", p.config.Model, "language", p.config.Language)
 	p.llm.GenerateContent(ctx, messages, streamingFunc, llms.WithModel(p.config.Model), llms.WithStream(streaming))
 }
 
@@ -182,4 +181,12 @@ func (p *SummaryImageProcessor) EncodeImage(reader io.ReadCloser, fileName strin
 	imgUrl := fmt.Sprintf("data:%s;base64,%s", contentType, photoBase64)
 
 	return imgUrl, nil
+}
+
+func (p *SummaryImageProcessor) ParseSummaryInfo(content string) (title, description string, tags []string) {
+	title = parseXmlContent(content, "title")
+	description = parseXmlContent(content, "description")
+	tagString := parseXmlContent(content, "tags")
+	tags = tagStringToArray(tagString)
+	return
 }

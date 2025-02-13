@@ -37,12 +37,12 @@ func sendToUser(ctx context.Context, c tele.Context, stream llms.StreamingString
 		if err == io.EOF {
 			*resp += *chunk
 			*resp = strings.ReplaceAll(*resp, "\\n", "\n")
-			if _, err := editMessage(c, msg, *resp, true); err != nil {
-				if strings.Contains(err.Error(), "message is not modified") {
-					return
-				}
-				_ = processSendError(ctx, c, err)
-			}
+			// if _, err := editMessage(c, msg, *resp, true); err != nil {
+			// 	if strings.Contains(err.Error(), "message is not modified") {
+			// 		return
+			// 	}
+			// 	_ = processSendError(ctx, c, err)
+			// }
 			return
 		}
 		logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err)

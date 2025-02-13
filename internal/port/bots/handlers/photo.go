@@ -9,9 +9,23 @@ import (
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/processor"
+	"text/template"
 
 	tele "gopkg.in/telebot.v3"
 )
+
+var imageSummaryTemplate = `
+# Title
+{{ .Title }}
+
+# Description
+{{ .Description }}
+
+# Tags
+{{ range $index, $tag := .Tags }}{{if $index}}, {{end}}#{{ $tag }}{{ end }}
+`
+
+var imageSummaryTempl = template.Must(template.New("imageSummaryTemplate").Parse(imageSummaryTemplate))
 
 func (h *Handler) PhotoHandler(c tele.Context) error {
 	ctx, user, tx, err := h.initHandlerRequest(c)
@@ -57,6 +71,23 @@ func (h *Handler) PhotoHandler(c tele.Context) error {
 		return c.Reply("Failed to encode image: " + err.Error())
 	}
 	summarier.StreamingSummary(ctx, imgUrl, streamingFunc)
+	title, description, tags := summarier.ParseSummaryInfo(resp)
+
+	var summaryBuffer bytes.Buffer
+	if err := imageSummaryTempl.Execute(&summaryBuffer, struct {
+		Title       string
+		Description string
+		Tags        []string
+	}{title, description, tags}); err != nil {
+		logger.FromContext(ctx).Error("failed to execute template", "err", err)
+		return nil
+	}
+
+	resp = summaryBuffer.String()
+	if msg, err = editMessage(c, msg, resp, true); err != nil {
+		logger.FromContext(ctx).Error("failed to edit message", "err", err)
+		return err
+	}
 
 	// save image content
 	contentType := files.GetFileMIMEWithDefault(photo.File.FilePath, "image/jpeg")
@@ -77,12 +108,14 @@ func (h *Handler) PhotoHandler(c tele.Context) error {
 		Type:    bookmarks.ContentTypeImage,
 		URL:     photo.FileURL,
 		UserID:  user.ID,
-		Summary: resp,
+		Title:   title,
+		Summary: description,
 		S3Key:   f.S3Key,
+		Tags:    tags,
 	}
 	bookmarkUrl, err := h.saveBookmark(ctx, tx, user.ID, bookmarkContent)
 	if err == nil {
-		if _, err := editMessage(c, msg, fmt.Sprintf("%s\n\n[Open Bookmark](%s)", resp, bookmarkUrl), true); err != nil {
+		if _, err := editMessage(c, msg, fmt.Sprintf("%s\n\nOpen Bookmark: %s", resp, bookmarkUrl), true); err != nil {
 			logger.FromContext(ctx).Error("failed to send message", "err", err)
 		}
 	}
