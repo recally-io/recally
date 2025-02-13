@@ -45,7 +45,6 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	resp := ""
 	chunk := ""
 	chunkSize := 400
-	isSummaryCached := true
 
 	sendToUser := func(stream llms.StreamingString) {
 		sendToUser(ctx, c, stream, &resp, &chunk, chunkSize, msg)
@@ -54,7 +53,6 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	var bookmarkContentDTO bookmarks.BookmarkContentDTO
 	// cache the summary
 	summary, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebSummary", url), 24*time.Hour, func() (*string, error) {
-		isSummaryCached = false
 		// cache the content
 		content, err := h.bookmarkService.FetchWebContentWithCache(ctx, url, fetcher.FetchOptions{
 			FecherType: fetcher.TypeHttp,
@@ -75,20 +73,15 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	}
 	var tags []string
 	*summary, tags = processor.NewSummaryProcessor(h.llm).ParseSummaryInfo(*summary)
+	bookmarkContentDTO.Summary = *summary
 	bookmarkContentDTO.Tags = append(bookmarkContentDTO.Tags, tags...)
+	if msg, err = editMessage(c, msg, *summary, true); err != nil {
+		return err
+	}
 
-	// if summary is cached, just return the cached summary
-	// if not cached, streaming send summary to user and save the bookmark
-	if isSummaryCached {
-		if _, err := editMessage(c, msg, *summary, true); err != nil {
-			logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
-		}
-	} else {
-		bookmarkContentDTO.Summary = *summary
-		if _, err = h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO); err != nil {
-			logger.FromContext(ctx).Error("failed to save bookmark", "err", err)
-			return err
-		}
+	if _, err = h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO); err != nil {
+		logger.FromContext(ctx).Error("failed to save bookmark", "err", err)
+		return err
 	}
 	return nil
 }
