@@ -20,12 +20,13 @@ WHERE id = $1;
 -- name: GetFileByOriginalURL :one
 SELECT * FROM files
 WHERE original_url = $1 
-AND user_id = $2;
+AND (user_id = $2 OR user_id = sqlc.narg('dummy_user_id'))  ;
 
 -- name: GetFileByS3Key :one
 SELECT * FROM files
 WHERE s3_key = $1
-AND user_id = $2;
+AND (user_id = $2 OR user_id = sqlc.narg('dummy_user_id'))
+;
 
 -- name: ListFiles :many
 SELECT * FROM files
@@ -58,10 +59,10 @@ WHERE id = $1;
 -- name: DeleteFileByOriginalURL :exec
 DELETE FROM files
 WHERE original_url = $1
-AND user_id = $2;
+AND (user_id = $2 OR user_id = sqlc.narg('dummy_user_id'));
 
 -- name: DeleteFileByS3Key :exec
 DELETE FROM files
 WHERE s3_key = $1
-AND user_id = $2;
+AND (user_id = $2 OR user_id = sqlc.narg('dummy_user_id'));
 

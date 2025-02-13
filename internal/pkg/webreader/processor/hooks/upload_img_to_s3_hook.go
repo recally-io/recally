@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/minio/minio-go/v7"
 )
 
 type ImageHook struct {
@@ -82,14 +81,11 @@ func (h *ImageHook) Process(selec *goquery.Selection) {
 }
 
 func (h *ImageHook) UploadToS3(src string) (string, error) {
-	ctx, err := auth.GetContextWithDummyUser(context.Background())
+	ctx, user, err := auth.GetContextWithDummyUser(context.Background())
 	if err != nil {
 		return "", err
 	}
-
-	file, err := files.DefaultService.UploadToS3FromUrl(ctx, h.pool.Pool, true, h.host, src, minio.PutObjectOptions{
-		CacheControl: "max-age=31536000, public",
-	})
+	file, err := files.DefaultService.CreateFileAndUploadToS3FromUrl(ctx, h.pool.Pool, user.ID, true, h.host, src)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload image to s3: %w", err)
 	}

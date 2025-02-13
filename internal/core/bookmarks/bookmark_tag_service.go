@@ -13,7 +13,7 @@ import (
 func (s *Service) linkContentTags(
 	ctx context.Context,
 	tx db.DBTX,
-	originTags, newTags []string,
+	newTags []string,
 	contentID, userID uuid.UUID,
 ) error {
 	// 1) Fetch all tags currently linked to this bookmark
@@ -56,7 +56,6 @@ func (s *Service) linkContentTags(
 	// 6) Log result
 	logger.FromContext(ctx).Info("link content with tags",
 		"content_id", contentID,
-		"origin_tags", originTags,
 		"new_tags", newTags,
 		"added_tags", toAdd,
 		"removed_tags", toRemove,

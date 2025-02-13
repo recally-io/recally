@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -38,7 +39,7 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 	var contentDTO *BookmarkContentDTO
 
 	// Create bookmark content for PDF and EPUB types
-	if dto.Type == ContentTypePDF || dto.Type == ContentTypeEPUB {
+	if dto.Type == ContentTypePDF || dto.Type == ContentTypeEPUB || dto.Type == ContentTypeImage {
 		contentDTO, err = s.CreateBookmarkContent(ctx, tx, dto)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bookmark content: %w", err)
@@ -166,6 +167,7 @@ func (s *Service) SearchBookmarks(ctx context.Context, tx db.DBTX, userID uuid.U
 }
 
 func (s *Service) DeleteBookmark(ctx context.Context, tx db.DBTX, userId, id uuid.UUID) error {
+	logger.FromContext(ctx).Info("deleting bookmark", "id", id.String(), "user_id", userId.String())
 	return s.dao.DeleteBookmark(ctx, tx, db.DeleteBookmarkParams{
 		ID:     id,
 		UserID: pgtype.UUID{Bytes: userId, Valid: true},

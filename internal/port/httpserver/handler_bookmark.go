@@ -194,7 +194,7 @@ func (h *bookmarksHandler) listDomains(c echo.Context) error {
 }
 
 type createBookmarkRequest struct {
-	URL         string   `json:"url" validate:"required,url"`
+	URL         string   `json:"url,omitempty" validate:"omitempty,url"`
 	Title       string   `json:"title"`
 	Description string   `json:"description,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
@@ -402,7 +402,7 @@ func (h *bookmarksHandler) deleteBookmark(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	if err := h.service.DeleteBookmark(ctx, tx, bookmarkID, user.ID); err != nil {
+	if err := h.service.DeleteBookmark(ctx, tx, user.ID, bookmarkID); err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 

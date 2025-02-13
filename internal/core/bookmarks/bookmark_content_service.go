@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"recally/internal/core/files"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/webreader"
@@ -20,6 +21,20 @@ func (s *Service) IsBookmarkContentExistByURL(ctx context.Context, tx db.DBTX, u
 }
 
 func (s *Service) CreateBookmarkContent(ctx context.Context, tx db.DBTX, content *BookmarkContentDTO) (*BookmarkContentDTO, error) {
+	// when user save image from url by recally-clipper, we need to upload it to s3 first
+	if content.S3Key == "" && content.IsMediaType() {
+		// upload image to s3
+		file, err := files.DefaultService.CreateFileAndUploadToS3FromUrl(ctx, tx, content.UserID, true, "", content.URL)
+		if err != nil {
+			return nil, err
+		}
+		content.S3Key = file.S3Key
+	}
+
+	if content.URL == "" {
+		content.URL = content.S3Key
+	}
+
 	params := content.Dump()
 	dbo, err := s.dao.CreateBookmarkContent(ctx, tx, params)
 	if err != nil {

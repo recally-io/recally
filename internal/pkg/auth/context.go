@@ -20,6 +20,14 @@ func LoadUserFromContext(ctx context.Context) (*UserDTO, error) {
 	return user, nil
 }
 
+func LoadUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
+	userID, ok := contexts.Get[uuid.UUID](ctx, contexts.ContextKeyUserID)
+	if !ok {
+		return uuid.Nil, fmt.Errorf("failed to get user ID from context")
+	}
+	return userID, nil
+}
+
 func SetUserToContext(ctx context.Context, user *UserDTO) context.Context {
 	ctx = contexts.Set(ctx, contexts.ContextKeyUser, user)
 	ctx = contexts.Set(ctx, contexts.ContextKeyUserID, user.ID)
@@ -49,10 +57,10 @@ func LoadUser(ctx context.Context, tx db.DBTX, userID uuid.UUID) (*UserDTO, erro
 
 func LoadDummyUser() (*UserDTO, error) {
 	ctx := context.Background()
-	user, err := cache.RunInCache[UserDTO](ctx,
+	user, err := cache.RunInCache(ctx,
 		cache.MemCache,
 		cache.NewCacheKey("auth", "dummy_user"),
-		time.Hour,
+		24*time.Hour,
 		func() (*UserDTO, error) {
 			var user *UserDTO
 			var err error
@@ -68,10 +76,18 @@ func LoadDummyUser() (*UserDTO, error) {
 	return user, err
 }
 
-func GetContextWithDummyUser(ctx context.Context) (context.Context, error) {
+func GetContextWithDummyUser(ctx context.Context) (context.Context, *UserDTO, error) {
 	dummyUser, err := LoadDummyUser()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return SetUserToContext(ctx, dummyUser), nil
+	return SetUserToContext(ctx, dummyUser), dummyUser, nil
+}
+
+func DummyUserID() uuid.UUID {
+	user, err := LoadDummyUser()
+	if err != nil {
+		return uuid.Nil
+	}
+	return user.ID
 }

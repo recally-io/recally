@@ -33,7 +33,7 @@ export const useGetPresignedURLs = () => {
 		FileError,
 		string,
 		GetPresignedURLsRequest
-	>("/api/v1/files/presigned-urls", async (url, { arg }) => {
+	>("/api/v1/files/file/presigned", async (url, { arg }) => {
 		const queryParams = new URLSearchParams({
 			file_name: arg.fileName,
 			file_type: arg.fileType,

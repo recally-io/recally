@@ -9,6 +9,7 @@ import (
 	"recally/internal/pkg/logger"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/cors"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -133,4 +134,13 @@ func (c *Client) PutBucketCors(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (c *Client) NewObjectKey(userID string) string {
+	now := time.Now()
+	return fmt.Sprintf("%s/%d/%d/%s", userID, now.Year(), now.Month(), uuid.New().String())
+}
+
+func (c *Client) LoadContent(ctx context.Context, objectKey string) (io.ReadCloser, error) {
+	return c.GetObject(ctx, c.bucketName, objectKey, minio.GetObjectOptions{})
 }
