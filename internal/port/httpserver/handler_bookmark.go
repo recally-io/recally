@@ -194,7 +194,7 @@ func (h *bookmarksHandler) listDomains(c echo.Context) error {
 }
 
 type createBookmarkRequest struct {
-	URL         string   `json:"url" validate:"required,url"`
+	URL         string   `json:"url,omitempty" validate:"omitempty,url"`
 	Title       string   `json:"title"`
 	Description string   `json:"description,omitempty"`
 	Tags        []string `json:"tags,omitempty"`

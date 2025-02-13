@@ -53,7 +53,7 @@ export default function BookmarkList({
 		} else if (bookmark.content.type == "image") {
 			return bookmark.content.url?.startsWith("http")
 				? bookmark.content.url
-				: `https://${window.location.host}/api/v1/files/${bookmark.content.url}`;
+				: `/api/v1/files/file/content?object_key=${bookmark.content.s3_key}`;
 		}
 		return "";
 	};

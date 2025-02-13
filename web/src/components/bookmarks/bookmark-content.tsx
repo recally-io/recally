@@ -6,9 +6,7 @@ import PdfViewer from "@/components/pdf-viewer";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
-import { useGetFile } from "@/lib/apis/file";
 import type React from "react";
-import { useEffect, useState } from "react";
 
 interface ArticleReaderProps {
 	bookmark: BookmarkType;
@@ -21,24 +19,8 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 	bookmark,
 	onRegenerateSummary,
 }) => {
-	const { trigger: getFile } = useGetFile();
-	const [fileUrl, setFileUrl] = useState<string | null>(null);
-
-	useEffect(() => {
-		const loadPdf = async () => {
-			if (bookmark.content.s3_key) {
-				try {
-					const fileUrl = await getFile({
-						object_key: bookmark.content.s3_key,
-					});
-					setFileUrl(fileUrl.url);
-				} catch (error) {
-					console.error("Failed to load PDF:", error);
-				}
-			}
-		};
-		loadPdf();
-	}, [bookmark.content.s3_key, getFile]);
+	const fileUrl =
+		"/api/v1/files/file/content?object_key=" + bookmark.content.s3_key;
 
 	return (
 		<>
@@ -80,7 +62,7 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
 			) : bookmark.content.type === "image" ? (
 				<div className="flex justify-center">
 					<img
-						src={fileUrl || bookmark.content.url}
+						src={fileUrl}
 						alt={bookmark.content.title || "Image"}
 						className="max-w-full h-auto rounded-lg shadow-lg"
 					/>

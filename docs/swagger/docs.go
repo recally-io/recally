@@ -5341,8 +5341,7 @@ const docTemplate = `{
         "httpserver.createBookmarkRequest": {
             "type": "object",
             "required": [
-                "type",
-                "url"
+                "type"
             ],
             "properties": {
                 "content": {

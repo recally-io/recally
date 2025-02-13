@@ -459,7 +459,6 @@ definitions:
         type: string
     required:
     - type
-    - url
     type: object
   httpserver.createBookmarkShareRequest:
     properties:
