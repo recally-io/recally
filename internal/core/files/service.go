@@ -3,6 +3,7 @@ package files
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,7 +20,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/minio/minio-go/v7"
+	"github.com/jackc/pgx/v5/pgtype"
 	utls "github.com/refraction-networking/utls"
 )
 
@@ -37,12 +38,8 @@ func NewService(s3 *s3.Client) *Service {
 	}
 }
 
+// CreateFile creates a new file and saves it to the database
 func (s *Service) CreateFile(ctx context.Context, tx db.DBTX, file *DTO) (*DTO, error) {
-	_, err := auth.LoadUserFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	dbo, err := s.dao.CreateFile(ctx, tx, file.Dump())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file: %w", err)
@@ -52,12 +49,8 @@ func (s *Service) CreateFile(ctx context.Context, tx db.DBTX, file *DTO) (*DTO, 
 	return file, nil
 }
 
+// GetFile retrieves a file by ID from database
 func (s *Service) GetFile(ctx context.Context, tx db.DBTX, id uuid.UUID) (*DTO, error) {
-	_, err := auth.LoadUserFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	dbo, err := s.dao.GetFileByID(ctx, tx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file: %w", err)
@@ -68,15 +61,18 @@ func (s *Service) GetFile(ctx context.Context, tx db.DBTX, id uuid.UUID) (*DTO, 
 	return &file, nil
 }
 
-func (s *Service) GetFileByS3Key(ctx context.Context, tx db.DBTX, s3Key string) (*DTO, error) {
-	user, err := auth.LoadUserFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
+// LoadFileByS3Key retrieves a file content by S3 key
+func (s *Service) LoadFileContentByS3Key(ctx context.Context, objectKey string) (io.ReadCloser, error) {
+	return s.s3.LoadContent(ctx, objectKey)
+}
 
+// GetFileByS3Key retrieves a file by S3 key
+func (s *Service) GetFileByS3Key(ctx context.Context, tx db.DBTX, userID uuid.UUID, objectKey string) (*DTO, error) {
+	dummyUserID := auth.DummyUserID()
 	dbo, err := s.dao.GetFileByS3Key(ctx, tx, db.GetFileByS3KeyParams{
-		S3Key:  s3Key,
-		UserID: user.ID,
+		S3Key:       objectKey,
+		UserID:      userID,
+		DummyUserID: pgtype.UUID{Bytes: dummyUserID, Valid: dummyUserID != uuid.Nil},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file by S3 key: %w", err)
@@ -87,15 +83,13 @@ func (s *Service) GetFileByS3Key(ctx context.Context, tx db.DBTX, s3Key string) 
 	return &file, nil
 }
 
-func (s *Service) GetFileByOriginalURL(ctx context.Context, tx db.DBTX, originalUrl string) (*DTO, error) {
-	user, err := auth.LoadUserFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+// GetFileByOriginalURL retrieves a file by original URL
+func (s *Service) GetFileByOriginalURL(ctx context.Context, tx db.DBTX, userID uuid.UUID, originalUrl string) (*DTO, error) {
+	dummyUserID := auth.DummyUserID()
 	dbo, err := s.dao.GetFileByOriginalURL(ctx, tx, db.GetFileByOriginalURLParams{
 		OriginalUrl: originalUrl,
-		UserID:      user.ID,
+		UserID:      userID,
+		DummyUserID: pgtype.UUID{Bytes: dummyUserID, Valid: dummyUserID != uuid.Nil},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file by original URL: %w", err)
@@ -106,58 +100,71 @@ func (s *Service) GetFileByOriginalURL(ctx context.Context, tx db.DBTX, original
 	return &file, nil
 }
 
+// DeleteFile deletes a file from database
 func (s *Service) DeleteFile(ctx context.Context, tx db.DBTX, id uuid.UUID) error {
-	_, err := auth.LoadUserFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
 	if err := s.dao.DeleteFile(ctx, tx, id); err != nil {
 		return fmt.Errorf("failed to delete file: %w", err)
 	}
 	return nil
 }
 
-func (s *Service) UploadToS3(ctx context.Context, tx db.DBTX, objectKey string, reader io.Reader, metadata *Metadata, opts minio.PutObjectOptions) (*DTO, error) {
-	user, err := auth.LoadUserFromContext(ctx)
-	if err != nil {
-		return nil, err
+// UploadToS3 uploads a file to S3
+func (s *Service) UploadToS3(ctx context.Context, userID uuid.UUID, objectKey string, reader io.ReadCloser, metadata Metadata, opts ...PutObjectOption) (*DTO, error) {
+	if reader == nil {
+		return nil, errors.New("file reader is nil")
 	}
-
-	// check if file exist
-	dto, err := s.GetFileByOriginalURL(ctx, tx, metadata.OriginalURL)
-	if err != nil && !db.IsNotFoundError(err) {
-		return nil, fmt.Errorf("failed to get file by original URL: %w", err)
-	}
-	if dto != nil {
-		return dto, nil
-	}
+	defer reader.Close()
 
 	// upload file to s3 if not exist
 	if objectKey == "" {
-		objectKey = fmt.Sprintf("%s/%s", user.ID.String(), uuid.New().String())
+		objectKey = s.s3.NewObjectKey(userID.String())
+		if metadata.Name != "" {
+			objectKey += "/" + metadata.Name
+		}
 	}
 
-	if opts.ContentType == "" {
-		opts.ContentType = metadata.MIMEType
+	putOptions := NewPutObjectOptions(opts...)
+	if putOptions.ContentType == "" {
+		putOptions.ContentType = metadata.MIMEType
 	}
-	info, err := s.s3.Upload(ctx, objectKey, reader, metadata.Size, opts)
+
+	info, err := s.s3.Upload(ctx, objectKey, reader, metadata.Size, putOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file to S3: %w", err)
 	}
 	logger.FromContext(ctx).Info("file uploaded to s3", "key", objectKey, "size", info.Size)
 	metadata.IsUploaded = true
-
 	file := NewFile(
-		user.ID,
+		userID,
 		metadata.OriginalURL,
 		objectKey,
 		metadata.Type,
-		WithFileMetadata(*metadata))
+		WithFileMetadata(metadata))
+	return file, nil
+}
+
+// CreateFileAndUploadToS3FromReader creates a file and uploads it to S3 from reader
+func (s *Service) CreateFileAndUploadToS3FromReader(ctx context.Context, tx db.DBTX, userID uuid.UUID, objectKey string, reader io.ReadCloser, metadata Metadata, opts ...PutObjectOption) (*DTO, error) {
+	// check if file exist
+	if metadata.OriginalURL != "" {
+		dto, err := s.GetFileByOriginalURL(ctx, tx, userID, metadata.OriginalURL)
+		if err != nil && !db.IsNotFoundError(err) {
+			return nil, fmt.Errorf("failed to get file by original URL: %w", err)
+		}
+		if dto != nil {
+			return dto, nil
+		}
+	}
+
+	file, err := s.UploadToS3(ctx, userID, objectKey, reader, metadata, opts...)
+	if err != nil {
+		return nil, err
+	}
 	return s.CreateFile(ctx, tx, file)
 }
 
-func (s *Service) UploadToS3FromUrl(ctx context.Context, tx db.DBTX, async bool, host, uri string, opts minio.PutObjectOptions) (*DTO, error) {
+// CreateFileAndUploadToS3FromUrl creates a file and uploads it to S3 from url
+func (s *Service) CreateFileAndUploadToS3FromUrl(ctx context.Context, tx db.DBTX, userID uuid.UUID, async bool, host, uri string, opts ...PutObjectOption) (*DTO, error) {
 	// Validate and parse URL
 	u, err := url.Parse(uri)
 	if err != nil {
@@ -177,7 +184,7 @@ func (s *Service) UploadToS3FromUrl(ctx context.Context, tx db.DBTX, async bool,
 
 	uri = u.String()
 
-	file, err := s.GetFileByOriginalURL(ctx, tx, uri)
+	file, err := s.GetFileByOriginalURL(ctx, tx, userID, uri)
 	if err != nil && !db.IsNotFoundError(err) {
 		return nil, fmt.Errorf("failed to get file by original URL: %w", err)
 	}
@@ -187,30 +194,30 @@ func (s *Service) UploadToS3FromUrl(ctx context.Context, tx db.DBTX, async bool,
 		return file, nil
 	}
 
-	user, err := auth.LoadUserFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	now := time.Now()
-
+	objectKey := s.s3.NewObjectKey(userID.String())
 	fileExt := path.Ext(uri)
-	objectKey := fmt.Sprintf("%s/%d/%d/%s/%s%s", user.ID.String(), now.Year(), now.Month(), u.Host, uuid.New().String(), fileExt)
+	if fileExt != "" {
+		objectKey += fileExt
+	}
 
 	upload := func(ctx context.Context) (*DTO, error) {
 		contentReader, metadata, err := s.loadContent(ctx, host, uri, fileExt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load content: %w", err)
 		}
-		return s.UploadToS3(ctx, tx, objectKey, contentReader, metadata, opts)
+		file, err := s.UploadToS3(ctx, userID, objectKey, contentReader, *metadata, opts...)
+		if err != nil {
+			return nil, err
+		}
+		return s.CreateFile(ctx, tx, file)
 	}
 
 	if async {
 		go func() {
-			_, err := upload(auth.SetUserToContext(context.Background(), user))
+			_, err := upload(auth.SetUserToContextByUserID(context.Background(), userID))
 			if err != nil {
 				logger.Default.Error("failed to upload file to s3, save the original url", "err", err, "url", uri)
-				file := NewFile(user.ID, uri, objectKey, "unknown", WithFileMetadata(Metadata{
+				file := NewFile(userID, uri, objectKey, "unknown", WithFileMetadata(Metadata{
 					IsUploaded: false,
 				}))
 				if _, err = s.CreateFile(ctx, tx, file); err != nil {
@@ -225,6 +232,7 @@ func (s *Service) UploadToS3FromUrl(ctx context.Context, tx db.DBTX, async bool,
 	return upload(ctx)
 }
 
+// loadContent loads content from url
 func (s *Service) loadContent(ctx context.Context, host, uri, ext string) (io.ReadCloser, *Metadata, error) {
 	metadata := &Metadata{
 		OriginalURL:  uri,
@@ -292,8 +300,9 @@ func (s *Service) loadContent(ctx context.Context, host, uri, ext string) (io.Re
 	return io.NopCloser(bytes.NewReader(content)), metadata, nil
 }
 
-func (s *Service) GetPresignedGetObjectURL(ctx context.Context, tx db.DBTX, objectKey string, expires time.Duration, reqParams url.Values) (string, error) {
-	file, err := s.GetFileByS3Key(ctx, tx, objectKey)
+// GetPresignedGetObjectURL gets a presigned get URL for an object
+func (s *Service) GetPresignedGetObjectURL(ctx context.Context, tx db.DBTX, userID uuid.UUID, objectKey string, expires time.Duration, reqParams url.Values) (string, error) {
+	file, err := s.GetFileByS3Key(ctx, tx, userID, objectKey)
 	if err != nil {
 		return "", err
 	}
@@ -307,8 +316,9 @@ func (s *Service) GetPresignedGetObjectURL(ctx context.Context, tx db.DBTX, obje
 	return u.String(), nil
 }
 
-func (s *Service) GetPresignedHeadObjectURL(ctx context.Context, tx db.DBTX, objectKey string, expires time.Duration, reqParams url.Values) (string, error) {
-	file, err := s.GetFileByS3Key(ctx, tx, objectKey)
+// GetPresignedHeadObjectURL gets a presigned head URL for an object
+func (s *Service) GetPresignedHeadObjectURL(ctx context.Context, tx db.DBTX, userID uuid.UUID, objectKey string, expires time.Duration, reqParams url.Values) (string, error) {
+	file, err := s.GetFileByS3Key(ctx, tx, userID, objectKey)
 	if err != nil {
 		return "", err
 	}
@@ -322,12 +332,14 @@ func (s *Service) GetPresignedHeadObjectURL(ctx context.Context, tx db.DBTX, obj
 	return u.String(), nil
 }
 
-func (s *Service) GetPresignedPutObjectURL(ctx context.Context, objectKey string, expires time.Duration) (string, error) {
+// GetPresignedPutObjectURL gets a presigned put URL for an object
+func (s *Service) GetPresignedPutObjectURL(ctx context.Context, userID uuid.UUID, fileName string, expires time.Duration) (string, string, error) {
+	objectKey := s.s3.NewObjectKey(userID.String()) + "/" + fileName
 	u, err := s.s3.PresignedPutObject(ctx, objectKey, expires)
 	if err != nil {
-		return "", fmt.Errorf("failed to get presigned head URL: %w", err)
+		return "", "", fmt.Errorf("failed to get presigned put URL: %w", err)
 	}
-	return u.String(), nil
+	return u.String(), objectKey, nil
 }
 
 // GetPublicURL returns the public URL of the file

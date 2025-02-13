@@ -12,9 +12,8 @@ import (
 	"text/template"
 )
 
-const defaultSummaryPrompt = `You are an experienced editor at* **The Wall Street Journal**. *Your task is to read the following article and provide a comprehensive summary for a busy reader who wants to quickly grasp the essential information.
+const defaultSummaryPrompt = `You are an experienced editor at **The Wall Street Journal**. Your task is to read the following article and provide a comprehensive summary for a busy reader who wants to quickly grasp the essential information.
 
-<ResponseFormat>
 # Summary
 [(2-3 sentences) Write a brief abstract summarizing the essence of the article.]
 
@@ -32,27 +31,30 @@ const defaultSummaryPrompt = `You are an experienced editor at* **The Wall Stree
 
 # Critical Analysis
 [Mention any potential biases, assumptions, strengths, or weaknesses in the article. Note any limitations or areas that would benefit from further exploration.]
-</ResponseFormat>
 
-Please ensure that your summary is written in the professional, clear, and engaging style characteristic of* **The Wall Street Journal**. *Maintain a neutral and informative tone suitable for helping the reader understand the article without reading it in full.
+Please ensure that your summary is written in the professional, clear, and engaging style characteristic of **The Wall Street Journal**. Maintain a neutral and informative tone suitable for helping the reader understand the article without reading it in full.
 `
 
 const summaryPromptTemplate = `
+<Instruction>
 {{ .Prompt }}
+</Instruction>
 
 <Article>
 {{ .Article }}
 </Article>
 
-<OutputLanguage>
-{{or .Language "[Same as article language]"}}
-</OutputLanguage>
+Please provide your summary using {{or .Language "[Same as article language]"}}  below. When you finish summarizing the article, please add tags to your response in following format:
 
-Please provide your summary below. When you finish summarizing the article, please add tags to the end of your response with following format: 
+<OutputFormat>
+<summary>
+[Your comprehensive summary that follow the Instruction]
+</summary>
 
 <tags>
-#tag1 #tag2 #tag3
+[Comma-Separated Tags here]
 </tags>
+</OutputFormat>
 `
 
 var summaryPromptTempl = template.Must(template.New("summaryPromptTemplate").Parse(summaryPromptTemplate))
@@ -163,4 +165,11 @@ func (p *SummaryProcessor) buildPrompt(ctx context.Context, content string) (str
 		return "", fmt.Errorf("generate summary prompt: %w", err)
 	}
 	return prompt.String(), nil
+}
+
+func (p *SummaryProcessor) ParseSummaryInfo(content string) (summary string, tags []string) {
+	summary = parseXmlContent(content, "summary")
+	tagString := parseXmlContent(content, "tags")
+	tags = tagStringToArray(tagString)
+	return
 }

@@ -63,6 +63,10 @@ type BookmarkContentDTO struct {
 	UpdatedAt   time.Time                `json:"updated_at"`
 }
 
+func (b *BookmarkContentDTO) IsMediaType() bool {
+	return b.Type == ContentTypePDF || b.Type == ContentTypeEPUB || b.Type == ContentTypeImage || b.Type == ContentTypeAudio || b.Type == ContentTypeVideo
+}
+
 func (b *BookmarkContentDTO) Load(dbo *db.BookmarkContent) {
 	b.ID = dbo.ID
 	b.Type = ContentType(dbo.Type)
@@ -119,6 +123,7 @@ func (b *BookmarkContentDTO) Dump() db.CreateBookmarkContentParams {
 			String: b.Html,
 			Valid:  b.Html != "",
 		},
+		Tags:     b.Tags,
 		Metadata: metadata,
 	}
 }

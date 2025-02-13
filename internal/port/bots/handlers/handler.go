@@ -36,6 +36,6 @@ func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.
 			return nil, nil, tx, fmt.Errorf("failed to get user: %w", err)
 		}
 	}
-
+	ctx = auth.SetUserToContext(ctx, user)
 	return ctx, user, tx, nil
 }

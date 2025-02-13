@@ -3,16 +3,14 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"io"
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,8 +18,6 @@ import (
 	"github.com/riverqueue/river"
 	tele "gopkg.in/telebot.v3"
 )
-
-var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+/?([^\s]*)`)
 
 func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	ctx, user, tx, err := h.initHandlerRequest(c)
@@ -38,71 +34,22 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		return c.Reply("Please provide a valid URL.")
 	}
 
-	processSendError := func(err error) error {
-		logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
-		err = c.Reply("Failed to send message. " + err.Error())
-		if err != nil {
-			logger.FromContext(ctx).Error("error reply message", "err", err)
-		}
-		return err
-	}
-
 	msg, err := c.Bot().Reply(c.Message(), "Please wait, I'm reading the page.")
 	if err != nil {
-		return processSendError(err)
+		return processSendError(ctx, c, err)
 	}
 
 	resp := ""
 	chunk := ""
 	chunkSize := 400
-	isSummaryCached := true
-
-	editMessage := func(msg *tele.Message, text string, format bool) (*tele.Message, error) {
-		if format {
-			return c.Bot().Edit(msg, convertToTGMarkdown(text), tele.ModeMarkdownV2)
-		}
-		return c.Bot().Edit(msg, text)
-	}
 
 	sendToUser := func(stream llms.StreamingString) {
-		line, err := stream.Content, stream.Err
-		chunk += line
-
-		if err != nil {
-			if err == io.EOF {
-				resp += chunk
-				resp = strings.ReplaceAll(resp, "\\n", "\n")
-				if _, err := editMessage(msg, resp, true); err != nil {
-					if strings.Contains(err.Error(), "message is not modified") {
-						return
-					}
-					_ = processSendError(err)
-				}
-				return
-			}
-			logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err)
-			if msg, err = editMessage(msg, "Failed to get summary.", false); err != nil {
-				_ = processSendError(err)
-				return
-			}
-		}
-
-		if len(chunk) > chunkSize {
-			resp += chunk
-			chunk = ""
-			var newErr error
-			msg, newErr = editMessage(msg, resp, false)
-			if newErr != nil {
-				_ = processSendError(newErr)
-				return
-			}
-		}
+		sendToUser(ctx, c, stream, &resp, &chunk, chunkSize, msg)
 	}
 
 	var bookmarkContentDTO bookmarks.BookmarkContentDTO
 	// cache the summary
 	summary, err := cache.RunInCache[string](ctx, cache.DefaultDBCache, cache.NewCacheKey("WebSummary", url), 24*time.Hour, func() (*string, error) {
-		isSummaryCached = false
 		// cache the content
 		content, err := h.bookmarkService.FetchWebContentWithCache(ctx, url, fetcher.FetchOptions{
 			FecherType: fetcher.TypeHttp,
@@ -119,30 +66,28 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		return &resp, nil
 	})
 	if err != nil {
-		return processSendError(err)
+		return processSendError(ctx, c, err)
+	}
+	var tags []string
+	*summary, tags = processor.NewSummaryProcessor(h.llm).ParseSummaryInfo(*summary)
+	bookmarkContentDTO.Summary = *summary
+	bookmarkContentDTO.Tags = append(bookmarkContentDTO.Tags, tags...)
+	if msg, err = editMessage(c, msg, *summary, true); err != nil {
+		return err
 	}
 
-	// if summary is cached, just return the cached summary
-	// if not cached, streaming send summary to user and save the bookmark
-	if isSummaryCached {
-		if _, err := editMessage(msg, *summary, true); err != nil {
-			logger.FromContext(ctx).Error("TextHandler failed to send message", "err", err, "text", text)
-		}
-	} else {
-		bookmarkContentDTO.Summary = resp
-		h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO)
+	if _, err = h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO); err != nil {
+		logger.FromContext(ctx).Error("failed to save bookmark", "err", err)
+		return err
 	}
 	return nil
 }
 
-func getUrlFromText(text string) string {
-	return urlPattern.FindString(text)
-}
-
-func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID, bookmarkContent *bookmarks.BookmarkContentDTO) {
+func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID, bookmarkContent *bookmarks.BookmarkContentDTO) (string, error) {
 	bookmark, err := h.bookmarkService.CreateBookmark(ctx, tx, userId, bookmarkContent)
 	if err != nil {
 		logger.FromContext(ctx).Error("save bookmark from reader bot error", "err", err.Error())
+		return "", err
 	} else {
 		logger.FromContext(ctx).Info("save bookmark from reader bot", "id", bookmark.ID)
 	}
@@ -159,4 +104,6 @@ func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID,
 	} else {
 		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
 	}
+	bookmarkUrl := fmt.Sprintf("%s/bookmarks/%s", config.Settings.Service.Fqdn, bookmark.ID)
+	return bookmarkUrl, nil
 }

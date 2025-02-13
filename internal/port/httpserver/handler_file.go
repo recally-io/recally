@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"recally/internal/core/files"
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
 	"time"
 
@@ -16,7 +17,7 @@ type fileService interface {
 	DeleteFile(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 	GetPublicURL(ctx context.Context, objectKey string) (string, error)
 	GetShareURL(ctx context.Context, objectKey string) string
-	GetPresignedPutObjectURL(ctx context.Context, objectKey string, expires time.Duration) (string, error)
+	GetPresignedPutObjectURL(ctx context.Context, userID uuid.UUID, fileName string, expires time.Duration) (string, string, error)
 }
 
 type fileHandler struct {
@@ -28,9 +29,10 @@ func registerFileHandlers(e *echo.Group, s *Service) {
 		service: files.NewService(s.s3),
 	}
 	files := e.Group("/files", authUserMiddleware())
-	files.GET("/presigned-urls", h.getPresignedURLs)
 	files.DELETE("/:id", h.deleteFile)
-	files.GET("/file", h.getFile)
+	files.GET("/file/presigned", h.getPresignedURLs)
+	files.GET("/file/url", h.getFilePublicURLByObjectKey)
+	files.GET("/file/content", h.getFileContentByObjectKey)
 }
 
 type getPresignedURLsRequest struct {
@@ -76,23 +78,27 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
-	objectKey := fmt.Sprintf("%s/%s/%s-%s", user.ID, time.Now().Format("2006-01"), uuid.New().String(), req.FileName)
 
 	// Default expiration to 1 hour if not provided
 	if req.Expiration == 0 {
 		req.Expiration = 3600
 	}
 	expirationDuration := time.Duration(req.Expiration) * time.Second
-	presignedURL, err := h.service.GetPresignedPutObjectURL(ctx, objectKey, expirationDuration)
+	presignedURL, objectKey, err := h.service.GetPresignedPutObjectURL(ctx, user.ID, req.FileName, expirationDuration)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate presigned URL: %w", err))
+	}
+
+	publicURL := ""
+	if config.Settings.S3.PublicURL != "" {
+		publicURL, _ = h.service.GetPublicURL(ctx, objectKey)
 	}
 
 	// Return the presigned URL
 	return JsonResponse(c, http.StatusOK, getPresignedURLsResponse{
 		PresignedURL: presignedURL,
 		ObjectKey:    objectKey,
-		PublicURL:    h.service.GetShareURL(ctx, objectKey),
+		PublicURL:    publicURL,
 	})
 }
 
@@ -100,14 +106,22 @@ type getPublicURLResponse struct {
 	URL string `json:"url"`
 }
 
-func (h *fileHandler) getFile(c echo.Context) error {
+func (h *fileHandler) getFileUrlByObjectKey(c echo.Context) (string, error) {
 	ctx := c.Request().Context()
 	req := new(getFileRequest)
 	if err := bindAndValidate(c, req); err != nil {
-		return ErrorResponse(c, http.StatusBadRequest, err)
+		return "", ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
 	publicURL, err := h.service.GetPublicURL(ctx, req.ObjectKey)
+	if err != nil {
+		return "", ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get public URL: %w", err))
+	}
+	return publicURL, nil
+}
+
+func (h *fileHandler) getFilePublicURLByObjectKey(c echo.Context) error {
+	publicURL, err := h.getFileUrlByObjectKey(c)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get public URL: %w", err))
 	}
@@ -115,6 +129,15 @@ func (h *fileHandler) getFile(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, getPublicURLResponse{
 		URL: publicURL,
 	})
+}
+
+func (h *fileHandler) getFileContentByObjectKey(c echo.Context) error {
+	publicURL, err := h.getFileUrlByObjectKey(c)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get public URL: %w", err))
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, publicURL)
 }
 
 type deleteFileRequest struct {

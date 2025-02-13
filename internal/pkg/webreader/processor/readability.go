@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/go-shiori/go-readability"
-	"github.com/minio/minio-go/v7"
 )
 
 type ReadabilityProcessor struct{}
@@ -64,13 +63,11 @@ func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.C
 	content.SiteName = article.SiteName
 
 	// Set the cover image, default upload to S3, if failed, use the original image
-	dummyUserCtx, err := auth.GetContextWithDummyUser(ctx)
+	dummyUserCtx, dummyUser, err := auth.GetContextWithDummyUser(ctx)
 	if err != nil {
 		content.Cover = article.Image
 	} else {
-		if file, err := files.DefaultService.UploadToS3FromUrl(dummyUserCtx, db.DefaultPool.Pool, true, "", article.Image, minio.PutObjectOptions{
-			CacheControl: "max-age=31536000, public",
-		}); err != nil {
+		if file, err := files.DefaultService.CreateFileAndUploadToS3FromUrl(dummyUserCtx, db.DefaultPool.Pool, dummyUser.ID, true, "", article.Image); err != nil {
 			content.Cover = article.Image
 		} else {
 			content.Cover = files.DefaultService.GetShareURL(ctx, file.S3Key)

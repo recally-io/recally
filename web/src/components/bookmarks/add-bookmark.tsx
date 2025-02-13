@@ -66,7 +66,6 @@ export default function AddBookmarkModal() {
 		selectedFile: File,
 	): Promise<GetPresignedURLsResponse> => {
 		try {
-			console.log(file);
 			const params: GetPresignedURLsRequest = {
 				fileName: selectedFile.name,
 				fileType: selectedFile.type,

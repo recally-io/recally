@@ -156,6 +156,15 @@ definitions:
           type: string
         type: array
     type: object
+  auth.AIConfig:
+    properties:
+      language:
+        type: string
+      model:
+        type: string
+      prompt:
+        type: string
+    type: object
   auth.ApiKeyDTO:
     properties:
       created_at:
@@ -181,21 +190,14 @@ definitions:
       user_id:
         type: string
     type: object
-  auth.SummaryConfig:
-    properties:
-      language:
-        type: string
-      model:
-        type: string
-      prompt:
-        type: string
-    type: object
   auth.UserSettings:
     properties:
+      describe_image_options:
+        $ref: '#/definitions/auth.AIConfig'
       is_linked_telegram_bot:
         type: boolean
       summary_options:
-        $ref: '#/definitions/auth.SummaryConfig'
+        $ref: '#/definitions/auth.AIConfig'
     type: object
   bookmarks.BookmarkContentDTO:
     properties:
@@ -457,7 +459,6 @@ definitions:
         type: string
     required:
     - type
-    - url
     type: object
   httpserver.createBookmarkShareRequest:
     properties:
