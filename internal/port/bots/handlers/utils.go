@@ -5,10 +5,17 @@ import (
 	"io"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
+	"regexp"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )
+
+var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+/?([^\s]*)`)
+
+func getUrlFromText(text string) string {
+	return urlPattern.FindString(text)
+}
 
 func processSendError(ctx context.Context, c tele.Context, err error) error {
 	logger.FromContext(ctx).Error("failed to send message", "err", err)

@@ -11,7 +11,6 @@ import (
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
-	"regexp"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,8 +18,6 @@ import (
 	"github.com/riverqueue/river"
 	tele "gopkg.in/telebot.v3"
 )
-
-var urlPattern = regexp.MustCompile(`http[s]?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+/?([^\s]*)`)
 
 func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	ctx, user, tx, err := h.initHandlerRequest(c)
@@ -84,10 +81,6 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		return err
 	}
 	return nil
-}
-
-func getUrlFromText(text string) string {
-	return urlPattern.FindString(text)
 }
 
 func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID, bookmarkContent *bookmarks.BookmarkContentDTO) (string, error) {
