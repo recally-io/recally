@@ -26,8 +26,11 @@ func editMessage(c tele.Context, msg *tele.Message, text string, format bool) (*
 	return c.Bot().Edit(msg, text)
 }
 
-func sendToUser(ctx context.Context, c tele.Context, stream llms.StreamingString, resp, chunk *string, chunkSize int, msg *tele.Message) *tele.Message {
+func sendToUser(ctx context.Context, c tele.Context, stream llms.StreamingString, resp, chunk *string, chunkSize int, msg *tele.Message) {
 	line, err := stream.Content, stream.Err
+	if line == "" && err == nil {
+		return
+	}
 	*chunk += line
 
 	if err != nil {
@@ -36,28 +39,28 @@ func sendToUser(ctx context.Context, c tele.Context, stream llms.StreamingString
 			*resp = strings.ReplaceAll(*resp, "\\n", "\n")
 			if _, err := editMessage(c, msg, *resp, true); err != nil {
 				if strings.Contains(err.Error(), "message is not modified") {
-					return msg
+					return
 				}
 				_ = processSendError(ctx, c, err)
 			}
-			return msg
+			return
 		}
 		logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err)
 		if _, err = editMessage(c, msg, "Failed to get summary.", false); err != nil {
 			_ = processSendError(ctx, c, err)
-			return nil
+			return
 		}
 	}
 
 	if len(*chunk) > chunkSize {
 		*resp += *chunk
 		*chunk = ""
-		var newErr error
-		msg, newErr = editMessage(c, msg, *resp, false)
-		if newErr != nil {
+
+		if newMsg, newErr := editMessage(c, msg, *resp, false); newErr != nil {
 			_ = processSendError(ctx, c, newErr)
-			return msg
+			return
+		} else {
+			*msg = *newMsg
 		}
 	}
-	return msg
 }

@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/files"
-	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 	"time"
 
@@ -99,16 +98,12 @@ func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
 		return err
 	}
 
-	tx, err := loadTx(ctx)
-	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err)
-	}
-	ctx, err = auth.GetContextWithDummyUser(ctx)
+	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 	// Get presigned URL with 1 hour expiration
-	presignedURL, err := h.fileService.GetPresignedGetObjectURL(ctx, tx, req.Key, time.Hour, nil)
+	presignedURL, err := h.fileService.GetPresignedGetObjectURL(ctx, tx, user.ID, req.Key, time.Hour, nil)
 	if err != nil {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("file not found"))
 	}
@@ -130,16 +125,12 @@ func (h *bookmarkShareHandler) getFileMetadata(c echo.Context) error {
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
-	tx, err := loadTx(ctx)
-	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err)
-	}
-	ctx, err = auth.GetContextWithDummyUser(ctx)
+	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 	// Get presigned URL with 1 hour expiration for HEAD request
-	presignedURL, err := h.fileService.GetPresignedHeadObjectURL(ctx, tx, req.Key, time.Hour, nil)
+	presignedURL, err := h.fileService.GetPresignedHeadObjectURL(ctx, tx, user.ID, req.Key, time.Hour, nil)
 	if err != nil {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("file not found"))
 	}

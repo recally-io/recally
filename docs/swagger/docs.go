@@ -4938,6 +4938,20 @@ const docTemplate = `{
                 }
             }
         },
+        "auth.AIConfig": {
+            "type": "object",
+            "properties": {
+                "language": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "prompt": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.ApiKeyDTO": {
             "type": "object",
             "properties": {
@@ -4976,28 +4990,17 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.SummaryConfig": {
-            "type": "object",
-            "properties": {
-                "language": {
-                    "type": "string"
-                },
-                "model": {
-                    "type": "string"
-                },
-                "prompt": {
-                    "type": "string"
-                }
-            }
-        },
         "auth.UserSettings": {
             "type": "object",
             "properties": {
+                "describe_image_options": {
+                    "$ref": "#/definitions/auth.AIConfig"
+                },
                 "is_linked_telegram_bot": {
                     "type": "boolean"
                 },
                 "summary_options": {
-                    "$ref": "#/definitions/auth.SummaryConfig"
+                    "$ref": "#/definitions/auth.AIConfig"
                 }
             }
         },

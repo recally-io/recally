@@ -83,32 +83,34 @@ func (q *Queries) DeleteFile(ctx context.Context, db DBTX, id uuid.UUID) error {
 const deleteFileByOriginalURL = `-- name: DeleteFileByOriginalURL :exec
 DELETE FROM files
 WHERE original_url = $1
-AND user_id = $2
+AND (user_id = $2 OR user_id = $3)
 `
 
 type DeleteFileByOriginalURLParams struct {
 	OriginalUrl string
 	UserID      uuid.UUID
+	DummyUserID pgtype.UUID
 }
 
 func (q *Queries) DeleteFileByOriginalURL(ctx context.Context, db DBTX, arg DeleteFileByOriginalURLParams) error {
-	_, err := db.Exec(ctx, deleteFileByOriginalURL, arg.OriginalUrl, arg.UserID)
+	_, err := db.Exec(ctx, deleteFileByOriginalURL, arg.OriginalUrl, arg.UserID, arg.DummyUserID)
 	return err
 }
 
 const deleteFileByS3Key = `-- name: DeleteFileByS3Key :exec
 DELETE FROM files
 WHERE s3_key = $1
-AND user_id = $2
+AND (user_id = $2 OR user_id = $3)
 `
 
 type DeleteFileByS3KeyParams struct {
-	S3Key  string
-	UserID uuid.UUID
+	S3Key       string
+	UserID      uuid.UUID
+	DummyUserID pgtype.UUID
 }
 
 func (q *Queries) DeleteFileByS3Key(ctx context.Context, db DBTX, arg DeleteFileByS3KeyParams) error {
-	_, err := db.Exec(ctx, deleteFileByS3Key, arg.S3Key, arg.UserID)
+	_, err := db.Exec(ctx, deleteFileByS3Key, arg.S3Key, arg.UserID, arg.DummyUserID)
 	return err
 }
 
@@ -140,16 +142,17 @@ func (q *Queries) GetFileByID(ctx context.Context, db DBTX, id uuid.UUID) (File,
 const getFileByOriginalURL = `-- name: GetFileByOriginalURL :one
 SELECT id, user_id, original_url, s3_key, s3_url, file_name, file_type, file_size, file_hash, metadata, created_at, updated_at FROM files
 WHERE original_url = $1 
-AND user_id = $2
+AND (user_id = $2 OR user_id = $3)
 `
 
 type GetFileByOriginalURLParams struct {
 	OriginalUrl string
 	UserID      uuid.UUID
+	DummyUserID pgtype.UUID
 }
 
 func (q *Queries) GetFileByOriginalURL(ctx context.Context, db DBTX, arg GetFileByOriginalURLParams) (File, error) {
-	row := db.QueryRow(ctx, getFileByOriginalURL, arg.OriginalUrl, arg.UserID)
+	row := db.QueryRow(ctx, getFileByOriginalURL, arg.OriginalUrl, arg.UserID, arg.DummyUserID)
 	var i File
 	err := row.Scan(
 		&i.ID,
@@ -171,16 +174,17 @@ func (q *Queries) GetFileByOriginalURL(ctx context.Context, db DBTX, arg GetFile
 const getFileByS3Key = `-- name: GetFileByS3Key :one
 SELECT id, user_id, original_url, s3_key, s3_url, file_name, file_type, file_size, file_hash, metadata, created_at, updated_at FROM files
 WHERE s3_key = $1
-AND user_id = $2
+AND (user_id = $2 OR user_id = $3)
 `
 
 type GetFileByS3KeyParams struct {
-	S3Key  string
-	UserID uuid.UUID
+	S3Key       string
+	UserID      uuid.UUID
+	DummyUserID pgtype.UUID
 }
 
 func (q *Queries) GetFileByS3Key(ctx context.Context, db DBTX, arg GetFileByS3KeyParams) (File, error) {
-	row := db.QueryRow(ctx, getFileByS3Key, arg.S3Key, arg.UserID)
+	row := db.QueryRow(ctx, getFileByS3Key, arg.S3Key, arg.UserID, arg.DummyUserID)
 	var i File
 	err := row.Scan(
 		&i.ID,

@@ -5,8 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"mime"
-	"path/filepath"
+	"recally/internal/core/files"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/llms"
@@ -30,27 +29,39 @@ const defaultSummaryImagePrompt = `You are an expert image analyst with strong s
    - Style (e.g., photorealistic, abstract)
    - Themes/concepts
 
-<guidelines>
+<Guidelines>
 - Focus only on observable elements (avoid assumptions about context)
 - Prioritize clarity and accuracy over creativity
 - Use neutral, objective language
-</guidelines>
+</Guidelines>
 
-<output_format>
-<output>
-  <title>[Title here]</title>
-  <description>[Detailed description here]</description>
-  <tags>[comma-separated tags]</tags>
-</output>
-</output_format>
+<OutputFormat>
+## Title
 
-<example>
-<output>
-  <title>Sunset Over Mountain Lake</title>
-  <description>A serene alpine lake reflects vibrant orange and pink sunset hues, surrounded by pine-covered slopes. The hyper-realistic digital painting features crisp water reflections and dramatic cloud formations, creating a peaceful yet awe-inspiring atmosphere.</description>
-  <tags>landscape, sunset, lake, mountains, digital painting</tags>
-</output>
-</example>
+[Title here]
+
+## Description
+
+[Description here]
+
+## Tags
+
+[Comma-Separated Tags here]
+</OutputFormat>
+
+<ExampleOutput>
+## Title
+
+Sunset Over Mountain Lake
+
+## Description
+
+A serene alpine lake reflects vibrant orange and pink sunset hues, surrounded by pine-covered slopes. The hyper-realistic digital painting features crisp water reflections and dramatic cloud formations, creating a peaceful yet awe-inspiring atmosphere.
+
+## Tags
+
+landscape, sunset, lake, mountains, digital painting
+</ExampleOutput>
 `
 
 // SummaryOption represents an option for configuring the SummaryProcessor
@@ -160,12 +171,9 @@ func (p *SummaryImageProcessor) process(ctx context.Context, imgURL string, stre
 	p.llm.GenerateContent(ctx, messages, streamingFunc, llms.WithModel(p.config.Model), llms.WithStream(streaming))
 }
 
-func (p *SummaryImageProcessor) EncodeImage(reader io.Reader, fileName string) (string, error) {
-	contentType := mime.TypeByExtension(filepath.Ext(fileName))
-	if contentType == "" {
-		contentType = "image/jpeg"
-	}
-
+func (p *SummaryImageProcessor) EncodeImage(reader io.ReadCloser, fileName string) (string, error) {
+	defer reader.Close()
+	contentType := files.GetFileMIMEWithDefault(fileName, "image/jpeg")
 	photoBytes, err := io.ReadAll(reader)
 	if err != nil {
 		return "", fmt.Errorf("failed to read photo: %w", err)

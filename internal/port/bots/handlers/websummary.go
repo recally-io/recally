@@ -6,6 +6,7 @@ import (
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
+	"recally/internal/pkg/config"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
@@ -47,7 +48,7 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	isSummaryCached := true
 
 	sendToUser := func(stream llms.StreamingString) {
-		msg = sendToUser(ctx, c, stream, &resp, &chunk, chunkSize, msg)
+		sendToUser(ctx, c, stream, &resp, &chunk, chunkSize, msg)
 	}
 
 	var bookmarkContentDTO bookmarks.BookmarkContentDTO
@@ -81,7 +82,12 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		}
 	} else {
 		bookmarkContentDTO.Summary = resp
-		h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO)
+		bookmarkUrl, err := h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO)
+		if err == nil {
+			if _, err := editMessage(c, msg, fmt.Sprintf("%s\n\n[Open Bookmark](%s)", resp, bookmarkUrl), true); err != nil {
+				logger.FromContext(ctx).Error("failed to send message", "err", err)
+			}
+		}
 	}
 	return nil
 }
@@ -90,10 +96,11 @@ func getUrlFromText(text string) string {
 	return urlPattern.FindString(text)
 }
 
-func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID, bookmarkContent *bookmarks.BookmarkContentDTO) {
+func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID, bookmarkContent *bookmarks.BookmarkContentDTO) (string, error) {
 	bookmark, err := h.bookmarkService.CreateBookmark(ctx, tx, userId, bookmarkContent)
 	if err != nil {
 		logger.FromContext(ctx).Error("save bookmark from reader bot error", "err", err.Error())
+		return "", err
 	} else {
 		logger.FromContext(ctx).Info("save bookmark from reader bot", "id", bookmark.ID)
 	}
@@ -110,4 +117,6 @@ func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID,
 	} else {
 		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
 	}
+	bookmarkUrl := fmt.Sprintf("%s/bookmarks/%s", config.Settings.Service.Fqdn, bookmark.ID)
+	return bookmarkUrl, nil
 }

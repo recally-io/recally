@@ -14,7 +14,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/minio/minio-go/v7"
 )
 
 func (s *Service) IsBookmarkContentExistByURL(ctx context.Context, tx db.DBTX, url string) (bool, error) {
@@ -25,9 +24,7 @@ func (s *Service) CreateBookmarkContent(ctx context.Context, tx db.DBTX, content
 	// when user save image from url by recally-clipper, we need to upload it to s3 first
 	if content.Type == ContentTypeImage && content.S3Key == "" {
 		// upload image to s3
-		file, err := files.DefaultService.UploadToS3FromUrl(ctx, tx, true, "", content.URL, minio.PutObjectOptions{
-			CacheControl: "max-age=31536000, public",
-		})
+		file, err := files.DefaultService.CreateFileAndUploadToS3FromUrl(ctx, tx, content.UserID, true, "", content.URL)
 		if err != nil {
 			return nil, err
 		}

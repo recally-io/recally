@@ -16,7 +16,7 @@ type fileService interface {
 	DeleteFile(ctx context.Context, tx db.DBTX, id uuid.UUID) error
 	GetPublicURL(ctx context.Context, objectKey string) (string, error)
 	GetShareURL(ctx context.Context, objectKey string) string
-	GetPresignedPutObjectURL(ctx context.Context, objectKey string, expires time.Duration) (string, error)
+	GetPresignedPutObjectURL(ctx context.Context, userID uuid.UUID, fileName string, expires time.Duration) (string, string, error)
 }
 
 type fileHandler struct {
@@ -76,14 +76,13 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
-	objectKey := fmt.Sprintf("%s/%s/%s-%s", user.ID, time.Now().Format("2006-01"), uuid.New().String(), req.FileName)
 
 	// Default expiration to 1 hour if not provided
 	if req.Expiration == 0 {
 		req.Expiration = 3600
 	}
 	expirationDuration := time.Duration(req.Expiration) * time.Second
-	presignedURL, err := h.service.GetPresignedPutObjectURL(ctx, objectKey, expirationDuration)
+	presignedURL, objectKey, err := h.service.GetPresignedPutObjectURL(ctx, user.ID, req.FileName, expirationDuration)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate presigned URL: %w", err))
 	}

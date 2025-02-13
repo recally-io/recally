@@ -42,6 +42,14 @@ type StreamingMessage struct {
 	IntermediateSteps []IntermediateStep `json:"intermediate_steps"`
 }
 
+func (m *StreamingMessage) ToStreamingString() StreamingString {
+	if m.Choice != nil {
+		return StreamingString{Content: m.Choice.Message.Content, Err: m.Err}
+	} else {
+		return StreamingString{Err: m.Err}
+	}
+}
+
 type StreamingString struct {
 	Content string `json:"content"`
 	Err     error  `json:"err"`
@@ -146,11 +154,7 @@ func (l *LLM) StreamingTextCompletion(ctx context.Context, prompt string, stream
 	}}
 
 	sendToUser := func(m StreamingMessage) {
-		if m.Choice != nil {
-			streamingFunc(StreamingString{Content: m.Choice.Message.Content, Err: m.Err})
-		} else {
-			streamingFunc(StreamingString{Err: m.Err})
-		}
+		streamingFunc(m.ToStreamingString())
 	}
 
 	l.GenerateContent(ctx, req.Messages, sendToUser, options...)
