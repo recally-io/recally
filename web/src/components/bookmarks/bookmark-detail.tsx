@@ -269,7 +269,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 								</AlertDialogFooter>
 							</AlertDialogContent>
 						</AlertDialog>
-						<ExpandableChatDemo />
+						<ExpandableChatDemo bookmark={bookmark} />
 					</main>
 				</div>
 			</SidebarInset>

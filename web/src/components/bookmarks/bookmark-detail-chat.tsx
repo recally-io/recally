@@ -7,15 +7,37 @@ import {
 import { ChatInput } from "@/components/ui/chat-input";
 import { ChatMessageList } from "@/components/ui/chat-message-list";
 import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import {
 	ExpandableChat,
 	ExpandableChatBody,
 	ExpandableChatFooter,
 	ExpandableChatHeader,
 } from "@/components/ui/expandable-chat";
-import { Bot, CornerDownLeft } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import type { Bookmark as BookmarkType } from "@/lib/apis/bookmarks";
+import { Bot, CornerDownLeft, Settings } from "lucide-react";
 import { FormEvent, useState } from "react";
 
-export function ExpandableChatDemo() {
+export function ExpandableChatDemo({ bookmark }: { bookmark: BookmarkType }) {
+	const systemMessage = `You are Recally, a personal assistant. You will be given a bookmark or article and your task is to answer questions about it.`;
+
+	const [systemPrompt, setSystemPrompt] = useState(systemMessage);
+	const [model, setModel] = useState("gpt-4");
+
 	const [messages, setMessages] = useState([
 		{
 			id: 1,
@@ -66,11 +88,11 @@ export function ExpandableChatDemo() {
 	};
 
 	// const handleAttachFile = () => {
-	// 	//
+	//   //
 	// };
 
 	// const handleMicrophoneClick = () => {
-	// 	//
+	//   //
 	// };
 
 	return (
@@ -136,26 +158,63 @@ export function ExpandableChatDemo() {
 							className="min-h-12 resize-none rounded-lg bg-background border-0 p-3 shadow-none focus-visible:ring-0"
 						/>
 						<div className="flex items-center p-3 pt-0 justify-between">
-							{/* <div className="flex">
-								<Button
-									variant="ghost"
-									size="icon"
-									type="button"
-									onClick={handleAttachFile}
-								>
-									<Paperclip className="size-4" />
-								</Button>
+							<div className="flex">
+								<Dialog>
+									<DialogTrigger asChild>
+										<Button variant="ghost" size="icon" type="button">
+											<Settings className="size-4" />
+										</Button>
+									</DialogTrigger>
+									<DialogContent>
+										<DialogHeader>
+											<DialogTitle>Chat Settings</DialogTitle>
+										</DialogHeader>
+										<div className="grid gap-4 py-4">
+											<div className="grid gap-2">
+												<Label htmlFor="model">Model</Label>
+												<Select value={model} onValueChange={setModel}>
+													<SelectTrigger>
+														<SelectValue placeholder="Select model" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="gpt-4">GPT-4</SelectItem>
+														<SelectItem value="gpt-3.5-turbo">
+															GPT-3.5 Turbo
+														</SelectItem>
+													</SelectContent>
+												</Select>
+											</div>
+											<div className="grid gap-2">
+												<Label htmlFor="system-prompt">System Prompt</Label>
+												<Textarea
+													id="system-prompt"
+													value={systemPrompt}
+													onChange={(e) => setSystemPrompt(e.target.value)}
+													className="h-32"
+												/>
+											</div>
+										</div>
+									</DialogContent>
+								</Dialog>
+								{/* <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={handleAttachFile}
+                >
+                  <Paperclip className="size-4" />
+                </Button>
 
-								<Button
-									variant="ghost"
-									size="icon"
-									type="button"
-									onClick={handleMicrophoneClick}
-								>
-									<Mic className="size-4" />
-								</Button>
-							</div> */}
-							<Button type="submit" size="sm" className="ml-auto gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={handleMicrophoneClick}
+                >
+                  <Mic className="size-4" />
+                </Button> */}
+							</div>
+							<Button type="submit" size="sm" className="gap-1.5">
 								Send Message
 								<CornerDownLeft className="size-3.5" />
 							</Button>
