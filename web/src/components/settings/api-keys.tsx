@@ -1,3 +1,4 @@
+import { useToast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -25,7 +26,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
 import type { CreateApiKeyInput } from "@/lib/apis/auth";
 import { useApiKeys, useApiKeysMutations } from "@/lib/apis/auth";
 import { Copy, Trash2 } from "lucide-react";

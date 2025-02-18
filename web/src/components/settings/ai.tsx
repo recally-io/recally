@@ -1,3 +1,4 @@
+import { useToast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/lib/apis/auth";
 import { useLLMs } from "@/lib/apis/llm";
 import { useUsers } from "@/lib/apis/users";

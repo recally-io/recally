@@ -1,9 +1,9 @@
+import { useToast } from "@/components/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/lib/apis/auth";
 import { useUsers } from "@/lib/apis/users";
 import Cookies from "js-cookie";

@@ -1,5 +1,6 @@
 import { ArticleActions } from "@/components/article/article-actions";
 import { ArticleReader } from "@/components/bookmarks/bookmark-content";
+import { useToast } from "@/components/hooks/use-toast";
 import { SidebarComponent } from "@/components/sidebar/sidebar";
 import { SidebarHeaderTrigger } from "@/components/sidebar/trigger";
 import {
@@ -13,7 +14,6 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useToast } from "@/hooks/use-toast";
 import {
 	useBookmark,
 	useBookmarkMutations,
@@ -22,6 +22,7 @@ import {
 import { ROUTES } from "@/lib/router";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { ExpandableChatDemo } from "./bookmark-detail-chat";
 
 // Add this near the top of the file, before the component
 const getShareUrl = (shareId?: string) => {
@@ -268,6 +269,7 @@ export default function BookmarkDetailPage({ id }: { id: string }) {
 								</AlertDialogFooter>
 							</AlertDialogContent>
 						</AlertDialog>
+						<ExpandableChatDemo />
 					</main>
 				</div>
 			</SidebarInset>
