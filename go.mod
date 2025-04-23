@@ -1,7 +1,7 @@
 module recally
 
 go 1.23
-toolchain go1.23.3
+toolchain go1.24.1
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
@@ -21,7 +21,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.82
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pgvector/pgvector-go v0.2.2
-	github.com/refraction-networking/utls v1.6.7
+	github.com/refraction-networking/utls v1.7.0
 	github.com/riverqueue/river v0.15.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.15.0
 	github.com/samber/slog-betterstack v1.4.1
@@ -32,9 +32,9 @@ require (
 	github.com/testcontainers/testcontainers-go v0.34.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.34.0
 	github.com/yuin/goldmark v1.7.8
-	golang.org/x/crypto v0.35.0
+	golang.org/x/crypto v0.36.0
 	golang.org/x/oauth2 v0.24.0
-	golang.org/x/sync v0.11.0
+	golang.org/x/sync v0.12.0
 	gopkg.in/telebot.v3 v3.3.8
 )
 
@@ -140,9 +140,9 @@ require (
 	go.opentelemetry.io/otel/trace v1.33.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
-	golang.org/x/net v0.36.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241223144023-3abc09e42ca8 // indirect
