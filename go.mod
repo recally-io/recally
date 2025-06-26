@@ -2,11 +2,7 @@ module recally
 
 go 1.24.0
 
-<<<<<<< bugfix/link_telegram_account
 toolchain go1.24.3
-=======
-toolchain go1.24.1
->>>>>>> main
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
