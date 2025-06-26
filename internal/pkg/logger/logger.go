@@ -10,7 +10,7 @@ import (
 	slogbetterstack "github.com/samber/slog-betterstack"
 )
 
-var defaultLogAttrs = []string{contexts.ContextKeyRequestID, contexts.ContextKeyUserID, contexts.ContextKeyUserName}
+var defaultLogAttrs = []string{contexts.ContextKeyRequestID, contexts.ContextKeyUserID, contexts.ContextKeyUserName, contexts.ContextKeyTelegramID, contexts.ContextKeyTelegramName}
 
 // Default logger
 var Default = New()

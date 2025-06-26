@@ -5,13 +5,15 @@ import "context"
 type ContextKey string
 
 const (
-	ContextKeyContext   = "ctx"
-	ContextKeyRequestID = "request_id"
-	ContextKeyLogger    = "logger"
-	ContextKeyUser      = "user"
-	ContextKeyUserID    = "user_id"
-	ContextKeyUserName  = "user_name"
-	ContextKeyTx        = "tx"
+	ContextKeyContext      = "ctx"
+	ContextKeyRequestID    = "request_id"
+	ContextKeyLogger       = "logger"
+	ContextKeyUser         = "user"
+	ContextKeyUserID       = "user_id"
+	ContextKeyUserName     = "user_name"
+	ContextKeyTx           = "tx"
+	ContextKeyTelegramID   = "telegram_id"
+	ContextKeyTelegramName = "telegram_name"
 )
 
 func Set(ctx context.Context, key string, value interface{}) context.Context {
