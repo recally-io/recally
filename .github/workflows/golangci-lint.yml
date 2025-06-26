@@ -9,7 +9,7 @@ jobs:
         steps:
             - uses: actions/setup-go@v5
               with:
-                  go-version: 1.23
+                  go-version: 1.24
             - uses: actions/checkout@v4
             - name: Cache Go Modules
               uses: actions/cache@v3
@@ -25,7 +25,7 @@ jobs:
               with:
                   version: v1.54
                   args: --timeout 10m0s
-                  only-new-issues: true
+                  only-new-issues: false
             - name: Test
               run: go test -v ./... | tee test-results.txt
             - name: Upload Test Results
