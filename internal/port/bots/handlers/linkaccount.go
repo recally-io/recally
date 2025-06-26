@@ -23,7 +23,7 @@ func (h *Handler) LinkAccountHandler(c tele.Context) error {
 		return nil
 	}
 
-	tgUserID, _ := contexts.Get[string](ctx, contexts.ContextKeyUserID)
+	tgUserID, _ := contexts.Get[string](ctx, contexts.ContextKeyTgUserID)
 	oAuthUser := auth.OAuth2User{
 		Provider: "telegram",
 		ID:       tgUserID,

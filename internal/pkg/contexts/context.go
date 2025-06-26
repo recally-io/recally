@@ -10,11 +10,12 @@ const (
 	ContextKeyLogger    = "logger"
 	ContextKeyUser      = "user"
 	ContextKeyUserID    = "user_id"
+	ContextKeyTgUserID  = "tg_user_id"
 	ContextKeyUserName  = "user_name"
 	ContextKeyTx        = "tx"
 )
 
-func Set(ctx context.Context, key string, value interface{}) context.Context {
+func Set(ctx context.Context, key string, value any) context.Context {
 	return context.WithValue(ctx, ContextKey(key), value)
 }
 
