@@ -42,7 +42,7 @@ RUN bun run docs:build
 
 
 # Build Go binary
-FROM golang:1.23-alpine AS build
+FROM golang:1.24-alpine AS build
 WORKDIR /go/src/app
 
 RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \

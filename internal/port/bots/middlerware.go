@@ -20,7 +20,7 @@ func contextMiddleware() tele.MiddlewareFunc {
 			ctx := context.Background()
 			start := time.Now()
 			ctx = contexts.Set(ctx, contexts.ContextKeyRequestID, uuid.Must(uuid.NewV7()).String())
-			ctx = contexts.Set(ctx, contexts.ContextKeyUserID, fmt.Sprintf("%d", c.Sender().ID))
+			ctx = contexts.Set(ctx, contexts.ContextKeyTgUserID, fmt.Sprintf("%d", c.Sender().ID))
 			ctx = contexts.Set(ctx, contexts.ContextKeyUserName, c.Sender().Username)
 			logger := logger.FromContext(ctx)
 			ctx = contexts.Set(ctx, contexts.ContextKeyLogger, logger)
