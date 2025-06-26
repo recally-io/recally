@@ -20,15 +20,15 @@ func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.
 		return ctx, nil, nil, fmt.Errorf("failed to get dbtx from context")
 	}
 
-	telegramID, ok := contexts.Get[string](ctx, contexts.ContextKeyTelegramID)
+	userID, ok := contexts.Get[string](ctx, contexts.ContextKeyUserID)
 	if !ok {
-		return ctx, nil, tx, fmt.Errorf("failed to get telegram ID from context")
+		return ctx, nil, tx, fmt.Errorf("failed to get userID from context")
 	}
-	user, err := h.authService.GetTelegramUser(ctx, tx, telegramID)
+	user, err := h.authService.GetTelegramUser(ctx, tx, userID)
 	if err != nil {
 		if strings.Contains(err.Error(), db.ErrNotFound) {
-			telegramName, _ := contexts.Get[string](ctx, contexts.ContextKeyTelegramName)
-			user, err = h.authService.CreateTelegramUser(ctx, tx, telegramName, telegramID)
+			userName := ctx.Value(contexts.ContextKey(contexts.ContextKeyUserName)).(string)
+			user, err = h.authService.CreateTelegramUser(ctx, tx, userName, userID)
 			if err != nil {
 				return ctx, nil, tx, fmt.Errorf("failed to create user: %w", err)
 			}
