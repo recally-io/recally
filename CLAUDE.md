@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Important
+
+1. When searching or analyzing code structure or syntax, always use `ast-grep --lang '<language>' -p '<pattern>'` by default. Only use plain-text search tools like `rg` or `grep` if explicitly instructed to do so. Clearly document your search patterns and findings in the session log.
+2. Create a session log file in the format `{time}-{name}.log` (e.g., `20240612-implement-auth.log`) in the `.claude/sessions/` directory. The filename should include the current timestamp and a descriptive session title.
+3. For any task involving multiple steps, always decompose it into clear, manageable sub-tasks. Develop a detailed, step-by-step plan and checklist, and document all progress in a dedicated Markdown session log. Update the log as you complete each sub-task, ensuring traceability and transparency. If a task can be parallelized, create and coordinate sub-agents as needed to efficiently complete sub-tasks. Clearly document the responsibilities and outputs of each sub-agent in the session log.
+4. Frequently commit changes to git using clear, conventional commit messages as checkpoints. This ensures that progress is well-documented and allows for easy rollback if needed.
+5. Prioritize clarity and explicitness in all reasoning and documentation. For every instruction, proceed step by step, explaining your thought process and actions. Never make assumptions—ask for clarification if any requirement is ambiguous or incomplete.
+
 ## Project Overview
 
 Recally is an AI-powered memory assistant for digital content. It's a full-stack web application with:
