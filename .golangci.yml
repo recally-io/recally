@@ -1,0 +1,380 @@
+# yaml-language-server: $schema=https://golangci-lint.run/jsonschema/golangci.jsonschema.json
+# This file configures golangci-lint for the Recally project
+# Reference: https://golangci-lint.run/usage/configuration/
+
+run:
+  # Timeout for analysis
+  timeout: 10m
+  
+  # Include test files
+  tests: true
+  
+  # Number of CPUs to use
+  concurrency: 4
+  
+  # Go version to target for code simplification
+  go: "1.24"
+  
+  # Skip directories
+  skip-dirs:
+    - database/bindata.go
+    - internal/pkg/db # Generated SQLC files
+    - docs/swagger
+    - web
+    - vendor
+    - .git
+    - bin
+    - dist
+  
+  # Skip files
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
+    - ".*_gen\\.go$"
+
+# Output configuration
+output:
+  # Format of output: colored-line-number|line-number|json|tab|checkstyle|code-climate
+  formats:
+    - format: colored-line-number
+      path: stdout
+  
+  # Print lines of code with issue
+  print-issued-lines: true
+  
+  # Print linter name in the end of issue text
+  print-linter-name: true
+  
+  # Make issues output unique by line
+  uniq-by-line: true
+  
+  # Sort results by: filepath, line and column
+  sort-results: true
+
+linters:
+  # Enable specific linters
+  enable:
+    # Default linters (fast and reliable)
+    - errcheck      # Checking for unchecked errors
+    - gosimple      # Simplifying code
+    - govet         # Suspicious constructs
+    - ineffassign   # Detecting ineffectual assignments
+    - staticcheck   # Advanced static analysis
+    - unused        # Detecting unused code
+    
+    # Additional recommended linters
+    - gofumpt       # Stricter gofmt
+    - goimports     # Auto import sorting and formatting
+    - gocritic      # Comprehensive checks
+    - revive        # Fast, configurable, extensible linter
+    - misspell      # Spell checker
+    - gosec         # Security issues
+    - unconvert     # Unnecessary type conversions
+    - dupl          # Code duplication
+    - gocyclo       # Cyclomatic complexity
+    - gocognit      # Cognitive complexity
+    - prealloc      # Find slice declarations that could be preallocated
+    - bodyclose     # HTTP response body close check
+    - noctx         # HTTP requests without context.Context
+    - exhaustive    # Check exhaustiveness of enum switch statements
+    - sqlclosecheck # Ensure sql.Rows and sql.Stmt are closed
+    - nilerr        # Finds code that returns nil even if it checks error
+    - errorlint     # Error wrapping issues
+    - godot         # Check comments end in period
+    - tparallel     # Detects inappropriate t.Parallel() usage
+    - thelper       # Detects test helpers without t.Helper()
+    - forbidigo     # Forbids specific function calls
+    - makezero      # Finds slice declarations with non-zero initial length
+    
+    # Style and formatting
+    - whitespace    # Unnecessary whitespace
+    - wsl           # Force consistent whitespace usage
+    - nlreturn      # Consistent newline returns
+    
+    # Bug detection
+    - asasalint     # Check for pass []any as any in variadic func
+    - bidichk       # Checks for dangerous unicode character sequences
+    - contextcheck  # Check if functions use context correctly
+    - durationcheck # Check for two durations multiplied together
+    - errchkjson    # Check types passed to JSON encoding functions
+    - reassign      # Checks that package variables are not reassigned
+    
+    # Performance
+    - nilerr        # Optimizes nil error returns
+    - musttag       # Struct tags checking
+
+  # Disable linters that are too strict or not suitable
+  disable:
+    - depguard      # Restricting imports - too restrictive for now
+    - gci           # Import ordering - handled by goimports
+    - godox         # TODO/FIXME comments - useful during development
+    - goerr113      # Dynamic errors - too strict for web app
+    - gomnd         # Magic numbers - too many false positives
+    - lll           # Line length - handled by editor
+    - nestif        # Nested if statements - sometimes necessary
+    - wrapcheck     # Error wrapping - too strict
+    - testpackage   # Separate test packages - not always practical
+    - varnamelen    # Variable name length - too opinionated
+    - ireturn       # Accept interfaces, return structs - too strict
+    - nonamedreturns # Named returns can be useful
+    - exhaustruct   # Exhaustive struct patterns - too verbose
+    - gomoddirectives # Allow replace directives when needed
+    - tagliatelle   # Struct tag naming - project specific
+
+linters-settings:
+  # errcheck
+  errcheck:
+    # Report about not checking errors in type assertions
+    check-type-assertions: true
+    # Report about assignment of errors to blank identifier
+    check-blank: true
+    # Exclude certain functions from error checking
+    exclude-functions:
+      - io.Copy
+      - io.WriteString
+      - (io.ReadCloser).Close
+      - (net/http.ResponseWriter).Write
+  
+  # govet
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment # Struct field alignment optimization - not critical
+    settings:
+      shadow:
+        strict: true
+  
+  # gofumpt
+  gofumpt:
+    # Enforce extra rules
+    extra-rules: true
+    # Module path
+    module-path: recally
+  
+  # goimports
+  goimports:
+    # Put local imports after 3rd party
+    local-prefixes: recally
+  
+  # gocritic
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - whyNoLint # Don't require explanations for nolint directives
+      - dupImport # goimports handles this
+      - octalLiteral # Octal literals are fine
+      - commentedOutCode # Sometimes useful during development
+    settings:
+      hugeParam:
+        sizeThreshold: 512
+  
+  # revive
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+        arguments: [allowTypesBefore: ["*testing.T", "*github.com/labstack/echo/v4.Context"]]
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: if-return
+      - name: increment-decrement
+      - name: var-declaration
+      - name: var-naming
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unreachable-code
+  
+  # misspell
+  misspell:
+    locale: US
+    ignore-words:
+      - cancelled # British spelling used in some contexts
+  
+  # gosec
+  gosec:
+    excludes:
+      - G104 # Unhandled errors - covered by errcheck
+      - G304 # File path provided as taint input - necessary for file operations
+    config:
+      global:
+        audit: true
+  
+  # dupl
+  dupl:
+    threshold: 150 # Token threshold for duplication
+  
+  # gocyclo
+  gocyclo:
+    min-complexity: 15
+  
+  # gocognit
+  gocognit:
+    min-complexity: 20
+  
+  # godot
+  godot:
+    # Check all top-level comments
+    scope: toplevel
+    # Exclude certain comments
+    exclude:
+      - "^TODO:"
+      - "^FIXME:"
+      - "^NOTE:"
+    # Only check exported items
+    capital: true
+  
+  # whitespace
+  whitespace:
+    multi-if: true
+    multi-func: true
+  
+  # wsl
+  wsl:
+    # Allow blocks to end with comments
+    allow-trailing-comment: true
+    # Force empty lines
+    force-err-cuddling: false
+    force-case-trailing-whitespace: 0
+  
+  # exhaustive
+  exhaustive:
+    # Check switch statements for missing cases
+    check:
+      - switch
+      - map
+    # Ignore enum members matching regex
+    ignore-enum-members: "Example.+"
+    # Consider default case as exhaustive
+    default-signifies-exhaustive: true
+  
+  # nolintlint
+  nolintlint:
+    # Require explanation for nolint directives
+    require-explanation: true
+    require-specific: true
+  
+  # thelper
+  thelper:
+    test:
+      # Check t.Helper() is called
+      first: true
+    benchmark:
+      # Check b.Helper() is called  
+      first: true
+  
+  # forbidigo
+  forbidigo:
+    forbid:
+      - p: ^fmt\.Print.*$
+        msg: use logger instead of fmt.Print
+      - p: ^panic$
+        msg: avoid using panic, return errors instead
+      - p: ^time\.Sleep$
+        msg: avoid time.Sleep in production code, use timers or tickers
+
+issues:
+  # Exclude configuration
+  exclude-dirs:
+    - database/bindata.go
+    - internal/pkg/db
+    - docs
+    - vendor
+  
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*_test\\.go$"
+  
+  # Maximum issues count per one linter
+  max-issues-per-linter: 50
+  
+  # Maximum count of issues with the same text
+  max-same-issues: 3
+  
+  # Fix found issues (if it's supported by the linter)
+  fix: true
+  
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - gocognit
+        - errcheck
+        - dupl
+        - gosec
+        - forbidigo
+        - musttag
+    
+    # Exclude known issues with generated files
+    - path: (bindata|db|swagger)\.go
+      linters:
+        - gofumpt
+        - goimports
+        - whitespace
+        - wsl
+        - godot
+        - dupl
+    
+    # Exclude certain linters for main packages
+    - path: main\.go
+      linters:
+        - forbidigo # Allow fmt.Print in main
+    
+    # Exclude migration files from some checks
+    - path: migrations/
+      linters:
+        - godot
+        - misspell
+    
+    # Allow TODO comments in certain files
+    - path: "(.*)?_test\\.go"
+      text: "TODO"
+      linters:
+        - godot
+    
+    # Exclude long lines in certain contexts
+    - source: "^//\\s*\\+build"
+      linters:
+        - lll
+    
+    # Exclude certain error checks in defer statements
+    - source: "^defer .*\\.Close"
+      linters:
+        - errcheck
+    
+    # Allow unused parameters in certain contexts
+    - text: "^unused parameter"
+      linters:
+        - revive
+      source: "^func.*\\(.*echo\\.Context\\).*$"
+
+  # Show all issues from a linter
+  exclude-use-default: false
+  
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-case-sensitive: false
+  
+  # The default value is false. If set to true exclude and exclude-rules
+  # regular expressions become case sensitive
+  exclude-dirs-use-default: false
+  
+  # Show only new issues created after git revision
+  new-from-rev: ""
+  
+  # Show only new issues created in git patch with set file path
+  new-from-patch: ""

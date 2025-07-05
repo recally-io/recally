@@ -1,13 +1,16 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
+# GoReleaser configuration for Recally
+# Documentation: https://goreleaser.com
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
 version: 2
 
+# Global environment variables for the build
+env:
+  - GO111MODULE=on
+  - GOPROXY=https://proxy.golang.org,direct
+
+# Pre-build hooks for generating required files
 before:
   hooks:
     - go mod tidy
@@ -19,15 +22,41 @@ before:
     - sqlc generate
     - swag init -g internal/port/httpserver/router.go -o docs/swagger
 
+# Build configuration
 builds:
-  - env:
+  - id: recally
+    main: ./main.go
+    binary: recally
+    env:
       - CGO_ENABLED=0
+      - GO111MODULE=on
     goos:
       - linux
-      # - windows
       - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+      - "386"
+    goarm:
+      - "7"
+    ignore:
+      - goos: windows
+        goarch: arm64
+      - goos: windows
+        goarch: "386"
+    # Build metadata via ldflags
     ldflags:
       - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+    # Build tags for different features
+    tags:
+      - osusergo
+      - netgo
+    # Pre-build hooks for frontend assets
     hooks:
       pre:
         - cmd: sh -c 'cd web && bun install && bun run build'
@@ -37,35 +66,209 @@ builds:
           env:
             - NODE_ENV=production
 
+# Archive configuration
 archives:
-  - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of `uname`.
+  - id: default
+    builds:
+      - recally
     name_template: >-
       {{ .ProjectName }}_
+      {{- .Version }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
-    format_overrides:
-      - goos: windows
-        format: zip
+    formats:
+      - tar.gz
+      - zip
+    # Include additional files in the archive
+    files:
+      - LICENSE*
+      - README*
+      - CHANGELOG*
+      - docs/README.md
+      - database/migrations/**/*
+      - "*.example"
+      - src: "VERSION"
+        dst: "VERSION"
+      - src: "env.example"
+        dst: "env.example"
+        strip_parent: true
 
+# Checksum configuration
 checksum:
-    name_template: "checksums.txt"
-snapshot:
-    version_template: "{{ incpatch .Version }}-next"
+  name_template: "checksums.txt"
+  algorithm: sha256
 
+# Snapshot configuration for development builds
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+# Changelog configuration
 changelog:
   sort: asc
+  use: github
   filters:
     exclude:
       - "^docs:"
       - "^test:"
+      - "^chore:"
+      - "^build:"
+      - "^ci:"
+      - "^style:"
+      - "^refactor:"
+      - "merge conflict"
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+  groups:
+    - title: "New Features"
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: "Bug Fixes"
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: "Enhancements"
+      regexp: "^.*enhancement[(\\w)]*:+.*$"
+      order: 2
+    - title: "Dependencies"
+      regexp: "^.*deps[(\\w)]*:+.*$"
+      order: 3
+    - title: "Others"
+      order: 999
 
+# Docker images configuration
+dockers:
+  - id: recally-docker
+    goos: linux
+    goarch: amd64
+    ids:
+      - recally
+    image_templates:
+      - "ghcr.io/recally-io/recally:latest"
+      - "ghcr.io/recally-io/recally:{{ .Version }}"
+      - "ghcr.io/recally-io/recally:{{ .Major }}.{{ .Minor }}"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.description=AI-powered memory assistant for digital content"
+      - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
+      - "--label=org.opencontainers.image.source=https://github.com/recally-io/recally"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+  - id: recally-docker-arm64
+    goos: linux
+    goarch: arm64
+    ids:
+      - recally
+    image_templates:
+      - "ghcr.io/recally-io/recally:{{ .Version }}-arm64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.description=AI-powered memory assistant for digital content"
+      - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
+      - "--label=org.opencontainers.image.source=https://github.com/recally-io/recally"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+
+# Docker manifests for multi-platform images
+docker_manifests:
+  - name_template: "ghcr.io/recally-io/recally:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/recally-io/recally:{{ .Version }}"
+      - "ghcr.io/recally-io/recally:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/recally-io/recally:latest"
+    image_templates:
+      - "ghcr.io/recally-io/recally:latest"
+      - "ghcr.io/recally-io/recally:{{ .Version }}-arm64"
+
+# Release configuration
 release:
   github:
     owner: recally-io
     name: recally
-  name_template: '{{ .Tag }}'
+  name_template: "Release {{.Version}}"
+  header: |
+    ## Recally {{.Version}}
+    
+    **Full Changelog**: https://github.com/recally-io/recally/compare/{{.PreviousTag}}...{{.Tag}}
+    
+    ## Installation
+    
+    ### Download Binary
+    Download the appropriate binary for your platform from the assets below.
+    
+    ### Docker
+    ```bash
+    docker pull ghcr.io/recally-io/recally:{{.Version}}
+    ```
+    
+    ### Homebrew (macOS/Linux)
+    ```bash
+    brew install recally-io/tap/recally
+    ```
+  footer: |
+    ## Docker Images
+    
+    Multi-platform Docker images are available:
+    - `ghcr.io/recally-io/recally:{{.Version}}` (linux/amd64, linux/arm64)
+    - `ghcr.io/recally-io/recally:latest` (linux/amd64, linux/arm64)
+    
+    ## Checksums
+    
+    You can verify the integrity of downloaded files using the checksums below:
+    
+    ```bash
+    # macOS
+    shasum -a 256 -c checksums.txt
+    
+    # Linux
+    sha256sum -c checksums.txt
+    ```
+  prerelease: auto
+  draft: false
+  replace_existing_draft: true
+  target_commitish: "{{ .Commit }}"
+  disable: false
+
+# Homebrew tap configuration
+brews:
+  - name: recally
+    repository:
+      owner: recally-io
+      name: homebrew-tap
+    url_template: "https://github.com/recally-io/recally/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    download_strategy: CurlDownloadStrategy
+    commit_author:
+      name: goreleaserbot
+      email: goreleaser@recally.io
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    directory: Formula
+    homepage: "https://github.com/recally-io/recally"
+    description: "AI-powered memory assistant for digital content"
+    license: "MIT"
+    skip_upload: auto
+    custom_block: |
+      head "https://github.com/recally-io/recally.git"
+    dependencies:
+      - name: postgresql
+        type: optional
+    install: |
+      bin.install "recally"
+      (etc/"recally").install "env.example" => "config.env"
+    test: |
+      system "#{bin}/recally", "version"
+
+# Validation rules
+announce:
+  skip: '{{gt .Patch 0}}'

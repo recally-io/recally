@@ -7,7 +7,7 @@ lint: lint-ui lint-go
 lint-go:
 	@echo "Linting..."
 	@go mod tidy
-	@golangci-lint run --fix ./...  --enable gofumpt
+	@golangci-lint run --fix ./...
 	@swag fmt
 
 lint-ui:

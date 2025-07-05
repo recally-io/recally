@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	migrations "recally/database"
@@ -17,6 +18,14 @@ import (
 	"time"
 )
 
+// Build information injected via ldflags
+var (
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
+	builtBy = "unknown"
+)
+
 type Service interface {
 	Name() string
 	Start(ctx context.Context)
@@ -24,12 +33,28 @@ type Service interface {
 }
 
 func main() {
+	// Handle version and health commands
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "version":
+			fmt.Printf("Recally %s\n", version)
+			fmt.Printf("Commit: %s\n", commit)
+			fmt.Printf("Date: %s\n", date)
+			fmt.Printf("Built by: %s\n", builtBy)
+			return
+		case "health":
+			// Simple health check - could be enhanced to check database connectivity
+			fmt.Println("OK")
+			return
+		}
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
 
 	migrations.Migrate(ctx, config.Settings.Database.URL())
 
-	logger.Default.Info("starting service")
+	logger.Default.Info("starting service", "version", version, "commit", commit)
 
 	services := make([]Service, 0)
 
