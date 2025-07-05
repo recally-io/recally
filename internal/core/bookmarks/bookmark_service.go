@@ -36,7 +36,7 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 		return nil, fmt.Errorf("%w: invalid URL", ErrInvalidInput)
 	}
 	dto.Domain = u.Host
-	var contentDTO *BookmarkContentDTO
+	contentDTO := &BookmarkContentDTO{}
 
 	// Create bookmark content for PDF and EPUB types
 	if dto.Type == ContentTypePDF || dto.Type == ContentTypeEPUB || dto.Type == ContentTypeImage {
@@ -51,23 +51,20 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 			Url:    dto.URL,
 			UserID: pgtype.UUID{Bytes: userId, Valid: true},
 		})
-		// Handle the response from content lookup
 		if err == nil {
-			// If content exists and belongs to the user, return duplicate error
-			if content.UserID.Valid && content.UserID.Bytes == userId {
-				return nil, fmt.Errorf("%w, id: %s", ErrDuplicate, content.ID)
-			}
-		} else if db.IsNotFoundError(err) {
-			contentDTO, err = s.CreateBookmarkContent(ctx, tx, dto)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create bookmark content: %w", err)
-			}
+			contentDTO.Load(&content)
 		} else {
-			// return other errors
-			return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
+			if db.IsNotFoundError(err) {
+				contentDTO, err = s.CreateBookmarkContent(ctx, tx, dto)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create bookmark content: %w", err)
+				}
+			} else {
+				// return other errors
+				return nil, fmt.Errorf("failed to check existing bookmark for url '%s': %w", dto.URL, err)
+			}
 		}
 	}
-
 	// Create the bookmark entry linking user to content
 	bookmark, err := s.dao.CreateBookmark(ctx, tx, db.CreateBookmarkParams{
 		UserID:    pgtype.UUID{Bytes: userId, Valid: true},
