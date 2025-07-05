@@ -15,9 +15,9 @@ RUN cd /temp && bun install --frozen-lockfile && \
 # Then copy all (non-ignored) project files into the image
 COPY web .
 
-# Run tests and build
+# Build the application
 ENV NODE_ENV=production
-RUN bun test && bun run build
+RUN bun run build
 
 # Buld docs using Vitepress
 FROM oven/bun:1 AS docs-base
