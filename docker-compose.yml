@@ -3,7 +3,7 @@ services:
     image: vaayne/recally:latest
     build: .
     ports:
-      - "1323:1323"
+      - "13233:1323"
     environment:
       - SERVICE_HOST=0.0.0.0
       - SERVICE_PORT=1323
@@ -24,7 +24,7 @@ services:
     image:  ghcr.docker.vaayne.com/go-rod/rod:latest
     restart: unless-stopped
     ports:
-      - "7317:7317"
+      - "17317:7317"
   postgres:
     image: paradedb/paradedb:latest-pg16
     environment:
@@ -32,10 +32,10 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "15432:5432"
+      - "15433:5432"
     restart: always
     volumes:
-      - recally-data:/var/lib/postgresql/data
+      - pg-data:/var/lib/postgresql/data
 
 volumes:
-  recally-data:
+  pg-data:
