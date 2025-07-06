@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
-
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"

@@ -115,10 +115,8 @@ func (f *TwitterFetcher) Fetch(ctx context.Context, uri string) (*webreader.Fetc
 	}
 
 	tweets := []*Tweet{tweet}
-	for {
-		if tweet.ReplyToStatusIDStr == "" {
-			break
-		}
+	for tweet.ReplyToStatusIDStr != "" {
+
 		tweet, err = f.fetchTweet(ctx, tweet.ReplyToStatusIDStr)
 		if err != nil {
 			logger.FromContext(ctx).Error("fetch tweet", "err", err, "id", tweet.ReplyToStatusIDStr)
@@ -152,7 +150,7 @@ func (f *TwitterFetcher) Fetch(ctx context.Context, uri string) (*webreader.Fetc
 		},
 	}
 	if tweet.Entities.Media != nil {
-		fetchedContent.Content.Image = tweet.Entities.Media[0].OriginalURL
+		fetchedContent.Image = tweet.Entities.Media[0].OriginalURL
 	}
 
 	return fetchedContent, nil

@@ -2,10 +2,9 @@ package transformer
 
 import (
 	"context"
-	"runtime"
-
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/rag/document"
+	"runtime"
 
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"

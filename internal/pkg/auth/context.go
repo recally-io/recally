@@ -3,11 +3,10 @@ package auth
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/db"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"

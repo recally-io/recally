@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-
 	"recally/internal/core/files"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"

@@ -6,12 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
-
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/rag/document"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

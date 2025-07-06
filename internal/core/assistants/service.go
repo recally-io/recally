@@ -3,13 +3,12 @@ package assistants
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/tools"
+	"time"
 )
 
 type Service struct {

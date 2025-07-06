@@ -3,7 +3,6 @@ package queue
 import (
 	"context"
 	"fmt"
-
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"

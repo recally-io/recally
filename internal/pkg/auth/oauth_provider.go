@@ -3,10 +3,9 @@ package auth
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/logger"
+	"time"
 
 	"golang.org/x/oauth2"
 )

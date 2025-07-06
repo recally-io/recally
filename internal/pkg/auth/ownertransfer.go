@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 

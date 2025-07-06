@@ -3,7 +3,6 @@ package httpserver
 import (
 	"context"
 	"errors"
-
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 

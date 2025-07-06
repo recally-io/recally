@@ -3,7 +3,6 @@ package httpserver
 import (
 	"context"
 	"net/http"
-
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/tools"
 
@@ -26,7 +25,7 @@ func registerLLMHandlers(e *echo.Group, s *Service) {
 	g.GET("/tools", h.listTools)
 }
 
-// @Router			/llm/models [get].
+// @Router	/llm/models [get].
 func (h *llmHandler) listModels(c echo.Context) error {
 	models, err := h.service.ListModels(c.Request().Context())
 	if err != nil {
@@ -36,7 +35,7 @@ func (h *llmHandler) listModels(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, models)
 }
 
-// @Router			/llm/tools [get].
+// @Router	/llm/tools [get].
 func (h *llmHandler) listTools(c echo.Context) error {
 	tools, err := h.service.ListTools(c.Request().Context())
 	if err != nil {

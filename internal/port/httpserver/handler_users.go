@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 
@@ -41,7 +40,7 @@ type updateUserInfoRequest struct {
 	Phone    string    `json:"phone"`
 }
 
-// @Router			/auth/user/info [put].
+// @Router	/auth/user/info [put].
 func (h *usersHandler) updateUserInfo(c echo.Context) error {
 	req := new(updateUserInfoRequest)
 	if err := c.Bind(req); err != nil {
@@ -72,7 +71,7 @@ type updateUserSettingsRequest struct {
 	Settings auth.UserSettings `json:"settings"`
 }
 
-// @Router			/auth/user/settings [put].
+// @Router	/auth/user/settings [put].
 func (h *usersHandler) updateUserSettings(c echo.Context) error {
 	req := new(updateUserSettingsRequest)
 	if err := c.Bind(req); err != nil {
@@ -104,7 +103,7 @@ type updateUserPasswordRequest struct {
 	Password        string    `json:"password"`
 }
 
-// @Router			/auth/user/password [put].
+// @Router	/auth/user/password [put].
 func (h *usersHandler) updateUserPassword(c echo.Context) error {
 	req := new(updateUserPasswordRequest)
 	if err := c.Bind(req); err != nil {

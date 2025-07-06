@@ -64,17 +64,17 @@ landscape, sunset, lake, mountains, digital painting
 </ExampleOutput>
 `
 
-// SummaryOption represents an option for configuring the SummaryProcessor
+// SummaryOption represents an option for configuring the SummaryProcessor.
 type SummaryImageOption func(*SummaryImageProcessor)
 
-// WithSummaryOptionModel sets the model for the SummaryProcessor
+// WithSummaryOptionModel sets the model for the SummaryProcessor.
 func WithSummaryImageOptionModel(model string) SummaryImageOption {
 	return func(p *SummaryImageProcessor) {
 		p.config.Model = model
 	}
 }
 
-// WithSummaryOptionPrompt sets the prompt template for the SummaryProcessor
+// WithSummaryOptionPrompt sets the prompt template for the SummaryProcessor.
 func WithSummaryImageOptionPrompt(prompt string) SummaryImageOption {
 	return func(p *SummaryImageProcessor) {
 		p.config.Prompt = prompt
@@ -101,13 +101,13 @@ func WithSummaryImageOptionUser(user *auth.UserDTO) SummaryImageOption {
 	}
 }
 
-// SummaryProcessor implements content summarization using LLM
+// SummaryProcessor implements content summarization using LLM.
 type SummaryImageProcessor struct {
 	config auth.AIConfig
 	llm    *llms.LLM
 }
 
-// NewSummaryProcessor creates a new SummaryProcessor with the given configuration
+// NewSummaryProcessor creates a new SummaryProcessor with the given configuration.
 func NewSummaryImageProcessor(llm *llms.LLM, opts ...SummaryImageOption) *SummaryImageProcessor {
 	p := &SummaryImageProcessor{
 		config: auth.AIConfig{
@@ -141,7 +141,7 @@ func (p *SummaryImageProcessor) Summary(ctx context.Context, imgURL string, stre
 	p.process(ctx, imgURL, streamingFunc, false)
 }
 
-// Process implements the Processor interface
+// Process implements the Processor interface.
 func (p *SummaryImageProcessor) process(ctx context.Context, imgURL string, streamingFunc func(content llms.StreamingMessage), streaming bool) {
 	logger.FromContext(ctx).Info("start describe image", "model", p.config.Model, "language", p.config.Language, "streaming", streaming)
 

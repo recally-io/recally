@@ -3,7 +3,6 @@ package embedddings
 import (
 	"context"
 	"fmt"
-
 	"recally/internal/pkg/rag/document"
 
 	"github.com/sashabaranov/go-openai"

@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"context"
-
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/rag/embedddings"
 )

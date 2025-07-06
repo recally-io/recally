@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"errors"
-
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/rag/textsplitter"
 )

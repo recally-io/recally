@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"net/http"
-
 	"recally/docs"
 	"recally/web"
 

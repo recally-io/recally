@@ -3,7 +3,6 @@ package httpserver
 import (
 	"fmt"
 	"net/http"
-
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 

@@ -4,31 +4,29 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"strconv"
-
 	"recally/internal/pkg/contexts"
+	"strconv"
 
 	slogbetterstack "github.com/samber/slog-betterstack"
 )
 
 var defaultLogAttrs = []string{contexts.ContextKeyRequestID, contexts.ContextKeyUserID, contexts.ContextKeyUserName}
 
-// Default logger
+// Default logger.
 var Default = New()
 
-// Logger is a wrapper around slog.Logger
+// Logger is a wrapper around slog.Logger.
 type Logger struct {
 	*slog.Logger
 }
 
-// Debug logs a message at level Fatal on the standard logger.
-// it will exit the program after logging
+// it will exit the program after logging.
 func (l Logger) Fatal(msg string, args ...interface{}) {
 	l.Error(msg, args...)
 	os.Exit(1)
 }
 
-// New creates a new logger
+// New creates a new logger.
 func New() Logger {
 	debug, err := strconv.ParseBool(os.Getenv("DEBUG"))
 	if err != nil {
@@ -69,7 +67,7 @@ func New() Logger {
 	}
 }
 
-// FromContext returns a logger from context
+// FromContext returns a logger from context.
 func FromContext(ctx context.Context, attrs ...slog.Attr) Logger {
 	logger, ok := contexts.Get[Logger](ctx, contexts.ContextKeyLogger)
 	if ok {

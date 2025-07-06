@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 

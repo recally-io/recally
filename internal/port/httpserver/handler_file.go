@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
-
 	"recally/internal/core/files"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -54,7 +53,7 @@ type getFileRequest struct {
 	ObjectKey string `query:"object_key" validate:"required"`
 }
 
-// @Router			/files/presigned-urls [get].
+// @Router	/files/presigned-urls [get].
 func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -137,7 +136,7 @@ type deleteFileRequest struct {
 	ID uuid.UUID `param:"id" validate:"required,uuid"`
 }
 
-// @Router			/files/{id} [delete].
+// @Router	/files/{id} [delete].
 func (h *fileHandler) deleteFile(c echo.Context) error {
 	ctx := c.Request().Context()
 

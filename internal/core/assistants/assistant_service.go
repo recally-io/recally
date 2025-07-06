@@ -3,7 +3,6 @@ package assistants
 import (
 	"context"
 	"fmt"
-
 	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"

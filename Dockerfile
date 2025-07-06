@@ -42,31 +42,31 @@ RUN bun run docs:build
 
 
 # Build Go binary
-FROM golang:1.24-alpine AS build
+FROM debian:12-slim AS builder
+RUN apt update && \
+    apt install -y curl && \
+    curl https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh
+
 WORKDIR /go/src/app
+COPY mise.toml ./
 
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
-    go install github.com/swaggo/swag/cmd/swag@latest && \
-    go install github.com/kevinburke/go-bindata/v4/...@latest
+RUN mise trust mise.toml && \
+    mise install && \
+    mise activate
 
-COPY go.mod go.sum ./
+COPY mise.toml go.mod go.sum ./
 RUN go mod download
-ENV CGO_ENABLED=0 GOOS=linux
 
 COPY . .
 COPY --from=ui-base /usr/src/app/dist web/dist
 COPY --from=docs-base /usr/src/app/.vitepress/dist docs/.vitepress/dist
-RUN go generate ./... && \
-    go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/ && \
-    sqlc generate && \
-    swag init -g internal/port/httpserver/router.go -o docs/swagger && \
-    go build -ldflags="-s -w" -o /go/bin/app main.go
+RUN mise build:go
 
 # Final stage
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /service
 
-COPY --from=build /go/bin/app .
+COPY --from=builder /go/bin/app .
 
 # Use non-root user for better security
 USER nonroot:nonroot

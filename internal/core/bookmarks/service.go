@@ -3,7 +3,6 @@ package bookmarks
 import (
 	"context"
 	"fmt"
-
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 

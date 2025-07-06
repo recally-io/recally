@@ -1,11 +1,10 @@
 package handlers
 
 import (
-	"strings"
-
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/logger"
+	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )

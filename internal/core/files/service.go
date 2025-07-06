@@ -9,16 +9,15 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
-	"strings"
-	"time"
-
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/s3"
 	"recally/internal/pkg/session"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -281,7 +280,7 @@ func (s *Service) loadContent(ctx context.Context, host, uri, ext string) (io.Re
 	// Perform request
 	sess := session.New(session.WithClientHelloID(utls.HelloChrome_100_PSK), session.WithTimeout(30*time.Second))
 
-	resp, err := sess.Client.Do(req)
+	resp, err := sess.Do(req)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to download content: %w", err)
 	}

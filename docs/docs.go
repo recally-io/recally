@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-
 	"recally/internal/pkg/config"
 
 	"github.com/labstack/echo/v4"

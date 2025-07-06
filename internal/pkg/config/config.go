@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-
 	"recally/internal/pkg/logger"
 
 	"github.com/caarlos0/env/v11"

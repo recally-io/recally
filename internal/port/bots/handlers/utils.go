@@ -3,11 +3,10 @@ package handlers
 import (
 	"context"
 	"io"
-	"regexp"
-	"strings"
-
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
+	"regexp"
+	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )

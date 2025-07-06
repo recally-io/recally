@@ -27,7 +27,7 @@ func init() {
 	}
 }
 
-// BrowserConfig extends the base Config with browser-specific options
+// BrowserConfig extends the base Config with browser-specific options.
 type BrowserConfig struct {
 	Timeout        int    `json:"timeout"`          // Timeout in seconds
 	ControlURL     string `json:"control_url"`      // Chrome DevTools Protocol control URL
@@ -35,7 +35,7 @@ type BrowserConfig struct {
 	ScrollToBottom bool   `json:"scroll_to_bottom"` // Scroll to bottom before extracting content
 }
 
-// BrowserFetcher implements the Fetcher interface using Chrome via go-rod
+// BrowserFetcher implements the Fetcher interface using Chrome via go-rod.
 type BrowserFetcher struct {
 	mux    sync.Mutex
 	config BrowserConfig
@@ -65,7 +65,7 @@ func defaultBrowserFetcher(opts ...BroswerOption) (*BrowserFetcher, error) {
 	return NewBrowserFetcher(config, opts...)
 }
 
-// NewBrowserFetcher creates a new BrowserFetcher with the given options
+// NewBrowserFetcher creates a new BrowserFetcher with the given options.
 func NewBrowserFetcher(config BrowserConfig, opts ...BroswerOption) (*BrowserFetcher, error) {
 	// Apply all options
 	for _, opt := range opts {
@@ -76,7 +76,7 @@ func NewBrowserFetcher(config BrowserConfig, opts ...BroswerOption) (*BrowserFet
 	}, nil
 }
 
-// Fetch implements the Fetcher interface
+// Fetch implements the Fetcher interface.
 func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
 	f.mux.Lock()
 	defer f.mux.Unlock()
@@ -123,36 +123,36 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Fetc
 	}, nil
 }
 
-// Close implements the Fetcher interface
+// Close implements the Fetcher interface.
 func (f *BrowserFetcher) Close() error {
 	return nil
 }
 
-// BroswerOption defines a function type for configuring BrowserFetcher
+// BroswerOption defines a function type for configuring BrowserFetcher.
 type BroswerOption func(*BrowserConfig)
 
-// WithBroswerOptionTimeout sets the timeout for browser operations
+// WithBroswerOptionTimeout sets the timeout for browser operations.
 func WithBroswerOptionTimeout(timeout int) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.Timeout = timeout
 	}
 }
 
-// WithBroswerOptionControlURL sets the Chrome DevTools Protocol control URL
+// WithBroswerOptionControlURL sets the Chrome DevTools Protocol control URL.
 func WithBroswerOptionControlURL(url string) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.ControlURL = url
 	}
 }
 
-// WithBroswerOptionUserAgent sets the user agent string
+// WithBroswerOptionUserAgent sets the user agent string.
 func WithBroswerOptionUserAgent(userAgent string) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.UserAgent = userAgent
 	}
 }
 
-// WithBroswerOptionScrollToBottom sets whether to scroll to bottom before extracting content
+// WithBroswerOptionScrollToBottom sets whether to scroll to bottom before extracting content.
 func WithBroswerOptionScrollToBottom(scroll bool) BroswerOption {
 	return func(c *BrowserConfig) {
 		c.ScrollToBottom = scroll

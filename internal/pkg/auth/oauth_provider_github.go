@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"recally/internal/pkg/config"
 
 	"golang.org/x/oauth2"

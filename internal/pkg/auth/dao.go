@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-
 	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"

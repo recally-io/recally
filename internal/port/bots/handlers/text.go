@@ -3,8 +3,6 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
@@ -13,6 +11,7 @@ import (
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"

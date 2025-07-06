@@ -3,10 +3,9 @@ package bookmarks
 import (
 	"context"
 	"fmt"
-	"slices"
-
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"slices"
 
 	"github.com/google/uuid"
 )

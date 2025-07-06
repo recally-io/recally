@@ -6,10 +6,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"recally/internal/pkg/db"
 	"strings"
 	"time"
-
-	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

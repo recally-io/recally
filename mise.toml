@@ -1,0 +1,218 @@
+# mise configuration file
+# https://mise.jdx.dev/configuration.html
+
+[tools]
+bun = "1.2.18"
+go = "1.24"
+"ubi:golangci/golangci-lint" = "2.2.1"
+"ubi:sqlc-dev/sqlc" = "1.29.0"
+"ubi:swaggo/swag" = "1.16.4"
+"ubi:kevinburke/go-bindata" = "4.0.2"
+
+
+[env]
+_.file = ".env"
+
+# Lint tasks
+[tasks.lint]
+description = "Lint all code (Go and UI)"
+depends = ["lint-ui", "lint-go"]
+
+[tasks."lint:go"]
+alias = "lint-go"
+description = "Lint Go code"
+run = [
+    "go mod tidy",
+    "swag fmt",
+    "golangci-lint fmt",
+    "golangci-lint run --fix",
+]
+
+[tasks."lint:ui"]
+alias = "lint-ui"
+description = "Lint web/UI code"
+dir = "web"
+run = "bun run lint"
+
+# Generate tasks
+[tasks.generate]
+description = "Generate all code"
+depends = ["generate:go", "generate:sql", "generate:spec"]
+
+[tasks."generate:go"]
+description = "Generate Go code"
+run = "go generate ./..."
+
+[tasks."generate:sql"]
+description = "Generate SQL code and bindata"
+run = [
+    'go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/',
+    "sqlc generate",
+]
+
+[tasks."generate:spec"]
+description = "Generate API spec/swagger docs"
+run = "swag init -g internal/port/httpserver/router.go -o docs/swagger"
+
+# Build tasks
+[tasks.build]
+description = "Build everything"
+depends = ["build:ui", "build:docs", "build:go"]
+
+[tasks."build:go"]
+description = "Build Go application"
+depends = ["generate"]
+run = "CGO_ENABLED=0 GOOS=linux go build -o bin/app main.go"
+
+[tasks."build:docs"]
+description = "Build documentation"
+dir = "docs"
+run = "bun run docs:build"
+
+[tasks."build:ui"]
+description = "Build web UI"
+dir = "web"
+run = "bun run build"
+
+# Test task
+[tasks.test]
+description = "Run tests"
+run = "go test ./..."
+
+# Run tasks
+[tasks.run]
+description = "Build and run the application"
+depends = ["build"]
+run = "./bin/app"
+
+[tasks."run:ui"]
+alias = "run-ui"
+description = "Run web UI in development mode"
+dir = "web"
+run = "bun run dev"
+
+[tasks."run:go"]
+alias = "run-go"
+description = "Run Go app in development mode (with DEBUG_UI)"
+depends = ["build:go"]
+env = { DEBUG_UI = "true" }
+run = "./bin/app"
+
+[tasks.ngrok]
+description = "Run ngrok tunnel"
+run = "ngrok http 1323"
+
+# Database tasks
+[tasks."db:up"]
+alias = "db-up"
+description = "Start database container"
+run = "docker compose up -d postgres"
+
+[tasks."db:psql"]
+alias = "psql"
+description = "Connect to database via psql"
+run = 'docker compose exec -it postgres psql -U ${DATABASE_USER} -d ${DATABASE_NAME}'
+
+# Migration tasks
+[tasks."migrate:new"]
+description = "Create a new migration file"
+run = '''
+if [ -z "$name" ]; then
+    echo "Error: Migration name required. Usage: mise run migrate:new name=your_migration_name"
+    exit 1
+fi
+migrate create -ext sql -dir database/migrations -seq "$name"
+echo "New migration created: database/migrations/*_$name.sql"
+'''
+
+[tasks."migrate:up"]
+description = "Run all pending migrations or up to a specific version"
+run = '''
+DATABASE_URL="postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable"
+if [ -z "$version" ]; then
+    migrate -path database/migrations -database "$DATABASE_URL" up
+    echo "All pending migrations applied."
+else
+    migrate -path database/migrations -database "$DATABASE_URL" up $version
+    echo "Migrated up to version $version."
+fi
+'''
+
+[tasks."migrate:down"]
+description = "Revert all migrations or down to a specific version"
+run = '''
+DATABASE_URL="postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable"
+if [ -z "$version" ]; then
+    migrate -path database/migrations -database "$DATABASE_URL" down
+    echo "All migrations reverted."
+else
+    migrate -path database/migrations -database "$DATABASE_URL" down $version
+    echo "Migrated down to version $version."
+fi
+'''
+
+[tasks."migrate:drop"]
+description = "Drop all tables in the database"
+run = '''
+DATABASE_URL="postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable"
+migrate -path database/migrations -database "$DATABASE_URL" drop
+echo "All migrations dropped."
+'''
+
+[tasks."migrate:force"]
+description = "Force set the database version"
+run = '''
+if [ -z "$version" ]; then
+    echo "Error: Version required. Usage: mise run migrate:force version=X"
+    exit 1
+fi
+DATABASE_URL="postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable"
+migrate -path database/migrations -database "$DATABASE_URL" force "$version"
+echo "Database version forcibly set to $version."
+'''
+
+# Docker tasks
+[tasks."docker:build"]
+description = "Build Docker image"
+run = "docker compose build"
+
+[tasks."docker:run"]
+description = "Run with Docker (foreground)"
+run = "docker compose up --build"
+
+[tasks."docker:up"]
+description = "Run with Docker (background)"
+run = "docker compose up --build -d"
+
+[tasks."docker:down"]
+description = "Stop Docker containers"
+run = "docker compose down"
+
+# Deploy task
+[tasks.deploy]
+description = "Deploy application"
+run = "dokploy app deploy"
+
+# Help task
+[tasks.help]
+description = "Show available commands"
+run = '''
+echo "Available commands:"
+echo "  mise run lint         - Lint all code (Go and UI)"
+echo "  mise run lint:go      - Lint Go code"
+echo "  mise run lint:ui      - Lint web/UI code"
+echo "  mise run generate     - Generate all code"
+echo "  mise run build        - Build everything"
+echo "  mise run test         - Run tests"
+echo "  mise run run          - Build and run the application"
+echo "  mise run run:go       - Run Go app in development mode"
+echo "  mise run run:ui       - Run web UI in development mode"
+echo "  mise run db:up        - Start database container"
+echo "  mise run db:psql      - Connect to database via psql"
+echo "  mise run migrate:new name=<name>  - Create a new migration"
+echo "  mise run migrate:up   - Run pending migrations"
+echo "  mise run migrate:down - Revert migrations"
+echo "  mise run docker:build - Build Docker image"
+echo "  mise run docker:up    - Run with Docker (background)"
+echo "  mise run deploy       - Deploy application"
+'''

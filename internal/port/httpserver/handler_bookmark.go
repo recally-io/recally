@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
-
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
+	"time"
 
 	"github.com/google/uuid"
 

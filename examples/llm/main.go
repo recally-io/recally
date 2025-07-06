@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"

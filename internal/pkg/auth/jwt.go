@@ -3,10 +3,9 @@ package auth
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"

@@ -38,7 +38,7 @@ build-go: generate
 	@echo "Building go..."
 	@go build -o bin/app main.go
 
-build-docs: 
+build-docs:
 	@echo "Building docs..."
 	@cd docs && bun run docs:build
 

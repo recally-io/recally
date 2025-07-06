@@ -3,11 +3,10 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/db"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"gopkg.in/telebot.v3"

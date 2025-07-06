@@ -2,7 +2,6 @@ package loader
 
 import (
 	"context"
-
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/rag/document/transformer"
 	"recally/internal/pkg/rag/textsplitter"

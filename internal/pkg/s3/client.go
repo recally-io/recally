@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"time"
-
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/logger"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"

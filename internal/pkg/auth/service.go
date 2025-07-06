@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"

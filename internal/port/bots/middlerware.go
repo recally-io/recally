@@ -3,13 +3,12 @@ package bots
 import (
 	"context"
 	"fmt"
-	"runtime/debug"
-	"time"
-
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"runtime/debug"
+	"time"
 
 	"github.com/google/uuid"
 	tele "gopkg.in/telebot.v3"

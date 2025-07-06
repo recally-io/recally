@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"time"
-
-	migrations "recally/database"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/config"
@@ -17,6 +14,9 @@ import (
 	"recally/internal/pkg/s3"
 	"recally/internal/port/bots"
 	"recally/internal/port/httpserver"
+	"time"
+
+	migrations "recally/database"
 )
 
 // Build information injected via ldflags.

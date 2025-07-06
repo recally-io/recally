@@ -2,11 +2,10 @@ package bookmarks
 
 import (
 	"encoding/json"
-	"slices"
-	"time"
-
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"slices"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

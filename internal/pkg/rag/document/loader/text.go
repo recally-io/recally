@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/rag/document/transformer"
 )

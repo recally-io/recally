@@ -3,7 +3,6 @@ package transformer
 import (
 	"context"
 	"fmt"
-
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/rag/document"
 )

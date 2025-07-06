@@ -2,10 +2,9 @@ package assistants
 
 import (
 	"encoding/json"
-	"time"
-
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

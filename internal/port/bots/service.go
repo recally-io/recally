@@ -2,7 +2,6 @@ package bots
 
 import (
 	"context"
-
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/config"
@@ -42,5 +41,5 @@ func (s *Service) Stop(ctx context.Context) {
 }
 
 func (s *Service) Name() string {
-	return s.Bot.cfg.Name
+	return s.cfg.Name
 }

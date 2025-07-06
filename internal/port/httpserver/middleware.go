@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"runtime/debug"
-	"strings"
-	"time"
-
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"runtime/debug"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"

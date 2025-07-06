@@ -3,10 +3,9 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"time"
-
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )

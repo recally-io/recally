@@ -3,13 +3,12 @@ package handlers
 import (
 	"bytes"
 	"io"
-	"text/template"
-
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/files"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/processor"
+	"text/template"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -69,7 +68,7 @@ func (h *Handler) PhotoHandler(c tele.Context) error {
 	// summarize image
 	summarier := processor.NewSummaryImageProcessor(h.llm, processor.WithSummaryImageOptionUser(user))
 
-	imgUrl, err := summarier.EncodeImage(io.NopCloser(bytes.NewReader(imgBuf)), photo.File.FilePath)
+	imgUrl, err := summarier.EncodeImage(io.NopCloser(bytes.NewReader(imgBuf)), photo.FilePath)
 	if err != nil {
 		return c.Reply("Failed to encode image: " + err.Error())
 	}
@@ -96,12 +95,12 @@ func (h *Handler) PhotoHandler(c tele.Context) error {
 	}
 
 	// save image content
-	contentType := files.GetFileMIMEWithDefault(photo.File.FilePath, "image/jpeg")
+	contentType := files.GetFileMIMEWithDefault(photo.FilePath, "image/jpeg")
 	metadata := files.Metadata{
-		Name:     photo.File.FilePath,
+		Name:     photo.FilePath,
 		Type:     photo.MediaType(),
-		Ext:      files.GetFileExtensionWithDefault(photo.File.FilePath, "jpg"),
-		Size:     photo.File.FileSize,
+		Ext:      files.GetFileExtensionWithDefault(photo.FilePath, "jpg"),
+		Size:     photo.FileSize,
 		MIMEType: contentType,
 	}
 

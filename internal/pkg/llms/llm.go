@@ -5,14 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
-	"sync"
-	"time"
-
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/tools"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/sashabaranov/go-openai"
 	"golang.org/x/sync/errgroup"

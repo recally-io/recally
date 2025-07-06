@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
-	"syscall"
-
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/config"
@@ -13,6 +11,7 @@ import (
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/s3"
+	"syscall"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"

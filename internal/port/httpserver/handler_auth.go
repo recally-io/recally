@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
-
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -96,7 +95,7 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-// @Router			/auth/login [post].
+// @Router	/auth/login [post].
 func (h *authHandler) login(c echo.Context) error {
 	req := new(loginRequest)
 	if err := c.Bind(req); err != nil {
@@ -141,7 +140,7 @@ type userResponse struct {
 	Settings auth.UserSettings `json:"settings"`
 }
 
-// @Router			/auth/register [post].
+// @Router	/auth/register [post].
 func (h *authHandler) register(c echo.Context) error {
 	req := new(registerRequest)
 	if err := c.Bind(req); err != nil {
@@ -189,7 +188,7 @@ func (h *authHandler) setCookieJwtToken(c echo.Context, token string) {
 	c.SetCookie(cookie)
 }
 
-// @Router			/auth/validate-jwt [get].
+// @Router	/auth/validate-jwt [get].
 func (h *authHandler) validateJwtToken(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -220,7 +219,7 @@ func (h *authHandler) validateJwtToken(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
 
-// @Router			/auth/logout [post].
+// @Router	/auth/logout [post].
 func (h *authHandler) logout(c echo.Context) error {
 	// Remove the token cookie by setting its expiry to a past time
 	cookie := &http.Cookie{

@@ -27,12 +27,12 @@ func init() {
 	}
 }
 
-// JinaConfig extends the base Config with Jina-specific options
+// JinaConfig extends the base Config with Jina-specific options.
 type JinaConfig struct {
 	Timeout int `json:"timeout"` // Timeout in seconds
 }
 
-// jinaContent represents the content returned by Jina API
+// jinaContent represents the content returned by Jina API.
 type jinaContent struct {
 	Url           string `json:"url"`
 	Title         string `json:"title"`
@@ -43,14 +43,14 @@ type jinaContent struct {
 	ScreenshotUrl string `json:"screenshotUrl,omitempty"`
 }
 
-// jinaResponse represents the API response from Jina
+// jinaResponse represents the API response from Jina.
 type jinaResponse struct {
 	Code   int         `json:"code"`
 	Status float64     `json:"status"`
 	Data   jinaContent `json:"data"`
 }
 
-// JinaFetcher implements the Fetcher interface using Jina.ai reader
+// JinaFetcher implements the Fetcher interface using Jina.ai reader.
 type JinaFetcher struct {
 	mux    sync.Mutex
 	client *http.Client
@@ -76,7 +76,7 @@ func defaultJinaFetcher() (*JinaFetcher, error) {
 	return NewJinaFetcher(config)
 }
 
-// NewJinaFetcher creates a new JinaFetcher with the given configuration
+// NewJinaFetcher creates a new JinaFetcher with the given configuration.
 func NewJinaFetcher(config JinaConfig, opts ...JinaOption) (*JinaFetcher, error) {
 	// Apply all options
 	for _, opt := range opts {
@@ -91,7 +91,7 @@ func NewJinaFetcher(config JinaConfig, opts ...JinaOption) (*JinaFetcher, error)
 	}, nil
 }
 
-// Fetch implements the Fetcher interface
+// Fetch implements the Fetcher interface.
 func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
 	f.mux.Lock()
 	defer f.mux.Unlock()
@@ -143,7 +143,7 @@ func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.Fetched
 	}, nil
 }
 
-// Close implements the Fetcher interface
+// Close implements the Fetcher interface.
 func (f *JinaFetcher) Close() error {
 	return nil
 }

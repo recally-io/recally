@@ -2,7 +2,6 @@ package queue
 
 import (
 	"context"
-
 	"recally/internal/pkg/logger"
 
 	"github.com/riverqueue/river"

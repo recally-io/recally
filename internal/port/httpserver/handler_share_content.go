@@ -5,11 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
-
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/files"
 	"recally/internal/pkg/db"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -84,7 +83,7 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, bookmark)
 }
 
-// @Router			/files/{id} [get].
+// @Router	/files/{id} [get].
 func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -107,7 +106,7 @@ func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
 	return c.Redirect(http.StatusFound, presignedURL)
 }
 
-// @Router			/shared/files/{key} [head].
+// @Router	/shared/files/{key} [head].
 func (h *bookmarkShareHandler) getFileMetadata(c echo.Context) error {
 	ctx := c.Request().Context()
 
