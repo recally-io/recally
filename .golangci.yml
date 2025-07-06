@@ -287,6 +287,7 @@ issues:
     - ".*\\.pb\\.go$"
     - ".*\\.gen\\.go$"
     - ".*_gen\\.go$"
+    - "docs/docs\\.go$"
   
   # Maximum issues count per one linter
   max-issues-per-linter: 50
@@ -311,6 +312,11 @@ issues:
         - gosec
         - forbidigo
         - musttag
+    
+    # Exclude typecheck for docs.go due to embed directive
+    - path: docs/docs\.go
+      linters:
+        - typecheck
     
     # Exclude known issues with generated files
     - path: (bindata|db|swagger)\.go
