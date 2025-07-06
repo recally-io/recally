@@ -29,9 +29,9 @@ type Event struct {
 	Comment []byte
 }
 
-// MarshalTo marshals Event to given Writer
+// MarshalTo marshals Event to given Writer.
 func (ev *Event) MarshalTo(w io.Writer) error {
-	// Marshalling part is taken from: https://github.com/r3labs/sse/blob/c6d5381ee3ca63828b321c16baa008fd6c0b4564/http.go#L16
+	// Marshaling part is taken from: https://github.com/r3labs/sse/blob/c6d5381ee3ca63828b321c16baa008fd6c0b4564/http.go#L16
 	if len(ev.Data) == 0 && len(ev.Comment) == 0 {
 		return nil
 	}
@@ -40,7 +40,6 @@ func (ev *Event) MarshalTo(w io.Writer) error {
 		// if _, err := fmt.Fprintf(w, "id: %s\n", ev.ID); err != nil {
 		// 	return err
 		// }
-
 		sd := bytes.Split(ev.Data, []byte("\n"))
 		for i := range sd {
 			if _, err := fmt.Fprintf(w, "data: %s\n", sd[i]); err != nil {

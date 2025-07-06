@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
 
@@ -40,27 +41,20 @@ type updateUserInfoRequest struct {
 	Phone    string    `json:"phone"`
 }
 
-// @Summary		Update user info
-// @Description	Update user's username, email, and phone
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Param			id		path		string							true	"User ID"
-// @Param			request	body		updateUserInfoRequest			true	"User info update details"
-// @Success		200		{object}	JSONResult{data=userResponse}	"User info updated successfully"
-// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
-// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
-// @Router			/auth/user/info [put]
+// @Router			/auth/user/info [put].
 func (h *usersHandler) updateUserInfo(c echo.Context) error {
 	req := new(updateUserInfoRequest)
 	if err := c.Bind(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("failed to bind request: %w", err))
 	}
+
 	ctx := c.Request().Context()
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	if user.ID != req.Id {
 		return ErrorResponse(c, http.StatusUnauthorized, fmt.Errorf("unauthorized to update user info"))
 	}
@@ -78,17 +72,7 @@ type updateUserSettingsRequest struct {
 	Settings auth.UserSettings `json:"settings"`
 }
 
-// @Summary		Update user settings
-// @Description	Update user's settings
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Param			id		path		string							true	"User ID"
-// @Param			request	body		updateUserSettingsRequest		true	"User settings update"
-// @Success		200		{object}	JSONResult{data=userResponse}	"User settings updated successfully"
-// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
-// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
-// @Router			/auth/user/settings [put]
+// @Router			/auth/user/settings [put].
 func (h *usersHandler) updateUserSettings(c echo.Context) error {
 	req := new(updateUserSettingsRequest)
 	if err := c.Bind(req); err != nil {
@@ -96,10 +80,12 @@ func (h *usersHandler) updateUserSettings(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	if user.ID != req.Id {
 		return ErrorResponse(c, http.StatusUnauthorized, fmt.Errorf("unauthorized to update user info"))
 	}
@@ -118,17 +104,7 @@ type updateUserPasswordRequest struct {
 	Password        string    `json:"password"`
 }
 
-// @Summary		Update user password
-// @Description	Update user's password
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Param			id		path		string							true	"User ID"
-// @Param			request	body		updateUserPasswordRequest		true	"User password update"
-// @Success		200		{object}	JSONResult{data=userResponse}	"User password updated successfully"
-// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
-// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
-// @Router			/auth/user/password [put]
+// @Router			/auth/user/password [put].
 func (h *usersHandler) updateUserPassword(c echo.Context) error {
 	req := new(updateUserPasswordRequest)
 	if err := c.Bind(req); err != nil {
@@ -136,10 +112,12 @@ func (h *usersHandler) updateUserPassword(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	if user.ID != req.Id {
 		return ErrorResponse(c, http.StatusUnauthorized, fmt.Errorf("unauthorized to update user info"))
 	}

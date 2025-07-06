@@ -73,15 +73,18 @@ func (h *Handler) computeAttrs(
 		h.b.Reset()
 		h.m.Unlock()
 	}()
+
 	if err := h.h.Handle(ctx, r); err != nil {
 		return nil, fmt.Errorf("error when calling inner handler's Handle: %w", err)
 	}
 
 	var attrs map[string]any
+
 	err := json.Unmarshal(h.b.Bytes(), &attrs)
 	if err != nil {
 		return nil, fmt.Errorf("error when unmarshaling inner handler's Handle result: %w", err)
 	}
+
 	return attrs, nil
 }
 
@@ -94,6 +97,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	var level string
+
 	levelAttr := slog.Attr{
 		Key:   slog.LevelKey,
 		Value: slog.AnyValue(r.Level),
@@ -121,6 +125,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	var timestamp string
+
 	timeAttr := slog.Attr{
 		Key:   slog.TimeKey,
 		Value: slog.StringValue(r.Time.Format(timeFormat)),
@@ -128,11 +133,13 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	if h.r != nil {
 		timeAttr = h.r([]string{}, timeAttr)
 	}
+
 	if !timeAttr.Equal(slog.Attr{}) {
 		timestamp = colorize(lightGray, timeAttr.Value.String())
 	}
 
 	var msg string
+
 	msgAttr := slog.Attr{
 		Key:   slog.MessageKey,
 		Value: slog.StringValue(r.Message),
@@ -140,6 +147,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	if h.r != nil {
 		msgAttr = h.r([]string{}, msgAttr)
 	}
+
 	if !msgAttr.Equal(slog.Attr{}) {
 		msg = colorize(white, msgAttr.Value.String())
 	}
@@ -162,14 +170,17 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		out.WriteString(timestamp)
 		out.WriteString(" ")
 	}
+
 	if len(level) > 0 {
 		out.WriteString(level)
 		out.WriteString(" ")
 	}
+
 	if len(msg) > 0 {
 		out.WriteString(msg)
 		out.WriteString(" ")
 	}
+
 	if len(attrsAsBytes) > 0 {
 		out.WriteString(colorize(darkGray, string(attrsAsBytes)))
 	}
@@ -191,9 +202,11 @@ func suppressDefaults(
 			a.Key == slog.MessageKey {
 			return slog.Attr{}
 		}
+
 		if next == nil {
 			return a
 		}
+
 		return next(groups, a)
 	}
 }

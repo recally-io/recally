@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-	"recally/internal/pkg/db"
 	"strings"
 	"testing"
 	"time"
+
+	"recally/internal/pkg/db"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -85,6 +86,7 @@ func (s *CacheTestSuite) initPostgres(ctx context.Context) (*db.Pool, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return pool, nil
 }
 

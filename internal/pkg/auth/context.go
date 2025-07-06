@@ -3,10 +3,11 @@ package auth
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/db"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -17,6 +18,7 @@ func LoadUserFromContext(ctx context.Context) (*UserDTO, error) {
 	if !ok {
 		return nil, fmt.Errorf("failed to get user from context")
 	}
+
 	return user, nil
 }
 
@@ -25,6 +27,7 @@ func LoadUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
 	if !ok {
 		return uuid.Nil, fmt.Errorf("failed to get user ID from context")
 	}
+
 	return userID, nil
 }
 
@@ -32,6 +35,7 @@ func SetUserToContext(ctx context.Context, user *UserDTO) context.Context {
 	ctx = contexts.Set(ctx, contexts.ContextKeyUser, user)
 	ctx = contexts.Set(ctx, contexts.ContextKeyUserID, user.ID)
 	ctx = contexts.Set(ctx, contexts.ContextKeyUserName, user.Username)
+
 	return ctx
 }
 
@@ -40,6 +44,7 @@ func SetUserToContextByUserID(ctx context.Context, userID uuid.UUID) context.Con
 	if err != nil {
 		return ctx
 	}
+
 	return SetUserToContext(ctx, user)
 }
 
@@ -52,6 +57,7 @@ func LoadUser(ctx context.Context, tx db.DBTX, userID uuid.UUID) (*UserDTO, erro
 	if err != nil {
 		user, err = LoadUserByID(ctx, tx, userID)
 	}
+
 	return user, err
 }
 
@@ -63,13 +69,17 @@ func LoadDummyUser() (*UserDTO, error) {
 		24*time.Hour,
 		func() (*UserDTO, error) {
 			var user *UserDTO
+
 			var err error
+
 			if e := db.RunInTransaction(ctx, db.DefaultPool.Pool, func(ctx context.Context, tx pgx.Tx) error {
 				user, err = New().GetDummyUser(ctx, tx)
+
 				return err
 			}); e != nil {
 				return nil, e
 			}
+
 			return user, nil
 		})
 
@@ -81,6 +91,7 @@ func GetContextWithDummyUser(ctx context.Context) (context.Context, *UserDTO, er
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return SetUserToContext(ctx, dummyUser), dummyUser, nil
 }
 
@@ -89,5 +100,6 @@ func DummyUserID() uuid.UUID {
 	if err != nil {
 		return uuid.Nil
 	}
+
 	return user.ID
 }

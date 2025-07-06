@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+
 	"recally/internal/core/bookmarks"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
@@ -41,6 +42,7 @@ func (w *CrawlerWorker) Work(ctx context.Context, job *river.Job[CrawlerWorkerAr
 		return w.work(ctx, tx, job)
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to run job", "err", err, "job", job)
+
 		return err
 	}
 
@@ -49,9 +51,11 @@ func (w *CrawlerWorker) Work(ctx context.Context, job *river.Job[CrawlerWorkerAr
 
 func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[CrawlerWorkerArgs]) error {
 	svc := bookmarks.NewService(w.llm)
+
 	dto, err := svc.FetchContent(ctx, tx, job.Args.ID, job.Args.UserID, job.Args.FetchOptions)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to fetch bookmark", "err", err, "id", job.Args.ID, "fetch_options", job.Args.FetchOptions)
+
 		return err
 	}
 
@@ -71,5 +75,6 @@ func (w *CrawlerWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[Craw
 	svc.SaveContentTags(job.Args.ID, job.Args.UserID, dto.Tags)
 
 	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title, "url", dto.URL, "fetch_options", job.Args.FetchOptions)
+
 	return nil
 }

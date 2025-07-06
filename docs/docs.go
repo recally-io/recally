@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+
 	"recally/internal/pkg/config"
 
 	"github.com/labstack/echo/v4"
@@ -21,6 +22,7 @@ func init() {
 	// dynamic file system
 	if config.Settings.Debug {
 		StaticHttpFS = http.FS(os.DirFS(fmt.Sprintf("docs/%s", distDir)))
+
 		return
 	}
 

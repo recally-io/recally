@@ -2,9 +2,10 @@ package assistants
 
 import (
 	"encoding/json"
+	"time"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -15,7 +16,7 @@ type ThreadMetadata struct {
 	IsGeneratedTitle bool `json:"is_generated_title"`
 }
 
-// Merge merges the thread metadata with the assistant metadata
+// Merge merges the thread metadata with the assistant metadata.
 func (m *ThreadMetadata) Merge(am AssistantMetadata) {
 	mergedRagSettings := am.RagSettings // Start with assistant's RagSettings
 
@@ -56,6 +57,7 @@ func (t *ThreadDTO) Load(dbo *db.AssistantThread) {
 	t.Name = dbo.Name
 	t.Description = dbo.Description.String
 	t.Model = dbo.Model
+
 	if dbo.Metadata != nil {
 		if err := json.Unmarshal(dbo.Metadata, &t.Metadata); err != nil {
 			logger.Default.Warn("failed to unmarshal Thread metadata", "err", err, "metadata", string(dbo.Metadata))
@@ -68,9 +70,11 @@ func (t *ThreadDTO) Load(dbo *db.AssistantThread) {
 
 func (d *ThreadDTO) Dump() *db.AssistantThread {
 	metadata, _ := json.Marshal(d.Metadata)
+
 	if d.Id == uuid.Nil {
 		d.Id = uuid.New()
 	}
+
 	return &db.AssistantThread{
 		Uuid:         d.Id,
 		UserID:       pgtype.UUID{Bytes: d.UserId, Valid: true},
@@ -105,6 +109,7 @@ func NewThread(userId uuid.UUID, assistant AssistantDTO, opts ...ThreadOption) *
 	for _, opt := range opts {
 		opt(t)
 	}
+
 	return t
 }
 

@@ -15,22 +15,22 @@ run:
   # Go version to target for code simplification
   go: "1.24"
   
-  # Skip directories
-  skip-dirs:
-    - database/bindata.go
-    - internal/pkg/db # Generated SQLC files
-    - docs/swagger
-    - web
-    - vendor
-    - .git
-    - bin
-    - dist
+  # Skip directories - deprecated, use issues.exclude-dirs instead
+  # skip-dirs:
+  #   - database/bindata.go
+  #   - internal/pkg/db # Generated SQLC files
+  #   - docs/swagger
+  #   - web
+  #   - vendor
+  #   - .git
+  #   - bin
+  #   - dist
   
-  # Skip files
-  skip-files:
-    - ".*\\.pb\\.go$"
-    - ".*\\.gen\\.go$"
-    - ".*_gen\\.go$"
+  # Skip files - deprecated, use issues.exclude-files instead
+  # skip-files:
+  #   - ".*\\.pb\\.go$"
+  #   - ".*\\.gen\\.go$"
+  #   - ".*_gen\\.go$"
 
 # Output configuration
 output:
@@ -45,8 +45,8 @@ output:
   # Print linter name in the end of issue text
   print-linter-name: true
   
-  # Make issues output unique by line
-  uniq-by-line: true
+  # Make issues output unique by line - deprecated, use issues.uniq-by-line instead
+  # uniq-by-line: true
   
   # Sort results by: filepath, line and column
   sort-results: true
@@ -108,8 +108,8 @@ linters:
     - depguard      # Restricting imports - too restrictive for now
     - gci           # Import ordering - handled by goimports
     - godox         # TODO/FIXME comments - useful during development
-    - goerr113      # Dynamic errors - too strict for web app
-    - gomnd         # Magic numbers - too many false positives
+    - err113        # Dynamic errors - too strict for web app (renamed from goerr113)
+    - mnd           # Magic numbers - too many false positives (renamed from gomnd)
     - lll           # Line length - handled by editor
     - nestif        # Nested if statements - sometimes necessary
     - wrapcheck     # Error wrapping - too strict
@@ -178,7 +178,8 @@ linters-settings:
     rules:
       - name: blank-imports
       - name: context-as-argument
-        arguments: [allowTypesBefore: ["*testing.T", "*github.com/labstack/echo/v4.Context"]]
+        arguments: 
+          - allowTypesBefore: "*testing.T,*github.com/labstack/echo/v4.Context"
       - name: context-keys-type
       - name: dot-imports
       - name: error-return
@@ -290,14 +291,18 @@ linters-settings:
 issues:
   # Exclude configuration
   exclude-dirs:
-    - database/bindata.go
-    - internal/pkg/db
-    - docs
+    - internal/pkg/db # Generated SQLC files
+    - docs/swagger
+    - web
     - vendor
+    - .git
+    - bin
+    - dist
   
   exclude-files:
     - ".*\\.pb\\.go$"
-    - ".*_test\\.go$"
+    - ".*\\.gen\\.go$"
+    - ".*_gen\\.go$"
   
   # Maximum issues count per one linter
   max-issues-per-linter: 50
@@ -307,6 +312,9 @@ issues:
   
   # Fix found issues (if it's supported by the linter)
   fix: true
+  
+  # Make issues output unique by line
+  uniq-by-line: true
   
   exclude-rules:
     # Exclude some linters from running on tests files

@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"errors"
+
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 
@@ -14,6 +15,7 @@ func loadTx(ctx context.Context) (pgx.Tx, error) {
 	if !ok {
 		return nil, errors.New("tx not found")
 	}
+
 	return tx, nil
 }
 

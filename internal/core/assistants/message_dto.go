@@ -2,10 +2,11 @@ package assistants
 
 import (
 	"encoding/json"
+	"time"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -19,7 +20,7 @@ type MessageMetadata struct {
 	IntermediateSteps []llms.IntermediateStep `json:"intermediate_steps"`
 }
 
-// 1563 dimensions
+// 1563 dimensions.
 var defaultEmbeddings = make([]float32, 1536)
 
 type MessageDTO struct {
@@ -49,21 +50,26 @@ func (d *MessageDTO) Load(dbo *db.AssistantMessage) {
 	d.PromptToken = dbo.PromptToken.Int32
 	d.CompletionToken = dbo.CompletionToken.Int32
 	d.Embeddings = dbo.Embeddings.Slice()
+
 	if dbo.Metadata != nil {
 		if err := json.Unmarshal(dbo.Metadata, &d.Metadata); err != nil {
 			logger.Default.Warn("failed to unmarshal ThreadMessage metadata", "err", err, "metadata", string(dbo.Metadata))
 		}
 	}
+
 	d.CreatedAt = dbo.CreatedAt.Time
 	d.UpdatedAt = dbo.UpdatedAt.Time
 }
 
 func (d *MessageDTO) Dump() *db.AssistantMessage {
 	metadata, _ := json.Marshal(d.Metadata)
+
 	if d.Embeddings == nil {
 		d.Embeddings = defaultEmbeddings
 	}
+
 	vec := pgvector.NewVector(d.Embeddings)
+
 	return &db.AssistantMessage{
 		UserID:          pgtype.UUID{Bytes: d.UserID, Valid: d.UserID != uuid.Nil},
 		AssistantID:     pgtype.UUID{Bytes: d.AssistantID, Valid: d.AssistantID != uuid.Nil},

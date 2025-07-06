@@ -42,12 +42,15 @@ func (s RecursiveCharacter) Split(text string) ([]string, error) {
 // addSeparatorInSplits adds the separator in each of splits.
 func (s RecursiveCharacter) addSeparatorInSplits(splits []string, separator string) []string {
 	splitsWithSeparator := make([]string, 0, len(splits))
+
 	for i, s := range splits {
 		if i > 0 {
 			s = separator + s
 		}
+
 		splitsWithSeparator = append(splitsWithSeparator, s)
 	}
+
 	return splitsWithSeparator
 }
 
@@ -57,10 +60,12 @@ func (s RecursiveCharacter) splitText(text string, separators []string) ([]strin
 	// Find the appropriate separator.
 	separator := separators[len(separators)-1]
 	newSeparators := []string{}
+
 	for i, c := range separators {
 		if c == "" || strings.Contains(text, c) {
 			separator = c
 			newSeparators = separators[i+1:]
+
 			break
 		}
 	}
@@ -70,12 +75,14 @@ func (s RecursiveCharacter) splitText(text string, separators []string) ([]strin
 		splits = s.addSeparatorInSplits(splits, separator)
 		separator = ""
 	}
+
 	goodSplits := make([]string, 0)
 
 	// Merge the splits, recursively splitting larger texts.
 	for _, split := range splits {
 		if s.LenFunc(split) < s.ChunkSize {
 			goodSplits = append(goodSplits, split)
+
 			continue
 		}
 
@@ -93,6 +100,7 @@ func (s RecursiveCharacter) splitText(text string, separators []string) ([]strin
 			if err != nil {
 				return nil, err
 			}
+
 			finalChunks = append(finalChunks, otherInfo...)
 		}
 	}

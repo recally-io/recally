@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"
@@ -31,8 +32,10 @@ func (s *Service) GetUserById(ctx context.Context, tx db.DBTX, userId uuid.UUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
+
 	u := new(UserDTO)
 	u.Load(&user)
+
 	return u, nil
 }
 
@@ -44,8 +47,10 @@ func (s *Service) GetDummyUser(ctx context.Context, tx db.DBTX) (*UserDTO, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
+
 	u := new(UserDTO)
 	u.Load(&user)
+
 	return u, nil
 }
 
@@ -55,8 +60,10 @@ func (s *Service) CreateUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*U
 		if err != nil {
 			return nil, fmt.Errorf("failed to hash password: %w", err)
 		}
+
 		user.Password = hashedPassword
 	}
+
 	dbUser := user.Dump()
 	params := db.CreateUserParams{
 		Username:            dbUser.Username,
@@ -66,28 +73,34 @@ func (s *Service) CreateUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*U
 		ActivateThreadID:    dbUser.ActivateThreadID,
 		Status:              dbUser.Status,
 	}
+
 	userModel, err := s.dao.CreateUser(ctx, tx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+
 	user.Load(&userModel)
+
 	return user, nil
 }
 
-func (s *Service) AuthByPassword(ctx context.Context, tx db.DBTX, email string, password string) (*UserDTO, error) {
+func (s *Service) AuthByPassword(ctx context.Context, tx db.DBTX, email, password string) (*UserDTO, error) {
 	user, err := s.dao.GetUserByEmail(ctx, tx, pgtype.Text{String: email, Valid: true})
 	if err != nil {
 		if db.IsNotFoundError(err) {
 			return nil, ErrUnAuthorized
 		}
+
 		return nil, fmt.Errorf("failed to load user: %w", err)
 	}
+
 	if err := s.validatePassword(password, user.PasswordHash.String); err != nil {
 		return nil, ErrUnAuthorized
 	}
 
 	u := new(UserDTO)
 	u.Load(&user)
+
 	return u, nil
 }
 
@@ -99,8 +112,10 @@ func (s *Service) GetTelegramUser(ctx context.Context, tx db.DBTX, userID string
 	if err != nil {
 		return nil, fmt.Errorf("failed to get telegram user: %w", err)
 	}
+
 	u := new(UserDTO)
 	u.Load(&user)
+
 	return u, nil
 }
 
@@ -122,8 +137,10 @@ func (s *Service) CreateTelegramUser(ctx context.Context, tx db.DBTX, userName, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create telegram oauth connection: %w", err)
 	}
+
 	u := new(UserDTO)
 	u.Load(&user)
+
 	return u, nil
 }
 
@@ -133,11 +150,14 @@ func (s *Service) UpdateTelegramUser(ctx context.Context, tx db.DBTX, user *User
 		ActivateAssistantID: dbUser.ActivateAssistantID,
 		ActivateThreadID:    dbUser.ActivateThreadID,
 	}
+
 	userModel, err := s.dao.UpdateUserById(ctx, tx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update telegram user: %w", err)
 	}
+
 	user.Load(&userModel)
+
 	return user, nil
 }
 
@@ -146,6 +166,7 @@ func (s *Service) hashPassword(password string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("auth: failed to hash password: %w", err)
 	}
+
 	return string(hashedPassword), nil
 }
 
@@ -154,6 +175,7 @@ func (s *Service) validatePassword(password, hashedPassword string) error {
 	if err != nil {
 		return ErrUnAuthorized
 	}
+
 	return nil
 }
 
@@ -192,12 +214,14 @@ func (s *Service) UpdateUserStatusById(ctx context.Context, tx db.DBTX, userId u
 
 func (s *Service) UpdateUser(ctx context.Context, tx db.DBTX, userId uuid.UUID, username, email, phone, password, status *string, settings *UserSettings) (*UserDTO, error) {
 	var user *UserDTO
+
 	var err error
 	if userId == uuid.Nil {
 		user, err = LoadUserFromContext(ctx)
 	} else {
 		user, err = s.GetUserById(ctx, tx, userId)
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -218,22 +242,28 @@ func (s *Service) UpdateUser(ctx context.Context, tx db.DBTX, userId uuid.UUID, 
 	if username != nil {
 		params.Username = pgtype.Text{String: *username, Valid: true}
 	}
+
 	if email != nil {
 		params.Email = pgtype.Text{String: *email, Valid: true}
 	}
+
 	if phone != nil {
 		params.Phone = pgtype.Text{String: *phone, Valid: true}
 	}
+
 	if password != nil {
 		hashedPassword, err := s.hashPassword(*password)
 		if err != nil {
 			return nil, fmt.Errorf("failed to hash password: %w", err)
 		}
+
 		params.PasswordHash = pgtype.Text{String: hashedPassword, Valid: true}
 	}
+
 	if status != nil {
 		params.Status = *status
 	}
+
 	if settings != nil {
 		newSettings, _ := json.Marshal(settings)
 		params.Settings = newSettings
@@ -243,6 +273,8 @@ func (s *Service) UpdateUser(ctx context.Context, tx db.DBTX, userId uuid.UUID, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user settings: %w", err)
 	}
+
 	user.Load(&userModel)
+
 	return user, nil
 }

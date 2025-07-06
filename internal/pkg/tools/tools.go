@@ -33,16 +33,19 @@ func (t *BaseTool) LLMDescription() string {
 func (t *BaseTool) Schema() *openai.FunctionDefinition {
 	r := new(jsonschema.Reflector)
 	schema := r.Reflect(t.Parameters)
+
 	var paramsSchema *jsonschema.Schema
 
 	if len(schema.Definitions) > 0 {
 		for _, def := range schema.Definitions {
 			paramsSchema = def
+
 			break
 		}
 	} else {
 		paramsSchema = schema
 	}
+
 	return &openai.FunctionDefinition{
 		Name:        t.Name,
 		Description: t.Description,
@@ -50,12 +53,12 @@ func (t *BaseTool) Schema() *openai.FunctionDefinition {
 	}
 }
 
-// UnmarshalArgs unmarshals the args string into the params struct.
-// params must be a pointer to a struct.
+// Params must be a pointer to a struct.
 func (t *BaseTool) UnmarshalArgs(ctx context.Context, args string, params any) error {
 	if err := json.Unmarshal([]byte(args), &params); err != nil {
 		return fmt.Errorf("failed to unmarshal %s request: %w", t.Name, err)
 	}
+
 	return nil
 }
 
@@ -64,5 +67,6 @@ func (t *BaseTool) MarshalResult(ctx context.Context, result any) (string, error
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal %s result: %w", t.Name, err)
 	}
+
 	return string(b), nil
 }

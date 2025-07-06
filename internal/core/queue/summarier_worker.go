@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+
 	"recally/internal/core/bookmarks"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
@@ -39,6 +40,7 @@ func (w *SummarierWorker) Work(ctx context.Context, job *river.Job[SummarierWork
 		return w.work(ctx, tx, job)
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to run job", "err", err, "job", job)
+
 		return err
 	}
 
@@ -47,11 +49,15 @@ func (w *SummarierWorker) Work(ctx context.Context, job *river.Job[SummarierWork
 
 func (w *SummarierWorker) work(ctx context.Context, tx pgx.Tx, job *river.Job[SummarierWorkerArgs]) error {
 	svc := bookmarks.NewService(w.llm)
+
 	dto, err := svc.SummarierContent(ctx, tx, job.Args.ID, job.Args.UserID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to fetch bookmark", "err", err, "id", job.Args.ID)
+
 		return err
 	}
+
 	logger.FromContext(ctx).Info("fetched bookmark", "id", dto.ID, "title", dto.Title, "url", dto.URL)
+
 	return nil
 }

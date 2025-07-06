@@ -3,8 +3,9 @@ package httpserver
 import (
 	"fmt"
 	"net/http"
-	"recally/internal/pkg/auth"
 	"time"
+
+	"recally/internal/pkg/auth"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -17,20 +18,10 @@ type createApiKeyRequest struct {
 	ExpiresAt time.Time `json:"expires_at" validate:"required,gt=now"`
 }
 
-// @Summary		Create API Key
-// @Description	Create a new API key for the authenticated user
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Security		Bearer
-// @Param			request	body		createApiKeyRequest				true	"API key creation details"
-// @Success		200		{object}	JSONResult{data=auth.ApiKeyDTO}	"API key created successfully"
-// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
-// @Failure		401		{object}	JSONResult{data=nil}			"Unauthorized"
-// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
-// @Router			/keys [post]
+// @Router			/keys [post].
 func (h *authHandler) createApiKey(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -60,20 +51,10 @@ type listApiKeysRequest struct {
 	IsActive bool   `query:"is_active"`
 }
 
-// @Summary		List API Keys
-// @Description	List all API keys for the authenticated user
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Security		Bearer
-// @Param			prefix		query		string								false	"Filter by key prefix"
-// @Param			is_active	query		bool								false	"Filter by active status"
-// @Success		200			{object}	JSONResult{data=[]auth.ApiKeyDTO}	"API keys retrieved successfully"
-// @Failure		401			{object}	JSONResult{data=nil}				"Unauthorized"
-// @Failure		500			{object}	JSONResult{data=nil}				"Internal server error"
-// @Router			/keys [get]
+// @Router			/keys [get].
 func (h *authHandler) listApiKeys(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -88,6 +69,7 @@ func (h *authHandler) listApiKeys(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to list API keys: %w", err))
 	}
+
 	return JsonResponse(c, http.StatusOK, keys)
 }
 
@@ -95,19 +77,10 @@ type deleteApiKeyRequest struct {
 	ID uuid.UUID `param:"id" validate:"required,uuid"`
 }
 
-// @Summary		Delete API Key
-// @Description	Delete an API key by ID
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Security		Bearer
-// @Param			id	path		string					true	"API key ID"
-// @Success		200	{object}	JSONResult{data=nil}	"API key deleted successfully"
-// @Failure		401	{object}	JSONResult{data=nil}	"Unauthorized"
-// @Failure		500	{object}	JSONResult{data=nil}	"Internal server error"
-// @Router			/keys/{id} [delete]
+// @Router			/keys/{id} [delete].
 func (h *authHandler) deleteApiKey(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)

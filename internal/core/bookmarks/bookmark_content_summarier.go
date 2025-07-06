@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+
 	"recally/internal/core/files"
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/db"
@@ -65,7 +66,8 @@ func (s *Service) summarierArticleContent(ctx context.Context, bookmarkID uuid.U
 	summarier := processor.NewSummaryProcessor(s.llm, processor.WithSummaryOptionUser(user))
 
 	if len(content.Markwdown) < 1000 {
-		logger.FromContext(ctx).Info("content is too short to summarise")
+		logger.FromContext(ctx).Info("content is too short to summarize")
+
 		return nil
 	}
 
@@ -74,11 +76,13 @@ func (s *Service) summarierArticleContent(ctx context.Context, bookmarkID uuid.U
 	} else {
 		summary, tags := summarier.ParseSummaryInfo(content.Summary)
 		bookmarkContent.Summary = summary
+
 		if len(tags) > 0 {
 			bookmarkContent.Tags = tags
 			s.SaveContentTags(bookmarkID, user.ID, tags)
 		}
 	}
+
 	return nil
 }
 
@@ -94,6 +98,7 @@ func (s *Service) summarierImageContent(ctx context.Context, bookmarkID uuid.UUI
 
 	// summarize image
 	summarier := processor.NewSummaryImageProcessor(s.llm, processor.WithSummaryImageOptionUser(user))
+
 	imgDataUrl, err := summarier.EncodeImage(imgReader, bookmarkContent.Content)
 	if err != nil {
 		return fmt.Errorf("failed to encode image: %w", err)
@@ -102,6 +107,7 @@ func (s *Service) summarierImageContent(ctx context.Context, bookmarkID uuid.UUI
 	streamingFunc := func(content llms.StreamingMessage) {
 		if content.Err != nil && content.Err != io.EOF {
 			logger.FromContext(ctx).Error("failed to generate describe image content", "err", content.Err)
+
 			return
 		}
 

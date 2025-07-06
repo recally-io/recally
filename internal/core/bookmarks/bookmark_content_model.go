@@ -2,10 +2,11 @@ package bookmarks
 
 import (
 	"context"
+	"time"
+
 	"recally/internal/core/files"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/webreader"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

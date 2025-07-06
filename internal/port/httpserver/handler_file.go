@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
+
 	"recally/internal/core/files"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -53,22 +54,10 @@ type getFileRequest struct {
 	ObjectKey string `query:"object_key" validate:"required"`
 }
 
-// @Summary		Get presigned URLs for file operations
-// @Description	Get presigned URLs for uploading or downloading files from S3
-// @Tags			files
-// @Accept			json
-// @Produce		json
-// @Param			fileName	query		string										true	"Name of the file"
-// @Param			fileType	query		string										true	"MIME type of the file"
-// @Param			action		query		string										false	"Action to perform (put or get)"	Enums(put, get)
-// @Param			expiration	query		int											false	"Expiration time in seconds (max 604800)"
-// @Success		200			{object}	JSONResult{data=getPresignedURLsResponse}	"Created"
-// @Failure		400			{object}	JSONResult{data=nil}						"Bad Request"
-// @Failure		401			{object}	JSONResult{data=nil}						"Unauthorized"
-// @Failure		500			{object}	JSONResult{data=nil}						"Internal Server Error"
-// @Router			/files/presigned-urls [get]
+// @Router			/files/presigned-urls [get].
 func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getPresignedURLsRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
@@ -83,7 +72,9 @@ func (h *fileHandler) getPresignedURLs(c echo.Context) error {
 	if req.Expiration == 0 {
 		req.Expiration = 3600
 	}
+
 	expirationDuration := time.Duration(req.Expiration) * time.Second
+
 	presignedURL, objectKey, err := h.service.GetPresignedPutObjectURL(ctx, user.ID, req.FileName, expirationDuration)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate presigned URL: %w", err))
@@ -108,6 +99,7 @@ type getPublicURLResponse struct {
 
 func (h *fileHandler) getFileUrlByObjectKey(c echo.Context) (string, error) {
 	ctx := c.Request().Context()
+
 	req := new(getFileRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return "", ErrorResponse(c, http.StatusBadRequest, err)
@@ -117,6 +109,7 @@ func (h *fileHandler) getFileUrlByObjectKey(c echo.Context) (string, error) {
 	if err != nil {
 		return "", ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get public URL: %w", err))
 	}
+
 	return publicURL, nil
 }
 
@@ -144,22 +137,15 @@ type deleteFileRequest struct {
 	ID uuid.UUID `param:"id" validate:"required,uuid"`
 }
 
-// @Summary		Delete a file
-// @Description	Delete a file by its ID
-// @Tags			files
-// @Produce		json
-// @Param			id	path		string					true	"File ID"
-// @Success		200	{object}	JSONResult{data=nil}	"Created"
-// @Failure		400	{object}	JSONResult{data=nil}	"Bad Request"
-// @Failure		401	{object}	JSONResult{data=nil}	"Unauthorized"
-// @Failure		500	{object}	JSONResult{data=nil}	"Internal Server Error"
-// @Router			/files/{id} [delete]
+// @Router			/files/{id} [delete].
 func (h *fileHandler) deleteFile(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(deleteFileRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
+
 	tx, err := loadTx(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -169,5 +155,6 @@ func (h *fileHandler) deleteFile(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to delete file: %w", err))
 	}
+
 	return JsonResponse(c, http.StatusOK, nil)
 }

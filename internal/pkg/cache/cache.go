@@ -28,7 +28,9 @@ func Get[T any](ctx context.Context, c Cache, key CacheKey) (*T, bool) {
 	}
 
 	var value T
+
 	MustUnmarshaler(b, &value)
+
 	return &value, true
 }
 
@@ -44,5 +46,6 @@ func RunInCache[T any](ctx context.Context, c Cache, key CacheKey, expiration ti
 	}
 
 	c.SetWithContext(ctx, key, data, expiration)
+
 	return data, nil
 }

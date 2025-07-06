@@ -3,12 +3,13 @@ package assistants
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/tools"
-	"time"
 )
 
 type Service struct {
@@ -30,22 +31,27 @@ func (s *Service) ListModels(ctx context.Context) ([]llms.Model, error) {
 	if models, ok := cache.Get[[]llms.Model](ctx, cache.MemCache, cacheKey); ok {
 		return *models, nil
 	}
+
 	models, err := s.llm.ListModels(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("list models error: %w", err)
 	}
+
 	cache.MemCache.Set(cacheKey, &models, time.Hour)
+
 	return models, nil
 }
 
 func (s *Service) ListTools(ctx context.Context) ([]tools.BaseTool, error) {
 	toolMappings := llms.AllToolMappings
 	availableTools := make([]tools.BaseTool, 0, len(toolMappings))
+
 	for _, tool := range toolMappings {
 		availableTools = append(availableTools, tools.BaseTool{
 			Name:        tool.LLMName(),
 			Description: tool.LLMDescription(),
 		})
 	}
+
 	return availableTools, nil
 }

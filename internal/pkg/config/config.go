@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+
 	"recally/internal/pkg/logger"
 
 	"github.com/caarlos0/env/v11"
@@ -96,9 +97,11 @@ func init() {
 	// Load .env file if exists
 	if _, err := os.Stat(".env"); err == nil {
 		logger.Default.Info("loading .env file")
+
 		if err := godotenv.Load(); err != nil {
 			logger.Default.Fatal("Error loading .env file", "err", err)
 		}
+
 		logger.Default.Info(".env file loaded")
 	} else {
 		logger.Default.Info(".env file not found")
@@ -107,5 +110,6 @@ func init() {
 	if err := env.Parse(Settings); err != nil {
 		logger.Default.Fatal("failed to load settings", "err", err)
 	}
+
 	logger.Default.Info("settings loaded")
 }

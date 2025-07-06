@@ -2,9 +2,10 @@ package assistants
 
 import (
 	"encoding/json"
+	"time"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -35,20 +36,24 @@ func (a *AttachmentDTO) Load(dbo *db.AssistantAttachment) {
 	a.Type = dbo.Type.String
 	a.URL = dbo.Url.String
 	a.Size = int(dbo.Size.Int32)
+
 	if dbo.Metadata != nil {
 		if err := json.Unmarshal(dbo.Metadata, &a.Metadata); err != nil {
 			logger.Default.Warn("failed to unmarshal Attachment metadata", "err", err, "metadata", string(dbo.Metadata))
 		}
 	}
+
 	a.CreatedAt = dbo.CreatedAt.Time
 	a.UpdatedAt = dbo.UpdatedAt.Time
 }
 
 func (a *AttachmentDTO) Dump() *db.AssistantAttachment {
 	metadata, _ := json.Marshal(a.Metadata)
+
 	if a.Id == uuid.Nil {
 		a.Id = uuid.New()
 	}
+
 	return &db.AssistantAttachment{
 		Uuid:        a.Id,
 		UserID:      pgtype.UUID{Bytes: a.UserId, Valid: a.UserId != uuid.Nil},

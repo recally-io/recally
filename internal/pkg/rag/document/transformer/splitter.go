@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"errors"
+
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/rag/textsplitter"
 )
@@ -16,6 +17,7 @@ func WithTextSplitter(textSplitter textsplitter.TextSplitter) Transformer {
 		return Batch(func(d []document.Document) ([]document.Document, error) {
 			texts := make([]string, 0)
 			metadatas := make([]map[string]any, 0)
+
 			for _, document := range d {
 				texts = append(texts, document.Content)
 				metadatas = append(metadatas, document.Metadata)

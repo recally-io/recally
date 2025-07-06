@@ -21,6 +21,7 @@ func parseListFilter(filters []string) (domains, contentTypes, tags []string) {
 		if len(kv) != 2 {
 			continue
 		}
+
 		switch kv[0] {
 		case "domain":
 			domains = append(domains, kv[1])
@@ -30,28 +31,34 @@ func parseListFilter(filters []string) (domains, contentTypes, tags []string) {
 			tags = append(tags, kv[1])
 		}
 	}
+
 	if len(domains) == 0 {
 		domains = nil
 	}
+
 	if len(contentTypes) == 0 {
 		contentTypes = nil
 	}
+
 	if len(tags) == 0 {
 		tags = nil
 	}
+
 	return
 }
 
 func parseXmlContent(content, tag string) string {
 	re := regexp.MustCompile(fmt.Sprintf(`(?s)<%s>(.*?)</%s>`, tag, tag))
+
 	matches := re.FindStringSubmatch(content)
 	if len(matches) < 2 {
 		return ""
 	}
+
 	return matches[1]
 }
 
-// parseTagsFromSummary extracts tags from a string and returns the tags array and the string without tags
+// parseTagsFromSummary extracts tags from a string and returns the tags array and the string without tags.
 func parseTagsFromSummary(input string) ([]string, string) {
 	// Regular expression to match the tags section
 	tagsRegex := regexp.MustCompile(`(?s)<tags>.*?</tags>`)
@@ -72,6 +79,7 @@ func parseTagsFromSummary(input string) ([]string, string) {
 
 	// Process valid tags
 	tagMap := make(map[string]bool) // Use map to ensure uniqueness
+
 	var tags []string
 
 	for _, word := range words {
@@ -79,6 +87,7 @@ func parseTagsFromSummary(input string) ([]string, string) {
 			tag := strings.TrimPrefix(word, "#")
 			if tag != "" && !tagMap[tag] {
 				tagMap[tag] = true
+
 				tags = append(tags, tag)
 			}
 		}

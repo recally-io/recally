@@ -43,10 +43,12 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	he, ok := err.(*echo.HTTPError)
 	if ok {
 		code = he.Code
+
 		if he.Internal != nil {
 			msg = he.Internal.Error()
 		}
 	}
+
 	_ = c.JSON(code, JSONResult{
 		Success: false,
 		Code:    code,
@@ -67,8 +69,10 @@ func bindAndValidate(c echo.Context, req any) error {
 	if err := c.Bind(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
+
 	if err := c.Validate(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
+
 	return nil
 }

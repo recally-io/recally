@@ -2,10 +2,11 @@ package bookmarks
 
 import (
 	"encoding/json"
-	"recally/internal/pkg/db"
-	"recally/internal/pkg/logger"
 	"slices"
 	"time"
+
+	"recally/internal/pkg/db"
+	"recally/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -60,11 +61,13 @@ func (b *BookmarkDTO) LoadWithContent(dbo *db.GetBookmarkWithContentRow) {
 	b.Load(&dbo.Bookmark)
 	// load bookmark content
 	var content BookmarkContentDTO
+
 	content.Load(&dbo.BookmarkContent)
 	b.Content = &content
 
 	if dbo.BookmarkShare.ID != uuid.Nil {
 		var share BookmarkShareDTO
+
 		share.Load(&dbo.BookmarkShare)
 		b.Share = &share
 		b.IsPublic = true
@@ -107,6 +110,7 @@ func loadListBookmarks(dbos []db.ListBookmarksRow) []BookmarkDTO {
 		b.Load(&dbo.Bookmark)
 		// load bookmaek content
 		var content BookmarkContentDTO
+
 		content.Load(&dbo.BookmarkContent)
 		content.Content = ""
 		content.Html = ""
@@ -114,6 +118,7 @@ func loadListBookmarks(dbos []db.ListBookmarksRow) []BookmarkDTO {
 		// Load tags
 		b.Tags = loadBookmarkTags(dbo.Tags)
 	}
+
 	return bookmarks
 }
 
@@ -124,6 +129,7 @@ func loadSearchBookmarks(dbos []db.SearchBookmarksRow) []BookmarkDTO {
 		b.Load(&dbo.Bookmark)
 		// load bookmaek content
 		var content BookmarkContentDTO
+
 		content.Load(&dbo.BookmarkContent)
 		content.Content = ""
 		content.Html = ""
@@ -131,6 +137,7 @@ func loadSearchBookmarks(dbos []db.SearchBookmarksRow) []BookmarkDTO {
 		// Load tags
 		b.Tags = loadBookmarkTags(dbo.Tags)
 	}
+
 	return bookmarks
 }
 
@@ -142,12 +149,15 @@ func loadBookmarkTags(input interface{}) []string {
 	// Handle case where input is []interface{}
 	if interfaceSlice, ok := input.([]interface{}); ok {
 		tags := make([]string, len(interfaceSlice))
+
 		for i, v := range interfaceSlice {
 			if str, ok := v.(string); ok {
 				tags[i] = str
 			}
 		}
+
 		slices.Sort(tags)
+
 		return tags
 	}
 
@@ -163,10 +173,12 @@ func loadBookmarkMetadata(input interface{}) *BookmarkMetadata {
 	if input == nil {
 		return nil
 	}
+
 	metadata := BookmarkMetadata{}
 	if err := json.Unmarshal(input.([]byte), &metadata); err != nil {
 		logger.Default.Warn("failed to unmarshal Bookmark metadata", "err", err, "metadata", string(input.(string)))
 	}
+
 	return &metadata
 }
 
@@ -174,7 +186,9 @@ func dumpBookmarkMetadata(input *BookmarkMetadata) []byte {
 	if input == nil {
 		return nil
 	}
+
 	metadata, _ := json.Marshal(input)
+
 	return metadata
 }
 
@@ -187,6 +201,7 @@ func loadBookmarkContentMetadata(input interface{}) *BookmarkContentMetadata {
 	if err := json.Unmarshal(input.([]byte), &metadata); err != nil {
 		logger.Default.Warn("failed to unmarshal BookmarkContent metadata", "err", err, "metadata", string(input.([]byte)))
 	}
+
 	return &metadata
 }
 
@@ -194,6 +209,8 @@ func dumpBookmarkContentMetadata(input *BookmarkContentMetadata) []byte {
 	if input == nil {
 		return nil
 	}
+
 	metadata, _ := json.Marshal(input)
+
 	return metadata
 }

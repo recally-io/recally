@@ -3,6 +3,7 @@ package embedddings
 import (
 	"context"
 	"fmt"
+
 	"recally/internal/pkg/rag/document"
 
 	"github.com/sashabaranov/go-openai"
@@ -45,15 +46,19 @@ func (e *Embedder) EmbedDocuments(ctx context.Context, docs []document.Document)
 	for i, doc := range docs {
 		texts[i] = doc.Content
 	}
+
 	embs, err := e.EmbedTexts(ctx, texts)
 	if err != nil {
 		return nil, err
 	}
+
 	newDocs := make([]document.Document, len(docs))
+
 	for i, doc := range docs {
 		doc.Embedding = embs[i]
 		newDocs[i] = doc
 	}
+
 	return newDocs, nil
 }
 
@@ -62,5 +67,6 @@ func (e *Embedder) EmbedText(ctx context.Context, text string) ([]float32, error
 	if err != nil {
 		return nil, err
 	}
+
 	return embs[0], nil
 }

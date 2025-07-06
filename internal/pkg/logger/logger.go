@@ -4,8 +4,9 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"recally/internal/pkg/contexts"
 	"strconv"
+
+	"recally/internal/pkg/contexts"
 
 	slogbetterstack "github.com/samber/slog-betterstack"
 )
@@ -33,6 +34,7 @@ func New() Logger {
 	if err != nil {
 		debug = false
 	}
+
 	var logger *slog.Logger
 
 	handlers := make([]slog.Handler, 0)
@@ -61,6 +63,7 @@ func New() Logger {
 	}
 
 	logger = slog.New(NewMultiHandler(handlers...))
+
 	return Logger{
 		Logger: logger,
 	}
@@ -72,10 +75,12 @@ func FromContext(ctx context.Context, attrs ...slog.Attr) Logger {
 	if ok {
 		return logger
 	}
+
 	sLogger := New()
 
 	defaultAttrs := buildLogAttrs(ctx)
 	handler := sLogger.Handler().WithAttrs(append(defaultAttrs, attrs...))
+
 	return Logger{
 		Logger: slog.New(handler),
 	}
@@ -83,13 +88,14 @@ func FromContext(ctx context.Context, attrs ...slog.Attr) Logger {
 
 func buildLogAttrs(ctx context.Context) []slog.Attr {
 	attrs := make([]slog.Attr, 0)
-	for _, key := range defaultLogAttrs {
 
+	for _, key := range defaultLogAttrs {
 		val, ok := contexts.Get[any](ctx, key)
 		if ok {
 			attrs = append(attrs, slog.Any(key, val))
 		}
 	}
+
 	return attrs
 }
 
@@ -103,11 +109,13 @@ func buildLogAttrs(ctx context.Context) []slog.Attr {
 //   - context.Context: A new context with copied values
 func CopyContext(ctx context.Context) context.Context {
 	newCtx := context.Background()
+
 	for _, key := range defaultLogAttrs {
 		val, ok := contexts.Get[any](ctx, key)
 		if ok {
 			newCtx = contexts.Set(newCtx, key, val)
 		}
 	}
+
 	return newCtx
 }

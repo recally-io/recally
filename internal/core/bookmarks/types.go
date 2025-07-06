@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// Common errors
+// Common errors.
 var (
 	ErrNotFound     = fmt.Errorf("bookmark not found")
 	ErrDuplicate    = fmt.Errorf("bookmark already exists")

@@ -2,6 +2,7 @@ package bots
 
 import (
 	"context"
+
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/config"
@@ -17,13 +18,16 @@ type Service struct {
 
 func NewServer(botType BotType, cfg config.TelegramConfig, pool *db.Pool, e *echo.Echo, cacheService cache.Cache, llm *llms.LLM, queue *queue.Queue) (*Service, error) {
 	var b *Bot
+
 	var err error
 	if botType == ReaderBot {
 		b, err = NewReaderBot(cfg, pool, e, cacheService, llm, queue)
 	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return &Service{
 		Bot: b,
 	}, nil

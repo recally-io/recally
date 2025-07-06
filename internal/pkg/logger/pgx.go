@@ -8,6 +8,7 @@ import (
 
 func (l Logger) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
 	l.Debug("pgx query", "sql", data.SQL, "args", data.Args)
+
 	return ctx
 }
 

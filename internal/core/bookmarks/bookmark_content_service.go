@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"time"
+
 	"recally/internal/core/files"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/webreader"
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/reader"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -28,6 +29,7 @@ func (s *Service) CreateBookmarkContent(ctx context.Context, tx db.DBTX, content
 		if err != nil {
 			return nil, err
 		}
+
 		content.S3Key = file.S3Key
 	}
 
@@ -36,6 +38,7 @@ func (s *Service) CreateBookmarkContent(ctx context.Context, tx db.DBTX, content
 	}
 
 	params := content.Dump()
+
 	dbo, err := s.dao.CreateBookmarkContent(ctx, tx, params)
 	if err != nil {
 		return nil, err
@@ -43,6 +46,7 @@ func (s *Service) CreateBookmarkContent(ctx context.Context, tx db.DBTX, content
 
 	result := &BookmarkContentDTO{}
 	result.Load(&dbo)
+
 	return result, nil
 }
 
@@ -54,6 +58,7 @@ func (s *Service) GetBookmarkContentByBookmarkID(ctx context.Context, tx db.DBTX
 
 	result := &BookmarkContentDTO{}
 	result.Load(&dbo)
+
 	return result, nil
 }
 
@@ -68,11 +73,13 @@ func (s *Service) GetBookmarkContentByURL(ctx context.Context, tx db.DBTX, url s
 
 	result := &BookmarkContentDTO{}
 	result.Load(&dbo)
+
 	return result, nil
 }
 
 func (s *Service) UpdateBookmarkContent(ctx context.Context, tx db.DBTX, content *BookmarkContentDTO) (*BookmarkContentDTO, error) {
 	params := content.DumpToUpdateParams()
+
 	dbo, err := s.dao.UpdateBookmarkContent(ctx, tx, params)
 	if err != nil {
 		return nil, err
@@ -80,6 +87,7 @@ func (s *Service) UpdateBookmarkContent(ctx context.Context, tx db.DBTX, content
 
 	result := &BookmarkContentDTO{}
 	result.Load(&dbo)
+
 	return result, nil
 }
 
@@ -101,6 +109,7 @@ func (s *Service) FetchContent(ctx context.Context, tx db.DBTX, bookmarkID, user
 	}
 
 	bookmarkContent.FromReaderContent(webContent)
+
 	return s.UpdateBookmarkContent(ctx, tx, bookmarkContent)
 }
 
@@ -121,5 +130,6 @@ func (s *Service) FetchWebContentWithCache(ctx context.Context, uri string, opts
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch content: %w", err)
 	}
+
 	return reader.Process(ctx, content)
 }
