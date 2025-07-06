@@ -32,19 +32,8 @@ run:
   #   - ".*\\.gen\\.go$"
   #   - ".*_gen\\.go$"
 
-# Output configuration
-output:
-  # Format of output: colored-line-number|line-number|json|tab|checkstyle|code-climate
-  format: colored-line-number
-  
-  # Print lines of code with issue
-  print-issued-lines: true
-  
-  # Print linter name in the end of issue text
-  print-linter-name: true
-  
-  # Sort results by: filepath, line and column
-  sort-results: true
+# Output configuration - removed due to compatibility issues with v1.64
+# Using default output settings
 
 linters:
   # Enable specific linters
