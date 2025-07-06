@@ -51,11 +51,10 @@ WORKDIR /go/src/app
 COPY mise.toml ./
 
 RUN mise trust mise.toml && \
-    mise install && \
-    mise activate
+    mise install
 
 COPY mise.toml go.mod go.sum ./
-RUN go mod download
+RUN mise x -- go mod download
 
 COPY . .
 COPY --from=ui-base /usr/src/app/dist web/dist
@@ -64,9 +63,10 @@ RUN mise build:go
 
 # Final stage
 FROM gcr.io/distroless/static-debian12:nonroot
+
 WORKDIR /service
 
-COPY --from=builder /go/bin/app .
+COPY --from=builder /go/src/app/recally .
 
 # Use non-root user for better security
 USER nonroot:nonroot
@@ -75,4 +75,4 @@ USER nonroot:nonroot
 # Expose the port specified by the PORT environment variable, defaulting to 1323
 EXPOSE ${PORT:-1323}
 
-CMD ["./app"]
+CMD ["/service/recally"]

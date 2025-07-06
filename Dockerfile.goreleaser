@@ -1,0 +1,15 @@
+# GoReleaser Dockerfile - uses pre-built binary
+FROM gcr.io/distroless/static-debian12:nonroot
+
+WORKDIR /service
+
+# Copy the pre-built binary
+COPY recally .
+
+# Use non-root user for better security
+USER nonroot:nonroot
+
+# Expose the port the app runs on
+EXPOSE ${PORT:-1323}
+
+ENTRYPOINT ["/service/recally"]

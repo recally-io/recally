@@ -12,6 +12,7 @@ go = "1.24"
 
 [env]
 _.file = ".env"
+IMAGE_NAME = "recally-io/recally"
 
 # Lint tasks
 [tasks.lint]
@@ -62,7 +63,7 @@ depends = ["build:ui", "build:docs", "build:go"]
 [tasks."build:go"]
 description = "Build Go application"
 depends = ["generate"]
-run = "CGO_ENABLED=0 GOOS=linux go build -o bin/app main.go"
+run = "CGO_ENABLED=0 GOOS=linux go build -o recally main.go"
 
 [tasks."build:docs"]
 description = "Build documentation"
@@ -82,8 +83,7 @@ run = "go test ./..."
 # Run tasks
 [tasks.run]
 description = "Build and run the application"
-depends = ["build"]
-run = "./bin/app"
+depends = ["build", "run:ui", "run:go"]
 
 [tasks."run:ui"]
 alias = "run-ui"
@@ -96,7 +96,7 @@ alias = "run-go"
 description = "Run Go app in development mode (with DEBUG_UI)"
 depends = ["build:go"]
 env = { DEBUG_UI = "true" }
-run = "./bin/app"
+run = "./recally"
 
 [tasks.ngrok]
 description = "Run ngrok tunnel"
@@ -174,7 +174,7 @@ echo "Database version forcibly set to $version."
 # Docker tasks
 [tasks."docker:build"]
 description = "Build Docker image"
-run = "docker compose build"
+run = "docker build -t $IMAGE_NAME ."
 
 [tasks."docker:run"]
 description = "Run with Docker (foreground)"

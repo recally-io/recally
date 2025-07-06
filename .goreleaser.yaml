@@ -13,14 +13,8 @@ env:
 # Pre-build hooks for generating required files
 before:
   hooks:
-    - go mod tidy
-    - go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-    - go install github.com/swaggo/swag/cmd/swag@latest
-    - go install github.com/kevinburke/go-bindata/v4/...@latest
-    - go generate ./...
-    - go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
-    - sqlc generate
-    - swag init -g internal/port/httpserver/router.go -o docs/swagger
+    - mise run build:docs
+    - mise run build:ui
 
 # Build configuration
 builds:
@@ -56,15 +50,6 @@ builds:
     tags:
       - osusergo
       - netgo
-    # Pre-build hooks for frontend assets
-    hooks:
-      pre:
-        - cmd: sh -c 'cd web && bun install && bun run build'
-          env:
-            - NODE_ENV=production
-        - cmd: sh -c 'cd docs && bun install && bun run docs:build'
-          env:
-            - NODE_ENV=production
 
 # Archive configuration
 archives:
@@ -88,10 +73,13 @@ archives:
       - README*
       - CHANGELOG*
       - docs/README.md
-      - database/migrations/**/*
+      - src: database/migrations/*
+        dst: database/migrations
       - "*.example"
       - src: "VERSION"
         dst: "VERSION"
+        info:
+          mode: 0644
       - src: "env.example"
         dst: "env.example"
         strip_parent: true
@@ -200,38 +188,33 @@ release:
   name_template: "Release {{.Version}}"
   header: |
     ## Recally {{.Version}}
-    
+
     **Full Changelog**: https://github.com/recally-io/recally/compare/{{.PreviousTag}}...{{.Tag}}
-    
+
     ## Installation
-    
+
     ### Download Binary
     Download the appropriate binary for your platform from the assets below.
-    
+
     ### Docker
     ```bash
     docker pull ghcr.io/recally-io/recally:{{.Version}}
     ```
-    
-    ### Homebrew (macOS/Linux)
-    ```bash
-    brew install recally-io/tap/recally
-    ```
   footer: |
     ## Docker Images
-    
+
     Multi-platform Docker images are available:
     - `ghcr.io/recally-io/recally:{{.Version}}` (linux/amd64, linux/arm64)
     - `ghcr.io/recally-io/recally:latest` (linux/amd64, linux/arm64)
-    
+
     ## Checksums
-    
+
     You can verify the integrity of downloaded files using the checksums below:
-    
+
     ```bash
     # macOS
     shasum -a 256 -c checksums.txt
-    
+
     # Linux
     sha256sum -c checksums.txt
     ```
@@ -241,33 +224,6 @@ release:
   target_commitish: "{{ .Commit }}"
   disable: false
 
-# Homebrew tap configuration
-brews:
-  - name: recally
-    repository:
-      owner: recally-io
-      name: homebrew-tap
-    url_template: "https://github.com/recally-io/recally/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    download_strategy: CurlDownloadStrategy
-    commit_author:
-      name: goreleaserbot
-      email: goreleaser@recally.io
-    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-    directory: Formula
-    homepage: "https://github.com/recally-io/recally"
-    description: "AI-powered memory assistant for digital content"
-    license: "MIT"
-    skip_upload: auto
-    custom_block: |
-      head "https://github.com/recally-io/recally.git"
-    dependencies:
-      - name: postgresql
-        type: optional
-    install: |
-      bin.install "recally"
-      (etc/"recally").install "env.example" => "config.env"
-    test: |
-      system "#{bin}/recally", "version"
 
 # Validation rules
 announce:
