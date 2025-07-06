@@ -276,7 +276,7 @@ issues:
   # Exclude configuration
   exclude-dirs:
     - internal/pkg/db # Generated SQLC files
-    - docs/swagger
+    - docs # VitePress docs with embedded files that don't exist during lint
     - web
     - vendor
     - .git

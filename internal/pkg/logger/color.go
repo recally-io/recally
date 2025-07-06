@@ -200,6 +200,7 @@ func suppressDefaults(
 		if a.Key == slog.TimeKey ||
 			a.Key == slog.LevelKey ||
 			a.Key == slog.MessageKey {
+
 			return slog.Attr{}
 		}
 
