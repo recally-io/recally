@@ -314,7 +314,7 @@ issues:
         - musttag
     
     # Exclude typecheck for docs.go due to embed directive
-    - path: docs/docs\.go
+    - path: docs/docs\.go$
       linters:
         - typecheck
     
