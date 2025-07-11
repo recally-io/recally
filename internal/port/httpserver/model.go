@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// @Description JSONResult represents the structure of the JSON response.
+// @Description	JSONResult represents the structure of the JSON response.
 type JSONResult struct {
 	// Success is a boolean value that indicates whether the request was successful.
 	Success bool `json:"success"`
@@ -43,10 +43,12 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	he, ok := err.(*echo.HTTPError)
 	if ok {
 		code = he.Code
+
 		if he.Internal != nil {
 			msg = he.Internal.Error()
 		}
 	}
+
 	_ = c.JSON(code, JSONResult{
 		Success: false,
 		Code:    code,
@@ -67,8 +69,10 @@ func bindAndValidate(c echo.Context, req any) error {
 	if err := c.Bind(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
+
 	if err := c.Validate(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
+
 	return nil
 }

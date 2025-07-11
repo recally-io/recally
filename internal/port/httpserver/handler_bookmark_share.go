@@ -67,6 +67,7 @@ func (h *bookmarksHandler) createBookmarkShare(c echo.Context) error {
 //	@Router			/bookmarks/{bookmark-id}/share [put]
 func (h *bookmarksHandler) updateBookmarkShare(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(createBookmarkShareRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
@@ -141,6 +142,7 @@ func (h *bookmarksHandler) getBookmarkShare(c echo.Context) error {
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -150,6 +152,7 @@ func (h *bookmarksHandler) getBookmarkShare(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	if cs == nil {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("shared bookmark not found"))
 	}

@@ -38,5 +38,6 @@ func (r WebLoader) Load(ctx context.Context, transformers ...transformer.Transfo
 			},
 		},
 	}
+
 	return transformerPipeline(docs, transformers...)
 }

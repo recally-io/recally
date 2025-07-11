@@ -21,6 +21,7 @@ func init() {
 	// dynamic file system
 	if config.Settings.Debug {
 		StaticHttpFS = http.FS(os.DirFS(fmt.Sprintf("docs/%s", distDir)))
+
 		return
 	}
 

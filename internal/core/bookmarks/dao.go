@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// DAO provides data access operations for bookmarks
+// DAO provides data access operations for bookmarks.
 type DAO interface {
 	IsBookmarkContentExistByURL(ctx context.Context, db db.DBTX, url string) (bool, error)
 	CreateBookmarkContent(ctx context.Context, db db.DBTX, arg db.CreateBookmarkContentParams) (db.BookmarkContent, error)

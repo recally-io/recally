@@ -1,23 +1,15 @@
-# Dockerfile for GoReleaser builds
-# This Dockerfile expects the binary to be pre-built by GoReleaser
-
+# GoReleaser Dockerfile - uses pre-built binary
 FROM gcr.io/distroless/static-debian12:nonroot
 
-# Copy the binary from GoReleaser
-COPY recally /service/recally
-
-# Use non-root user for security
-USER nonroot:nonroot
-
-# Set working directory
 WORKDIR /service
 
-# Expose default port
-EXPOSE 1323
+# Copy the pre-built binary
+COPY recally .
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD ["/service/recally", "health"] || exit 1
+# Use non-root user for better security
+USER nonroot:nonroot
 
-# Run the binary
+# Expose the port the app runs on
+EXPOSE ${PORT:-1323}
+
 ENTRYPOINT ["/service/recally"]

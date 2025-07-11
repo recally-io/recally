@@ -20,7 +20,7 @@ func (p *ReadabilityProcessor) Name() string {
 	return "Readability"
 }
 
-// Process implements the Processor interface
+// Process implements the Processor interface.
 func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.Content) error {
 	parsedURL, err := url.ParseRequestURI(content.URL)
 	// If there's an error parsing the URI, set parsedURL to nil

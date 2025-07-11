@@ -35,6 +35,7 @@ type OAuthProvider interface {
 func GetOAuthProvider(name string) (OAuthProvider, error) {
 	if name == "github" {
 		provider := NewOAuthProviderGithub(config.Settings.OAuths.Github)
+
 		return provider, nil
 	}
 
@@ -68,11 +69,13 @@ func (p *oAuthProvider) GetConfig() *oauth2.Config {
 			Scopes:       append(p.defaultScopes, p.cfg.Scopes...),
 		}
 	}
+
 	return p.oAuthConfig
 }
 
 func (p *oAuthProvider) GetToken(ctx context.Context, code string) (*oauth2.Token, error) {
 	cfg := p.GetConfig()
+
 	token, err := cfg.Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange oauth code: %w", err)
@@ -85,5 +88,6 @@ func (p *oAuthProvider) GetToken(ctx context.Context, code string) (*oauth2.Toke
 
 func (p *oAuthProvider) GetRedirectURL() string {
 	cfg := p.GetConfig()
+
 	return cfg.AuthCodeURL(fmt.Sprintf("state:%s", p.Name), oauth2.AccessTypeOnline)
 }

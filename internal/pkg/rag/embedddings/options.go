@@ -18,6 +18,7 @@ func (o Options) ToEmbeddingRequest() openai.EmbeddingRequestStrings {
 	if o.Model == "" {
 		o.Model = defaultModel
 	}
+
 	return openai.EmbeddingRequestStrings{
 		Model: openai.EmbeddingModel(o.Model),
 	}

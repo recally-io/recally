@@ -28,16 +28,20 @@ func main() {
 
 	sendToUser := func(m llms.StreamingMessage) {
 		choice := m.Choice
+
 		err := m.Err
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				logger.Default.Info("done")
+
 				return
 			} else {
 				logger.Default.Error("failed to send message to user", "err", err)
+
 				return
 			}
 		}
+
 		fmt.Print(choice.Message.Content)
 	}
 

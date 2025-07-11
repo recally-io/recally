@@ -20,6 +20,7 @@ func (h *MultiHandler) Enabled(ctx context.Context, level slog.Level) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -29,11 +30,13 @@ func (h *MultiHandler) Handle(ctx context.Context, r slog.Record) error {
 		slog.String("app", "recally"),
 		// slog.String("version", "1.0.0"),
 	)
+
 	for _, handler := range h.handlers {
 		if err := handler.Handle(ctx, r); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -42,6 +45,7 @@ func (h *MultiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	for i, handler := range h.handlers {
 		handlers[i] = handler.WithAttrs(attrs)
 	}
+
 	return NewMultiHandler(handlers...)
 }
 
@@ -50,5 +54,6 @@ func (h *MultiHandler) WithGroup(name string) slog.Handler {
 	for i, handler := range h.handlers {
 		handlers[i] = handler.WithGroup(name)
 	}
+
 	return NewMultiHandler(handlers...)
 }

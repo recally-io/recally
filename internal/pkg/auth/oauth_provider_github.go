@@ -16,7 +16,7 @@ type OAuthProviderGithub struct {
 	oAuthProvider
 }
 
-// GitHub user structure
+// GitHub user structure.
 type GitHubUser struct {
 	Login       string `json:"login"`
 	ID          int    `json:"id"`
@@ -36,11 +36,14 @@ func NewOAuthProviderGithub(cfg config.OAuthConfig) *OAuthProviderGithub {
 
 func (p *OAuthProviderGithub) GetUser(ctx context.Context, token *oauth2.Token) (OAuth2User, error) {
 	client := p.GetConfig().Client(ctx, token)
+
 	resp, err := client.Get("https://api.github.com/user")
 	if err != nil {
 		return OAuth2User{}, fmt.Errorf("failed to get user from github: %w", err)
 	}
+
 	defer resp.Body.Close()
+
 	var user GitHubUser
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		return OAuth2User{}, fmt.Errorf("failed to decode github user: %w", err)

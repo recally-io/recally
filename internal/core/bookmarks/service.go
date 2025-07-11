@@ -40,6 +40,7 @@ func (s *Service) ListTags(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([
 			Count: tag.Cnt,
 		})
 	}
+
 	return tagsList, nil
 }
 
@@ -53,6 +54,7 @@ func (s *Service) ListDomains(ctx context.Context, tx db.DBTX, userID uuid.UUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list domains for user '%s': %w", userID.String(), err)
 	}
+
 	tags := make([]DomainDTO, 0, len(domains))
 	for _, domain := range domains {
 		tags = append(tags, DomainDTO{
@@ -60,5 +62,6 @@ func (s *Service) ListDomains(ctx context.Context, tx db.DBTX, userID uuid.UUID)
 			Count: domain.Cnt,
 		})
 	}
+
 	return tags, nil
 }

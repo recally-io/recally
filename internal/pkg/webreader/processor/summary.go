@@ -59,17 +59,17 @@ Please provide your summary using {{or .Language "[Same as article language]"}} 
 
 var summaryPromptTempl = template.Must(template.New("summaryPromptTemplate").Parse(summaryPromptTemplate))
 
-// SummaryOption represents an option for configuring the SummaryProcessor
+// SummaryOption represents an option for configuring the SummaryProcessor.
 type SummaryOption func(*SummaryProcessor)
 
-// WithSummaryOptionModel sets the model for the SummaryProcessor
+// WithSummaryOptionModel sets the model for the SummaryProcessor.
 func WithSummaryOptionModel(model string) SummaryOption {
 	return func(p *SummaryProcessor) {
 		p.config.Model = model
 	}
 }
 
-// WithSummaryOptionPrompt sets the prompt template for the SummaryProcessor
+// WithSummaryOptionPrompt sets the prompt template for the SummaryProcessor.
 func WithSummaryOptionPrompt(prompt string) SummaryOption {
 	return func(p *SummaryProcessor) {
 		p.config.Prompt = prompt
@@ -96,13 +96,13 @@ func WithSummaryOptionUser(user *auth.UserDTO) SummaryOption {
 	}
 }
 
-// SummaryProcessor implements content summarization using LLM
+// SummaryProcessor implements content summarization using LLM.
 type SummaryProcessor struct {
 	config auth.AIConfig
 	llm    *llms.LLM
 }
 
-// NewSummaryProcessor creates a new SummaryProcessor with the given configuration
+// NewSummaryProcessor creates a new SummaryProcessor with the given configuration.
 func NewSummaryProcessor(llm *llms.LLM, opts ...SummaryOption) *SummaryProcessor {
 	p := &SummaryProcessor{
 		config: auth.AIConfig{
@@ -124,7 +124,7 @@ func (p *SummaryProcessor) Name() string {
 	return "AI Summary"
 }
 
-// Process implements the Processor interface
+// Process implements the Processor interface.
 func (p *SummaryProcessor) Process(ctx context.Context, content *webreader.Content) error {
 	prompt, err := p.buildPrompt(ctx, content.Markwdown)
 	if err != nil {

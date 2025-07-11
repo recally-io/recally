@@ -36,6 +36,7 @@ func defaultLLMToolMappings() map[string]tools.Tool {
 
 func llmTools(mappings map[string]tools.Tool) []openai.Tool {
 	toolList := make([]openai.Tool, 0)
+
 	for _, t := range mappings {
 		schema := t.Schema()
 		toolList = append(toolList, openai.Tool{
@@ -47,5 +48,6 @@ func llmTools(mappings map[string]tools.Tool) []openai.Tool {
 			},
 		})
 	}
+
 	return toolList
 }
