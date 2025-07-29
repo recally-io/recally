@@ -19,10 +19,12 @@ func getUrlFromText(text string) string {
 
 func processSendError(ctx context.Context, c tele.Context, err error) error {
 	logger.FromContext(ctx).Error("failed to send message", "err", err)
+
 	err = c.Reply("Failed to send message. " + err.Error())
 	if err != nil {
 		logger.FromContext(ctx).Error("error reply message", "err", err)
 	}
+
 	return err
 }
 
@@ -30,6 +32,7 @@ func editMessage(c tele.Context, msg *tele.Message, text string, format bool) (*
 	if format {
 		return c.Bot().Edit(msg, convertToTGMarkdown(text), tele.ModeMarkdownV2)
 	}
+
 	return c.Bot().Edit(msg, text)
 }
 
@@ -38,6 +41,7 @@ func sendToUser(ctx context.Context, c tele.Context, stream llms.StreamingString
 	if line == "" && err == nil {
 		return
 	}
+
 	*chunk += line
 
 	if err != nil {
@@ -52,9 +56,12 @@ func sendToUser(ctx context.Context, c tele.Context, stream llms.StreamingString
 			// }
 			return
 		}
+
 		logger.FromContext(ctx).Error("TextHandler failed to get summary", "err", err)
+
 		if _, err = editMessage(c, msg, "Failed to get summary.", false); err != nil {
 			_ = processSendError(ctx, c, err)
+
 			return
 		}
 	}
@@ -65,6 +72,7 @@ func sendToUser(ctx context.Context, c tele.Context, stream llms.StreamingString
 
 		if newMsg, newErr := editMessage(c, msg, *resp, false); newErr != nil {
 			_ = processSendError(ctx, c, newErr)
+
 			return
 		} else {
 			*msg = *newMsg

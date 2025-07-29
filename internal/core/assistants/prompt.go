@@ -33,6 +33,7 @@ func getTitleGenerationPrompt(conversation string) (string, error) {
 	}); err != nil {
 		return "", err
 	}
+
 	return tpl.String(), nil
 }
 
@@ -62,5 +63,6 @@ func getChatMessageWithRagPrompt(knowledgeBaseInfo, chatHistory, userQuery strin
 	}); err != nil {
 		return "", err
 	}
+
 	return tpl.String(), nil
 }

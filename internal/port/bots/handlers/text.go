@@ -23,12 +23,15 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 	ctx, user, tx, err := h.initHandlerRequest(c)
 	if err != nil {
 		logger.FromContext(ctx).Error("init request error", "err", err)
+
 		_ = c.Reply("Failed to processing message, please retry.")
+
 		return err
 	}
 
 	text := c.Text()
 	logger.FromContext(ctx).Info("TextHandler start summary", "text", text)
+
 	url := getUrlFromText(text)
 	if url == "" {
 		return c.Reply("Please provide a valid URL.")
@@ -57,29 +60,35 @@ func (h *Handler) WebSummaryHandler(c tele.Context) error {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get content: %w", err)
 		}
+
 		bookmarkContentDTO.FromReaderContent(content)
 		bookmarkContentDTO.Type = bookmarks.ContentTypeBookmark
 
 		// process the summary
 		summarier := processor.NewSummaryProcessor(h.llm, processor.WithSummaryOptionUser(user))
 		summarier.StreamingSummary(ctx, content.Markwdown, sendToUser)
+
 		return &resp, nil
 	})
 	if err != nil {
 		return processSendError(ctx, c, err)
 	}
+
 	var tags []string
 	*summary, tags = processor.NewSummaryProcessor(h.llm).ParseSummaryInfo(*summary)
 	bookmarkContentDTO.Summary = *summary
 	bookmarkContentDTO.Tags = append(bookmarkContentDTO.Tags, tags...)
+
 	if msg, err = editMessage(c, msg, *summary, true); err != nil {
 		return err
 	}
 
 	if _, err = h.saveBookmark(ctx, tx, user.ID, &bookmarkContentDTO); err != nil {
 		logger.FromContext(ctx).Error("failed to save bookmark", "err", err)
+
 		return err
 	}
+
 	return nil
 }
 
@@ -87,6 +96,7 @@ func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID,
 	bookmark, err := h.bookmarkService.CreateBookmark(ctx, tx, userId, bookmarkContent)
 	if err != nil {
 		logger.FromContext(ctx).Error("save bookmark from reader bot error", "err", err.Error())
+
 		return "", err
 	} else {
 		logger.FromContext(ctx).Info("save bookmark from reader bot", "id", bookmark.ID)
@@ -104,6 +114,8 @@ func (h *Handler) saveBookmark(ctx context.Context, tx pgx.Tx, userId uuid.UUID,
 	} else {
 		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
 	}
+
 	bookmarkUrl := fmt.Sprintf("%s/bookmarks/%s", config.Settings.Service.Fqdn, bookmark.ID)
+
 	return bookmarkUrl, nil
 }

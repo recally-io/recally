@@ -9,10 +9,10 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 )
 
-// MarkdownOption represents an option for configuring the MarkdownProcessor
+// MarkdownOption represents an option for configuring the MarkdownProcessor.
 type MarkdownOption func(*MarkdownProcessor)
 
-// WithMarkdownOptions sets the markdown converter options
+// WithMarkdownOptions sets the markdown converter options.
 func WithMarkdownOptions(options md.Options) MarkdownOption {
 	return func(p *MarkdownProcessor) {
 		p.config.Options = options
@@ -31,21 +31,21 @@ func WithMarkdownAfterHook(hooks ...md.Afterhook) MarkdownOption {
 	}
 }
 
-// MarkdownConfig contains configuration for the markdown processor
+// MarkdownConfig contains configuration for the markdown processor.
 type MarkdownConfig struct {
 	Options     md.Options
 	BeforeHooks []md.BeforeHook
 	AfterHooks  []md.Afterhook
 }
 
-// MarkdownProcessor implements HTML to Markdown conversion
+// MarkdownProcessor implements HTML to Markdown conversion.
 type MarkdownProcessor struct {
 	Host   string `json:"host"`
 	config MarkdownConfig
 	conv   *md.Converter
 }
 
-// NewMarkdownProcessor creates a new MarkdownProcessor with the given configuration
+// NewMarkdownProcessor creates a new MarkdownProcessor with the given configuration.
 func NewMarkdownProcessor(host string, opts ...MarkdownOption) *MarkdownProcessor {
 	p := &MarkdownProcessor{
 		config: MarkdownConfig{
@@ -80,7 +80,7 @@ func (p *MarkdownProcessor) Name() string {
 	return "Markdown"
 }
 
-// Process implements the Processor interface
+// Process implements the Processor interface.
 func (p *MarkdownProcessor) Process(ctx context.Context, content *webreader.Content) error {
 	// Convert HTML to Markdown
 	markdown, err := p.conv.ConvertString(content.Html)

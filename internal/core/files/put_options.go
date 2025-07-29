@@ -23,5 +23,6 @@ func NewPutObjectOptions(opts ...PutObjectOption) minio.PutObjectOptions {
 	for _, opt := range opts {
 		opt(&res)
 	}
+
 	return res
 }

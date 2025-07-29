@@ -32,10 +32,12 @@ func (m *memCache) SetWithContext(ctx context.Context, key CacheKey, value inter
 func (m *memCache) Get(key CacheKey) (any, bool) {
 	m.mux.Lock()
 	defer m.mux.Unlock()
+
 	value, ok := m.c.Get(key.String())
 	if !ok {
 		return nil, false
 	}
+
 	return value, true
 }
 

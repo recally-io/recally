@@ -29,5 +29,6 @@ func transformerPipeline(docs []document.Document, transformers ...transformer.T
 			return nil, err
 		}
 	}
+
 	return docs, nil
 }

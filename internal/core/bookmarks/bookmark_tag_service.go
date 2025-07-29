@@ -70,12 +70,15 @@ func difference(sliceA, sliceB []string) []string {
 	for _, val := range sliceB {
 		setB[val] = struct{}{}
 	}
+
 	var diff []string
+
 	for _, val := range sliceA {
 		if _, found := setB[val]; !found {
 			diff = append(diff, val)
 		}
 	}
+
 	return diff
 }
 
@@ -97,6 +100,7 @@ func (s *Service) ensureTagsExist(ctx context.Context, tx db.DBTX, targetTags []
 		if slices.Contains(existing, tag) {
 			continue
 		}
+
 		if _, err := s.dao.CreateBookmarkTag(ctx, tx, db.CreateBookmarkTagParams{
 			Name:   tag,
 			UserID: userID,

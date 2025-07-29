@@ -85,6 +85,7 @@ func (s *CacheTestSuite) initPostgres(ctx context.Context) (*db.Pool, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return pool, nil
 }
 

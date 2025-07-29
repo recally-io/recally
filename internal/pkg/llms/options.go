@@ -79,6 +79,7 @@ func (o Options) ToChatCompletionRequest() openai.ChatCompletionRequest {
 	if o.Model == "" {
 		o.Model = defaultModel
 	}
+
 	return openai.ChatCompletionRequest{
 		Model:            o.Model,
 		Stop:             o.StopWords,

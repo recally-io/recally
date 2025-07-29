@@ -21,6 +21,7 @@ import (
 func (s *Service) registerMiddlewares() {
 	e := s.Server
 	pool := s.pool
+
 	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
 			return uuid.Must(uuid.NewV7()).String()
@@ -38,6 +39,7 @@ func (s *Service) registerMiddlewares() {
 			if strings.HasPrefix(c.Path(), "/api/v1/assistants/") && strings.HasSuffix(c.Path(), "/messages") && c.Request().Method == http.MethodPost {
 				return true
 			}
+
 			return false
 		},
 		ErrorMessage: "custom timeout error message returns to client",
@@ -48,11 +50,12 @@ func (s *Service) registerMiddlewares() {
 	e.Use(transactionMiddleWare(pool))
 }
 
-// contextMiddleWare is a middleware that sets logger and other context values to echo.Context
+// contextMiddleWare is a middleware that sets logger and other context values to echo.Context.
 func contextMiddleWare() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			setContext(c, contexts.ContextKeyLogger, logger.FromContext(c.Request().Context()))
+
 			return next(c)
 		}
 	}
@@ -64,9 +67,12 @@ func recoverMiddleware() echo.MiddlewareFunc {
 		if config.Settings.Debug {
 			debug.PrintStack()
 		}
+
 		logger.FromContext(c.Request().Context()).Error("http request recovered from panic", "err", err, "stack", string(stack))
+
 		return err
 	}
+
 	return middleware.RecoverWithConfig(cfg)
 }
 
@@ -92,6 +98,7 @@ func requestLoggerMiddleware() echo.MiddlewareFunc {
 			attrs = append(attrs, slog.String("error", v.Error.Error()))
 			logger.Default.LogAttrs(ctx, slog.LevelError, msg, attrs...)
 		}
+
 		return v.Error
 	}
 
@@ -116,21 +123,25 @@ func requestLoggerMiddleware() echo.MiddlewareFunc {
 	})
 }
 
-// contextMiddleWare is a middleware that sets logger and other context values to echo.Context
+// contextMiddleWare is a middleware that sets logger and other context values to echo.Context.
 func transactionMiddleWare(pool *db.Pool) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
+
 			tx, err := pool.Begin(ctx)
 			if err != nil {
 				return err
 			}
+
 			setContext(c, contexts.ContextKeyTx, tx)
+
 			defer func() {
 				if r := recover(); r != nil {
 					if err := tx.Rollback(context.Background()); err != nil {
 						logger.FromContext(ctx).Error("failed to rollback transaction", "err", err)
 					}
+
 					panic(r)
 				}
 			}()
@@ -139,6 +150,7 @@ func transactionMiddleWare(pool *db.Pool) echo.MiddlewareFunc {
 				if err := tx.Rollback(context.Background()); err != nil {
 					logger.FromContext(ctx).Error("failed to rollback transaction", "err", err)
 				}
+
 				return err
 			}
 

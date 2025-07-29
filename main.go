@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	migrations "recally/database"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/config"
@@ -16,9 +15,11 @@ import (
 	"recally/internal/port/bots"
 	"recally/internal/port/httpserver"
 	"time"
+
+	migrations "recally/database"
 )
 
-// Build information injected via ldflags
+// Build information injected via ldflags.
 var (
 	version = "dev"
 	commit  = "unknown"
@@ -41,10 +42,12 @@ func main() {
 			fmt.Printf("Commit: %s\n", commit)
 			fmt.Printf("Date: %s\n", date)
 			fmt.Printf("Built by: %s\n", builtBy)
+
 			return
 		case "health":
 			// Simple health check - could be enhanced to check database connectivity
 			fmt.Println("OK")
+
 			return
 		}
 	}
@@ -70,6 +73,7 @@ func main() {
 	if err != nil {
 		logger.Default.Fatal("failed to create new queue service", "err", err)
 	}
+
 	services = append(services, queueService)
 
 	// start http service
@@ -77,6 +81,7 @@ func main() {
 	if err != nil {
 		logger.Default.Fatal("failed to create new http service", "err", err)
 	}
+
 	services = append(services, httpService)
 
 	// start telegram bot service
@@ -86,6 +91,7 @@ func main() {
 		if err != nil {
 			logger.Default.Fatal("failed to create new bot service", "err", err, "type", bots.ReaderBot, "name", cfg.Name)
 		}
+
 		services = append(services, botService)
 	}
 
@@ -97,6 +103,7 @@ func main() {
 
 	// wait for signal and gracefully shutdown
 	<-ctx.Done()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

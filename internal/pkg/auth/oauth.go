@@ -13,6 +13,7 @@ func (s *Service) GetOAuth2RedirectURL(ctx context.Context, provider string) (st
 	if err != nil {
 		return "", err
 	}
+
 	return oProvider.GetRedirectURL(), nil
 }
 
@@ -51,6 +52,7 @@ func (s *Service) HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider
 	if err != nil {
 		return nil, err
 	}
+
 	token, err := oProvider.GetToken(ctx, code)
 	if err != nil {
 		return nil, err
@@ -87,6 +89,7 @@ func (s *Service) HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider
 				Username: pgtype.Text{String: fmt.Sprintf("%s-%s", oUser.Provider, oUser.Name), Valid: oUser.Name != ""},
 				Email:    pgtype.Text{String: oUser.Email, Valid: oUser.Email != ""},
 			}
+
 			dbUser, err = s.dao.CreateUser(ctx, tx, createUserParams)
 			if err != nil {
 				return nil, fmt.Errorf("create user failed: %w", err)
@@ -103,11 +106,11 @@ func (s *Service) HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider
 			RefreshToken:   pgtype.Text{String: token.RefreshToken, Valid: token.RefreshToken != ""},
 			TokenExpiresAt: pgtype.Timestamptz{Time: token.Expiry, Valid: true},
 		}
+
 		_, err = s.dao.CreateOAuthConnection(ctx, tx, params)
 		if err != nil {
 			return nil, fmt.Errorf("create oauth connection failed: %w", err)
 		}
-
 	} else {
 		// update oauth connection
 		params := db.UpdateOAuthConnectionParams{
@@ -118,12 +121,15 @@ func (s *Service) HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider
 			RefreshToken:   pgtype.Text{String: token.RefreshToken, Valid: token.RefreshToken != ""},
 			TokenExpiresAt: pgtype.Timestamptz{Time: token.Expiry, Valid: true},
 		}
+
 		_, err = s.dao.UpdateOAuthConnection(ctx, tx, params)
 		if err != nil {
 			return nil, fmt.Errorf("update oauth connection failed: %w", err)
 		}
 	}
+
 	user.Load(&dbUser)
+
 	return user, nil
 }
 
@@ -142,6 +148,7 @@ func (s *Service) LinkAccount(ctx context.Context, tx db.DBTX, originalOAuthUser
 	if err != nil && !db.IsNotFoundError(err) {
 		return fmt.Errorf("get oauth connection by provider and provider id failed: %w", err)
 	}
+
 	originalUser, err := s.GetUserById(ctx, tx, oAuthConn.UserID)
 	if err != nil {
 		return fmt.Errorf("get original user by id failed: %w", err)
@@ -172,6 +179,7 @@ func (s *Service) LinkAccount(ctx context.Context, tx db.DBTX, originalOAuthUser
 		Provider:       originalOAuthUser.Provider,
 		ProviderUserID: originalOAuthUser.ID,
 	}
+
 	_, err = s.dao.UpdateOAuthConnection(ctx, tx, params)
 	if err != nil {
 		return fmt.Errorf("update oauth connection failed: %w", err)

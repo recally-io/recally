@@ -14,6 +14,7 @@ func loadTx(ctx context.Context) (pgx.Tx, error) {
 	if !ok {
 		return nil, errors.New("tx not found")
 	}
+
 	return tx, nil
 }
 

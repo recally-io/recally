@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// DAO provides data access operations for files
+// DAO provides data access operations for files.
 type DAO interface {
 	CreateFile(ctx context.Context, tx db.DBTX, arg db.CreateFileParams) (db.File, error)
 

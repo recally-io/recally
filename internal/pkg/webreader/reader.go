@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Content represents the result of a fetch operation
+// Content represents the result of a fetch operation.
 type Content struct {
 	URL           string     `json:"url"`
 	Title         string     `json:"title"`
@@ -35,7 +35,7 @@ type FetchedContent struct {
 	Headers     map[string][]string
 }
 
-// Fetcher defines the interface for different content fetchers
+// Fetcher defines the interface for different content fetchers.
 type Fetcher interface {
 	// Fetch retrieves content from the given URL
 	Fetch(ctx context.Context, url string) (*FetchedContent, error)
@@ -43,7 +43,7 @@ type Fetcher interface {
 	Close() error
 }
 
-// Processor defines the interface for different content processors
+// Processor defines the interface for different content processors.
 type Processor interface {
 	// Process processes the input content string and returns the processed result string
 	Process(ctx context.Context, input *Content) error
@@ -51,13 +51,13 @@ type Processor interface {
 	Name() string
 }
 
-// Reader represents a configurable web content reader
+// Reader represents a configurable web content reader.
 type Reader struct {
 	fetcher    Fetcher
 	processors []Processor
 }
 
-// New creates a new Reader instance
+// New creates a new Reader instance.
 func New(f Fetcher, processors ...Processor) *Reader {
 	return &Reader{
 		fetcher:    f,
@@ -65,12 +65,12 @@ func New(f Fetcher, processors ...Processor) *Reader {
 	}
 }
 
-// AddProcessor adds a new processor to the end of the processing chain
+// AddProcessor adds a new processor to the end of the processing chain.
 func (w *Reader) AddProcessor(p Processor) {
 	w.processors = append(w.processors, p)
 }
 
-// Read fetches content from the URL and processes it through all processors in sequence
+// Read fetches content from the URL and processes it through all processors in sequence.
 func (w *Reader) Fetch(ctx context.Context, url string) (*Content, error) {
 	// Fetch the content
 	defer w.fetcher.Close()
@@ -98,7 +98,7 @@ func (w *Reader) Process(ctx context.Context, content *Content) (*Content, error
 	return content, nil
 }
 
-// Read fetches content from the URL and processes it through all processors in sequence
+// Read fetches content from the URL and processes it through all processors in sequence.
 func (w *Reader) Read(ctx context.Context, url string) (*Content, error) {
 	fetchedContent, err := w.Fetch(ctx, url)
 	if err != nil {

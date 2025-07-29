@@ -51,16 +51,19 @@ func Batch(transformer Transformer, docs []document.Document) ([]document.Docume
 			if err != nil {
 				// Log the error if the transformation fails.
 				logger.Default.Error("failed to transform document", "err", err)
+
 				return err
 			}
 
 			// Append the transformed document to the result slice.
 			res = append(res, newDoc...)
+
 			return nil
 		})
 	}
 
 	// Wait for all goroutines to complete.
 	err := eg.Wait()
+
 	return res, err
 }

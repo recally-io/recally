@@ -11,7 +11,7 @@ import (
 	utls "github.com/refraction-networking/utls"
 )
 
-// HTTPConfig extends the base Config with HTTP-specific options
+// HTTPConfig extends the base Config with HTTP-specific options.
 type HTTPConfig struct {
 	Timeout         int               `json:"timeout"`          // Timeout in seconds
 	MaxBodySize     int64             `json:"max_body_size"`    // Maximum body size in bytes
@@ -22,10 +22,10 @@ type HTTPConfig struct {
 	FollowRedirects bool              `json:"follow_redirects"` // Whether to follow redirects
 }
 
-// HTTPOption is a function type that modifies HTTPFetcher options
+// HTTPOption is a function type that modifies HTTPFetcher options.
 type HTTPOption func(*HTTPConfig)
 
-// HTTPFetcher implements the Fetcher interface using net/http
+// HTTPFetcher implements the Fetcher interface using net/http.
 type HTTPFetcher struct {
 	client *http.Client
 	config HTTPConfig
@@ -39,7 +39,7 @@ func DefaultHTTPConfig() HTTPConfig {
 	}
 }
 
-// NewHTTPFetcher creates a new HTTPFetcher with the given options
+// NewHTTPFetcher creates a new HTTPFetcher with the given options.
 func NewHTTPFetcher(opts ...HTTPOption) (*HTTPFetcher, error) {
 	config := DefaultHTTPConfig()
 
@@ -73,7 +73,7 @@ func NewHTTPFetcher(opts ...HTTPOption) (*HTTPFetcher, error) {
 	}, nil
 }
 
-// Fetch implements the Fetcher interface
+// Fetch implements the Fetcher interface.
 func (f *HTTPFetcher) Fetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
 	var lastErr error
 	retries := f.config.RetryCount + 1
@@ -102,7 +102,7 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, url string) (*webreader.Fetched
 	return nil, fmt.Errorf("all fetch attempts failed: %w", lastErr)
 }
 
-// doFetch performs the actual HTTP fetch
+// doFetch performs the actual HTTP fetch.
 func (f *HTTPFetcher) doFetch(ctx context.Context, url string) (*webreader.FetchedContent, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -132,54 +132,54 @@ func (f *HTTPFetcher) doFetch(ctx context.Context, url string) (*webreader.Fetch
 	}, nil
 }
 
-// Close implements the Fetcher interface
+// Close implements the Fetcher interface.
 func (f *HTTPFetcher) Close() error {
 	return nil
 }
 
-// WithHTTPOptionTimeout sets the timeout for HTTP requests
+// WithHTTPOptionTimeout sets the timeout for HTTP requests.
 func WithHTTPOptionTimeout(timeout int) HTTPOption {
 	return func(config *HTTPConfig) {
 		config.Timeout = timeout
 	}
 }
 
-// WithHTTPOptionMaxBodySize sets the maximum body size for HTTP responses
+// WithHTTPOptionMaxBodySize sets the maximum body size for HTTP responses.
 func WithHTTPOptionMaxBodySize(size int64) HTTPOption {
 	return func(config *HTTPConfig) {
 		config.MaxBodySize = size
 	}
 }
 
-// WithHTTPOptionMaxRedirects sets the maximum number of redirects to follow
+// WithHTTPOptionMaxRedirects sets the maximum number of redirects to follow.
 func WithHTTPOptionMaxRedirects(maxRedirects int) HTTPOption {
 	return func(config *HTTPConfig) {
 		config.MaxRedirects = maxRedirects
 	}
 }
 
-// WithHTTPOptionRetryCount sets the number of times to retry failed requests
+// WithHTTPOptionRetryCount sets the number of times to retry failed requests.
 func WithHTTPOptionRetryCount(retryCount int) HTTPOption {
 	return func(config *HTTPConfig) {
 		config.RetryCount = retryCount
 	}
 }
 
-// WithRetryDelay sets the delay between retries
+// WithRetryDelay sets the delay between retries.
 func WithRetryDelay(delay time.Duration) HTTPOption {
 	return func(config *HTTPConfig) {
 		config.RetryDelay = delay
 	}
 }
 
-// WithHTTPOptionExtraHeaders sets additional HTTP headers
+// WithHTTPOptionExtraHeaders sets additional HTTP headers.
 func WithHTTPOptionExtraHeaders(headers map[string]string) HTTPOption {
 	return func(config *HTTPConfig) {
 		config.ExtraHeaders = headers
 	}
 }
 
-// WithHTTPOptionFollowRedirects sets whether to follow redirects
+// WithHTTPOptionFollowRedirects sets whether to follow redirects.
 func WithHTTPOptionFollowRedirects(follow bool) HTTPOption {
 	return func(config *HTTPConfig) {
 		config.FollowRedirects = follow
