@@ -34,7 +34,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.34.0
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/crypto v0.36.0
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sync v0.12.0
 	gopkg.in/telebot.v3 v3.3.8
 )
