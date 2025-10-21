@@ -45,7 +45,10 @@ RUN bun run docs:build
 FROM golang:1.24-alpine AS build
 WORKDIR /go/src/app
 
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
+# Install Atlas CLI and other tools
+RUN apk add --no-cache curl && \
+    curl -sSf https://atlascli.io/install.sh | sh && \
+    go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
     go install github.com/swaggo/swag/cmd/swag@latest && \
     go install github.com/kevinburke/go-bindata/v4/...@latest
 
@@ -65,6 +68,9 @@ RUN go generate ./... && \
 # Final stage
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /service
+
+# Copy Atlas CLI binary
+COPY --from=build /usr/local/bin/atlas /usr/local/bin/atlas
 
 COPY --from=build /go/bin/app .
 
