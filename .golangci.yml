@@ -2,6 +2,8 @@
 # This file configures golangci-lint for the Recally project
 # Reference: https://golangci-lint.run/usage/configuration/
 
+version: 2
+
 run:
   # Timeout for analysis
   timeout: 10m

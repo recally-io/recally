@@ -142,7 +142,7 @@ River Migrations (Independent) → Continue Startup
 
 #### 1.0 Install Atlas CLI Locally
 ```bash
-curl -sSf https://atlascli.io/install.sh | sh
+curl -sSf https://atlasgo.sh | sh -s -- --yes
 ```
 
 #### 1.1 Add Atlas Go SDK Dependency
@@ -218,7 +218,7 @@ env "production" {
 Update `Dockerfile` (if exists) to include Atlas:
 ```dockerfile
 # Add Atlas CLI
-RUN curl -sSf https://atlascli.io/install.sh | sh
+RUN curl -sSf https://atlasgo.sh | sh -s -- --yes
 ```
 
 **Files Modified**: `Dockerfile` (or create deployment note)

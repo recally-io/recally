@@ -4,7 +4,7 @@
 # Download Atlas CLI in a builder stage
 FROM alpine:latest AS atlas-builder
 RUN apk add --no-cache curl && \
-    curl -sSf https://atlascli.io/install.sh | sh
+    curl -sSf https://atlasgo.sh | sh -s -- --yes
 
 FROM gcr.io/distroless/static-debian12:nonroot
 
