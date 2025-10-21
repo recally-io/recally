@@ -17,7 +17,6 @@ run:
   
   # Skip directories
   skip-dirs:
-    - database/bindata.go
     - internal/pkg/db # Generated SQLC files
     - docs/swagger
     - web
@@ -288,7 +287,6 @@ linters-settings:
 issues:
   # Exclude configuration
   exclude-dirs:
-    - database/bindata.go
     - internal/pkg/db
     - docs
     - vendor
@@ -319,7 +317,7 @@ issues:
         - musttag
     
     # Exclude known issues with generated files
-    - path: (bindata|db|swagger)\.go
+    - path: (db|swagger)\.go
       linters:
         - gofumpt
         - goimports

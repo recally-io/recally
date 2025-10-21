@@ -36,7 +36,7 @@ make lint
 # Run tests
 make test
 
-# Generate code (SQL, Swagger, Go bindata)
+# Generate code (SQL, Swagger)
 make generate
 ```
 

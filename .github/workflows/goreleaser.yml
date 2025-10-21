@@ -45,7 +45,6 @@ jobs:
         run: |
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
           go install github.com/swaggo/swag/cmd/swag@latest
-          go install github.com/kevinburke/go-bindata/v4/...@latest
 
       - name: Validate GoReleaser config
         uses: goreleaser/goreleaser-action@v6

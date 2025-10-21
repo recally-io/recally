@@ -49,8 +49,7 @@ WORKDIR /go/src/app
 RUN apk add --no-cache curl && \
     curl -sSf https://atlascli.io/install.sh | sh && \
     go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
-    go install github.com/swaggo/swag/cmd/swag@latest && \
-    go install github.com/kevinburke/go-bindata/v4/...@latest
+    go install github.com/swaggo/swag/cmd/swag@latest
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -60,7 +59,6 @@ COPY . .
 COPY --from=ui-base /usr/src/app/dist web/dist
 COPY --from=docs-base /usr/src/app/.vitepress/dist docs/.vitepress/dist
 RUN go generate ./... && \
-    go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/ && \
     sqlc generate && \
     swag init -g internal/port/httpserver/router.go -o docs/swagger && \
     go build -ldflags="-s -w" -o /go/bin/app main.go
