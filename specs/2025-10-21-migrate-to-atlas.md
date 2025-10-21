@@ -1,7 +1,7 @@
 # Migrate Database Migrations from go-migrate to Atlas
 
 **Date**: 2025-10-21
-**Status**: Planned
+**Status**: In Progress
 **Reviewed by**: Codex (GPT-5)
 
 ---
@@ -1306,3 +1306,50 @@ All using `update_updated_at_column()` function:
 **Status**: Ready for Implementation
 **Next Action**: User approval → Begin Phase 1
 **Estimated Completion**: 2-3 days
+
+---
+
+## Implementation Progress
+
+### Phase 1: Atlas Setup and Dependencies
+- [ ] Install Atlas CLI locally
+- [ ] Add Atlas Go SDK dependency and remove go-migrate
+- [ ] Create Atlas configuration file (database/atlas.hcl)
+- [ ] Update Dockerfile to pre-install Atlas CLI
+
+### Phase 2: Schema Definition
+- [ ] Create infrastructure schema (cache table)
+- [ ] Create authentication schema (users, OAuth, API keys, revoked tokens)
+- [ ] Create assistant system schema (with assistant_embedddings typo)
+- [ ] Create content and bookmark schemas (legacy + modern)
+- [ ] Create file storage schema
+- [ ] Create trigger functions schema
+- [ ] Create extensions and indexes schema (vector, BM25)
+- [ ] Separate seed data from migrations
+
+### Phase 3: Generate Initial Migration
+- [ ] Validate all schema files
+- [ ] Generate initial migration from schema definitions
+- [ ] Review and adjust generated migration SQL
+- [ ] Test migration on fresh database
+
+### Phase 4: Atlas Integration Layer
+- [ ] Create Atlas migration manager (database/atlas.go)
+- [ ] Update migration orchestration (database/migrate.go)
+- [ ] Verify SQLC configuration compatibility
+
+### Phase 5: Makefile and Cleanup
+- [ ] Archive old migrations to migrations.old/
+- [ ] Delete go-migrate artifacts (bindata.go)
+- [ ] Update Makefile with Atlas commands
+
+### Phase 6: Testing and Validation
+- [ ] Run fresh database integration test
+- [ ] Verify all 22 tables and schema objects
+- [ ] Test SQLC code regeneration
+- [ ] Run functional API tests
+- [ ] Test migration idempotency
+
+### Phase 7: Documentation Updates
+- [ ] Update CLAUDE.md documentation
+- [ ] Create Atlas migration guide
