@@ -1,8 +1,6 @@
 // Assistant System Schema
 // This file defines AI assistant functionality with conversation management
 
-schema "public" {
-}
 
 table "assistants" {
   schema = schema.public
@@ -75,7 +73,7 @@ table "assistants" {
     columns = [column.uuid]
   }
 
-  index "idx_user_created_at" {
+  index "idx_assistants_user_created_at" {
     columns = [column.user_id, column.created_at]
   }
 }
@@ -165,7 +163,7 @@ table "assistant_threads" {
     columns = [column.user_id, column.assistant_id, column.created_at]
   }
 
-  index "idx_assistant_created_at" {
+  index "idx_assistant_threads_assistant_created_at" {
     columns = [column.assistant_id, column.created_at]
   }
 }
@@ -271,15 +269,15 @@ table "assistant_messages" {
     columns = [column.uuid]
   }
 
-  index "idx_user_created_at" {
+  index "idx_assistant_messages_user_created_at" {
     columns = [column.user_id, column.created_at]
   }
 
-  index "idx_assistant_created_at" {
+  index "idx_assistant_messages_assistant_created_at" {
     columns = [column.assistant_id, column.created_at]
   }
 
-  index "idx_thread_created_at" {
+  index "idx_assistant_messages_thread_created_at" {
     columns = [column.thread_id, column.created_at]
   }
 }
@@ -375,15 +373,15 @@ table "assistant_attachments" {
     columns = [column.uuid]
   }
 
-  index "idx_user_created_at" {
+  index "idx_assistant_attachments_user_created_at" {
     columns = [column.user_id, column.created_at]
   }
 
-  index "idx_assistant_created_at" {
+  index "idx_assistant_attachments_assistant_created_at" {
     columns = [column.assistant_id, column.created_at]
   }
 
-  index "idx_thread_created_at" {
+  index "idx_assistant_attachments_thread_created_at" {
     columns = [column.thread_id, column.created_at]
   }
 }

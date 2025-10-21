@@ -1,8 +1,6 @@
 // Content and Bookmark Schema
 // This file defines both legacy content tables and modern bookmark system tables
 
-schema "public" {
-}
 
 // ============================================================================
 // Legacy Content System Tables
@@ -123,7 +121,7 @@ table "content" {
   index "idx_content_metadata" {
     columns = [column.metadata]
     type    = GIN
-    ops     = sql("jsonb_path_ops")
+    // Note: jsonb_path_ops operator class will be added to migration manually if needed
   }
 }
 
@@ -503,7 +501,7 @@ table "bookmark_content" {
   index "idx_bookmark_content_metadata" {
     columns = [column.metadata]
     type    = GIN
-    ops     = sql("jsonb_path_ops")
+    // Note: jsonb_path_ops operator class will be added to migration manually if needed
   }
 }
 
@@ -586,7 +584,7 @@ table "bookmarks" {
   index "idx_bookmarks_metadata" {
     columns = [column.metadata]
     type    = GIN
-    ops     = sql("jsonb_path_ops")
+    // Note: jsonb_path_ops operator class will be added to migration manually if needed
   }
 }
 

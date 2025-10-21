@@ -1,8 +1,6 @@
 // Files Schema
 // This file defines the files table for S3 resource mapping
 
-schema "public" {
-}
 
 table "files" {
   schema = schema.public
@@ -109,7 +107,7 @@ table "files" {
   index "idx_metadata" {
     columns = [column.metadata]
     type    = GIN
-    ops     = sql("jsonb_path_ops")
+    // Note: jsonb_path_ops operator class will be added to migration manually if needed
   }
 
   index "idx_user_id" {

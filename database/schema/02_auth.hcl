@@ -1,8 +1,6 @@
 // Authentication and Authorization Schema
 // This file defines user management, OAuth integration, API keys, and token revocation tables
 
-schema "public" {
-}
 
 table "users" {
   schema = schema.public
@@ -87,30 +85,23 @@ table "users" {
   }
 
   index "idx_users_email" {
-    unique  = true
-    columns = [sql("LOWER(email)")]
+    unique = true
     on {
-      column = column.email
-      ops    = sql("IS NOT NULL")
+      expr = "LOWER(email)"
     }
+    where = "email IS NOT NULL"
   }
 
   index "idx_users_phone" {
     unique  = true
     columns = [column.phone]
-    on {
-      column = column.phone
-      ops    = sql("IS NOT NULL")
-    }
+    where   = "phone IS NOT NULL"
   }
 
   index "idx_users_username" {
     unique  = true
     columns = [column.username]
-    on {
-      column = column.username
-      ops    = sql("IS NOT NULL")
-    }
+    where   = "username IS NOT NULL"
   }
 
   check "users_email_check" {
@@ -208,10 +199,7 @@ table "auth_user_oauth_connections" {
 
   index "idx_oauth_token_expiry" {
     columns = [column.token_expires_at]
-    on {
-      column = column.token_expires_at
-      ops    = sql("IS NOT NULL")
-    }
+    where   = "token_expires_at IS NOT NULL"
   }
 }
 
@@ -296,10 +284,7 @@ table "auth_api_keys" {
 
   index "idx_auth_api_keys_expiry" {
     columns = [column.expires_at]
-    on {
-      column = column.expires_at
-      ops    = sql("IS NOT NULL")
-    }
+    where   = "expires_at IS NOT NULL"
   }
 
   check "ck_key_expiry" {
