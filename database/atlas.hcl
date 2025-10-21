@@ -1,16 +1,10 @@
 env "local" {
-  src = "file://database/schema"
+  src = "file://schema"
   url = getenv("DATABASE_URL")
-  dev = "docker://paradedb/paradedb:latest-pg16"  # CRITICAL: Use ParadeDB, not vanilla Postgres
+  dev = "docker://postgres/16/dev?search_path=public"
 
   migration {
-    dir = "file://database/migrations"
-  }
-
-  # Ignore River's internal migration tables
-  exclude {
-    schema_pattern = "^river_.*"
-    table_pattern  = "^river_.*"
+    dir = "file://migrations"
   }
 
   lint {
@@ -27,16 +21,11 @@ env "local" {
 }
 
 env "production" {
-  src = "file://database/schema"
+  src = "file://schema"
   url = getenv("DATABASE_URL")
 
   migration {
-    dir = "file://database/migrations"
-  }
-
-  exclude {
-    schema_pattern = "^river_.*"
-    table_pattern  = "^river_.*"
+    dir = "file://migrations"
   }
 
   lint {

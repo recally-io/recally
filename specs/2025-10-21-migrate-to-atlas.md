@@ -1312,10 +1312,10 @@ All using `update_updated_at_column()` function:
 ## Implementation Progress
 
 ### Phase 1: Atlas Setup and Dependencies
-- [ ] Install Atlas CLI locally
-- [ ] Add Atlas Go SDK dependency and remove go-migrate
-- [ ] Create Atlas configuration file (database/atlas.hcl)
-- [ ] Update Dockerfile to pre-install Atlas CLI
+- [x] Install Atlas CLI locally
+- [x] Add Atlas Go SDK dependency and remove go-migrate
+- [x] Create Atlas configuration file (database/atlas.hcl)
+- [x] Update Dockerfile to pre-install Atlas CLI
 
 ### Phase 2: Schema Definition
 - [ ] Create infrastructure schema (cache table)
