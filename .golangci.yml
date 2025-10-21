@@ -35,19 +35,17 @@ run:
 # Output configuration
 output:
   # Format of output: colored-line-number|line-number|json|tab|checkstyle|code-climate
-  formats:
-    - format: colored-line-number
-      path: stdout
-  
+  format: colored-line-number
+
   # Print lines of code with issue
   print-issued-lines: true
-  
+
   # Print linter name in the end of issue text
   print-linter-name: true
-  
+
   # Make issues output unique by line
   uniq-by-line: true
-  
+
   # Sort results by: filepath, line and column
   sort-results: true
 
