@@ -67,8 +67,9 @@ RUN go generate ./... && \
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /service
 
-# Copy Atlas CLI binary
+# Copy Atlas CLI binary and migrations
 COPY --from=build /usr/local/bin/atlas /usr/local/bin/atlas
+COPY --from=build /go/src/app/database/migrations /service/database/migrations
 
 COPY --from=build /go/bin/app .
 
