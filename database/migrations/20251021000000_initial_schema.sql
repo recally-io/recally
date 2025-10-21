@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Initial Schema Migration
--- Generated: 2025-10-21 22:45:03
+-- Generated: 2025-10-21 22:52:51
 --
 -- This migration creates the complete database schema for Recally including:
 -- - 22 tables across 5 domain areas
@@ -333,6 +333,61 @@ CREATE TABLE "files" (
 );
 
 -- ============================================================================
+-- Unique Indexes
+-- ============================================================================
+-- NOTE: Unique indexes MUST be created before foreign keys that reference them
+
+-- cache
+CREATE UNIQUE INDEX "uni_cache_domain_key" ON "cache" ("domain", "key");
+
+-- users
+CREATE UNIQUE INDEX "users_uuid_key" ON "users" ("uuid");
+CREATE UNIQUE INDEX "users_email_key" ON "users" ("email");
+CREATE UNIQUE INDEX "idx_users_email" ON "users" (LOWER(email)) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX "idx_users_phone" ON "users" ("phone") WHERE phone IS NOT NULL;
+CREATE UNIQUE INDEX "idx_users_username" ON "users" ("username") WHERE username IS NOT NULL;
+
+-- auth_user_oauth_connections
+CREATE UNIQUE INDEX "uq_oauth_connection" ON "auth_user_oauth_connections" ("provider", "provider_user_id");
+
+-- auth_api_keys
+CREATE UNIQUE INDEX "uq_user_key_name" ON "auth_api_keys" ("user_id", "name");
+
+-- auth_revoked_tokens
+CREATE UNIQUE INDEX "uq_revoked_token" ON "auth_revoked_tokens" ("user_id", "jti");
+
+-- assistants
+CREATE UNIQUE INDEX "assistants_uuid_key" ON "assistants" ("uuid");
+
+-- assistant_threads
+CREATE UNIQUE INDEX "assistant_threads_uuid_key" ON "assistant_threads" ("uuid");
+
+-- assistant_messages
+CREATE UNIQUE INDEX "assistant_messages_uuid_key" ON "assistant_messages" ("uuid");
+
+-- assistant_attachments
+CREATE UNIQUE INDEX "assistant_attachments_uuid_key" ON "assistant_attachments" ("uuid");
+
+-- assistant_embedddings
+CREATE UNIQUE INDEX "assistant_embedddings_uuid_key" ON "assistant_embedddings" ("uuid");
+
+-- content_tags
+CREATE UNIQUE INDEX "content_tags_name_user_id_key" ON "content_tags" ("name", "user_id");
+
+-- bookmark_content
+CREATE UNIQUE INDEX "bookmark_content_url_user_id_key" ON "bookmark_content" ("url", "user_id");
+
+-- bookmark_tags
+CREATE UNIQUE INDEX "bookmark_tags_user_id_name_key" ON "bookmark_tags" ("user_id", "name");
+
+-- bookmark_share
+CREATE UNIQUE INDEX "bookmark_share_user_id_bookmark_id_key" ON "bookmark_share" ("user_id", "bookmark_id");
+
+-- files
+CREATE UNIQUE INDEX "unique_original_url" ON "files" ("original_url");
+CREATE UNIQUE INDEX "unique_s3_key" ON "files" ("s3_key");
+
+-- ============================================================================
 -- Foreign Keys
 -- ============================================================================
 
@@ -420,59 +475,41 @@ ALTER TABLE "auth_api_keys" ADD CONSTRAINT "ck_key_expiry" CHECK (expires_at IS 
 ALTER TABLE "auth_revoked_tokens" ADD CONSTRAINT "ck_token_revocation" CHECK (expires_at > revoked_at);
 
 -- ============================================================================
--- Indexes
+-- Regular Indexes
 -- ============================================================================
 
--- cache
-CREATE UNIQUE INDEX "uni_cache_domain_key" ON "cache" ("domain", "key");
-
--- users
-CREATE UNIQUE INDEX "users_uuid_key" ON "users" ("uuid");
-CREATE UNIQUE INDEX "users_email_key" ON "users" ("email");
-CREATE UNIQUE INDEX "idx_users_email" ON "users" (LOWER(email)) WHERE email IS NOT NULL;
-CREATE UNIQUE INDEX "idx_users_phone" ON "users" ("phone") WHERE phone IS NOT NULL;
-CREATE UNIQUE INDEX "idx_users_username" ON "users" ("username") WHERE username IS NOT NULL;
-
 -- auth_user_oauth_connections
-CREATE UNIQUE INDEX "uq_oauth_connection" ON "auth_user_oauth_connections" ("provider", "provider_user_id");
 CREATE INDEX "idx_oauth_user_id" ON "auth_user_oauth_connections" ("user_id");
 CREATE INDEX "idx_oauth_provider_lookup" ON "auth_user_oauth_connections" ("provider", "provider_user_id");
 CREATE INDEX "idx_oauth_token_expiry" ON "auth_user_oauth_connections" ("token_expires_at") WHERE token_expires_at IS NOT NULL;
 
 -- auth_api_keys
-CREATE UNIQUE INDEX "uq_user_key_name" ON "auth_api_keys" ("user_id", "name");
 CREATE INDEX "idx_auth_api_keys_prefix" ON "auth_api_keys" ("key_prefix");
 CREATE INDEX "idx_auth_api_keys_user" ON "auth_api_keys" ("user_id");
 CREATE INDEX "idx_auth_api_keys_expiry" ON "auth_api_keys" ("expires_at") WHERE expires_at IS NOT NULL;
 
 -- auth_revoked_tokens
-CREATE UNIQUE INDEX "uq_revoked_token" ON "auth_revoked_tokens" ("user_id", "jti");
 CREATE INDEX "idx_auth_revoked_tokens_expiry" ON "auth_revoked_tokens" ("expires_at");
 CREATE INDEX "idx_auth_revoked_tokens_user" ON "auth_revoked_tokens" ("user_id");
 
 -- assistants
-CREATE UNIQUE INDEX "assistants_uuid_key" ON "assistants" ("uuid");
 CREATE INDEX "idx_assistants_user_created_at" ON "assistants" ("user_id", "created_at");
 
 -- assistant_threads
-CREATE UNIQUE INDEX "assistant_threads_uuid_key" ON "assistant_threads" ("uuid");
 CREATE INDEX "idx_user_assistant_created_at" ON "assistant_threads" ("user_id", "assistant_id", "created_at");
 CREATE INDEX "idx_assistant_threads_assistant_created_at" ON "assistant_threads" ("assistant_id", "created_at");
 
 -- assistant_messages
-CREATE UNIQUE INDEX "assistant_messages_uuid_key" ON "assistant_messages" ("uuid");
 CREATE INDEX "idx_assistant_messages_user_created_at" ON "assistant_messages" ("user_id", "created_at");
 CREATE INDEX "idx_assistant_messages_assistant_created_at" ON "assistant_messages" ("assistant_id", "created_at");
 CREATE INDEX "idx_assistant_messages_thread_created_at" ON "assistant_messages" ("thread_id", "created_at");
 
 -- assistant_attachments
-CREATE UNIQUE INDEX "assistant_attachments_uuid_key" ON "assistant_attachments" ("uuid");
 CREATE INDEX "idx_assistant_attachments_user_created_at" ON "assistant_attachments" ("user_id", "created_at");
 CREATE INDEX "idx_assistant_attachments_assistant_created_at" ON "assistant_attachments" ("assistant_id", "created_at");
 CREATE INDEX "idx_assistant_attachments_thread_created_at" ON "assistant_attachments" ("thread_id", "created_at");
 
 -- assistant_embedddings
-CREATE UNIQUE INDEX "assistant_embedddings_uuid_key" ON "assistant_embedddings" ("uuid");
 CREATE INDEX "idx_user" ON "assistant_embedddings" ("user_id");
 CREATE INDEX "idx_attachment" ON "assistant_embedddings" ("attachment_id");
 
@@ -485,7 +522,6 @@ CREATE INDEX "idx_content_created_at" ON "content" ("created_at");
 CREATE INDEX "idx_content_metadata" ON "content" USING GIN ("metadata");
 
 -- content_tags
-CREATE UNIQUE INDEX "content_tags_name_user_id_key" ON "content_tags" ("name", "user_id");
 CREATE INDEX "idx_content_tags_name" ON "content_tags" ("name");
 CREATE INDEX "idx_content_tags_user_id" ON "content_tags" ("user_id");
 
@@ -497,7 +533,6 @@ CREATE INDEX "content_share_user_id_idx" ON "content_share" ("user_id");
 CREATE INDEX "content_share_content_id_idx" ON "content_share" ("content_id");
 
 -- bookmark_content
-CREATE UNIQUE INDEX "bookmark_content_url_user_id_key" ON "bookmark_content" ("url", "user_id");
 CREATE INDEX "idx_bookmark_content_type" ON "bookmark_content" ("type");
 CREATE INDEX "idx_bookmark_content_url" ON "bookmark_content" ("url");
 CREATE INDEX "idx_bookmark_content_domain" ON "bookmark_content" ("domain");
@@ -511,20 +546,16 @@ CREATE INDEX "idx_bookmarks_archive" ON "bookmarks" ("user_id", "is_archive");
 CREATE INDEX "idx_bookmarks_metadata" ON "bookmarks" USING GIN ("metadata");
 
 -- bookmark_tags
-CREATE UNIQUE INDEX "bookmark_tags_user_id_name_key" ON "bookmark_tags" ("user_id", "name");
 CREATE INDEX "idx_bookmark_tags_name" ON "bookmark_tags" ("name");
 
 -- bookmark_tags_mapping
 CREATE INDEX "idx_bookmark_tags_mapping_tag_id" ON "bookmark_tags_mapping" ("tag_id");
 
 -- bookmark_share
-CREATE UNIQUE INDEX "bookmark_share_user_id_bookmark_id_key" ON "bookmark_share" ("user_id", "bookmark_id");
 CREATE INDEX "idx_bookmark_share_user_id" ON "bookmark_share" ("user_id");
 CREATE INDEX "idx_bookmark_share_content_id" ON "bookmark_share" ("bookmark_id");
 
 -- files
-CREATE UNIQUE INDEX "unique_original_url" ON "files" ("original_url");
-CREATE UNIQUE INDEX "unique_s3_key" ON "files" ("s3_key");
 CREATE INDEX "idx_original_url" ON "files" ("original_url");
 CREATE INDEX "idx_s3_url" ON "files" ("s3_url");
 CREATE INDEX "idx_file_hash" ON "files" ("file_hash");
