@@ -543,13 +543,13 @@ table "bookmarks" {
   }
 
   column "created_at" {
-    null    = false
+    null    = true
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
   }
 
   column "updated_at" {
-    null    = false
+    null    = true
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
   }
@@ -608,13 +608,13 @@ table "bookmark_tags" {
   }
 
   column "created_at" {
-    null    = false
+    null    = true
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
   }
 
   column "updated_at" {
-    null    = false
+    null    = true
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
   }
@@ -653,13 +653,13 @@ table "bookmark_tags_mapping" {
   }
 
   column "created_at" {
-    null    = false
+    null    = true
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
   }
 
   column "updated_at" {
-    null    = false
+    null    = true
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
   }

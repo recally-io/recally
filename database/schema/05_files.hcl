@@ -58,13 +58,13 @@ table "files" {
   }
 
   column "created_at" {
-    null    = false
+    null    = true
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
   }
 
   column "updated_at" {
-    null    = false
+    null    = true
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
   }

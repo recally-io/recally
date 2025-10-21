@@ -29,18 +29,18 @@ table "cache" {
 
   column "expires_at" {
     null = true
-    type = timestamptz
+    type = timestamp
   }
 
   column "created_at" {
     null    = true
-    type    = timestamptz
+    type    = timestamp
     default = sql("CURRENT_TIMESTAMP")
   }
 
   column "updated_at" {
     null    = true
-    type    = timestamptz
+    type    = timestamp
     default = sql("CURRENT_TIMESTAMP")
   }
 
