@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 
@@ -44,5 +45,6 @@ func (s *Service) OwnerTransfer(ctx context.Context, tx db.DBTX, ownerID, newOwn
 	}
 
 	logger.FromContext(ctx).Info("all owner transfer tasks completed successfully")
+
 	return nil
 }

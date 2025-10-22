@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
+
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/tools"
-	"time"
 )
 
 const (
@@ -61,16 +62,19 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to invoke tool: %w", err)
 	}
+
 	return t.MarshalResult(ctx, result)
 }
 
 func (t *Tool) Search(ctx context.Context, args RequestArgs) ([]*Content, error) {
 	url := fmt.Sprintf("%s/%s", jinaHost, args.Query)
 	logger.FromContext(ctx).Debug("jina searcher start", "query", args.Query)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jina searcher request: %w", err)
 	}
+
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 
@@ -85,7 +89,9 @@ func (t *Tool) Search(ctx context.Context, args RequestArgs) ([]*Content, error)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read jina searcher response body: %w", err)
 		}
+
 		logger.FromContext(ctx).Error("jina searcher error", "query", args.Query, "status", resp.Status, "err", string(respData))
+
 		return nil, fmt.Errorf("jina searcher for '%s' error: %s, %v", args.Query, resp.Status, string(respData))
 	}
 
@@ -94,6 +100,7 @@ func (t *Tool) Search(ctx context.Context, args RequestArgs) ([]*Content, error)
 	if err := json.NewDecoder(resp.Body).Decode(content); err != nil {
 		return nil, fmt.Errorf("failed to decode jina searcher response: %w", err)
 	}
+
 	return content.Data, nil
 }
 
@@ -103,8 +110,10 @@ func (t *Tool) SearchWithCache(ctx context.Context, args RequestArgs, cacheServi
 	cacheKey := cache.NewCacheKey("JinaSearcher", args.Query)
 	if val, ok := cache.Get[[]*Content](ctx, cacheService, cacheKey); ok {
 		logger.FromContext(ctx).Info("JinaSearcher", "cache", "hit", "query", args.Query)
+
 		return *val, nil
 	}
+
 	data, err := t.Search(ctx, args)
 	if err != nil {
 		return nil, err
@@ -112,5 +121,6 @@ func (t *Tool) SearchWithCache(ctx context.Context, args RequestArgs, cacheServi
 	// set cache
 	cacheService.Set(cacheKey, data, 24*time.Hour)
 	logger.FromContext(ctx).Info("JinaSearcher", "cache", "set", "query", args.Query)
+
 	return data, nil
 }

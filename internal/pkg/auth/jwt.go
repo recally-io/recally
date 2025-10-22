@@ -3,9 +3,10 @@ package auth
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/db"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -28,6 +29,7 @@ func (s *Service) GenerateJWT(userId uuid.UUID) (string, error) {
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 		"user_id": userId,
 	})
+
 	return token.SignedString(getJWTSecret())
 }
 
@@ -36,7 +38,9 @@ func (s *Service) ValidateJWT(ctx context.Context, tx db.DBTX, tokenString strin
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid token: %w", err)
 	}
+
 	user, err := s.GetUserById(ctx, tx, userId)
+
 	return user, exp, err
 }
 
@@ -45,6 +49,7 @@ func ValidateJWT(tokenString string) (uuid.UUID, int64, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("jwt: unexpected signing method: %v", token.Header["alg"])
 		}
+
 		return getJWTSecret(), nil
 	})
 	if err != nil {
@@ -52,10 +57,12 @@ func ValidateJWT(tokenString string) (uuid.UUID, int64, error) {
 	}
 
 	claim := token.Claims.(jwt.MapClaims)
+
 	userId, ok := claim["user_id"]
 	if !ok {
 		return uuid.Nil, 0, fmt.Errorf("jwt: user claim not found")
 	}
+
 	exp := int64(claim["exp"].(float64))
 
 	return uuid.MustParse(userId.(string)), exp, nil

@@ -2,6 +2,7 @@ package loader
 
 import (
 	"context"
+
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/rag/document/transformer"
 	"recally/internal/pkg/tools/jinareader"
@@ -38,5 +39,6 @@ func (r WebLoader) Load(ctx context.Context, transformers ...transformer.Transfo
 			},
 		},
 	}
+
 	return transformerPipeline(docs, transformers...)
 }

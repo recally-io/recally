@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"time"
+
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/logger"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
@@ -50,6 +51,7 @@ func New(cfg config.S3Config) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	c := &Client{Client: client, bucketName: cfg.BucketName, publicURL: cfg.PublicURL}
 
 	go func() {
@@ -60,6 +62,7 @@ func New(cfg config.S3Config) (*Client, error) {
 			logger.Default.Info("bucket cors set successfully", "bucket", c.bucketName)
 		}
 	}()
+
 	return c, nil
 }
 
@@ -72,6 +75,7 @@ func (c *Client) Upload(ctx context.Context, objectKey string, reader io.Reader,
 	if err != nil {
 		return minio.UploadInfo{}, fmt.Errorf("s3: failed to upload file: %w", err)
 	}
+
 	return info, nil
 }
 
@@ -86,6 +90,7 @@ func (c *Client) PresignedHeadObject(ctx context.Context, objectName string, exp
 func (c *Client) PresignedGetObject(ctx context.Context, objectName string, expires time.Duration, reqParams url.Values) (u *url.URL, err error) {
 	if c.publicURL != "" {
 		uri := fmt.Sprintf("%s/%s/%s", c.publicURL, c.bucketName, objectName)
+
 		return url.Parse(uri)
 	}
 
@@ -97,6 +102,7 @@ func (c *Client) Delete(ctx context.Context, objectKey string) error {
 	if err != nil {
 		return fmt.Errorf("s3: failed to delete file: %w", err)
 	}
+
 	return nil
 }
 
@@ -121,6 +127,7 @@ func (c *Client) PutBucketCors(ctx context.Context) error {
 	bucketCors, err := c.GetBucketCors(context.Background(), c.bucketName)
 	if err == nil && bucketCors != nil && len(bucketCors.CORSRules) > 0 {
 		logger.Default.Debug("bucket cors already set", "bucket", c.bucketName, "cors", bucketCors.CORSRules)
+
 		return nil
 	}
 
@@ -138,6 +145,7 @@ func (c *Client) PutBucketCors(ctx context.Context) error {
 
 func (c *Client) NewObjectKey(userID string) string {
 	now := time.Now()
+
 	return fmt.Sprintf("%s/%d/%d/%s", userID, now.Year(), now.Month(), uuid.New().String())
 }
 

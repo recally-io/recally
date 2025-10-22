@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"fmt"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
@@ -48,6 +49,7 @@ func New(pool *db.Pool, llm *llms.LLM, opts ...Option) (*Queue, error) {
 	for _, opt := range opts {
 		opt(q)
 	}
+
 	cfg := &river.Config{
 		Queues: map[string]river.QueueConfig{
 			q.name: {MaxWorkers: 100},
@@ -74,6 +76,7 @@ func NewServer(q *Queue) (*Service, error) {
 	if q == nil {
 		return nil, fmt.Errorf("default queue is nil")
 	}
+
 	return &Service{
 		Queue: q,
 	}, nil

@@ -3,10 +3,11 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 	"recally/internal/pkg/db"
-	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"gopkg.in/telebot.v3"
@@ -24,10 +25,12 @@ func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.
 	if !ok {
 		return ctx, nil, tx, fmt.Errorf("failed to get userID from context")
 	}
+
 	user, err := h.authService.GetTelegramUser(ctx, tx, tgUserID)
 	if err != nil {
 		if strings.Contains(err.Error(), db.ErrNotFound) {
 			userName := ctx.Value(contexts.ContextKey(contexts.ContextKeyUserName)).(string)
+
 			user, err = h.authService.CreateTelegramUser(ctx, tx, userName, tgUserID)
 			if err != nil {
 				return ctx, nil, tx, fmt.Errorf("failed to create user: %w", err)
@@ -36,6 +39,8 @@ func (h *Handler) initHandlerRequest(c telebot.Context) (context.Context, *auth.
 			return nil, nil, tx, fmt.Errorf("failed to get user: %w", err)
 		}
 	}
+
 	ctx = auth.SetUserToContext(ctx, user)
+
 	return ctx, user, tx, nil
 }

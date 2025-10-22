@@ -2,9 +2,10 @@ package auth
 
 import (
 	"encoding/json"
+	"time"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -45,17 +46,20 @@ func (t *UserDTO) Load(d *db.User) {
 	t.ActivateAssistantID = d.ActivateAssistantID.Bytes
 	t.ActivateThreadID = d.ActivateThreadID.Bytes
 	t.Status = d.Status
+
 	if d.Settings != nil {
 		if err := json.Unmarshal(d.Settings, &t.Settings); err != nil {
 			logger.Default.Warn("failed to unmarshal user settings", "err", err, "settings", string(d.Settings))
 		}
 	}
+
 	t.CreatedAt = d.CreatedAt.Time
 	t.UpdatedAt = d.UpdatedAt.Time
 }
 
 func (t *UserDTO) Dump() *db.User {
 	settings, _ := json.Marshal(t.Settings)
+
 	return &db.User{
 		Uuid:                t.ID,
 		Username:            pgtype.Text{String: t.Username, Valid: t.Username != ""},

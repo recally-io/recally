@@ -3,6 +3,7 @@ package httpserver
 import (
 	"fmt"
 	"net/http"
+
 	"recally/internal/pkg/auth"
 	"recally/internal/pkg/contexts"
 
@@ -34,6 +35,7 @@ func authValidation(key string, c echo.Context) (bool, error) {
 	}
 
 	ctx := c.Request().Context()
+
 	tx, err := loadTx(ctx)
 	if err != nil {
 		return false, fmt.Errorf("failed to load transaction: %w", err)
@@ -46,6 +48,7 @@ func authValidation(key string, c echo.Context) (bool, error) {
 	user, _, err := authService.ValidateJWT(ctx, tx, key)
 	if err == nil {
 		setContext(c, contexts.ContextKeyUser, user)
+
 		return true, nil
 	}
 
@@ -53,8 +56,10 @@ func authValidation(key string, c echo.Context) (bool, error) {
 	user, err = authService.ValidateApiKey(ctx, tx, key)
 	if err == nil {
 		setContext(c, contexts.ContextKeyUser, user)
+
 		return true, nil
 	}
+
 	return false, fmt.Errorf("invalid key: %w", err)
 }
 

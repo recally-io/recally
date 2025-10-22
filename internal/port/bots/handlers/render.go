@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"bytes"
-	"recally/internal/pkg/logger"
 	"sync"
+
+	"recally/internal/pkg/logger"
 
 	tgmd "github.com/Mad-Pixels/goldmark-tgmd"
 	"github.com/yuin/goldmark"
@@ -32,11 +33,16 @@ func convertToTGMarkdown(md string) string {
 	})
 
 	mdBytes := []byte(md)
+
 	var buf bytes.Buffer
+
 	if err := mdParser.Convert(mdBytes, &buf); err != nil {
 		logger.Default.Warn("Failed to convert markdown to HTML", "err", err.Error())
+
 		buf = *bytes.NewBuffer(mdBytes)
+
 		return md
 	}
+
 	return buf.String()
 }

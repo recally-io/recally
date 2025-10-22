@@ -6,9 +6,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"recally/internal/pkg/db"
 	"strings"
 	"time"
+
+	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -36,12 +37,15 @@ func (t *ApiKeyDTO) Load(d *db.AuthApiKey) {
 	t.Prefix = d.KeyPrefix
 	t.Hash = d.KeyHash
 	t.Scopes = d.Scopes
+
 	if d.ExpiresAt.Valid {
 		t.ExpiresAt = d.ExpiresAt.Time
 	}
+
 	if d.LastUsedAt.Valid {
 		t.LastUsedAt = d.LastUsedAt.Time
 	}
+
 	t.CreatedAt = d.CreatedAt.Time
 	t.UpdatedAt = d.UpdatedAt.Time
 }
@@ -82,6 +86,7 @@ func (s *Service) generateRandomApiKey(prefix string) string {
 	if prefix != "" {
 		return prefix + "_" + encoded
 	}
+
 	return encoded
 }
 
@@ -111,6 +116,7 @@ func (s *Service) CreateApiKey(ctx context.Context, tx db.DBTX, key *ApiKeyDTO) 
 	}
 
 	key.Load(&apiKey)
+
 	return key, nil
 }
 
@@ -118,6 +124,7 @@ func (s *Service) DeleteApiKey(ctx context.Context, tx db.DBTX, id uuid.UUID) er
 	if err := s.dao.DeleteAPIKey(ctx, tx, id); err != nil {
 		return fmt.Errorf("failed to delete API key: %w", err)
 	}
+
 	return nil
 }
 
@@ -137,11 +144,13 @@ func (s *Service) ListApiKeys(ctx context.Context, tx db.DBTX, prefix string, Is
 	}
 
 	result := make([]*ApiKeyDTO, len(apiKeys))
+
 	for i, key := range apiKeys {
 		dto := new(ApiKeyDTO)
 		dto.Load(&key)
 		result[i] = dto
 	}
+
 	return result, nil
 }
 
@@ -149,6 +158,7 @@ func (s *Service) UpdateApiKeyLastUsed(ctx context.Context, tx db.DBTX, id uuid.
 	if err := s.dao.UpdateAPIKeyLastUsed(ctx, tx, id); err != nil {
 		return fmt.Errorf("failed to update API key last used: %w", err)
 	}
+
 	return nil
 }
 
@@ -157,7 +167,9 @@ func (s *Service) ValidateApiKey(ctx context.Context, tx db.DBTX, key string) (*
 	if err != nil {
 		return nil, err
 	}
+
 	u := new(UserDTO)
 	u.Load(&user)
+
 	return u, nil
 }

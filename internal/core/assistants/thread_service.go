@@ -6,11 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/rag/document"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -25,8 +26,10 @@ func (s *Service) ListThreads(ctx context.Context, tx db.DBTX, assistantID uuid.
 	}
 
 	var result []ThreadDTO
+
 	for _, th := range threads {
 		var t ThreadDTO
+
 		t.Load(&th)
 		result = append(result, t)
 	}
@@ -39,17 +42,21 @@ func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDT
 	if err != nil {
 		return nil, fmt.Errorf("failed to get assistant: %w", err)
 	}
+
 	if thread.Model == "" {
 		thread.Model = ass.Model
 	}
+
 	if thread.Metadata.Tools == nil {
 		thread.Metadata.Tools = ass.Metadata.Tools
 	}
+
 	if thread.SystemPrompt == "" {
 		thread.SystemPrompt = ass.SystemPrompt
 	}
 
 	model := thread.Dump()
+
 	th, err := s.dao.CreateAssistantThread(ctx, tx, db.CreateAssistantThreadParams{
 		Uuid:         model.Uuid,
 		UserID:       model.UserID,
@@ -63,12 +70,15 @@ func (s *Service) CreateThread(ctx context.Context, tx db.DBTX, thread *ThreadDT
 	if err != nil {
 		return nil, fmt.Errorf("failed to create thread: %w", err)
 	}
+
 	thread.Load(&th)
+
 	return thread, nil
 }
 
 func (s *Service) UpdateThread(ctx context.Context, tx db.DBTX, thread *ThreadDTO) (*ThreadDTO, error) {
 	model := thread.Dump()
+
 	th, err := s.dao.UpdateAssistantThread(ctx, tx, db.UpdateAssistantThreadParams{
 		Uuid:         thread.Id,
 		Name:         model.Name,
@@ -80,7 +90,9 @@ func (s *Service) UpdateThread(ctx context.Context, tx db.DBTX, thread *ThreadDT
 	if err != nil {
 		return nil, fmt.Errorf("failed to update thread: %w", err)
 	}
+
 	thread.Load(&th)
+
 	return thread, nil
 }
 
@@ -89,7 +101,9 @@ func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thread: %w", err)
 	}
+
 	var t ThreadDTO
+
 	t.Load(&th)
 
 	ass, err := s.dao.GetAssistant(ctx, tx, th.AssistantID.Bytes)
@@ -98,6 +112,7 @@ func (s *Service) GetThread(ctx context.Context, tx db.DBTX, id uuid.UUID) (*Thr
 	}
 
 	var a AssistantDTO
+
 	a.Load(&ass)
 	t.Metadata.Merge(a.Metadata)
 
@@ -114,12 +129,15 @@ func (s *Service) DeleteThread(ctx context.Context, tx db.DBTX, id uuid.UUID) er
 	if err := s.dao.DeleteAssistantAttachmentsByThreadId(ctx, tx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
 		return fmt.Errorf("failed to delete thread attachments: %w", err)
 	}
+
 	if err := s.dao.DeleteThreadMessagesByThread(ctx, tx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
 		return fmt.Errorf("failed to delete thread messages: %w", err)
 	}
+
 	if err := s.dao.DeleteAssistantThread(ctx, tx, id); err != nil {
 		return fmt.Errorf("failed to delete thread: %w", err)
 	}
+
 	return nil
 }
 
@@ -127,21 +145,27 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, strea
 	thread, err := s.GetThread(ctx, tx, id)
 	if err != nil {
 		streamingFunc(nil, fmt.Errorf("failed to get thread: %w", err))
+
 		return
 	}
 
 	var newMessage *MessageDTO
+
 	newMessageID := uuid.New()
 	sb := strings.Builder{}
+
 	var usage *openai.Usage
+
 	model := thread.Model
 	intermediateSteps := make([]llms.IntermediateStep, 0)
 
 	sendToUser := func(streamMsg llms.StreamingMessage) {
 		choice := streamMsg.Choice
+
 		err := streamMsg.Err
 		if err != nil && !errors.Is(err, io.EOF) {
 			streamingFunc(nil, err)
+
 			return
 		}
 
@@ -184,9 +208,12 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, strea
 	oaiMessages, lmodel, metadata, steps, err := s.buildChatMessages(ctx, tx, thread)
 	if err != nil {
 		streamingFunc(nil, fmt.Errorf("failed to build chat messages: %w", err))
+
 		return
 	}
+
 	model = lmodel
+
 	intermediateSteps = append(intermediateSteps, steps...)
 
 	opts := []llms.Option{
@@ -196,16 +223,19 @@ func (s *Service) RunThread(ctx context.Context, tx db.DBTX, id uuid.UUID, strea
 	}
 
 	s.llm.GenerateContent(ctx, oaiMessages, sendToUser, opts...)
+
 	if newMessage != nil {
 		newMessage.Text = sb.String()
 		if usage != nil {
 			newMessage.PromptToken = int32(usage.PromptTokens)
 			newMessage.CompletionToken = int32(usage.CompletionTokens)
 		}
+
 		if _, err := s.CreateThreadMessage(ctx, tx, thread.Id, newMessage); err != nil {
 			streamingFunc(nil, fmt.Errorf("failed to create thread message: %w", err))
 		}
 	}
+
 	streamingFunc(nil, io.EOF)
 }
 
@@ -218,10 +248,12 @@ func (s *Service) GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.U
 	if err != nil {
 		return "", fmt.Errorf("failed to get thread: %w", err)
 	}
+
 	messages, err := s.ListThreadMessages(ctx, tx, id)
 	if err != nil {
 		return "", fmt.Errorf("failed to get thread messages: %w", err)
 	}
+
 	if len(messages) < 2 {
 		return "", fmt.Errorf("not enough messages to generate title")
 	}
@@ -241,6 +273,7 @@ func (s *Service) GenerateThreadTitle(ctx context.Context, tx db.DBTX, id uuid.U
 	if err != nil {
 		return "", fmt.Errorf("GenerateThreadTitle: %w", err)
 	}
+
 	thread.Name = title
 	thread.Metadata.IsGeneratedTitle = true
 
@@ -257,9 +290,11 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 	messages, err := s.ListThreadMessages(ctx, tx, thread.Id)
 	metadata := messages[len(messages)-1].Metadata
 	steps := make([]llms.IntermediateStep, 0)
+
 	if err != nil {
 		return nil, "", metadata, steps, fmt.Errorf("failed to get thread messages: %w", err)
 	}
+
 	oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
 		Role:    "system",
 		Content: thread.SystemPrompt,
@@ -271,6 +306,7 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 			Content: m.Text,
 		})
 	}
+
 	lastMessage := messages[len(messages)-1]
 
 	// Rewrite user message using RAG
@@ -297,6 +333,7 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 				Text: lastMessage.Text,
 			})
 		}
+
 		for _, img := range lastMessage.Metadata.Images {
 			multiContent = append(multiContent, openai.ChatMessagePart{
 				Type: openai.ChatMessagePartTypeImageURL,
@@ -305,6 +342,7 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 				},
 			})
 		}
+
 		oaiMessages[len(oaiMessages)-1] = openai.ChatCompletionMessage{
 			Role:         "user",
 			MultiContent: multiContent,
@@ -316,14 +354,17 @@ func (s *Service) buildChatMessages(ctx context.Context, tx db.DBTX, thread *Thr
 
 func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *MessageDTO) []llms.IntermediateStep {
 	steps := make([]llms.IntermediateStep, 0)
+
 	if message.Text == "" {
 		logger.FromContext(ctx).Info("RAG for user message: message text is empty")
+
 		return steps
 	}
 	// 1. search for similar documents
 	// 2. search chat history for similar questions
 	// 3. construct a new message
 	var err error
+
 	docs := make([]document.Document, 0)
 	// chatHistory := make([]string, 0)
 
@@ -333,6 +374,7 @@ func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *M
 	}
 
 	vec := pgvector.NewVector(embeddings)
+
 	docsRes, err := s.dao.SimilaritySearchByThreadId(ctx, tx, db.SimilaritySearchByThreadIdParams{
 		Uuid:       message.ThreadID,
 		Embeddings: &vec,
@@ -340,18 +382,22 @@ func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *M
 	})
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to search for similar documents", "err", err)
+
 		return steps
 	}
+
 	for _, d := range docsRes {
 		var metadata map[string]any
 		if err := json.Unmarshal(d.Metadata, &metadata); err != nil {
 			logger.FromContext(ctx).Error("failed to unmarshal metadata", "err", err)
 		}
+
 		docs = append(docs, document.Document{
 			Content:  d.Text,
 			Metadata: metadata,
 		})
 	}
+
 	steps = append(steps, llms.IntermediateStep{
 		Type:   llms.IntermediateStepRag,
 		Name:   "vector_search",
@@ -376,12 +422,15 @@ func (s *Service) rewriteUserMessage(ctx context.Context, tx db.DBTX, message *M
 	for _, d := range docs {
 		docStrBuilder.WriteString(fmt.Sprintf("Content: %s\nMetadata: %v\nScore: %f\n\n", d.Content, d.Metadata, d.Score))
 	}
+
 	docsStr := docStrBuilder.String()
+
 	prompt, err := getChatMessageWithRagPrompt(docsStr, "", message.Text)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get chat message with RAG prompt", "err", err)
 	}
 
 	message.Text = prompt
+
 	return steps
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/rag/document/transformer"
 )
@@ -23,6 +24,7 @@ func NewTextLoader(r io.Reader) TextLoader {
 // Load reads from the io.Reader and returns documents with the data.
 func (r TextLoader) Load(ctx context.Context, transformers ...transformer.Transformer) ([]document.Document, error) {
 	buf := new(bytes.Buffer)
+
 	_, err := io.Copy(buf, r.Reader)
 	if err != nil {
 		return nil, err

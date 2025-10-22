@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+	"time"
+
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/tools"
-	"strings"
-	"time"
 )
 
 const (
@@ -66,6 +67,7 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to invoke tool: %w", err)
 	}
+
 	return t.MarshalResult(ctx, result)
 }
 
@@ -74,12 +76,15 @@ func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 	if url == "" {
 		return nil, fmt.Errorf("jina reader: url is empty")
 	}
+
 	url = fmt.Sprintf("%s/%s", jinaHost, url)
 	logger.FromContext(ctx).Debug("jina reader start", "url", url)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jina reader request: %w", err)
 	}
+
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Locale", "en-US")
@@ -87,6 +92,7 @@ func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 	if len(args.Formats) == 0 {
 		args.Formats = []string{"markdown"}
 	}
+
 	req.Header.Set("X-Return-Format", strings.Join(args.Formats, ","))
 
 	resp, err := t.httpClient.Do(req)
@@ -100,7 +106,9 @@ func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to read jina reader response body: %w", err)
 		}
+
 		logger.FromContext(ctx).Error("jina reader read url error", "url", url, "status", resp.Status, "err", string(respData))
+
 		return nil, fmt.Errorf("jina reader read URL '%s' Error: %s, %v", url, resp.Status, string(respData))
 	}
 
@@ -109,6 +117,7 @@ func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 	if err := json.NewDecoder(resp.Body).Decode(content); err != nil {
 		return nil, fmt.Errorf("failed to decode jina reader response: %w", err)
 	}
+
 	return &content.Data, nil
 }
 
@@ -118,8 +127,10 @@ func (t *Tool) ReadWithCache(ctx context.Context, args RequestArgs, cacheService
 	cacheKey := cache.NewCacheKey("JinaReader", args.Url)
 	if val, ok := cache.Get[Content](ctx, cacheService, cacheKey); ok {
 		logger.FromContext(ctx).Info("JinaReader", "cache", "hit", "url", args.Url)
+
 		return val, nil
 	}
+
 	data, err := t.Read(ctx, args)
 	if err != nil {
 		return nil, err
@@ -127,5 +138,6 @@ func (t *Tool) ReadWithCache(ctx context.Context, args RequestArgs, cacheService
 	// set cache
 	cacheService.Set(cacheKey, data, 24*time.Hour)
 	logger.FromContext(ctx).Info("JinaReader", "cache", "set", "url", args.Url)
+
 	return data, nil
 }
