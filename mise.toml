@@ -1,0 +1,285 @@
+min_version = "2024.1.0"
+
+# ============================================
+# TOOLS - Pinned versions for reproducibility
+# ============================================
+[tools]
+# Core runtimes
+go = "1.24.6"  # From go.mod
+"ubi:oven-sh/bun" = "1.1"
+
+# Go development tools
+"go:github.com/sqlc-dev/sqlc/cmd/sqlc" = "1.27"
+"ubi:golangci/golangci-lint" = "1.62"
+"go:github.com/swaggo/swag/cmd/swag" = "1.16"
+
+# Database tools
+"ubi:ariga/atlas" = "0.29"
+
+# ============================================
+# ENVIRONMENT VARIABLES
+# ============================================
+[env]
+# Load from .env file (for secrets like DB_PASSWORD, API keys)
+_.file = [".env"]
+
+# Database configuration (non-sensitive defaults)
+DB_HOST = "localhost"
+DB_PORT = "15432"
+DB_NAME = "recally"
+DB_USER = "postgres"
+
+# Construct DATABASE_URL from components
+DATABASE_URL = "postgresql://{{env.DB_USER}}:{{env.DB_PASSWORD}}@{{env.DB_HOST}}:{{env.DB_PORT}}/{{env.DB_NAME}}?sslmode=disable"
+
+# ============================================
+# LINTING TASKS
+# ============================================
+[tasks."lint"]
+description = "Lint Go code and frontend"
+depends = ["lint:ui", "lint:go"]
+
+[tasks."lint:go"]
+description = "Lint Go code with golangci-lint"
+run = [
+  "go mod tidy",
+  "golangci-lint run --fix ./...",
+  "swag fmt"
+]
+
+[tasks."lint:ui"]
+description = "Lint frontend code with Biome"
+dir = "web"
+run = "bun run lint"
+
+# ============================================
+# CODE GENERATION TASKS
+# ============================================
+[tasks."generate"]
+description = "Generate all code (Go + SQL + Swagger)"
+depends = ["generate:go", "generate:sql", "generate:spec"]
+
+[tasks."generate:go"]
+description = "Generate Go code"
+run = "go generate ./..."
+
+[tasks."generate:sql"]
+description = "Generate Go code from SQL using SQLC"
+run = "sqlc generate"
+
+[tasks."generate:spec"]
+description = "Generate Swagger API documentation"
+run = "swag init -g internal/port/httpserver/router.go -o docs/swagger"
+
+# ============================================
+# BUILD TASKS
+# ============================================
+[tasks."build"]
+description = "Build everything (UI + Docs + Go)"
+depends = ["build:ui", "build:docs", "build:go"]
+
+[tasks."build:go"]
+description = "Build Go backend binary"
+depends = ["generate"]
+run = "go build -o bin/app main.go"
+
+[tasks."build:docs"]
+description = "Build documentation site"
+dir = "docs"
+run = "bun run docs:build"
+
+[tasks."build:ui"]
+description = "Build frontend for production"
+dir = "web"
+run = "bun run build"
+
+# ============================================
+# TEST TASKS
+# ============================================
+[tasks."test"]
+description = "Run Go tests"
+run = "go test ./..."
+
+# ============================================
+# DEVELOPMENT TASKS
+# ============================================
+[tasks."run"]
+description = "Build and run full application"
+depends = ["build"]
+run = "./bin/app"
+
+[tasks."run:go"]
+description = "Build and run backend with DEBUG_UI=true"
+depends = ["build:go"]
+env = { DEBUG_UI = "true" }
+run = "./bin/app"
+alias = "run-go"
+
+[tasks."run:ui"]
+description = "Run frontend development server"
+dir = "web"
+run = "bun run dev"
+alias = "run-ui"
+
+[tasks."dev:backend"]
+description = "Run backend with hot reload (no build)"
+env = { DEBUG_UI = "true" }
+run = "go run main.go"
+
+[tasks."dev:docs"]
+description = "Run documentation development server"
+dir = "docs"
+run = "bun run docs:dev"
+
+# ============================================
+# DATABASE TASKS
+# ============================================
+[tasks."db:up"]
+description = "Start PostgreSQL database"
+run = "docker compose up -d postgres"
+alias = "db-up"
+
+[tasks."migrate:new"]
+description = "Create new Atlas migration (usage: mise run migrate:new name=your_migration)"
+dir = "database"
+run = "atlas migrate diff {{arg(name='migration')}} --env local"
+
+[tasks."migrate:up"]
+description = "Apply all pending Atlas migrations"
+dir = "database"
+run = "atlas migrate apply --env local --url \"$DATABASE_URL\""
+
+[tasks."migrate:status"]
+description = "Check Atlas migration status"
+dir = "database"
+run = "atlas migrate status --env local --url \"$DATABASE_URL\""
+
+[tasks."migrate:validate"]
+description = "Validate Atlas migrations"
+dir = "database"
+run = "atlas migrate validate --env local"
+
+[tasks."migrate:hash"]
+description = "Generate Atlas migration checksums"
+dir = "database"
+run = "atlas migrate hash"
+
+[tasks."migrate:down"]
+description = "Rollback last Atlas migration"
+dir = "database"
+run = "atlas migrate down --env local --url \"$DATABASE_URL\""
+
+[tasks."psql"]
+description = "Connect to PostgreSQL console via Docker"
+run = "docker compose exec postgres psql -U $DB_USER -d $DB_NAME"
+
+# ============================================
+# DOCKER TASKS
+# ============================================
+[tasks."docker:build"]
+description = "Build Docker images"
+run = "docker compose build"
+
+[tasks."docker:run"]
+description = "Run with docker compose (build + up)"
+run = "docker compose up --build"
+
+[tasks."docker:up"]
+description = "Start all services with docker compose (detached)"
+run = "docker compose up --build -d"
+
+[tasks."docker:down"]
+description = "Stop docker compose services"
+run = "docker compose down"
+
+# ============================================
+# UTILITY TASKS
+# ============================================
+[tasks."ngrok"]
+description = "Run ngrok tunnel to localhost (default: 1323)"
+run = "ngrok http ${PORT:-1323}"
+
+[tasks."deploy"]
+description = "Deploy using dokploy"
+run = "dokploy app deploy"
+
+[tasks."help"]
+description = "Show available tasks"
+run = "mise tasks"
+
+[tasks."setup"]
+description = "First-time project setup"
+run = '''
+#!/usr/bin/env bash
+set -e
+
+echo "🚀 Setting up Recally project..."
+
+# Check for .env file
+if [ ! -f .env ]; then
+  echo "⚠️  .env file not found. Please copy env.example to .env and configure it."
+  exit 1
+fi
+
+echo "📦 Installing Go dependencies..."
+go mod download || { echo "❌ Failed to download Go modules"; exit 1; }
+
+echo "📦 Installing frontend dependencies..."
+(cd web && bun install) || { echo "❌ Failed to install frontend deps"; exit 1; }
+
+echo "📦 Installing docs dependencies..."
+(cd docs && bun install) || { echo "❌ Failed to install docs deps"; exit 1; }
+
+echo "🐳 Starting database..."
+mise run db:up || { echo "❌ Failed to start database"; exit 1; }
+
+echo "⏳ Waiting for database to be ready..."
+until docker compose exec postgres pg_isready -U $DB_USER > /dev/null 2>&1; do
+  echo "  Waiting for PostgreSQL..."
+  sleep 1
+done
+echo "✅ Database is ready"
+
+echo "🗃️ Applying migrations..."
+mise run migrate:up || { echo "❌ Failed to apply migrations"; exit 1; }
+
+echo "🔧 Generating code..."
+mise run generate || { echo "❌ Failed to generate code"; exit 1; }
+
+echo "✅ Setup complete! Run 'mise run dev:backend' and 'mise run run:ui' to start developing."
+'''
+
+[tasks."doctor"]
+description = "Check tool versions and environment"
+run = '''
+echo "🔍 Recally Environment Check"
+echo "============================"
+mise --version
+echo ""
+echo "📦 Installed Tools:"
+mise list
+echo ""
+echo "🔧 Tool Versions:"
+go version
+bun --version
+atlas version
+sqlc version
+golangci-lint --version
+echo ""
+echo "🐳 Docker:"
+docker --version
+docker compose version
+echo ""
+echo "🗄️ Database:"
+docker compose ps postgres || echo "⚠️  Database not running (run: mise run db:up)"
+'''
+
+[tasks."clean"]
+description = "Clean build artifacts"
+run = '''
+rm -rf bin/
+rm -rf web/dist/
+rm -rf docs/.vitepress/dist/
+rm -rf coverage.out
+echo "✨ Cleaned build artifacts"
+'''
