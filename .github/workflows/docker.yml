@@ -90,4 +90,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           cache-from: type=registry,ref=recally/recally:buildcache
-          cache-to: type=registry,ref=recally/recally:buildcache,mode=max
+          cache-to: ${{ github.event_name != 'pull_request' && 'type=registry,ref=recally/recally:buildcache,mode=max' || 'type=local,dest=/tmp/.buildx-cache' }}
