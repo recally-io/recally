@@ -8,17 +8,18 @@ jobs:
         runs-on: ubicloud-standard-2
         steps:
             - uses: actions/checkout@v5
-            - uses: actions/setup-go@v6
+
+            - name: Setup mise
+              uses: jdx/mise-action@v3
               with:
-                  go-version: 1.24
-            - name: golangci-lint
-              uses: golangci/golangci-lint-action@v8
-              with:
-                  version: v2.2
-                  args: --timeout 10m0s
-                  only-new-issues: false
+                  cache: true
+
+            - name: Lint
+              run: mise run lint:go
+
             - name: Test
-              run: go test -v ./... | tee test-results.txt
+              run: mise run test | tee test-results.txt
+
             - name: Upload Test Results
               uses: actions/upload-artifact@v4
               with:

@@ -16,55 +16,75 @@ Recally is an AI-powered memory assistant for digital content. It's a full-stack
 ### Development
 ```bash
 # Full application with hot reload
-make run
+mise run dev:backend  # Backend (go run, hot reload)
+mise run run:ui       # Frontend dev server
 
-# Backend only (with DEBUG_UI=true)
-make run-go
-
-# Frontend only
-make run-ui
+# Production-like run (with build)
+mise run run          # Build and run
+mise run run:go       # Build and run with DEBUG_UI=true
 
 # Database only
-make db-up
+mise run db:up
 ```
 
 ### Code Quality
 ```bash
 # Lint everything (Go + UI)
-make lint
+mise run lint
 
 # Run tests
-make test
+mise run test
 
 # Generate code (SQL, Swagger)
-make generate
+mise run generate
 ```
 
 ### Database Management
 ```bash
 # Create new migration
-make migrate-new name=migration_name
+mise run migrate:new name=migration_name
 
 # Apply migrations
-make migrate-up
+mise run migrate:up
 
-# Revert migrations
-make migrate-down
+# Check migration status
+mise run migrate:status
+
+# Validate migrations
+mise run migrate:validate
+
+# Rollback last migration
+mise run migrate:down
 
 # Access PostgreSQL console
-make psql
+mise run psql
 ```
 
 ### Building
 ```bash
 # Build everything
-make build
+mise run build
 
 # Build Docker image
-make docker-build
+mise run docker:build
 
 # Run with Docker Compose
-make docker-up
+mise run docker:up
+```
+
+### Tool Management
+```bash
+# Install all tools defined in mise.toml
+mise install
+
+# List installed tools
+mise list
+
+# See all available tasks
+mise tasks
+
+# Check environment health
+mise run doctor
 ```
 
 ## Architecture Overview
@@ -110,18 +130,18 @@ make docker-up
    - Database runs on port 15432
 
 2. **Code Generation**:
-   - Run `make generate` after modifying SQL queries
+   - Run `mise run generate` after modifying SQL queries
    - SQL queries in `/database/queries/` generate Go code via SQLC
    - API spec auto-generated from Echo routes
 
 3. **Database Changes**:
-   - Create migrations with `make migrate-new name=feature_name`
+   - Create migrations with `mise run migrate:new name=feature_name`
    - Migrations stored in `/database/migrations/`
-   - Always test migrations with `make migrate-up` and `make migrate-down`
+   - Always test migrations with `mise run migrate:up` and `mise run migrate:down`
 
 4. **Testing**:
-   - Backend tests: `make test`
-   - Integration tests use real PostgreSQL (via `make db-up`)
+   - Backend tests: `mise run test`
+   - Integration tests use real PostgreSQL (via `mise run db:up`)
 
 ## Important Patterns
 
@@ -153,18 +173,18 @@ make docker-up
 ### Adding New API Endpoint
 1. Define handler in `/internal/port/httpserver/handlers/`
 2. Add route in `/internal/port/httpserver/routes.go`
-3. Run `make generate-spec` to update Swagger docs
+3. Run `mise run generate:spec` to update Swagger docs
 
 ### Adding Database Query
 1. Write SQL in `/database/queries/`
-2. Run `make generate-sql`
+2. Run `mise run generate:sql`
 3. Use generated code in your Go files
 
 ### Modifying Frontend
 1. Components in `/web/src/components/`
 2. Routes in `/web/src/routes/`
 3. API client in `/web/src/lib/api/`
-4. Run `make run-ui` for hot reload
+4. Run `mise run run:ui` for hot reload
 
 ## Configuration Notes
 - Service FQDN required for OAuth callbacks and webhooks
