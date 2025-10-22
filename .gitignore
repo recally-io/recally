@@ -58,3 +58,4 @@ dev-dist
 # Added by goreleaser init:
 dist/
 .windsurfrules
+hono/node_modules/
