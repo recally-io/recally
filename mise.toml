@@ -1,5 +1,3 @@
-min_version = "2024.1.0"
-
 # ============================================
 # TOOLS - Pinned versions for reproducibility
 # ============================================
@@ -43,6 +41,8 @@ description = "Lint Go code with golangci-lint"
 run = [
   "go mod tidy",
   "golangci-lint run --fix ./...",
+  # https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/modernize#hdr-Analyzer_modernize
+  "go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...",
   "swag fmt"
 ]
 
