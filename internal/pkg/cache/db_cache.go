@@ -3,9 +3,10 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -36,7 +37,7 @@ type DbCache struct {
 
 type Option func(*DbCache)
 
-// NewDBCache creates a new cache instance
+// NewDBCache creates a new cache instance.
 func NewDBCache(pool *db.Pool, opts ...Option) *DbCache {
 	service := &DbCache{
 		tx: pool,
@@ -46,24 +47,29 @@ func NewDBCache(pool *db.Pool, opts ...Option) *DbCache {
 	for _, opt := range opts {
 		opt(service)
 	}
+
 	return service
 }
 
-func (c *DbCache) Set(key CacheKey, value interface{}, expiration time.Duration) {
+func (c *DbCache) Set(key CacheKey, value any, expiration time.Duration) {
 	c.SetWithContext(context.Background(), key, value, expiration)
 }
 
-func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value interface{}, expiration time.Duration) {
+func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value any, expiration time.Duration) {
 	ok, err := c.db.IsCacheExists(ctx, c.tx, db.IsCacheExistsParams{Domain: key.Domain, Key: key.Key})
 	if err != nil {
 		logger.FromContext(ctx).Warn("failed to check cache exists", "key", key, "err", err)
+
 		return
 	}
+
 	jsonValue, err := Marshaler(value)
 	if err != nil {
 		logger.FromContext(ctx).Warn("failed to marshal value", "key", key, "err", err)
+
 		return
 	}
+
 	if !ok {
 		params := db.CreateCacheParams{
 			Domain:    key.Domain,
@@ -99,6 +105,7 @@ func (c *DbCache) GetWithContext(ctx context.Context, key CacheKey) (any, bool) 
 	})
 	if err != nil {
 		logger.FromContext(ctx).Warn("failed to get cache", "key", key, "err", err)
+
 		return nil, false
 	}
 	// c.MemCache.Set(key.String(), item.Value, time.Until(item.ExpiresAt.Time))

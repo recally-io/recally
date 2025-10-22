@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+
 	"recally/internal/pkg/logger"
 
 	"github.com/riverqueue/river"
@@ -25,5 +26,6 @@ type EmailWorker struct {
 func (w *EmailWorker) Work(ctx context.Context, job *river.Job[EmailWorkerArgs]) error {
 	// Send email
 	logger.FromContext(ctx).Info("Sending email", "from", job.Args.From, "to", job.Args.To, "subject", job.Args.Subject, "body", job.Args.Body)
+
 	return nil
 }

@@ -84,7 +84,7 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, url string) (*webreader.Fetc
 	if err != nil {
 		return nil, fmt.Errorf("create new fetcher: %w", err)
 	}
-	defer browser.Close()
+	defer func() { _ = browser.Close() }()
 
 	// Create new page
 	page := browser.MustPage(url)

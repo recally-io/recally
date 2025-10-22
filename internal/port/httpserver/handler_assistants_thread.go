@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
+
 	"recally/internal/core/assistants"
 	"recally/internal/pkg/logger"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -33,6 +34,7 @@ import (
 //	@Router			/assistants/{assistant-id}/threads [get]
 func (h *assistantHandler) listThreads(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getAssistantRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
@@ -47,6 +49,7 @@ func (h *assistantHandler) listThreads(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	return JsonResponse(c, http.StatusOK, threads)
 }
 
@@ -57,7 +60,7 @@ type createThreadRequest struct {
 	Description  string                       `json:"description,omitempty"`
 	Model        string                       `json:"model,omitempty"`
 	SystemPrompt string                       `json:"system_prompt,omitempty"`
-	Metadata     assistants.AssistantMetadata `json:"metadata,omitempty"`
+	Metadata     assistants.AssistantMetadata `json:"metadata"`
 }
 
 // createThread is a handler function that creates a new thread for an assistant.
@@ -81,10 +84,13 @@ type createThreadRequest struct {
 func (h *assistantHandler) createThread(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(createThreadRequest)
+
 	if err := bindAndValidate(c, req); err != nil {
 		logger.FromContext(ctx).Error("bind request error", "err", err)
+
 		return err
 	}
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -121,7 +127,7 @@ type updateThreadRequest struct {
 	SystemPrompt string    `json:"system_prompt,omitempty"`
 	Metadata     struct {
 		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // updateThread is a handler function that updates an existing thread for an assistant.
@@ -145,10 +151,12 @@ type updateThreadRequest struct {
 //	@Router			/assistants/{assistant-id}/threads/{thread-id} [put]
 func (h *assistantHandler) updateThread(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(updateThreadRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -162,15 +170,19 @@ func (h *assistantHandler) updateThread(c echo.Context) error {
 	if req.Name != "" {
 		thread.Name = req.Name
 	}
+
 	if req.Description != "" {
 		thread.Description = req.Description
 	}
+
 	if req.Model != "" {
 		thread.Model = req.Model
 	}
+
 	if req.SystemPrompt != "" {
 		thread.SystemPrompt = req.SystemPrompt
 	}
+
 	if req.Metadata.Tools != nil {
 		thread.Metadata.Tools = req.Metadata.Tools
 	}
@@ -207,10 +219,12 @@ type getThreadRequest struct {
 //	@Router			/assistants/{assistant-id}/threads/{thread-id} [get]
 func (h *assistantHandler) getThread(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getThreadRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -225,69 +239,55 @@ func (h *assistantHandler) getThread(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	thread.Messages = messages
+
 	return JsonResponse(c, http.StatusOK, thread)
 }
 
-// deleteThread is a handler function that deletes a thread by ID.
+// DeleteThread is a handler function that deletes a thread by ID.
 // It retrieves the thread ID from the request parameters and uses it to delete the thread.
 // If the thread ID is not found in the parameters, it returns an error with status code 400 (Bad Request).
 // If there is an error while deleting the thread, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 204 (No Content).
 
-// @Summary		Delete Thread
-// @Description	Deletes a thread by ID
-// @Tags			Assistants
-// @Accept			json
-// @Produce		json
-// @Param			assistant-id	path		string					true	"Assistant ID"
-// @Param			thread-id		path		string					true	"Thread ID"
-// @success		204				{object}	JSONResult{data=nil}	"No Content"
-// @Failure		400				{object}	JSONResult{data=nil}	"Bad Request"
-// @Failure		401				{object}	JSONResult{data=nil}	"Unauthorized"
-// @Failure		500				{object}	JSONResult{data=nil}	"Internal Server Error"
-// @Router			/assistants/{assistant-id}/threads/{thread-id} [delete]
+// @Router			/assistants/{assistant-id}/threads/{thread-id} [delete].
 func (h *assistantHandler) deleteThread(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getThreadRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	err = h.service.DeleteThread(ctx, tx, req.ThreadId)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	return JsonResponse(c, http.StatusNoContent, nil)
 }
 
-// generateThreadTitle is a handler function that generates a title for a thread.
+// GenerateThreadTitle is a handler function that generates a title for a thread.
 // It retrieves the thread ID from the request parameters and uses it to generate the title.
 // If the thread ID is not found in the parameters, it returns an error with status code 400 (Bad Request).
 // If there is an error while generating the title, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the generated title.
 
-// @Summary		Generate Thread Title
-// @Description	Generates a title for a thread based on the conversation
-// @Tags			Assistants
-// @Accept			json
-// @Produce		json
-// @Param			assistant-id	path		string					true	"Assistant ID"
-// @Param			thread-id		path		string					true	"Thread ID"
-// @success		200				{object}	JSONResult{data=string}	"Success"
-// @Failure		400				{object}	JSONResult{data=nil}	"Bad Request"
-// @Failure		401				{object}	JSONResult{data=nil}	"Unauthorized"
-// @Failure		500				{object}	JSONResult{data=nil}	"Internal Server Error"
-// @Router			/assistants/{assistant-id}/threads/{thread-id}/generate-title [post]
+// @Router			/assistants/{assistant-id}/threads/{thread-id}/generate-title [post].
 func (h *assistantHandler) generateThreadTitle(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getThreadRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -321,10 +321,12 @@ func (h *assistantHandler) generateThreadTitle(c echo.Context) error {
 //	@Router			/assistants/{assistant-id}/threads/{thread-id}/messages [get]
 func (h *assistantHandler) listThreadMessages(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getThreadRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -334,6 +336,7 @@ func (h *assistantHandler) listThreadMessages(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	return JsonResponse(c, http.StatusOK, messages)
 }
 
@@ -346,7 +349,7 @@ type createThreadMessageRequest struct {
 	Metadata    struct {
 		Tools  []string `json:"tools,omitempty"`
 		Images []string `json:"images,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // createThreadMessage is a handler function that creates a new message for a thread.
@@ -370,10 +373,12 @@ type createThreadMessageRequest struct {
 //	@Router			/assistants/{assistant-id}/threads/{thread-id}/messages [post]
 func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(createThreadMessageRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -412,6 +417,7 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 	streamingFunc := func(msg *assistants.MessageDTO, err error) {
 		if err != nil {
 			errChan <- err
+
 			return
 		}
 		msgChan <- msg
@@ -425,28 +431,34 @@ func (h *assistantHandler) createThreadMessage(c echo.Context) error {
 
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
+
 	for {
 		select {
 		case <-c.Request().Context().Done():
 			logger.FromContext(ctx).Info("SSE client disconnected", "ip", c.RealIP())
+
 			return nil
 		case err := <-errChan:
 			if errors.Is(err, io.EOF) {
 				w.Flush()
+
 				return nil
 			}
+
 			return ErrorResponse(c, http.StatusInternalServerError, err)
 		case msg := <-msgChan:
 			data, err := json.Marshal(msg)
 			if err != nil {
 				return ErrorResponse(c, http.StatusInternalServerError, err)
 			}
+
 			event := Event{
 				Data: data,
 			}
 			if err := event.MarshalTo(w); err != nil {
 				return ErrorResponse(c, http.StatusInternalServerError, err)
 			}
+
 			w.Flush()
 		}
 	}
@@ -458,39 +470,31 @@ type getThreadMessageRequest struct {
 	MessageId   uuid.UUID `param:"message-id" validate:"required,uuid4"`
 }
 
-// deleteThreadMessage is a handler function that deletes a thread message by ID.
+// DeleteThreadMessage is a handler function that deletes a thread message by ID.
 // It retrieves the thread message ID from the request parameters and uses it to delete the thread message.
 // If the thread message ID is not found in the parameters, it returns an error with status code 400 (Bad Request).
 // If there is an error while deleting the thread message, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 204 (No Content).
 
-// @Summary		Delete Thread Message
-// @Description	Deletes a thread message by ID
-// @Tags			Assistants
-// @Accept			json
-// @Produce		json
-// @Param			assistant-id	path		string					true	"Assistant ID"
-// @Param			thread-id		path		string					true	"Thread ID"
-// @Param			message-id		path		string					true	"Message ID"
-// @success		204				{object}	JSONResult{data=nil}	"No Content"
-// @Failure		400				{object}	JSONResult{data=nil}	"Bad Request"
-// @Failure		401				{object}	JSONResult{data=nil}	"Unauthorized"
-// @Failure		500				{object}	JSONResult{data=nil}	"Internal Server Error"
-// @Router			/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [delete]
+// @Router			/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [delete].
 func (h *assistantHandler) deleteThreadMessage(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getThreadMessageRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	err = h.service.DeleteThreadMessage(ctx, tx, req.MessageId)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	return JsonResponse(c, http.StatusNoContent, nil)
 }
 
@@ -502,32 +506,20 @@ type updateThreadMessageRequest struct {
 	Text        string    `json:"text" validate:"required"`
 	Metadata    struct {
 		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
-// update Thread Message
+// Update Thread Message
 // updateThreadMessage is a handler function that updates a thread message by ID.
 // It retrieves the thread message ID from the request parameters and the updated message data from the request body.
 // If the thread message ID is not found in the parameters or the request body is invalid, it returns an error with status code 400 (Bad Request).
 // If there is an error while updating the thread message, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the updated thread message.
 
-// @Summary		Update Thread Message
-// @Description	Updates a thread message by ID
-// @Tags			Assistants
-// @Accept			json
-// @Produce		json
-// @Param			assistant-id	path		string									true	"Assistant ID"
-// @Param			thread-id		path		string									true	"Thread ID"
-// @Param			message-id		path		string									true	"Message ID"
-// @Param			message			body		assistants.MessageDTO					true	"Updated Message"
-// @Success		200				{object}	JSONResult{data=assistants.MessageDTO}	"Success"
-// @Failure		400				{object}	JSONResult{data=nil}					"Bad Request"
-// @Failure		401				{object}	JSONResult{data=nil}					"Unauthorized"
-// @Failure		500				{object}	JSONResult{data=nil}					"Internal Server Error"
-// @Router			/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [put]
+// @Router			/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [put].
 func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(updateThreadMessageRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
@@ -572,16 +564,15 @@ func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
 	if req.Model != "" {
 		messageDTO.Model = req.Model
 	}
+
 	return JsonResponse(c, http.StatusOK, messageDTO)
 	// Create Thread Message
 	// if _, err := h.service.CreateThreadMessage(ctx, tx, thread.Id, &messageDTO); err != nil {
 	// 	return ErrorResponse(c, http.StatusInternalServerError, err)
 	// }
-
 	// resp, err := h.service.RunThread(ctx, tx, thread.Id)
 	// if err != nil {
 	// 	return ErrorResponse(c, http.StatusInternalServerError, err)
 	// }
-
 	// return JsonResponse(c, http.StatusOK, resp)
 }

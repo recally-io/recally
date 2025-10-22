@@ -1,7 +1,15 @@
 # Dockerfile for GoReleaser builds
 # This Dockerfile expects the binary to be pre-built by GoReleaser
 
+# Download Atlas CLI in a builder stage
+FROM alpine:latest AS atlas-builder
+RUN apk add --no-cache curl && \
+    curl -sSf https://atlasgo.sh | sh -s -- --yes
+
 FROM gcr.io/distroless/static-debian12:nonroot
+
+# Copy Atlas CLI
+COPY --from=atlas-builder /usr/local/bin/atlas /usr/local/bin/atlas
 
 # Copy the binary from GoReleaser
 COPY recally /service/recally

@@ -72,13 +72,14 @@ type Options struct {
 
 	// Metadata is a map of metadata to include in the request.
 	// The meaning of this field is specific to the backend in use.
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
 func (o Options) ToChatCompletionRequest() openai.ChatCompletionRequest {
 	if o.Model == "" {
 		o.Model = defaultModel
 	}
+
 	return openai.ChatCompletionRequest{
 		Model:            o.Model,
 		Stop:             o.StopWords,

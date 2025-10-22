@@ -45,9 +45,11 @@ RUN bun run docs:build
 FROM golang:1.24-alpine AS build
 WORKDIR /go/src/app
 
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
-    go install github.com/swaggo/swag/cmd/swag@latest && \
-    go install github.com/kevinburke/go-bindata/v4/...@latest
+# Install Atlas CLI and other tools
+RUN apk add --no-cache curl && \
+    curl -sSf https://atlasgo.sh | sh -s -- --yes && \
+    go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
+    go install github.com/swaggo/swag/cmd/swag@latest
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -57,7 +59,6 @@ COPY . .
 COPY --from=ui-base /usr/src/app/dist web/dist
 COPY --from=docs-base /usr/src/app/.vitepress/dist docs/.vitepress/dist
 RUN go generate ./... && \
-    go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/ && \
     sqlc generate && \
     swag init -g internal/port/httpserver/router.go -o docs/swagger && \
     go build -ldflags="-s -w" -o /go/bin/app main.go
@@ -65,6 +66,10 @@ RUN go generate ./... && \
 # Final stage
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /service
+
+# Copy Atlas CLI binary and migrations
+COPY --from=build /usr/local/bin/atlas /usr/local/bin/atlas
+COPY --from=build /go/src/app/database/migrations /service/database/migrations
 
 COPY --from=build /go/bin/app .
 

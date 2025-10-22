@@ -2,6 +2,8 @@ package transformer
 
 import (
 	"errors"
+	"maps"
+
 	"recally/internal/pkg/rag/document"
 	"recally/internal/pkg/rag/textsplitter"
 )
@@ -16,6 +18,7 @@ func WithTextSplitter(textSplitter textsplitter.TextSplitter) Transformer {
 		return Batch(func(d []document.Document) ([]document.Document, error) {
 			texts := make([]string, 0)
 			metadatas := make([]map[string]any, 0)
+
 			for _, document := range d {
 				texts = append(texts, document.Content)
 				metadatas = append(metadatas, document.Metadata)
@@ -37,7 +40,7 @@ func createDocuments(textSplitter textsplitter.TextSplitter, texts []string, met
 
 	documents := make([]document.Document, 0)
 
-	for i := 0; i < len(texts); i++ {
+	for i := range texts {
 		chunks, err := textSplitter.Split(texts[i])
 		if err != nil {
 			return nil, err
@@ -46,9 +49,7 @@ func createDocuments(textSplitter textsplitter.TextSplitter, texts []string, met
 		for _, chunk := range chunks {
 			// Copy the document metadata
 			curMetadata := make(map[string]any, len(metadatas[i]))
-			for key, value := range metadatas[i] {
-				curMetadata[key] = value
-			}
+			maps.Copy(curMetadata, metadatas[i])
 
 			documents = append(documents, document.Document{
 				Content:  chunk,

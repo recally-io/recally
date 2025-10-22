@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
+
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/files"
 	"recally/internal/pkg/db"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -18,7 +19,7 @@ type BookmarkShareService interface {
 	GetBookmarkShareContent(ctx context.Context, tx db.DBTX, sharedID uuid.UUID) (*bookmarks.BookmarkContentDTO, error)
 }
 
-// bookmarkServiceImpl implements BookmarkService
+// bookmarkServiceImpl implements BookmarkService.
 type bookmarkShareHandler struct {
 	service     BookmarkShareService
 	fileService *files.Service
@@ -61,6 +62,7 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, err := loadTx(ctx)
 	if err != nil {
 		return errors.New("tx not found")
@@ -70,6 +72,7 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	if bookmark == nil {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("shared bookmark not found"))
 	}
@@ -81,18 +84,10 @@ func (h *bookmarkShareHandler) getSharedBookmark(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, bookmark)
 }
 
-// @Summary		Redirect to file
-// @Description	Get a redirect to the file's presigned URL
-// @Tags			files
-// @Produce		json
-// @Param			id	path		string					true	"File ID"
-// @Success		302	{string}	string					"Redirect to file URL"
-// @Failure		400	{object}	JSONResult{data=nil}	"Bad Request"
-// @Failure		401	{object}	JSONResult{data=nil}	"Unauthorized"
-// @Failure		404	{object}	JSONResult{data=nil}	"Object not found"
-// @Router			/files/{id} [get]
+// @Router			/files/{id} [get].
 func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(sharedFileRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
@@ -112,19 +107,15 @@ func (h *bookmarkShareHandler) redirectToFile(c echo.Context) error {
 	return c.Redirect(http.StatusFound, presignedURL)
 }
 
-// @Summary		Get file metadata
-// @Description	Get metadata for a shared file without downloading it
-// @Tags			files
-// @Param			key	path	string	true	"File key"
-// @Success		200	"Success"
-// @Failure		404	{object}	JSONResult{data=nil}	"File not found"
-// @Router			/shared/files/{key} [head]
+// @Router			/shared/files/{key} [head].
 func (h *bookmarkShareHandler) getFileMetadata(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(sharedFileRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -140,7 +131,7 @@ func (h *bookmarkShareHandler) getFileMetadata(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Copy relevant headers from S3 response to our response
 	for key, values := range resp.Header {

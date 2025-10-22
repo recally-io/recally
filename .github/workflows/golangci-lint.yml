@@ -1,4 +1,4 @@
-name: golangci-lint and test
+name: Lint and Test
 
 on: push
 
@@ -7,23 +7,14 @@ jobs:
         name: lint and test
         runs-on: ubicloud-standard-2
         steps:
-            - uses: actions/setup-go@v5
+            - uses: actions/checkout@v5
+            - uses: actions/setup-go@v6
               with:
                   go-version: 1.24
-            - uses: actions/checkout@v4
-            - name: Cache Go Modules
-              uses: actions/cache@v3
-              with:
-                  path: |
-                    ~/.cache/go-build
-                    ~/go/pkg/mod
-                  key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-                  restore-keys: |
-                    ${{ runner.os }}-go-
             - name: golangci-lint
               uses: golangci/golangci-lint-action@v8
               with:
-                  version: v2.2.1
+                  version: v2.2
                   args: --timeout 10m0s
                   only-new-issues: false
             - name: Test

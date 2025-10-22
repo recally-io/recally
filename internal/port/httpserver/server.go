@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"syscall"
+
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/config"
@@ -11,7 +13,6 @@ import (
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/s3"
-	"syscall"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -31,11 +32,12 @@ type CustomValidator struct {
 	validator *validator.Validate
 }
 
-func (cv *CustomValidator) Validate(i interface{}) error {
+func (cv *CustomValidator) Validate(i any) error {
 	if err := cv.validator.Struct(i); err != nil {
 		// Optionally, you could return the error to give each route more control over the status code
 		return fmt.Errorf("validation error: %w", err)
 	}
+
 	return nil
 }
 
@@ -72,26 +74,31 @@ func New(pool *db.Pool, llm *llms.LLM, queue *queue.Queue, opts ...Option) (*Ser
 	for _, opt := range opts {
 		opt(s)
 	}
+
 	if s.cache == nil {
 		s.cache = cache.MemCache
 	}
 
 	s.registerMiddlewares()
 	s.registerRouters()
+
 	return s, nil
 }
 
 func (s *Service) Start(ctx context.Context) {
 	addr := fmt.Sprintf("%s:%d", config.Settings.Service.Host, config.Settings.Service.Port)
+
 	if s.uiCmd != nil {
 		go func() {
 			// run vite server
 			logger.Default.Info("starting vite server")
+
 			if err := s.uiCmd.Run(); err != nil {
 				logger.Default.Fatal("failed to start vite server", "err", err)
 			}
 		}()
 	}
+
 	if err := s.Server.Start(addr); err != nil {
 		logger.Default.Fatal("failed to start", "service", s.Name(), "addr", addr, "err", err)
 	}
@@ -103,6 +110,7 @@ func (s *Service) Stop(ctx context.Context) {
 			logger.Default.Fatal("failed to stop vite server", "err", err)
 		}
 	}
+
 	if err := s.Server.Shutdown(ctx); err != nil {
 		logger.Default.Fatal("failed to stop", "service", s.Name(), "err", err)
 	}

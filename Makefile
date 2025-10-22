@@ -22,7 +22,6 @@ generate-go:
 
 generate-sql:
 	@echo "Generating sql..."
-	@go-bindata -prefix "database/migrations/" -pkg migrations -o database/bindata.go database/migrations/
 	@sqlc generate
 
 generate-spec:
@@ -86,50 +85,37 @@ docker-down:
 	@echo "Stopping docker"
 	@docker compose down
 
-# Create a new migration file
+# Create a new Atlas migration
 # Usage: make migrate-new name=your_migration_name
 migrate-new:
-	@echo "Creating migration..."
-	@migrate create -ext sql -dir database/migrations -seq "$(name)"
-	@echo "New migration created: database/migrations/*_$(name).sql"
+	@echo "Creating Atlas migration..."
+	@cd database && atlas migrate diff "$(name)" --env local
+	@echo "New migration created in database/migrations/"
 
-# Run all pending migrations or up to a specific version
-# Usage: make migrate-up [version=X]
+# Apply all pending migrations
+# Usage: make migrate-up
 migrate-up:
-	@echo "Migrating up..."
-	@if [ -z "$(version)" ]; then \
-		migrate -path database/migrations -database "$(DATABASE_URL)" up; \
-		echo "All pending migrations applied."; \
-	else \
-		migrate -path database/migrations -database "$(DATABASE_URL)" up $(version); \
-		echo "Migrated up to version $(version)."; \
-	fi
+	@echo "Applying Atlas migrations..."
+	@cd database && atlas migrate apply --env local --url "$(DATABASE_URL)"
+	@echo "All pending migrations applied."
 
-# Revert all migrations or down to a specific version
-# Usage: make migrate-down [version=X]
-migrate-down:
-	@echo "Migrating down..."
-	@if [ -z "$(version)" ]; then \
-		migrate -path database/migrations -database "$(DATABASE_URL)" down; \
-		echo "All migrations reverted."; \
-	else \
-		migrate -path database/migrations -database "$(DATABASE_URL)" down $(version); \
-		echo "Migrated down to version $(version)."; \
-	fi
+# Check migration status
+# Usage: make migrate-status
+migrate-status:
+	@echo "Checking migration status..."
+	@cd database && atlas migrate status --env local --url "$(DATABASE_URL)"
 
-# Drop all tables in the database
-# Usage: make migrate-drop
-migrate-drop:
-	@echo "Dropping all migrations..."
-	@migrate -path database/migrations -database "$(DATABASE_URL)" drop
-	@echo "All migrations dropped."
+# Validate migration directory
+# Usage: make migrate-validate
+migrate-validate:
+	@echo "Validating migrations..."
+	@cd database && atlas migrate validate --env local
 
-# Force set the database version
-# Usage: make migrate-force version=X
-migrate-force:
-	@echo "Forcing migration version to $(version)..."
-	@migrate -path database/migrations -database "$(DATABASE_URL)" force "$(version)"
-	@echo "Database version forcibly set to $(version)."
+# Generate migration hash/checksum
+# Usage: make migrate-hash
+migrate-hash:
+	@echo "Generating migration checksums..."
+	@cd database && atlas migrate hash
 
 psql:
 	@echo "Connecting to database..."
@@ -141,12 +127,26 @@ deploy:
 
 help:
 	@echo "Available commands:"
-	@echo "  lint: Lint the code"
-	@echo "  build: Build the code"
-	@echo "  buildd: Build the code with docker"
-	@echo "  run: Run the code"
-	@echo "  rund: Run the code with docker"
-	@echo "  migrate-new: Create a new migration, run with 'make migrate-new name=your_migration_name'"
-	@echo "  migrate-up: Migrate up"
-	@echo "  migrate-down: Migrate down"
+	@echo "  lint: Lint the code (Go + UI)"
+	@echo "  generate: Generate code (Go + SQL + Swagger)"
+	@echo "  build: Build the code (Go + UI + Docs)"
+	@echo "  test: Run tests"
+	@echo "  run: Run the full application"
+	@echo "  run-go: Run Go backend only"
+	@echo "  run-ui: Run UI frontend only"
+	@echo ""
+	@echo "Database commands:"
+	@echo "  db-up: Start PostgreSQL database"
+	@echo "  psql: Connect to database CLI"
+	@echo "  migrate-new: Create new migration (make migrate-new name=your_migration_name)"
+	@echo "  migrate-up: Apply pending migrations"
+	@echo "  migrate-status: Check migration status"
+	@echo "  migrate-validate: Validate migration files"
+	@echo "  migrate-hash: Generate migration checksums"
+	@echo ""
+	@echo "Docker commands:"
+	@echo "  docker-build: Build with docker"
+	@echo "  docker-up: Start with docker compose"
+	@echo "  docker-down: Stop docker compose"
+	@echo ""
 	@echo "  help: Show this help message"

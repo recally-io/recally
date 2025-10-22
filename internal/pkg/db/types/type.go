@@ -1,3 +1,3 @@
 package types
 
-type JSONB map[string]interface{}
+type JSONB map[string]any

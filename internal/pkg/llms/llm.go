@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
+	"sync"
+	"time"
+
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/config"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/tools"
-	"strings"
-	"sync"
-	"time"
 
 	"github.com/sashabaranov/go-openai"
 	"golang.org/x/sync/errgroup"
@@ -70,6 +71,7 @@ func New(baseUrl, apiKey string) *LLM {
 	if baseUrl != "" {
 		cfg.BaseURL = baseUrl
 	}
+
 	return &LLM{
 		client:       openai.NewClientWithConfig(cfg),
 		toolMappings: AllToolMappings,
@@ -82,6 +84,7 @@ func (l *LLM) ListModels(ctx context.Context) ([]Model, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		data := make([]Model, 0, len(models.Models))
 		for _, m := range models.Models {
 			data = append(data, Model{
@@ -89,8 +92,10 @@ func (l *LLM) ListModels(ctx context.Context) ([]Model, error) {
 				Name: m.ID,
 			})
 		}
+
 		return &data, nil
 	})
+
 	return *models, err
 }
 
@@ -102,6 +107,7 @@ func (l *LLM) ListTools(ctx context.Context) ([]tools.BaseTool, error) {
 			Description: tool.LLMDescription(),
 		})
 	}
+
 	return availableTools, nil
 }
 
@@ -113,6 +119,7 @@ func (l *LLM) CreateEmbeddings(ctx context.Context, text string) ([]float32, err
 	if err != nil {
 		return nil, err
 	}
+
 	return embeddings.Data[0].Embedding, nil
 }
 
@@ -121,6 +128,7 @@ func (l *LLM) TextCompletion(ctx context.Context, prompt string, options ...Opti
 	for _, o := range options {
 		o(opts)
 	}
+
 	req := opts.ToChatCompletionRequest()
 	req.Messages = []openai.ChatCompletionMessage{{
 		Role:    openai.ChatMessageRoleUser,
@@ -145,6 +153,7 @@ func (l *LLM) StreamingTextCompletion(ctx context.Context, prompt string, stream
 	for _, o := range options {
 		o(opts)
 	}
+
 	options = append(options, WithStream(true))
 
 	req := opts.ToChatCompletionRequest()
@@ -165,6 +174,7 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 	for _, o := range options {
 		o(opts)
 	}
+
 	req := opts.ToChatCompletionRequest()
 	req.Messages = messages
 
@@ -178,14 +188,17 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 
 	// dynamically add tools to the request
 	logger.FromContext(ctx).Info("generating content", "tool_names", opts.ToolNames, "model", req.Model)
+
 	if len(opts.ToolNames) > 0 {
 		mapping := make(map[string]tools.Tool)
+
 		for _, name := range opts.ToolNames {
 			tool, ok := l.toolMappings[name]
 			if ok {
 				mapping[name] = tool
 			}
 		}
+
 		req.Tools = llmTools(mapping)
 	}
 
@@ -195,16 +208,21 @@ func (l *LLM) GenerateContent(ctx context.Context, messages []openai.ChatComplet
 		if req.Messages[0].Role == openai.ChatMessageRoleSystem {
 			req.Messages[0].Role = openai.ChatMessageRoleUser
 		}
+
 		if len(req.Tools) > 0 {
 			req.Tools = nil
 		}
+
 		req.Stream = false
 	}
 
 	respChan := make(chan *openai.ChatCompletionChoice)
 	errChan := make(chan error)
+
 	go l.generateContent(ctx, req, respChan, errChan)
+
 	var choice *openai.ChatCompletionChoice
+
 	sb := strings.Builder{}
 	toolCalls := make([]openai.ToolCall, 0)
 out:
@@ -237,9 +255,11 @@ out:
 				if req.Stream {
 					choice.Message.Content = sb.String()
 				}
+
 				break out
 			}
 			syncStreamFunc(StreamingMessage{Err: err})
+
 			return
 		}
 	}
@@ -250,15 +270,19 @@ out:
 				Role:      openai.ChatMessageRoleAssistant,
 				ToolCalls: toolCalls,
 			})
+
 			toolMessages, steps, err := l.invokeTools(ctx, toolCalls)
 			if err != nil {
 				syncStreamFunc(StreamingMessage{Err: err})
+
 				return
 			}
 
 			syncStreamFunc(StreamingMessage{IntermediateSteps: steps})
+
 			req.Messages = append(req.Messages, toolMessages...)
 			toolCalls = make([]openai.ToolCall, 0)
+
 			go l.generateContent(ctx, req, respChan, errChan)
 		outloop:
 			for {
@@ -289,42 +313,51 @@ out:
 						if req.Stream {
 							choice.Message.Content = sb.String()
 						}
+
 						break outloop
 					}
 					syncStreamFunc(StreamingMessage{Err: err})
+
 					return
 				}
 			}
+
 			if len(toolCalls) == 0 {
 				break
 			}
 		}
 	}
+
 	if !req.Stream {
 		syncStreamFunc(StreamingMessage{Choice: choice})
 	}
+
 	syncStreamFunc(StreamingMessage{Err: io.EOF})
 }
 
 func (l *LLM) generateContent(ctx context.Context, req openai.ChatCompletionRequest, choiceChan chan *openai.ChatCompletionChoice, errChan chan error) {
 	if req.Stream {
 		l.generateContentStream(ctx, req, choiceChan, errChan)
+
 		return
 	}
 
 	start := time.Now()
+
 	resp, err := l.client.CreateChatCompletion(ctx, req)
 	if err != nil {
-
 		errChan <- err
+
 		return
 	}
+
 	logger.FromContext(ctx).Info("time for generated content",
 		"duration", time.Since(start).Milliseconds(),
 		"model", req.Model,
 		"prompt_tokens", resp.Usage.PromptTokens,
 		"completion_tokens", resp.Usage.CompletionTokens,
 	)
+
 	if len(resp.Choices) == 0 {
 		errChan <- fmt.Errorf("no choices returned")
 
@@ -339,14 +372,19 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 	req.StreamOptions = &openai.StreamOptions{
 		IncludeUsage: true,
 	}
+
 	stream, err := l.client.CreateChatCompletionStream(ctx, req)
 	if err != nil {
 		errChan <- err
+
 		return
 	}
-	defer stream.Close()
+
+	defer func() { _ = stream.Close() }()
+
 	start := time.Now()
 	usage := &openai.Usage{}
+
 	for {
 		response, err := stream.Recv()
 		if err != nil {
@@ -360,11 +398,14 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 			}
 
 			errChan <- err
+
 			return
 		}
+
 		if response.Usage != nil {
 			usage = response.Usage
 		}
+
 		if len(response.Choices) > 0 {
 			delta := response.Choices[0]
 			choice := &openai.ChatCompletionChoice{
@@ -384,39 +425,50 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 
 func (l *LLM) invokeTools(ctx context.Context, toolCalls []openai.ToolCall) ([]openai.ChatCompletionMessage, []IntermediateStep, error) {
 	var messages []openai.ChatCompletionMessage
+
 	eg, ctx := errgroup.WithContext(ctx)
 	steps := make([]IntermediateStep, 0)
+
 	for _, tc := range toolCalls {
 		eg.Go(func() error {
 			toolName := tc.Function.Name
 			toolArgs := tc.Function.Arguments
+
 			tool, ok := l.toolMappings[toolName]
 			if !ok {
 				return fmt.Errorf("tool %s not found", toolName)
 			}
+
 			logger.FromContext(ctx).Info("invoking tool", "tool", toolName, "args", toolArgs)
+
 			start := time.Now()
+
 			toolResp, err := tool.Invoke(ctx, toolArgs)
 			if err != nil {
 				return fmt.Errorf("failed to invoke tool %s: %w", toolName, err)
 			}
+
 			logger.FromContext(ctx).Info("tool response", "tool", toolName, "response", toolResp[:min(200, len(toolResp))], "duration", time.Since(start).Milliseconds())
 			messages = append(messages, openai.ChatCompletionMessage{
 				Role:       openai.ChatMessageRoleTool,
 				ToolCallID: tc.ID,
 				Content:    toolResp,
 			})
+
 			steps = append(steps, IntermediateStep{
 				Type:   IntermediateStepTool,
 				Name:   toolName,
 				Input:  toolArgs,
 				Output: toolResp,
 			})
+
 			return nil
 		})
 	}
+
 	if err := eg.Wait(); err != nil {
 		return nil, steps, err
 	}
+
 	return messages, steps, nil
 }

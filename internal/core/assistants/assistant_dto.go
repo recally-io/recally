@@ -2,10 +2,11 @@ package assistants
 
 import (
 	"encoding/json"
+	"time"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
 	"recally/internal/pkg/logger"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -21,7 +22,7 @@ type RagSettings struct {
 type AssistantMetadata struct {
 	// Tools is a list of tools that the assistant can use
 	Tools       []string    `json:"tools,omitempty"`
-	RagSettings RagSettings `json:"rag_settings,omitempty"`
+	RagSettings RagSettings `json:"rag_settings"`
 }
 
 type AssistantDTO struct {
@@ -36,7 +37,7 @@ type AssistantDTO struct {
 	UpdatedAt    time.Time         `json:"updated_at"`
 }
 
-// Load converts a database object to a domain object
+// Load converts a database object to a domain object.
 func (a *AssistantDTO) Load(dbo *db.Assistant) {
 	a.Id = dbo.Uuid
 	a.UserId = dbo.UserID.Bytes
@@ -44,18 +45,21 @@ func (a *AssistantDTO) Load(dbo *db.Assistant) {
 	a.Description = dbo.Description.String
 	a.SystemPrompt = dbo.SystemPrompt.String
 	a.Model = dbo.Model
+
 	if dbo.Metadata != nil {
 		if err := json.Unmarshal(dbo.Metadata, &a.Metadata); err != nil {
 			logger.Default.Warn("failed to unmarshal Assistant metadata", "err", err, "metadata", string(dbo.Metadata))
 		}
 	}
+
 	a.CreatedAt = dbo.CreatedAt.Time
 	a.UpdatedAt = dbo.UpdatedAt.Time
 }
 
-// Dump converts a domain object to a database object
+// Dump converts a domain object to a database object.
 func (a *AssistantDTO) Dump() *db.Assistant {
 	metadata, _ := json.Marshal(a.Metadata)
+
 	return &db.Assistant{
 		UserID:       pgtype.UUID{Bytes: a.UserId, Valid: a.UserId != uuid.Nil},
 		Name:         a.Name,
@@ -80,6 +84,7 @@ func NewAssistant(userId uuid.UUID, opts ...AssistantOption) *AssistantDTO {
 	for _, opt := range opts {
 		opt(a)
 	}
+
 	return a
 }
 

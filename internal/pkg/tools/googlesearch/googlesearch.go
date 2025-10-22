@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
 	"recally/internal/pkg/tools"
 )
 
@@ -23,7 +24,7 @@ func WithHttpClient(client *http.Client) Option {
 	}
 }
 
-func New(apiKey string, searchEngineID string) *Tool {
+func New(apiKey, searchEngineID string) *Tool {
 	return &Tool{
 		apiKey:         apiKey,
 		searchEngineID: searchEngineID,
@@ -61,11 +62,12 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to invoke tool: %w", err)
 	}
+
 	return t.MarshalResult(ctx, result)
 }
 
 func (t *Tool) Search(ctx context.Context, args RequestArgs) (*Result, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://www.googleapis.com/customsearch/v1", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://www.googleapis.com/customsearch/v1", http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create google search request: %w", err)
 	}
@@ -80,10 +82,13 @@ func (t *Tool) Search(ctx context.Context, args RequestArgs) (*Result, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to send google search request: %w", err)
 	}
-	defer resp.Body.Close()
+
+	defer func() { _ = resp.Body.Close() }()
+
 	result := new(Result)
 	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
 		return nil, fmt.Errorf("failed to get google search response: %w", err)
 	}
+
 	return result, nil
 }

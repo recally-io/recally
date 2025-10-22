@@ -3,6 +3,7 @@ package assistants
 import (
 	"context"
 	"fmt"
+
 	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"
@@ -14,17 +15,22 @@ func (s *Service) ListAssistants(ctx context.Context, tx db.DBTX, userId uuid.UU
 	if err != nil {
 		return nil, fmt.Errorf("failed to get assistants: %w", err)
 	}
+
 	asstants := make([]AssistantDTO, 0, len(asts))
+
 	for _, ast := range asts {
 		var a AssistantDTO
+
 		a.Load(&ast)
 		asstants = append(asstants, a)
 	}
+
 	return asstants, nil
 }
 
 func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *AssistantDTO) (*AssistantDTO, error) {
 	model := assistant.Dump()
+
 	ast, err := s.dao.CreateAssistant(ctx, tx, db.CreateAssistantParams{
 		UserID:       model.UserID,
 		Name:         model.Name,
@@ -36,7 +42,9 @@ func (s *Service) CreateAssistant(ctx context.Context, tx db.DBTX, assistant *As
 	if err != nil {
 		return nil, fmt.Errorf("failed to create assistant: %w", err)
 	}
+
 	assistant.Load(&ast)
+
 	return assistant, nil
 }
 
@@ -54,7 +62,9 @@ func (s *Service) UpdateAssistant(ctx context.Context, tx db.DBTX, assistant *As
 	if err != nil {
 		return nil, fmt.Errorf("failed to update assistant: %w", err)
 	}
+
 	assistant.Load(&ast)
+
 	return assistant, nil
 }
 
@@ -63,8 +73,11 @@ func (s *Service) GetAssistant(ctx context.Context, tx db.DBTX, id uuid.UUID) (*
 	if err != nil {
 		return nil, fmt.Errorf("failed to get assistant: %w", err)
 	}
+
 	var assistant AssistantDTO
+
 	assistant.Load(&ast)
+
 	return &assistant, nil
 }
 

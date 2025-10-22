@@ -51,10 +51,10 @@ type Entities struct {
 	Hashtags []struct {
 		Text string `json:"text"`
 	} `json:"hashtags"`
-	URLs         []EntityURL   `json:"urls"`
-	UserMentions []User        `json:"user_mentions"`
-	Symbols      []interface{} `json:"symbols"`
-	Media        []EntityURL   `json:"media"`
+	URLs         []EntityURL `json:"urls"`
+	UserMentions []User      `json:"user_mentions"`
+	Symbols      []any       `json:"symbols"`
+	Media        []EntityURL `json:"media"`
 }
 
 type EntityURL struct {
@@ -115,10 +115,8 @@ func (f *TwitterFetcher) Fetch(ctx context.Context, uri string) (*webreader.Fetc
 	}
 
 	tweets := []*Tweet{tweet}
-	for {
-		if tweet.ReplyToStatusIDStr == "" {
-			break
-		}
+	for tweet.ReplyToStatusIDStr != "" {
+
 		tweet, err = f.fetchTweet(ctx, tweet.ReplyToStatusIDStr)
 		if err != nil {
 			logger.FromContext(ctx).Error("fetch tweet", "err", err, "id", tweet.ReplyToStatusIDStr)
@@ -152,7 +150,7 @@ func (f *TwitterFetcher) Fetch(ctx context.Context, uri string) (*webreader.Fetc
 		},
 	}
 	if tweet.Entities.Media != nil {
-		fetchedContent.Content.Image = tweet.Entities.Media[0].OriginalURL
+		fetchedContent.Image = tweet.Entities.Media[0].OriginalURL
 	}
 
 	return fetchedContent, nil
@@ -170,7 +168,7 @@ func (f *TwitterFetcher) fetchTweet(ctx context.Context, tweetId string) (*Tweet
 	if err != nil {
 		return nil, fmt.Errorf("fetch tweet: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	var tweet Tweet
 	if err := json.NewDecoder(resp.Body).Decode(&tweet); err != nil {
 		return nil, fmt.Errorf("decode tweet: %w", err)

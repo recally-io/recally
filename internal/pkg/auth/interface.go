@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// User represents the authenticated user information
+// User represents the authenticated user information.
 type User struct {
 	ID                  string
 	Username            *string
@@ -20,10 +20,10 @@ type User struct {
 	LastLoginAt         *time.Time
 	FailedLoginAttempts int16
 	LockedUntil         *time.Time
-	Settings            map[string]interface{}
+	Settings            map[string]any
 }
 
-// OAuthConnection represents a user's OAuth provider connection
+// OAuthConnection represents a user's OAuth provider connection.
 type OAuthConnection struct {
 	Provider       string
 	ProviderUserID string
@@ -31,10 +31,10 @@ type OAuthConnection struct {
 	AccessToken    string
 	RefreshToken   *string
 	TokenExpiresAt *time.Time
-	ProviderData   map[string]interface{}
+	ProviderData   map[string]any
 }
 
-// VerificationType represents different types of verification
+// VerificationType represents different types of verification.
 type VerificationType string
 
 const (
@@ -51,10 +51,10 @@ type AuthService interface {
 	SignOut(ctx context.Context, userID string) error
 
 	// OAuth Operations
-	SignUpWithOAuth(ctx context.Context, provider string, code string) (*User, string, error)
-	SignInWithOAuth(ctx context.Context, provider string, code string) (*User, string, error)
-	LinkOAuthProvider(ctx context.Context, userID string, provider string, code string) error
-	UnlinkOAuthProvider(ctx context.Context, userID string, provider string) error
+	SignUpWithOAuth(ctx context.Context, provider, code string) (*User, string, error)
+	SignInWithOAuth(ctx context.Context, provider, code string) (*User, string, error)
+	LinkOAuthProvider(ctx context.Context, userID, provider, code string) error
+	UnlinkOAuthProvider(ctx context.Context, userID, provider string) error
 	GetOAuthConnections(ctx context.Context, userID string) ([]OAuthConnection, error)
 
 	// JWT Token Operations
@@ -63,23 +63,23 @@ type AuthService interface {
 	RevokeToken(ctx context.Context, token string) error
 
 	// API Key Operations
-	GenerateAPIKey(ctx context.Context, userID string, description string) (string, error)
+	GenerateAPIKey(ctx context.Context, userID, description string) (string, error)
 	ValidateAPIKey(ctx context.Context, apiKey string) (*User, error)
 	RevokeAPIKey(ctx context.Context, apiKey string) error
 	ListAPIKeys(ctx context.Context, userID string) ([]string, error)
 
 	// Verification Operations
 	SendVerification(ctx context.Context, userID string, verificationType VerificationType) error
-	VerifyToken(ctx context.Context, userID string, token string, verificationType VerificationType) error
+	VerifyToken(ctx context.Context, userID, token string, verificationType VerificationType) error
 
 	// User Management
 	GetUser(ctx context.Context, userID string) (*User, error)
-	UpdateUser(ctx context.Context, userID string, updates map[string]interface{}) error
+	UpdateUser(ctx context.Context, userID string, updates map[string]any) error
 	DeactivateUser(ctx context.Context, userID string) error
 	ReactivateUser(ctx context.Context, userID string) error
 
 	// Password Management
-	ChangePassword(ctx context.Context, userID string, oldPassword, newPassword string) error
-	ResetPassword(ctx context.Context, token string, newPassword string) error
+	ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error
+	ResetPassword(ctx context.Context, token, newPassword string) error
 	RequestPasswordReset(ctx context.Context, email string) error
 }

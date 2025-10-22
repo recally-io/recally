@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"recally/internal/pkg/auth"
-	"recally/internal/pkg/db"
 	"strings"
 	"time"
+
+	"recally/internal/pkg/auth"
+	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -17,7 +18,7 @@ type authService interface {
 	GetOAuth2RedirectURL(ctx context.Context, provider string) (string, error)
 	HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider, code string) (*auth.UserDTO, error)
 	CreateUser(ctx context.Context, tx db.DBTX, user *auth.UserDTO) (*auth.UserDTO, error)
-	AuthByPassword(ctx context.Context, tx db.DBTX, email string, password string) (*auth.UserDTO, error)
+	AuthByPassword(ctx context.Context, tx db.DBTX, email, password string) (*auth.UserDTO, error)
 	GenerateJWT(user uuid.UUID) (string, error)
 	ValidateJWT(ctx context.Context, tx db.DBTX, tokenString string) (*auth.UserDTO, int64, error)
 
@@ -54,6 +55,7 @@ func registerAuthHandlers(e *echo.Group) {
 func (h *authHandler) oAuthLogin(c echo.Context) error {
 	provider := c.Param("provider")
 	ctx := c.Request().Context()
+
 	redirectUrl, err := h.service.GetOAuth2RedirectURL(ctx, provider)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth redirect url: %w", err))
@@ -68,10 +70,12 @@ func (h *authHandler) oAuthCallback(c echo.Context) error {
 	provider := c.Param("provider")
 	code := c.QueryParam("code")
 	ctx := c.Request().Context()
+
 	tx, err := loadTx(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	user, err := h.service.HandleOAuth2Callback(ctx, tx, provider, code)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth token: %w", err))
@@ -83,6 +87,7 @@ func (h *authHandler) oAuthCallback(c echo.Context) error {
 	}
 
 	h.setCookieJwtToken(c, jwtToken)
+
 	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
 
@@ -91,16 +96,7 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-// @Summary		Login
-// @Description	Authenticate a user with email and password
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Param			request	body		loginRequest					true	"User login details"
-// @Success		200		{object}	JSONResult{data=userResponse}	"User logged in successfully"
-// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
-// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
-// @Router			/auth/login [post]
+// @Router			/auth/login [post].
 func (h *authHandler) login(c echo.Context) error {
 	req := new(loginRequest)
 	if err := c.Bind(req); err != nil {
@@ -108,6 +104,7 @@ func (h *authHandler) login(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
+
 	tx, err := loadTx(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -124,6 +121,7 @@ func (h *authHandler) login(c echo.Context) error {
 	}
 
 	h.setCookieJwtToken(c, token)
+
 	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
 
@@ -143,16 +141,7 @@ type userResponse struct {
 	Settings auth.UserSettings `json:"settings"`
 }
 
-// @Summary		Register a new user
-// @Description	Register a new user with the provided username, email, and password
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Param			request	body		registerRequest					true	"User registration details"
-// @Success		200		{object}	JSONResult{data=userResponse}	"User registered successfully"
-// @Failure		400		{object}	JSONResult{data=nil}			"Bad Request"
-// @Failure		500		{object}	JSONResult{data=nil}			"Internal server error"
-// @Router			/auth/register [post]
+// @Router			/auth/register [post].
 func (h *authHandler) register(c echo.Context) error {
 	req := new(registerRequest)
 	if err := c.Bind(req); err != nil {
@@ -160,10 +149,12 @@ func (h *authHandler) register(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
+
 	tx, err := loadTx(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	user, err := h.service.CreateUser(ctx, tx, &auth.UserDTO{
 		Username: req.Username,
 		Email:    req.Email,
@@ -179,6 +170,7 @@ func (h *authHandler) register(c echo.Context) error {
 	}
 
 	h.setCookieJwtToken(c, token)
+
 	return JsonResponse(c, http.StatusOK, userResponse{
 		ID:       user.ID,
 		Username: user.Username,
@@ -197,21 +189,15 @@ func (h *authHandler) setCookieJwtToken(c echo.Context, token string) {
 	c.SetCookie(cookie)
 }
 
-// @Summary		Validate JWT token
-// @Description	Validate the JWT token and return the user ID
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Success		200	{object}	JSONResult{data=userResponse}	"
-// @Failure		401	{object}	JSONResult{data=nil}			"Unauthorized"
-// @Failure		500	{object}	JSONResult{data=nil}			"Internal
-// @Router			/auth/validate-jwt [get]
+// @Router			/auth/validate-jwt [get].
 func (h *authHandler) validateJwtToken(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	tx, err := loadTx(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	token, err := c.Cookie("token")
 	if err != nil {
 		return ErrorResponse(c, http.StatusUnauthorized, fmt.Errorf("failed to get jwt token: %w", err))
@@ -227,20 +213,14 @@ func (h *authHandler) validateJwtToken(c echo.Context) error {
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token: %w", err))
 		}
+
 		h.setCookieJwtToken(c, jwt)
 	}
+
 	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
 
-// @Summary		User logout
-// @Description	Clear user session by removing JWT token
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Success		200	{object}	JSONResult{data=nil}	"Successfully logged out"
-// @Failure		401	{object}	JSONResult{data=nil}	"Unauthorized"
-// @Failure		500	{object}	JSONResult{data=nil}	"Internal server error"
-// @Router			/auth/logout [post]
+// @Router			/auth/logout [post].
 func (h *authHandler) logout(c echo.Context) error {
 	// Remove the token cookie by setting its expiry to a past time
 	cookie := &http.Cookie{

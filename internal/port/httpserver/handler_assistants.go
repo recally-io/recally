@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"net/http"
+
 	"recally/internal/core/assistants"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/llms"
@@ -94,14 +95,17 @@ func registerAssistantHandlers(e *echo.Group, s *Service) {
 //	@Router			/assistants [get]
 func (h *assistantHandler) listAssistants(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	assistants, err := h.service.ListAssistants(ctx, tx, user.ID)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	return JsonResponse(c, http.StatusOK, assistants)
 }
 
@@ -115,31 +119,25 @@ type getAssistantRequest struct {
 // If there is an error while fetching the assistant, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the assistant.
 
-// @Summary		Get Assistant
-// @Description	Retrieves an assistant by ID
-// @Tags			Assistants
-// @Accept			json
-// @Produce		json
-// @Param			assistant-id	path		string										true	"Assistant ID"
-// @Success		200				{object}	JSONResult{data=assistants.AssistantDTO}	"Success"
-// @Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
-// @Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
-// @Failure		500				{object}	JSONResult{data=nil}						"Internal
-// @Router			/assistants/{assistant-id} [get]
+// @Router			/assistants/{assistant-id} [get].
 func (h *assistantHandler) getAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getAssistantRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	assistant, err := h.service.GetAssistant(ctx, tx, req.AssistantId)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	return JsonResponse(c, http.StatusOK, assistant)
 }
 
@@ -150,7 +148,7 @@ type createAssistantRequest struct {
 	Model        string `json:"model,omitempty"`
 	Metadata     struct {
 		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // createAssistant is a handler function that creates a new assistant.
@@ -173,10 +171,12 @@ type createAssistantRequest struct {
 //	@Router			/assistants [post]
 func (h *assistantHandler) createAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(createAssistantRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, user, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -209,7 +209,7 @@ type updateAssistantRequest struct {
 	Model        string    `json:"model,omitempty"`
 	Metadata     struct {
 		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // updateAssistant is a handler function that updates an existing assistant.
@@ -242,6 +242,7 @@ func (h *assistantHandler) updateAssistant(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	assistant, err := h.service.GetAssistant(ctx, tx, req.AssistantId)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -250,15 +251,19 @@ func (h *assistantHandler) updateAssistant(c echo.Context) error {
 	if req.Name != "" {
 		assistant.Name = req.Name
 	}
+
 	if req.Description != "" {
 		assistant.Description = req.Description
 	}
+
 	if req.SystemPrompt != "" {
 		assistant.SystemPrompt = req.SystemPrompt
 	}
+
 	if req.Model != "" {
 		assistant.Model = req.Model
 	}
+
 	if req.Metadata.Tools != nil {
 		assistant.Metadata.Tools = req.Metadata.Tools
 	}
@@ -306,19 +311,10 @@ func (h *assistantHandler) deleteAssistant(c echo.Context) error {
 	return JsonResponse(c, http.StatusNoContent, nil)
 }
 
-// @Summary		List Attachments by Assistant
-// @Description	Lists attachments for a specific assistant
-// @Tags			Assistants
-// @Accept			json
-// @Produce		json
-// @Param			assistant-id	path		string										true	"Assistant ID"
-// @Success		200				{object}	JSONResult{data=[]assistants.AttachmentDTO}	"Success"
-// @Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
-// @Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
-// @Failure		500				{object}	JSONResult{data=nil}						"Internal Server Error"
-// @Router			/assistants/{assistant-id}/attachments [get]
+// @Router			/assistants/{assistant-id}/attachments [get].
 func (h *assistantHandler) listAttachmentsByAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getAssistantRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
@@ -387,24 +383,15 @@ func (h *assistantHandler) uploadAssistantAttachment(c echo.Context) error {
 	return JsonResponse(c, http.StatusCreated, attachment)
 }
 
-// @Summary		List Attachments by Thread
-// @Description	Lists attachments for a specific thread
-// @Tags			Assistants
-// @Accept			json
-// @Produce		json
-// @Param			assistant-id	path		string										true	"Assistant ID"
-// @Param			thread-id		path		string										true	"Thread ID"
-// @Success		200				{object}	JSONResult{data=[]assistants.AttachmentDTO}	"Success"
-// @Failure		400				{object}	JSONResult{data=nil}						"Bad Request"
-// @Failure		401				{object}	JSONResult{data=nil}						"Unauthorized"
-// @Failure		500				{object}	JSONResult{data=nil}						"Internal Server Error"
-// @Router			/assistants/{assistant-id}/threads/{thread-id}/attachments [get]
+// @Router			/assistants/{assistant-id}/threads/{thread-id}/attachments [get].
 func (h *assistantHandler) listAttachmentsByThread(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := new(getThreadRequest)
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	tx, _, err := initContext(ctx)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
@@ -471,28 +458,22 @@ func (h *assistantHandler) uploadThreadAttachment(c echo.Context) error {
 	return JsonResponse(c, http.StatusCreated, attachment)
 }
 
-// @Summary		List Models
-// @Description	Lists available language models
-// @Tags			Assistants
-// @Accept			json
-// @Produce		json
-// @Success		200	{object}	JSONResult{data=[]llms.Model}	"Success"
-// @Failure		401	{object}	JSONResult{data=nil}			"Unauthorized"
-// @Failure		500	{object}	JSONResult{data=nil}			"Internal Server Error"
-// @Router			/assistants/models [get]
+// @Router			/assistants/models [get].
 func (h *assistantHandler) listModels(c echo.Context) error {
 	models, err := h.service.ListModels(c.Request().Context())
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	return JsonResponse(c, http.StatusOK, models)
 }
 
-// add an api to list all available tools
+// add an api to list all available tools.
 func (h *assistantHandler) listTools(c echo.Context) error {
 	tools, err := h.service.ListTools(c.Request().Context())
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	return JsonResponse(c, http.StatusOK, tools)
 }

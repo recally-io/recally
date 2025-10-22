@@ -6,8 +6,8 @@ import (
 )
 
 type Cache interface {
-	Set(key CacheKey, value interface{}, expiration time.Duration)
-	SetWithContext(ctx context.Context, key CacheKey, value interface{}, expiration time.Duration)
+	Set(key CacheKey, value any, expiration time.Duration)
+	SetWithContext(ctx context.Context, key CacheKey, value any, expiration time.Duration)
 	Get(key CacheKey) (any, bool)
 	GetWithContext(ctx context.Context, key CacheKey) (any, bool)
 	Delete(key CacheKey)
@@ -28,7 +28,9 @@ func Get[T any](ctx context.Context, c Cache, key CacheKey) (*T, bool) {
 	}
 
 	var value T
+
 	MustUnmarshaler(b, &value)
+
 	return &value, true
 }
 
@@ -44,5 +46,6 @@ func RunInCache[T any](ctx context.Context, c Cache, key CacheKey, expiration ti
 	}
 
 	c.SetWithContext(ctx, key, data, expiration)
+
 	return data, nil
 }

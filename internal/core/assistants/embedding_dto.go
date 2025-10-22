@@ -1,8 +1,9 @@
 package assistants
 
 import (
-	"recally/internal/pkg/db"
 	"time"
+
+	"recally/internal/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -34,6 +35,7 @@ func (e *EmbeddingDTO) Load(dbo *db.AssistantEmbeddding) {
 
 func (e *EmbeddingDTO) Dump() *db.AssistantEmbeddding {
 	vec := pgvector.NewVector(e.Embeddings)
+
 	return &db.AssistantEmbeddding{
 		UserID:       pgtype.UUID{Bytes: e.UserID, Valid: e.UserID != uuid.Nil},
 		AttachmentID: pgtype.UUID{Bytes: e.AttachmentID, Valid: e.AttachmentID != uuid.Nil},

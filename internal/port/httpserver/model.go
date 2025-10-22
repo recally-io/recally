@@ -15,12 +15,12 @@ type JSONResult struct {
 	// Message is a string value that represents the message of the response.
 	Message string `json:"message" example:"OK"`
 	// Data is an interface value that represents the data of the response.
-	Data interface{} `json:"data"`
+	Data any `json:"data"`
 	// Error is an error value that represents the error of the response.
 	Error error `json:"error"`
 }
 
-func JsonResponse(c echo.Context, code int, data interface{}) error {
+func JsonResponse(c echo.Context, code int, data any) error {
 	return c.JSON(code, JSONResult{
 		Success: true,
 		Code:    code,
@@ -43,10 +43,12 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	he, ok := err.(*echo.HTTPError)
 	if ok {
 		code = he.Code
+
 		if he.Internal != nil {
 			msg = he.Internal.Error()
 		}
 	}
+
 	_ = c.JSON(code, JSONResult{
 		Success: false,
 		Code:    code,
@@ -67,8 +69,10 @@ func bindAndValidate(c echo.Context, req any) error {
 	if err := c.Bind(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
+
 	if err := c.Validate(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err)
 	}
+
 	return nil
 }

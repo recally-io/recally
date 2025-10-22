@@ -115,7 +115,7 @@ func (f *JinaFetcher) Fetch(ctx context.Context, url string) (*webreader.Fetched
 	if err != nil {
 		return nil, fmt.Errorf("send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Handle non-200 responses
 	if resp.StatusCode != http.StatusOK {

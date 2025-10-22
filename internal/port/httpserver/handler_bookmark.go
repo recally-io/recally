@@ -4,25 +4,26 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
+
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/cache"
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader/fetcher"
-	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/labstack/echo/v4"
 )
 
-// BookmarkService defines operations for managing bookmarks
+// BookmarkService defines operations for managing bookmarks.
 type BookmarkService interface {
 	ListBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUID, filters []string, query string, limit, offset int32) ([]bookmarks.BookmarkDTO, int64, error)
 	CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, dto *bookmarks.BookmarkContentDTO) (*bookmarks.BookmarkDTO, error)
 	GetBookmarkWithContent(ctx context.Context, tx db.DBTX, userId, id uuid.UUID) (*bookmarks.BookmarkDTO, error)
-	UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, id uuid.UUID, bookmak *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
+	UpdateBookmark(ctx context.Context, tx db.DBTX, userId, id uuid.UUID, bookmak *bookmarks.BookmarkDTO) (*bookmarks.BookmarkDTO, error)
 	DeleteBookmark(ctx context.Context, tx db.DBTX, id, userID uuid.UUID) error
 	DeleteBookmarksByUser(ctx context.Context, tx db.DBTX, userID uuid.UUID) error
 
@@ -32,13 +33,13 @@ type BookmarkService interface {
 	ListTags(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]bookmarks.TagDTO, error)
 	ListDomains(ctx context.Context, tx db.DBTX, userID uuid.UUID) ([]bookmarks.DomainDTO, error)
 
-	GetBookmarkShare(ctx context.Context, tx db.DBTX, userID uuid.UUID, bookmarkID uuid.UUID) (*bookmarks.BookmarkShareDTO, error)
-	CreateBookmarkShare(ctx context.Context, tx db.DBTX, userID uuid.UUID, bookmarkID uuid.UUID, expiresAt time.Time) (*bookmarks.BookmarkShareDTO, error)
-	UpdateBookmarkShare(ctx context.Context, tx db.DBTX, userID uuid.UUID, bookmarkID uuid.UUID, expiresAt time.Time) (*bookmarks.BookmarkShareDTO, error)
-	DeleteBookmarkShare(ctx context.Context, tx db.DBTX, userID uuid.UUID, bookmarkID uuid.UUID) error
+	GetBookmarkShare(ctx context.Context, tx db.DBTX, userID, bookmarkID uuid.UUID) (*bookmarks.BookmarkShareDTO, error)
+	CreateBookmarkShare(ctx context.Context, tx db.DBTX, userID, bookmarkID uuid.UUID, expiresAt time.Time) (*bookmarks.BookmarkShareDTO, error)
+	UpdateBookmarkShare(ctx context.Context, tx db.DBTX, userID, bookmarkID uuid.UUID, expiresAt time.Time) (*bookmarks.BookmarkShareDTO, error)
+	DeleteBookmarkShare(ctx context.Context, tx db.DBTX, userID, bookmarkID uuid.UUID) error
 }
 
-// bookmarkServiceImpl implements BookmarkService
+// bookmarkServiceImpl implements BookmarkService.
 type bookmarksHandler struct {
 	service BookmarkService
 	queue   *queue.Queue
@@ -99,6 +100,7 @@ func (h *bookmarksHandler) listBookmarks(c echo.Context) error {
 	if err := bindAndValidate(c, req); err != nil {
 		return err
 	}
+
 	if req.Limit == 0 {
 		req.Limit = 20
 	}
@@ -148,6 +150,7 @@ func (h *bookmarksHandler) listTags(c echo.Context) error {
 			if err != nil {
 				return nil, err
 			}
+
 			return &t, nil
 		})
 	if err != nil {
@@ -184,6 +187,7 @@ func (h *bookmarksHandler) listDomains(c echo.Context) error {
 			if err != nil {
 				return nil, err
 			}
+
 			return &d, nil
 		})
 	if err != nil {
@@ -263,6 +267,7 @@ func (h *bookmarksHandler) createBookmark(c echo.Context) error {
 	} else {
 		logger.FromContext(ctx).Info("success inserted job", "result", result, "err", err)
 	}
+
 	return JsonResponse(c, http.StatusCreated, bookmark)
 }
 
@@ -301,6 +306,7 @@ func (h *bookmarksHandler) getBookmark(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	if bookmark == nil {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("bookmark not found"))
 	}
@@ -369,6 +375,7 @@ func (h *bookmarksHandler) updateBookmark(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
+
 	if updated == nil {
 		return ErrorResponse(c, http.StatusNotFound, fmt.Errorf("bookmark not found"))
 	}

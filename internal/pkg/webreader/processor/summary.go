@@ -156,7 +156,7 @@ func (p *SummaryProcessor) StreamingSummary(ctx context.Context, content string,
 
 func (p *SummaryProcessor) buildPrompt(ctx context.Context, content string) (string, error) {
 	var prompt strings.Builder
-	if err := summaryPromptTempl.Execute(&prompt, map[string]interface{}{
+	if err := summaryPromptTempl.Execute(&prompt, map[string]any{
 		"Prompt":   p.config.Prompt,
 		"Article":  content,
 		"Language": p.config.Language,

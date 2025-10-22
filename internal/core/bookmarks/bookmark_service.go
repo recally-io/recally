@@ -1,10 +1,11 @@
-// Package bookmarks provides functionality for managing user bookmarks and their content
+// Package bookmarks provides functionality for managing user bookmarks and their content.
 package bookmarks
 
 import (
 	"context"
 	"fmt"
 	"net/url"
+
 	"recally/internal/pkg/db"
 	"recally/internal/pkg/logger"
 
@@ -35,6 +36,7 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 	if err != nil {
 		return nil, fmt.Errorf("%w: invalid URL", ErrInvalidInput)
 	}
+
 	dto.Domain = u.Host
 	contentDTO := &BookmarkContentDTO{}
 
@@ -76,6 +78,7 @@ func (s *Service) CreateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 
 	// Convert database model to DTO
 	var bookmarkDTO BookmarkDTO
+
 	bookmarkDTO.Load(&bookmark)
 
 	return &bookmarkDTO, nil
@@ -89,8 +92,11 @@ func (s *Service) GetBookmarkWithContent(ctx context.Context, tx db.DBTX, userId
 	if err != nil {
 		return nil, err
 	}
+
 	var result BookmarkDTO
+
 	result.LoadWithContent(&bookmark)
+
 	return &result, nil
 }
 
@@ -98,6 +104,7 @@ func (s *Service) ListBookmarks(ctx context.Context, tx db.DBTX, userID uuid.UUI
 	if limit <= 0 || limit > 100 {
 		limit = 50 // Default limit
 	}
+
 	if offset < 0 {
 		offset = 0
 	}
@@ -134,9 +141,11 @@ func (s *Service) SearchBookmarks(ctx context.Context, tx db.DBTX, userID uuid.U
 	if limit <= 0 || limit > 100 {
 		limit = 50 // Default limit
 	}
+
 	if offset < 0 {
 		offset = 0
 	}
+
 	domains, contentTypes, tags := parseListFilter(filters)
 	totalCount := int64(0)
 
@@ -157,14 +166,17 @@ func (s *Service) SearchBookmarks(ctx context.Context, tx db.DBTX, userID uuid.U
 	}
 
 	dtos := loadSearchBookmarks(bs)
+
 	if len(bs) > 0 {
 		totalCount = bs[0].TotalCount
 	}
+
 	return dtos, totalCount, nil
 }
 
 func (s *Service) DeleteBookmark(ctx context.Context, tx db.DBTX, userId, id uuid.UUID) error {
 	logger.FromContext(ctx).Info("deleting bookmark", "id", id.String(), "user_id", userId.String())
+
 	return s.dao.DeleteBookmark(ctx, tx, db.DeleteBookmarkParams{
 		ID:     id,
 		UserID: pgtype.UUID{Bytes: userId, Valid: true},
@@ -175,11 +187,12 @@ func (s *Service) DeleteBookmarksByUser(ctx context.Context, tx db.DBTX, userId 
 	return s.dao.DeleteBookmarksByUser(ctx, tx, pgtype.UUID{Bytes: userId, Valid: true})
 }
 
-func (s *Service) UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UUID, id uuid.UUID, dto *BookmarkDTO) (*BookmarkDTO, error) {
+func (s *Service) UpdateBookmark(ctx context.Context, tx db.DBTX, userId, id uuid.UUID, dto *BookmarkDTO) (*BookmarkDTO, error) {
 	bookmark, err := s.GetBookmarkWithContent(ctx, tx, userId, id)
 	if err != nil {
 		return nil, err
 	}
+
 	if dto.Content != nil {
 		new := dto.Content
 		old := bookmark.Content
@@ -187,15 +200,19 @@ func (s *Service) UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 		if new.Content != "" {
 			old.Content = new.Content
 		}
+
 		if new.Description != "" {
 			old.Description = new.Description
 		}
+
 		if new.Html != "" {
 			old.Html = new.Html
 		}
+
 		if new.Summary != "" {
 			old.Summary = new.Summary
 		}
+
 		if _, err = s.UpdateBookmarkContent(ctx, tx, old); err != nil {
 			return nil, fmt.Errorf("failed to update bookmark content: %w", err)
 		}
@@ -205,6 +222,8 @@ func (s *Service) UpdateBookmark(ctx context.Context, tx db.DBTX, userId uuid.UU
 	if err != nil {
 		return nil, fmt.Errorf("failed to update bookmark: %w", err)
 	}
+
 	bookmark.Load(&dbo)
+
 	return bookmark, nil
 }

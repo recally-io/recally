@@ -20,18 +20,21 @@ func New(opts ...Option) *Session {
 	for _, opt := range opts {
 		opt(session)
 	}
+
 	return session
 }
 
 type Option func(*Session)
 
-// WithClientHelloID is used to set tls config
+// WithClientHelloID is used to set tls config.
 func WithClientHelloID(clientHelloID utls.ClientHelloID) Option {
 	c, err := utls.UTLSIdToSpec(clientHelloID)
 	if err != nil {
 		slog.Error("tls config error", "err", err)
+
 		return func(s *Session) {}
 	}
+
 	transport := &http.Transport{
 		DisableKeepAlives: false,
 		TLSClientConfig: &tls.Config{
@@ -42,28 +45,29 @@ func WithClientHelloID(clientHelloID utls.ClientHelloID) Option {
 			ClientSessionCache: tls.NewLRUClientSessionCache(32),
 		},
 	}
+
 	return func(s *Session) {
-		s.Client.Transport = transport
+		s.Transport = transport
 	}
 }
 
-// WithTransport is used to set transport
+// WithTransport is used to set transport.
 func WithTransport(transport *http.Transport) Option {
 	return func(s *Session) {
-		s.Client.Transport = transport
+		s.Transport = transport
 	}
 }
 
-// WithTimeout is used to set timeout
+// WithTimeout is used to set timeout.
 func WithTimeout(timeout time.Duration) Option {
 	return func(s *Session) {
-		s.Client.Timeout = timeout
+		s.Timeout = timeout
 	}
 }
 
-// WithCookieJar is used to set cookie jar
+// WithCookieJar is used to set cookie jar.
 func WithCookieJar(jar http.CookieJar) Option {
 	return func(s *Session) {
-		s.Client.Jar = jar
+		s.Jar = jar
 	}
 }

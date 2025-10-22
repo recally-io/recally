@@ -3,64 +3,57 @@ package migrations
 import (
 	"context"
 	"fmt"
-	"recally/internal/pkg/logger"
 	"strings"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
+	"recally/internal/pkg/logger"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/riverqueue/river/rivermigrate"
 )
 
+// Migrate runs all database migrations (Atlas + River).
 func Migrate(ctx context.Context, databaseURL string) {
 	logger.Default.Info("start migrating database")
+
+	// Run River migrations first (for background job queue)
 	migrateRiver(ctx, databaseURL)
 
-	s := bindata.Resource(AssetNames(), func(name string) ([]byte, error) {
-		return Asset(name)
-	})
-	d, err := bindata.WithInstance(s)
-	if err != nil {
-		logger.Default.Fatal("Error while creating bindata instance", err, "err")
-	}
+	// Run Atlas migrations for application schema
+	if err := MigrateAtlas(ctx, databaseURL); err != nil {
+		logger.Default.Fatal("Error while running Atlas migrations", "err", err)
 
-	m, err := migrate.NewWithSourceInstance("migrations", d, databaseURL)
-	if err != nil {
-		logger.Default.Fatal("Error while creating migrate instance", err, "err")
-	}
-	if err := m.Up(); err != nil {
-		if err.Error() == "no change" {
-			logger.Default.Info("No migration for normal db needed")
-			return
-		}
-		logger.Default.Fatal("Error while migrating", "err", err)
 		return
 	}
+
 	logger.Default.Info("Migration successful")
 }
 
 func migrateRiver(ctx context.Context, databaseURL string) {
 	logger.Default.Info("start migrating river")
+
 	dbPool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
 		logger.Default.Fatal("migrateRiver failed to connect to database", "err", err)
 	}
+
 	defer dbPool.Close()
 
 	migrator, err := rivermigrate.New(riverpgxv5.New(dbPool), nil)
 	if err != nil {
 		logger.Default.Fatal("migrateRiver failed to create migrator", "err", err)
 	}
+
 	res, err := migrator.Migrate(ctx, rivermigrate.DirectionUp, &rivermigrate.MigrateOpts{
 		TargetVersion: -1,
 	})
 	if err != nil {
 		logger.Default.Fatal("migrateRiver failed to migrate", "err", err)
 	}
+
 	for _, version := range res.Versions {
 		logger.Default.Info(fmt.Sprintf("Migrated [%s] version %d", strings.ToUpper(string(res.Direction)), version.Version))
 	}
+
 	logger.Default.Info("migrate river successful")
 }
