@@ -20,16 +20,17 @@ go = "1.24.6"  # From go.mod
 # ENVIRONMENT VARIABLES
 # ============================================
 [env]
-# Load from .env file (for secrets like DB_PASSWORD, API keys)
-_.file = [".env"]
-
 # Database configuration (non-sensitive defaults)
 DB_HOST = "localhost"
 DB_PORT = "15432"
 DB_NAME = "recally"
 DB_USER = "postgres"
+DB_PASSWORD = "postgres"  # Default for development, override in .env
 
-# Construct DATABASE_URL from components
+# Load from .env file to override defaults (for secrets like DB_PASSWORD, API keys)
+_.file = [".env"]
+
+# Construct DATABASE_URL from components (after .env is loaded)
 DATABASE_URL = "postgresql://{{env.DB_USER}}:{{env.DB_PASSWORD}}@{{env.DB_HOST}}:{{env.DB_PORT}}/{{env.DB_NAME}}?sslmode=disable"
 
 # ============================================
