@@ -380,7 +380,7 @@ func (l *LLM) generateContentStream(ctx context.Context, req openai.ChatCompleti
 		return
 	}
 
-	defer stream.Close()
+	defer func() { _ = stream.Close() }()
 
 	start := time.Now()
 	usage := &openai.Usage{}

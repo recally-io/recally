@@ -17,7 +17,7 @@ func parseXmlContent(content, tag string) string {
 
 func tagStringToArray(tagString string) []string {
 	tags := []string{}
-	for _, tag := range strings.Split(tagString, ", ") {
+	for tag := range strings.SplitSeq(tagString, ", ") {
 		if tag != "" {
 			tags = append(tags, strings.TrimSpace(tag))
 		}

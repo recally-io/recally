@@ -35,7 +35,7 @@ type BookmarkContentFileMetadata struct {
 
 type BookmarkContentMetadata struct {
 	Author      string    `json:"author,omitempty"`
-	PublishedAt time.Time `json:"published_at,omitempty"`
+	PublishedAt time.Time `json:"published_at"`
 	Description string    `json:"description,omitempty"`
 	SiteName    string    `json:"site_name,omitempty"`
 	Domain      string    `json:"domain,omitempty"`
@@ -43,7 +43,7 @@ type BookmarkContentMetadata struct {
 	Favicon string `json:"favicon"`
 	Cover   string `json:"cover,omitempty"`
 
-	File BookmarkContentFileMetadata `json:"file,omitempty"`
+	File BookmarkContentFileMetadata `json:"file"`
 }
 
 type BookmarkContentDTO struct {

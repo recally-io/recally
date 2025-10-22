@@ -15,12 +15,12 @@ type JSONResult struct {
 	// Message is a string value that represents the message of the response.
 	Message string `json:"message" example:"OK"`
 	// Data is an interface value that represents the data of the response.
-	Data interface{} `json:"data"`
+	Data any `json:"data"`
 	// Error is an error value that represents the error of the response.
 	Error error `json:"error"`
 }
 
-func JsonResponse(c echo.Context, code int, data interface{}) error {
+func JsonResponse(c echo.Context, code int, data any) error {
 	return c.JSON(code, JSONResult{
 		Success: true,
 		Code:    code,

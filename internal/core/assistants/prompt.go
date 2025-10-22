@@ -28,7 +28,7 @@ var titleGenerationPromptTmpl = template.Must(template.New("promptTitleGeneratio
 
 func getTitleGenerationPrompt(conversation string) (string, error) {
 	var tpl bytes.Buffer
-	if err := titleGenerationPromptTmpl.Execute(&tpl, map[string]interface{}{
+	if err := titleGenerationPromptTmpl.Execute(&tpl, map[string]any{
 		"Prompt": conversation,
 	}); err != nil {
 		return "", err
@@ -56,7 +56,7 @@ var chatMessageWithRagPromptTmpl = template.Must(template.New("promptChatMessage
 
 func getChatMessageWithRagPrompt(knowledgeBaseInfo, chatHistory, userQuery string) (string, error) {
 	var tpl bytes.Buffer
-	if err := chatMessageWithRagPromptTmpl.Execute(&tpl, map[string]interface{}{
+	if err := chatMessageWithRagPromptTmpl.Execute(&tpl, map[string]any{
 		"KnowledgeBaseInfo": knowledgeBaseInfo,
 		"ChatHistory":       chatHistory,
 		"UserQuery":         userQuery,

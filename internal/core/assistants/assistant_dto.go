@@ -22,7 +22,7 @@ type RagSettings struct {
 type AssistantMetadata struct {
 	// Tools is a list of tools that the assistant can use
 	Tools       []string    `json:"tools,omitempty"`
-	RagSettings RagSettings `json:"rag_settings,omitempty"`
+	RagSettings RagSettings `json:"rag_settings"`
 }
 
 type AssistantDTO struct {

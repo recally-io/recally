@@ -78,7 +78,7 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, url string) (*webreader.Fetched
 	var lastErr error
 	retries := f.config.RetryCount + 1
 
-	for attempt := 0; attempt < retries; attempt++ {
+	for attempt := range retries {
 		if attempt > 0 {
 			select {
 			case <-ctx.Done():
@@ -116,7 +116,7 @@ func (f *HTTPFetcher) doFetch(ctx context.Context, url string) (*webreader.Fetch
 
 	// Check if the response status code indicates an error
 	if resp.StatusCode >= 400 {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return nil, fmt.Errorf("http status %d: %s", resp.StatusCode, resp.Status)
 	}
 

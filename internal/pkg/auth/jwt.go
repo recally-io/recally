@@ -45,7 +45,7 @@ func (s *Service) ValidateJWT(ctx context.Context, tx db.DBTX, tokenString strin
 }
 
 func ValidateJWT(tokenString string) (uuid.UUID, int64, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("jwt: unexpected signing method: %v", token.Header["alg"])
 		}

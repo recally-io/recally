@@ -160,7 +160,7 @@ func transactionMiddleWare(pool *db.Pool) echo.MiddlewareFunc {
 	}
 }
 
-func setContext(c echo.Context, key string, value interface{}) {
+func setContext(c echo.Context, key string, value any) {
 	ctx := contexts.Set(c.Request().Context(), key, value)
 
 	// set to context.Context

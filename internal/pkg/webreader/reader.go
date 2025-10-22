@@ -73,7 +73,7 @@ func (w *Reader) AddProcessor(p Processor) {
 // Read fetches content from the URL and processes it through all processors in sequence
 func (w *Reader) Fetch(ctx context.Context, url string) (*Content, error) {
 	// Fetch the content
-	defer w.fetcher.Close()
+	defer func() { _ = w.fetcher.Close() }()
 	fetchedContent, err := w.fetcher.Fetch(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("fetch error: %w", err)
@@ -116,7 +116,7 @@ func (w *Reader) preProcess(content *FetchedContent) error {
 	if err != nil {
 		return fmt.Errorf("failed to read content: %w", err)
 	}
-	defer content.Reader.Close()
+	defer func() { _ = content.Reader.Close() }()
 
 	if content.Html == "" {
 		content.Html = string(rawContent)

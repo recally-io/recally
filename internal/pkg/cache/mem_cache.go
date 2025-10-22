@@ -19,11 +19,11 @@ func NewMemCache(defaultExpiration, cleanupInterval time.Duration) *memCache {
 	return &memCache{c: cache.New(defaultExpiration, cleanupInterval), mux: sync.Mutex{}}
 }
 
-func (m *memCache) Set(key CacheKey, value interface{}, expiration time.Duration) {
+func (m *memCache) Set(key CacheKey, value any, expiration time.Duration) {
 	m.c.Set(key.String(), value, expiration)
 }
 
-func (m *memCache) SetWithContext(ctx context.Context, key CacheKey, value interface{}, expiration time.Duration) {
+func (m *memCache) SetWithContext(ctx context.Context, key CacheKey, value any, expiration time.Duration) {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 	m.Set(key, value, expiration)

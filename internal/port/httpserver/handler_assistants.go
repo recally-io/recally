@@ -148,7 +148,7 @@ type createAssistantRequest struct {
 	Model        string `json:"model,omitempty"`
 	Metadata     struct {
 		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // createAssistant is a handler function that creates a new assistant.
@@ -209,7 +209,7 @@ type updateAssistantRequest struct {
 	Model        string    `json:"model,omitempty"`
 	Metadata     struct {
 		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // updateAssistant is a handler function that updates an existing assistant.

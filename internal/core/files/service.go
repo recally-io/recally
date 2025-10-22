@@ -124,7 +124,7 @@ func (s *Service) UploadToS3(ctx context.Context, userID uuid.UUID, objectKey st
 	if reader == nil {
 		return nil, errors.New("file reader is nil")
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	// upload file to s3 if not exist
 	if objectKey == "" {
@@ -281,12 +281,12 @@ func (s *Service) loadContent(ctx context.Context, host, uri, ext string) (io.Re
 	// Perform request
 	sess := session.New(session.WithClientHelloID(utls.HelloChrome_100_PSK), session.WithTimeout(30*time.Second))
 
-	resp, err := sess.Client.Do(req)
+	resp, err := sess.Do(req)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to download content: %w", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, nil, fmt.Errorf("failed to download content: status %s", resp.Status)

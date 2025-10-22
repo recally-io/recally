@@ -20,7 +20,7 @@ type User struct {
 	LastLoginAt         *time.Time
 	FailedLoginAttempts int16
 	LockedUntil         *time.Time
-	Settings            map[string]interface{}
+	Settings            map[string]any
 }
 
 // OAuthConnection represents a user's OAuth provider connection.
@@ -31,7 +31,7 @@ type OAuthConnection struct {
 	AccessToken    string
 	RefreshToken   *string
 	TokenExpiresAt *time.Time
-	ProviderData   map[string]interface{}
+	ProviderData   map[string]any
 }
 
 // VerificationType represents different types of verification.
@@ -74,7 +74,7 @@ type AuthService interface {
 
 	// User Management
 	GetUser(ctx context.Context, userID string) (*User, error)
-	UpdateUser(ctx context.Context, userID string, updates map[string]interface{}) error
+	UpdateUser(ctx context.Context, userID string, updates map[string]any) error
 	DeactivateUser(ctx context.Context, userID string) error
 	ReactivateUser(ctx context.Context, userID string) error
 

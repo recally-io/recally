@@ -99,7 +99,7 @@ func (t *Tool) Read(ctx context.Context, args RequestArgs) (*Content, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to send jina reader request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		respData, err := io.ReadAll(resp.Body)

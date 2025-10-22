@@ -36,7 +36,7 @@ type DTO struct {
 	FileType    string    `json:"file_type"`
 	FileSize    int64     `json:"file_size,omitempty"`
 	FileHash    string    `json:"file_hash,omitempty"`
-	Metadata    Metadata  `json:"metadata,omitempty"`
+	Metadata    Metadata  `json:"metadata"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

@@ -69,7 +69,7 @@ func (s *Service) registerWebUIRouters(e *echo.Echo) {
 			return err
 		}
 
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 		c.Response().Header().Set("Content-Type", "application/manifest+json")
 		c.Response().Header().Set("Cache-Control", "public, max-age=86400") // Cache for 1 day
 
@@ -88,7 +88,7 @@ func (s *Service) registerWebUIRouters(e *echo.Echo) {
 		if path != "" {
 			// Try to open the requested file
 			if file, err := web.StaticHttpFS.Open(path); err == nil {
-				defer file.Close()
+				defer func() { _ = file.Close() }()
 				// Add cache control for static assets
 				return echo.WrapHandler(http.FileServer(web.StaticHttpFS))(c)
 			}
@@ -99,7 +99,7 @@ func (s *Service) registerWebUIRouters(e *echo.Echo) {
 		if err != nil {
 			return err
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 		// No cache for index.html to ensure latest version
 		c.Response().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 

@@ -83,7 +83,7 @@ func (t *Tool) Search(ctx context.Context, args RequestArgs) (*Result, error) {
 		return nil, fmt.Errorf("failed to send google search request: %w", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	result := new(Result)
 	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {

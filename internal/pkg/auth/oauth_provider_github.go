@@ -43,7 +43,7 @@ func (p *OAuthProviderGithub) GetUser(ctx context.Context, token *oauth2.Token) 
 		return OAuth2User{}, fmt.Errorf("failed to get user from github: %w", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var user GitHubUser
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {

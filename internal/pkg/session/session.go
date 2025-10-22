@@ -47,27 +47,27 @@ func WithClientHelloID(clientHelloID utls.ClientHelloID) Option {
 	}
 
 	return func(s *Session) {
-		s.Client.Transport = transport
+		s.Transport = transport
 	}
 }
 
 // WithTransport is used to set transport.
 func WithTransport(transport *http.Transport) Option {
 	return func(s *Session) {
-		s.Client.Transport = transport
+		s.Transport = transport
 	}
 }
 
 // WithTimeout is used to set timeout.
 func WithTimeout(timeout time.Duration) Option {
 	return func(s *Session) {
-		s.Client.Timeout = timeout
+		s.Timeout = timeout
 	}
 }
 
 // WithCookieJar is used to set cookie jar.
 func WithCookieJar(jar http.CookieJar) Option {
 	return func(s *Session) {
-		s.Client.Jar = jar
+		s.Jar = jar
 	}
 }

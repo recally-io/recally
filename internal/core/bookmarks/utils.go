@@ -83,8 +83,8 @@ func parseTagsFromSummary(input string) ([]string, string) {
 	var tags []string
 
 	for _, word := range words {
-		if strings.HasPrefix(word, "#") {
-			tag := strings.TrimPrefix(word, "#")
+		if after, ok := strings.CutPrefix(word, "#"); ok {
+			tag := after
 			if tag != "" && !tagMap[tag] {
 				tagMap[tag] = true
 

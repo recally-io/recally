@@ -13,7 +13,7 @@ type BookmarkShareDTO struct {
 	ID         uuid.UUID `json:"id"`
 	UserID     uuid.UUID `json:"user_id"`
 	BookmarkID uuid.UUID `json:"bookmark_id"`
-	ExpiresAt  time.Time `json:"expires_at,omitempty"`
+	ExpiresAt  time.Time `json:"expires_at"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }

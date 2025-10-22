@@ -32,7 +32,7 @@ type CustomValidator struct {
 	validator *validator.Validate
 }
 
-func (cv *CustomValidator) Validate(i interface{}) error {
+func (cv *CustomValidator) Validate(i any) error {
 	if err := cv.validator.Struct(i); err != nil {
 		// Optionally, you could return the error to give each route more control over the status code
 		return fmt.Errorf("validation error: %w", err)

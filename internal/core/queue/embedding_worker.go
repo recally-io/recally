@@ -53,7 +53,6 @@ func (w *AttachmentEmbeddingWorker) Work(ctx context.Context, args *river.Job[At
 	eg.SetLimit(10) // Set max concurrent goroutines to 10
 
 	for _, doc := range args.Args.Docs {
-		doc := doc
 
 		eg.Go(func() error {
 			return w.createAssistantEmbedding(ctx, doc, args.Args.UserID, args.Args.AttachmentID)

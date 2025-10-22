@@ -60,7 +60,7 @@ type createThreadRequest struct {
 	Description  string                       `json:"description,omitempty"`
 	Model        string                       `json:"model,omitempty"`
 	SystemPrompt string                       `json:"system_prompt,omitempty"`
-	Metadata     assistants.AssistantMetadata `json:"metadata,omitempty"`
+	Metadata     assistants.AssistantMetadata `json:"metadata"`
 }
 
 // createThread is a handler function that creates a new thread for an assistant.
@@ -127,7 +127,7 @@ type updateThreadRequest struct {
 	SystemPrompt string    `json:"system_prompt,omitempty"`
 	Metadata     struct {
 		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // updateThread is a handler function that updates an existing thread for an assistant.
@@ -349,7 +349,7 @@ type createThreadMessageRequest struct {
 	Metadata    struct {
 		Tools  []string `json:"tools,omitempty"`
 		Images []string `json:"images,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // createThreadMessage is a handler function that creates a new message for a thread.
@@ -506,7 +506,7 @@ type updateThreadMessageRequest struct {
 	Text        string    `json:"text" validate:"required"`
 	Metadata    struct {
 		Tools []string `json:"tools,omitempty"`
-	} `json:"metadata,omitempty"`
+	} `json:"metadata"`
 }
 
 // Update Thread Message

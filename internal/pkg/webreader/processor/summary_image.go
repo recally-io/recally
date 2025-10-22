@@ -171,7 +171,7 @@ func (p *SummaryImageProcessor) process(ctx context.Context, imgURL string, stre
 }
 
 func (p *SummaryImageProcessor) EncodeImage(reader io.ReadCloser, fileName string) (string, error) {
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 	contentType := files.GetFileMIMEWithDefault(fileName, "image/jpeg")
 	photoBytes, err := io.ReadAll(reader)
 	if err != nil {

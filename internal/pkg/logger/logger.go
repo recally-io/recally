@@ -23,7 +23,7 @@ type Logger struct {
 
 // Debug logs a message at level Fatal on the standard logger.
 // it will exit the program after logging
-func (l Logger) Fatal(msg string, args ...interface{}) {
+func (l Logger) Fatal(msg string, args ...any) {
 	l.Error(msg, args...)
 	os.Exit(1)
 }

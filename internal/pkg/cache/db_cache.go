@@ -51,11 +51,11 @@ func NewDBCache(pool *db.Pool, opts ...Option) *DbCache {
 	return service
 }
 
-func (c *DbCache) Set(key CacheKey, value interface{}, expiration time.Duration) {
+func (c *DbCache) Set(key CacheKey, value any, expiration time.Duration) {
 	c.SetWithContext(context.Background(), key, value, expiration)
 }
 
-func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value interface{}, expiration time.Duration) {
+func (c *DbCache) SetWithContext(ctx context.Context, key CacheKey, value any, expiration time.Duration) {
 	ok, err := c.db.IsCacheExists(ctx, c.tx, db.IsCacheExistsParams{Domain: key.Domain, Key: key.Key})
 	if err != nil {
 		logger.FromContext(ctx).Warn("failed to check cache exists", "key", key, "err", err)

@@ -22,7 +22,7 @@ type Highlight struct {
 
 type BookmarkMetadata struct {
 	ReadingProgress int       `json:"reading_progress,omitempty"`
-	LastReadAt      time.Time `json:"last_read_at,omitempty"`
+	LastReadAt      time.Time `json:"last_read_at"`
 
 	Highlights []Highlight `json:"highlights,omitempty"`
 }
@@ -141,13 +141,13 @@ func loadSearchBookmarks(dbos []db.SearchBookmarksRow) []BookmarkDTO {
 	return bookmarks
 }
 
-func loadBookmarkTags(input interface{}) []string {
+func loadBookmarkTags(input any) []string {
 	if input == nil {
 		return nil
 	}
 
 	// Handle case where input is []interface{}
-	if interfaceSlice, ok := input.([]interface{}); ok {
+	if interfaceSlice, ok := input.([]any); ok {
 		tags := make([]string, len(interfaceSlice))
 
 		for i, v := range interfaceSlice {
@@ -169,7 +169,7 @@ func loadBookmarkTags(input interface{}) []string {
 	return nil
 }
 
-func loadBookmarkMetadata(input interface{}) *BookmarkMetadata {
+func loadBookmarkMetadata(input any) *BookmarkMetadata {
 	if input == nil {
 		return nil
 	}
@@ -192,7 +192,7 @@ func dumpBookmarkMetadata(input *BookmarkMetadata) []byte {
 	return metadata
 }
 
-func loadBookmarkContentMetadata(input interface{}) *BookmarkContentMetadata {
+func loadBookmarkContentMetadata(input any) *BookmarkContentMetadata {
 	if input == nil {
 		return nil
 	}

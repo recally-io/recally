@@ -131,7 +131,7 @@ func (h *bookmarkShareHandler) getFileMetadata(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Copy relevant headers from S3 response to our response
 	for key, values := range resp.Header {
