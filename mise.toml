@@ -92,6 +92,19 @@ description = "Build frontend for production"
 dir = "web"
 run = "bun run build"
 
+[tasks."auth:build"]
+description = "Compile Bun auth server binary"
+run = '''
+set -euo pipefail
+
+ENTRY=${AUTH_SERVER_ENTRY:-hono/auth-server.ts}
+OUTFILE=${AUTH_SERVER_OUTFILE:-hono/auth-server}
+
+mkdir -p "$(dirname "$OUTFILE")"
+
+bun build "$ENTRY" --compile --outfile "$OUTFILE"
+'''
+
 # ============================================
 # TEST TASKS
 # ============================================

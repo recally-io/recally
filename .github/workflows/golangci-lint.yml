@@ -9,16 +9,47 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v1
+              with:
+                  bun-version: "1.3"
+                  cache: true
+
+            - name: Cache auth server dependencies
+              if: hashFiles('hono/package.json') != ''
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      hono/node_modules
+                  key: ${{ runner.os }}-hono-${{ hashFiles('hono/bun.lockb', 'hono/package.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-hono-
+
             - name: Setup mise
               uses: jdx/mise-action@v3
               with:
                   cache: true
+
+            - name: Install auth server dependencies
+              if: hashFiles('hono/package.json') != ''
+              working-directory: hono
+              run: bun install
 
             - name: Lint
               run: mise run lint:go
 
             - name: Test
               run: mise run test | tee test-results.txt
+
+            - name: Build auth server
+              run: mise run auth:build
+
+            - name: Upload auth server binary
+              uses: actions/upload-artifact@v4
+              with:
+                  name: hono-auth-server
+                  path: hono/auth-server
+                  if-no-files-found: error
 
             - name: Upload Test Results
               uses: actions/upload-artifact@v4

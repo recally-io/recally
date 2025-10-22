@@ -57,4 +57,5 @@ dev-dist
 .local/
 # Added by goreleaser init:
 dist/
+hono/auth-server
 .windsurfrules
