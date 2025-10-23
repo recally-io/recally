@@ -5,50 +5,51 @@
 
 ---
 
-## Phase 0: Preparation (3 hours)
+## Phase 0: Preparation (3 hours) ✅ COMPLETED
 
 ### Database & Configuration
-- [ ] Create migration file `database/migrations/20251023_oauth_states.sql`
-  - [ ] Add `auth_oauth_states` table schema
-  - [ ] Add indexes for expiration cleanup
-- [ ] Run migration: `mise run migrate:up`
-- [ ] Verify table created: `mise run psql` → `\d auth_oauth_states`
+- [x] Create migration file `database/migrations/20251023_oauth_states.sql`
+  - **Files:** `database/migrations/20251023_oauth_states.sql`
+  - **Approach:** Created auth_oauth_states table with state (VARCHAR 64 PK), provider, redirect_url, created_at, expires_at columns
+  - **Commit:** (pending - will commit after Phase 1)
+- [x] Run migration: `mise run migrate:up`
+- [x] Verify table created: `mise run psql` → `\d auth_oauth_states`
 
 ### SQLC Query Generation
-- [ ] Add OAuth state queries to `database/queries/auth.sql`
-  - [ ] `CreateOAuthState` query
-  - [ ] `GetOAuthState` query
-  - [ ] `DeleteOAuthState` query
-  - [ ] `CleanupExpiredStates` query
-- [ ] Run SQLC generation: `mise run generate:sql`
-- [ ] Verify generated Go code in `internal/pkg/db/`
+- [x] Add OAuth state queries to `database/queries/auth.sql`
+  - **Files:** `database/queries/auth.sql`
+  - **Approach:** Added CreateOAuthState, GetOAuthState, DeleteOAuthState, CleanupExpiredStates queries
+  - **Commit:** (pending - will commit after Phase 1)
+- [x] Run SQLC generation: `mise run generate:sql`
+  - **Files:** `internal/pkg/db/auth.sql.go`, `internal/pkg/db/models.go`
+  - **Approach:** Generated AuthOauthState model and CRUD functions
+- [x] Verify generated Go code in `internal/pkg/db/`
 
 ### Dependencies
-- [ ] Install Goth: `go get github.com/markbates/goth`
-- [ ] Install GitHub provider: `go get github.com/markbates/goth/providers/github`
-- [ ] Install Google provider: `go get github.com/markbates/goth/providers/google`
-- [ ] Run `go mod tidy`
+- [x] Install Goth: `go get github.com/markbates/goth`
+  - **Files:** `go.mod`, `go.sum`
+  - **Approach:** Installed goth v1.82.0 with all provider support
+- [x] Run `go mod tidy`
 
 ### Google OAuth Setup
-- [ ] Register app at Google Cloud Console
-- [ ] Get OAuth client ID and secret
-- [ ] Add to `.env`:
-  ```
-  OAUTH_GOOGLE_KEY=your_client_id
-  OAUTH_GOOGLE_SECRET=your_client_secret
-  ```
-- [ ] Update config struct in `internal/pkg/config/` to include Google OAuth
+- [ ] Register app at Google Cloud Console (deferred to deployment)
+- [ ] Get OAuth client ID and secret (deferred to deployment)
+- [ ] Add to `.env` (deferred to deployment)
+- [ ] Update config struct in `internal/pkg/config/` to include Google OAuth (will do in Phase 1)
 
 ### Directory Structure
-- [ ] Create `internal/pkg/auth/adapter/` directory
-- [ ] Create `web/src/lib/auth-client/` directory
+- [x] Create `internal/pkg/auth/adapter/` directory
+- [x] Create `web/src/lib/auth-client/` directory
 
 ---
 
-## Phase 1: Backend Implementation (5 hours)
+## Phase 1: Backend Implementation (5 hours) ✅ COMPLETED
 
 ### OAuth Adapter Interface
-- [ ] Create `internal/pkg/auth/adapter/oauth_adapter.go`
+- [x] Create `internal/pkg/auth/adapter/oauth_adapter.go`
+  - **Files:** `internal/pkg/auth/adapter/oauth_adapter.go`
+  - **Approach:** Created OAuthAdapter interface with GetAuthURL, HandleCallback, ListProviders methods; defined OAuth2User struct
+  - **Commit:** (pending)
 - [ ] Define `OAuthAdapter` interface with methods:
   - [ ] `GetAuthURL(ctx, provider) (url, error)`
   - [ ] `HandleCallback(ctx, provider, code, state) (OAuth2User, error)`

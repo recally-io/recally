@@ -1,21 +1,12 @@
 import useSWR from "swr";
 import fetcher from "./fetcher";
-import type { User } from "./users";
-
-interface LoginInput {
-	email: string;
-	password: string;
-}
-
-interface RegisterInput {
-	username: string;
-	email: string;
-	password: string;
-}
-
-interface OAuthLoginResponse {
-	url: string;
-}
+import { authClient } from "@/lib/auth-client";
+import type {
+	LoginInput,
+	OAuthLoginResponse,
+	RegisterInput,
+	User,
+} from "@/lib/auth-client";
 
 export interface ApiKey {
 	id: string;
@@ -36,36 +27,7 @@ export interface CreateApiKeyInput {
 
 // API Functions
 const api = {
-	login: (input: LoginInput) =>
-		fetcher<User>("/api/v1/auth/login", {
-			method: "POST",
-			body: JSON.stringify(input),
-		}),
-
-	register: (input: RegisterInput) =>
-		fetcher<User>("/api/v1/auth/register", {
-			method: "POST",
-			body: JSON.stringify(input),
-		}),
-
-	logout: () =>
-		fetcher<void>("/api/v1/auth/logout", {
-			method: "POST",
-		}),
-
-	validateToken: () => fetcher<User>("/api/v1/auth/validate-jwt"),
-
-	oauthLogin: (provider: string) => {
-		return fetcher<OAuthLoginResponse>(
-			`/api/v1/oauth/${provider.toLowerCase()}/login`,
-		);
-	},
-
-	OAuthCallback: (provider: string, code: string) => {
-		return fetcher<User>(`/api/v1/oauth/${provider}/callback?code=${code}`);
-	},
-
-	// API Key operations
+	// API Key operations (unchanged)
 	createApiKey: (input: CreateApiKeyInput) =>
 		fetcher<ApiKey>("/api/v1/auth/keys", {
 			method: "POST",
@@ -83,18 +45,27 @@ const api = {
 		fetcher<void>(`/api/v1/auth/keys/${id}`, {
 			method: "DELETE",
 		}),
+
+	// OAuth callback (still needed for callback route)
+	OAuthCallback: (provider: string, code: string) => {
+		return fetcher<User>(`/api/v1/oauth/${provider}/callback?code=${code}`);
+	},
 };
 
 // SWR Hooks
 export function useUser() {
-	const { data, error, mutate } = useSWR<User>("auth-user", api.validateToken, {
-		// Adjust SWR options for caching
-		revalidateOnFocus: false,
-		revalidateIfStale: false,
-		revalidateOnReconnect: false,
-		dedupingInterval: 60000, // 1 minute
-		shouldRetryOnError: false,
-	});
+	const { data, error, mutate } = useSWR<User>(
+		"auth-user",
+		() => authClient.validateSession(),
+		{
+			// Adjust SWR options for caching
+			revalidateOnFocus: false,
+			revalidateIfStale: false,
+			revalidateOnReconnect: false,
+			dedupingInterval: 60000, // 1 minute
+			shouldRetryOnError: false,
+		},
+	);
 
 	return {
 		user: data,
@@ -143,24 +114,28 @@ export function useAuth() {
 
 	return {
 		login: async (input: LoginInput) => {
-			const user = await api.login(input);
+			const user = await authClient.login(input.email, input.password);
 			await mutate(user);
 			return user;
 		},
 
 		register: async (input: RegisterInput) => {
-			const user = await api.register(input);
+			const user = await authClient.register(
+				input.username,
+				input.email,
+				input.password,
+			);
 			await mutate(user);
 			return user;
 		},
 
 		logout: async () => {
-			await api.logout();
+			await authClient.logout();
 			await mutate(undefined);
 		},
 
-		oauthLogin: (provider: string) => {
-			return api.oauthLogin(provider);
+		oauthLogin: async (provider: string) => {
+			return authClient.getOAuthURL(provider);
 		},
 
 		oauthCallback: async (provider: string, code: string, state: string) => {
