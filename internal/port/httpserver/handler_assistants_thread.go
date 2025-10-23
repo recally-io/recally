@@ -251,7 +251,7 @@ func (h *assistantHandler) getThread(c echo.Context) error {
 // If there is an error while deleting the thread, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 204 (No Content).
 
-// @Router			/assistants/{assistant-id}/threads/{thread-id} [delete].
+// @Router	/assistants/{assistant-id}/threads/{thread-id} [delete].
 func (h *assistantHandler) deleteThread(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -279,7 +279,7 @@ func (h *assistantHandler) deleteThread(c echo.Context) error {
 // If there is an error while generating the title, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the generated title.
 
-// @Router			/assistants/{assistant-id}/threads/{thread-id}/generate-title [post].
+// @Router	/assistants/{assistant-id}/threads/{thread-id}/generate-title [post].
 func (h *assistantHandler) generateThreadTitle(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -476,7 +476,7 @@ type getThreadMessageRequest struct {
 // If there is an error while deleting the thread message, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 204 (No Content).
 
-// @Router			/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [delete].
+// @Router	/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [delete].
 func (h *assistantHandler) deleteThreadMessage(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -516,7 +516,7 @@ type updateThreadMessageRequest struct {
 // If there is an error while updating the thread message, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the updated thread message.
 
-// @Router			/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [put].
+// @Router	/assistants/{assistant-id}/threads/{thread-id}/messages/{message-id} [put].
 func (h *assistantHandler) updateThreadMessage(c echo.Context) error {
 	ctx := c.Request().Context()
 
