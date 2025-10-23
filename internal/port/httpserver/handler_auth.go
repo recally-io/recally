@@ -17,6 +17,7 @@ import (
 type authService interface {
 	GetOAuth2RedirectURL(ctx context.Context, provider string) (string, error)
 	HandleOAuth2Callback(ctx context.Context, tx db.DBTX, provider, code string) (*auth.UserDTO, error)
+	HandleOAuth2UserLogin(ctx context.Context, tx db.DBTX, provider, code, state string) (*auth.UserDTO, error)
 	CreateUser(ctx context.Context, tx db.DBTX, user *auth.UserDTO) (*auth.UserDTO, error)
 	AuthByPassword(ctx context.Context, tx db.DBTX, email, password string) (*auth.UserDTO, error)
 	GenerateJWT(user uuid.UUID) (string, error)
@@ -32,8 +33,13 @@ type authHandler struct {
 }
 
 func registerAuthHandlers(e *echo.Group) {
+	// Initialize auth service with Goth adapter for OAuth
+	dao := db.New()
+	oauthAdapter := auth.InitGothAdapter(dao)
+	authService := auth.NewWithAdapter(oauthAdapter)
+
 	h := &authHandler{
-		service: auth.New(),
+		service: authService,
 	}
 	oauth := e.Group("/oauth")
 	oauth.GET("/:provider/login", h.oAuthLogin)
@@ -56,6 +62,8 @@ func (h *authHandler) oAuthLogin(c echo.Context) error {
 	provider := c.Param("provider")
 	ctx := c.Request().Context()
 
+	// For backward compatibility: use old flow if GetOAuth2RedirectURL exists
+	// Otherwise, fall back to the legacy OAuth flow
 	redirectUrl, err := h.service.GetOAuth2RedirectURL(ctx, provider)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth redirect url: %w", err))
@@ -69,6 +77,7 @@ func (h *authHandler) oAuthLogin(c echo.Context) error {
 func (h *authHandler) oAuthCallback(c echo.Context) error {
 	provider := c.Param("provider")
 	code := c.QueryParam("code")
+	state := c.QueryParam("state")
 	ctx := c.Request().Context()
 
 	tx, err := loadTx(ctx)
@@ -76,9 +85,20 @@ func (h *authHandler) oAuthCallback(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	user, err := h.service.HandleOAuth2Callback(ctx, tx, provider, code)
-	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth token: %w", err))
+	// Use new Goth-based OAuth flow with state validation
+	var user *auth.UserDTO
+	if state != "" {
+		// New flow with CSRF protection via state validation
+		user, err = h.service.HandleOAuth2UserLogin(ctx, tx, provider, code, state)
+		if err != nil {
+			return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to complete oauth login: %w", err))
+		}
+	} else {
+		// Legacy flow for backward compatibility (no state validation)
+		user, err = h.service.HandleOAuth2Callback(ctx, tx, provider, code)
+		if err != nil {
+			return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to get oauth token: %w", err))
+		}
 	}
 
 	jwtToken, err := h.service.GenerateJWT(user.ID)
@@ -86,7 +106,7 @@ func (h *authHandler) oAuthCallback(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token: %w", err))
 	}
 
-	h.setCookieJwtToken(c, jwtToken)
+	h.setSecureCookieJwtToken(c, jwtToken)
 
 	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
@@ -96,7 +116,7 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-// @Router			/auth/login [post].
+// @Router	/auth/login [post].
 func (h *authHandler) login(c echo.Context) error {
 	req := new(loginRequest)
 	if err := c.Bind(req); err != nil {
@@ -141,7 +161,7 @@ type userResponse struct {
 	Settings auth.UserSettings `json:"settings"`
 }
 
-// @Router			/auth/register [post].
+// @Router	/auth/register [post].
 func (h *authHandler) register(c echo.Context) error {
 	req := new(registerRequest)
 	if err := c.Bind(req); err != nil {
@@ -189,7 +209,22 @@ func (h *authHandler) setCookieJwtToken(c echo.Context, token string) {
 	c.SetCookie(cookie)
 }
 
-// @Router			/auth/validate-jwt [get].
+// setSecureCookieJwtToken sets a secure JWT cookie with enhanced security flags
+// This method should be used for OAuth flows to ensure cookies are properly protected
+func (h *authHandler) setSecureCookieJwtToken(c echo.Context, token string) {
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 24),
+		Path:     "/",
+		HttpOnly: true,                    // Prevent JavaScript access (XSS protection)
+		Secure:   c.IsTLS(),               // Only send over HTTPS in production
+		SameSite: http.SameSiteStrictMode, // CSRF protection (Strict for OAuth callbacks)
+	}
+	c.SetCookie(cookie)
+}
+
+// @Router	/auth/validate-jwt [get].
 func (h *authHandler) validateJwtToken(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -220,7 +255,7 @@ func (h *authHandler) validateJwtToken(c echo.Context) error {
 	return JsonResponse(c, http.StatusOK, toUserResponse(user))
 }
 
-// @Router			/auth/logout [post].
+// @Router	/auth/logout [post].
 func (h *authHandler) logout(c echo.Context) error {
 	// Remove the token cookie by setting its expiry to a past time
 	cookie := &http.Cookie{
