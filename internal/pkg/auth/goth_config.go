@@ -10,7 +10,6 @@ import (
 
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/github"
-	"github.com/markbates/goth/providers/google"
 )
 
 // gothAdapterWrapper wraps the adapter.GothAdapter to match auth.OAuthAdapter interface
@@ -64,17 +63,6 @@ func InitGothAdapter(dao *db.Queries) OAuthAdapter {
 			"user:email",
 		)
 		gothAdapter.RegisterProvider(githubProvider)
-	}
-
-	// Register Google provider if configured
-	if config.Settings.OAuths.Google.Key != "" && config.Settings.OAuths.Google.Secret != "" {
-		googleProvider := google.New(
-			config.Settings.OAuths.Google.Key,
-			config.Settings.OAuths.Google.Secret,
-			fmt.Sprintf("%s/api/v1/oauth/google/callback", fqdn),
-			"email", "profile",
-		)
-		gothAdapter.RegisterProvider(googleProvider)
 	}
 
 	// Clear any previously registered providers from goth.UseProviders

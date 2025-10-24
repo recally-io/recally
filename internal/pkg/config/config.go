@@ -14,8 +14,8 @@ var Settings = &Config{}
 
 type OAuthConfig struct {
 	Endpoint string   `env:"ENDPOINT"`
-	Key      string   `env:"KEY"`
-	Secret   string   `env:"SECRET"`
+	Key      string   `env:"KEY,required"`
+	Secret   string   `env:"SECRET,required"`
 	Scopes   []string `env:"SCOPES"`
 }
 
@@ -86,7 +86,6 @@ type Config struct {
 	JWTSecret string `env:"JWT_SECRET,required"`
 	OAuths    struct {
 		Github OAuthConfig `envPrefix:"GITHUB_"`
-		Google OAuthConfig `envPrefix:"GOOGLE_"`
 	} `envPrefix:"OAUTH_"`
 	OpenAI            OpenAIConfig       `envPrefix:"OPENAI_"`
 	GoogleSearch      GoogleSearchConfig `envPrefix:"GOOGLE_SEARCH_"`
