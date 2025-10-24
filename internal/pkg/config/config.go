@@ -14,8 +14,8 @@ var Settings = &Config{}
 
 type OAuthConfig struct {
 	Endpoint string   `env:"ENDPOINT"`
-	Key      string   `env:"KEY,required"`
-	Secret   string   `env:"SECRET,required"`
+	Key      string   `env:"KEY"`
+	Secret   string   `env:"SECRET"`
 	Scopes   []string `env:"SCOPES"`
 }
 
