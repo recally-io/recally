@@ -6,7 +6,7 @@
 go = "1.24"  # From go.mod
 bun = "1.3"
 # Go development tools
-"ubi:sqlc-dev/sqlc" = "1.29.0"
+"ubi:sqlc-dev/sqlc" = "1.30.0"
 "ubi:golangci/golangci-lint" = "2.2"
 "ubi:swaggo/swag" = "1.16.5"
 # Database tools
