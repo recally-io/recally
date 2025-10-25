@@ -1,10 +1,5 @@
 import { AuthError } from "./errors";
-import type {
-	LoginInput,
-	OAuthLoginResponse,
-	RegisterInput,
-	User,
-} from "./types";
+import type { OAuthLoginResponse, User } from "./types";
 
 /**
  * Client for authentication operations

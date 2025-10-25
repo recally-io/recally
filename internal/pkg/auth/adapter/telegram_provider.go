@@ -59,7 +59,7 @@ func (p *TelegramProvider) FetchUser(session goth.Session) (goth.User, error) {
 	if err != nil {
 		return goth.User{}, fmt.Errorf("failed to verify bot: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var result struct {
 		OK     bool `json:"ok"`

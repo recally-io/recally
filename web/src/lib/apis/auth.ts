@@ -1,12 +1,7 @@
 import useSWR from "swr";
 import fetcher from "./fetcher";
 import { authClient } from "@/lib/auth-client";
-import type {
-	LoginInput,
-	OAuthLoginResponse,
-	RegisterInput,
-	User,
-} from "@/lib/auth-client";
+import type { LoginInput, RegisterInput, User } from "@/lib/auth-client";
 
 export interface ApiKey {
 	id: string;
