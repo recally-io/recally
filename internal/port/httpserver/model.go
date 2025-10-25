@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// @Description JSONResult represents the structure of the JSON response.
+// @Description	JSONResult represents the structure of the JSON response.
 type JSONResult struct {
 	// Success is a boolean value that indicates whether the request was successful.
 	Success bool `json:"success"`

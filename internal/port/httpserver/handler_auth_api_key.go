@@ -18,7 +18,7 @@ type createApiKeyRequest struct {
 	ExpiresAt time.Time `json:"expires_at" validate:"required,gt=now"`
 }
 
-// @Router			/keys [post].
+// @Router	/keys [post].
 func (h *authHandler) createApiKey(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -51,7 +51,7 @@ type listApiKeysRequest struct {
 	IsActive bool   `query:"is_active"`
 }
 
-// @Router			/keys [get].
+// @Router	/keys [get].
 func (h *authHandler) listApiKeys(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -77,7 +77,7 @@ type deleteApiKeyRequest struct {
 	ID uuid.UUID `param:"id" validate:"required,uuid"`
 }
 
-// @Router			/keys/{id} [delete].
+// @Router	/keys/{id} [delete].
 func (h *authHandler) deleteApiKey(c echo.Context) error {
 	ctx := c.Request().Context()
 

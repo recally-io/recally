@@ -91,5 +91,18 @@ DELETE FROM auth_revoked_tokens
 WHERE expires_at < CURRENT_TIMESTAMP;
 
 -- name: DeleteRevokedToken :exec
-DELETE FROM auth_revoked_tokens 
+DELETE FROM auth_revoked_tokens
 WHERE jti = $1 AND user_id = $2;
+
+-- name: CreateOAuthState :exec
+INSERT INTO auth_oauth_states (state, provider, redirect_url, expires_at)
+VALUES ($1, $2, $3, $4);
+
+-- name: GetOAuthState :one
+SELECT * FROM auth_oauth_states WHERE state = $1;
+
+-- name: DeleteOAuthState :exec
+DELETE FROM auth_oauth_states WHERE state = $1;
+
+-- name: CleanupExpiredStates :exec
+DELETE FROM auth_oauth_states WHERE expires_at < NOW();

@@ -94,6 +94,14 @@ type AuthApiKey struct {
 	UpdatedAt  pgtype.Timestamptz
 }
 
+type AuthOauthState struct {
+	State       string
+	Provider    string
+	RedirectUrl pgtype.Text
+	CreatedAt   pgtype.Timestamp
+	ExpiresAt   pgtype.Timestamp
+}
+
 type AuthRevokedToken struct {
 	Jti       uuid.UUID
 	UserID    uuid.UUID

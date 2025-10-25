@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"recally/internal/pkg/db"
 
@@ -17,13 +18,29 @@ var ErrUnAuthorized = errors.New("401: username or password or token is invalid"
 
 const DummyUserName = "dummy_user"
 
+// OAuthAdapter interface abstracts OAuth provider implementations
+// This interface is implemented by the adapter package to provide OAuth functionality
+type OAuthAdapter interface {
+	GetAuthURL(ctx context.Context, tx db.DBTX, provider string) (url string, err error)
+	HandleCallback(ctx context.Context, tx db.DBTX, provider, code, state string) (oAuth2User any, err error)
+	ListProviders() []string
+}
+
 type Service struct {
-	dao dto
+	dao     dto
+	adapter OAuthAdapter
 }
 
 func New() *Service {
 	return &Service{
 		dao: db.New(),
+	}
+}
+
+func NewWithAdapter(adapter OAuthAdapter) *Service {
+	return &Service{
+		dao:     db.New(),
+		adapter: adapter,
 	}
 }
 
@@ -275,6 +292,127 @@ func (s *Service) UpdateUser(ctx context.Context, tx db.DBTX, userId uuid.UUID, 
 	}
 
 	user.Load(&userModel)
+
+	return user, nil
+}
+
+// HandleOAuth2UserLogin processes OAuth login using the Goth adapter
+// This method uses the new Goth-based OAuth flow with enhanced security
+// including CSRF protection via state validation
+//
+// Parameters:
+//   - ctx: Request context
+//   - tx: Database transaction for atomic operations
+//   - provider: OAuth provider name (e.g., "google", "github")
+//   - code: Authorization code from OAuth callback
+//   - state: State parameter for CSRF protection
+//
+// Returns:
+//   - *UserDTO: User information after successful authentication
+//   - error: Error if authentication fails at any step
+//
+// The method performs:
+// 1. Validates OAuth callback with state verification (CSRF protection)
+// 2. Fetches user info from OAuth provider
+// 3. Links to existing user by provider ID or email
+// 4. Creates new user if needed
+// 5. Updates OAuth connection tokens
+func (s *Service) HandleOAuth2UserLogin(ctx context.Context, tx db.DBTX, provider, code, state string) (*UserDTO, error) {
+	if s.adapter == nil {
+		return nil, fmt.Errorf("OAuth adapter not configured")
+	}
+
+	// Use adapter to handle callback with state validation
+	oUserInterface, err := s.adapter.HandleCallback(ctx, tx, provider, code, state)
+	if err != nil {
+		return nil, fmt.Errorf("OAuth callback failed: %w", err)
+	}
+
+	// Extract OAuth2User from interface (pattern matching on the returned struct)
+	// The adapter returns a struct with fields: Provider, ID, Name, Email, Avatar, AccessToken, RefreshToken, TokenExpiresAt, RawData
+	oUserValue := oUserInterface.(struct {
+		Provider       string
+		ID             string
+		Name           string
+		Email          string
+		Avatar         string
+		AccessToken    string
+		RefreshToken   string
+		TokenExpiresAt time.Time
+		RawData        []byte
+	})
+
+	user := &UserDTO{}
+
+	// Check if user exists with this OAuth provider
+	dbUser, err := s.dao.GetUserByOAuthProviderId(ctx, tx, db.GetUserByOAuthProviderIdParams{
+		Provider:       provider,
+		ProviderUserID: oUserValue.ID,
+	})
+	if err != nil {
+		if !db.IsNotFoundError(err) {
+			return nil, fmt.Errorf("get user by oauth provider id failed: %w", err)
+		}
+
+		// Check if user with the same email exists
+		dbUser, err = s.dao.GetUserByEmail(ctx, tx, pgtype.Text{
+			String: oUserValue.Email,
+			Valid:  oUserValue.Email != "",
+		})
+		if err != nil {
+			if !db.IsNotFoundError(err) {
+				return nil, fmt.Errorf("get user by email failed: %w", err)
+			}
+
+			// User not found, create new user
+			createUserParams := db.CreateUserParams{
+				Username: pgtype.Text{String: fmt.Sprintf("%s-%s", oUserValue.Provider, oUserValue.Name), Valid: oUserValue.Name != ""},
+				Email:    pgtype.Text{String: oUserValue.Email, Valid: oUserValue.Email != ""},
+				Status:   "active",
+			}
+
+			dbUser, err = s.dao.CreateUser(ctx, tx, createUserParams)
+			if err != nil {
+				return nil, fmt.Errorf("create user failed: %w", err)
+			}
+		}
+
+		// Create OAuth connection
+		params := db.CreateOAuthConnectionParams{
+			UserID:         dbUser.Uuid,
+			Provider:       provider,
+			ProviderUserID: oUserValue.ID,
+			ProviderEmail:  pgtype.Text{String: oUserValue.Email, Valid: oUserValue.Email != ""},
+			AccessToken:    pgtype.Text{String: oUserValue.AccessToken, Valid: oUserValue.AccessToken != ""},
+			RefreshToken:   pgtype.Text{String: oUserValue.RefreshToken, Valid: oUserValue.RefreshToken != ""},
+			TokenExpiresAt: pgtype.Timestamptz{Time: oUserValue.TokenExpiresAt, Valid: !oUserValue.TokenExpiresAt.IsZero()},
+			ProviderData:   oUserValue.RawData,
+		}
+
+		_, err = s.dao.CreateOAuthConnection(ctx, tx, params)
+		if err != nil {
+			return nil, fmt.Errorf("create oauth connection failed: %w", err)
+		}
+	} else {
+		// Update OAuth connection with fresh tokens
+		params := db.UpdateOAuthConnectionParams{
+			UserID:         dbUser.Uuid,
+			Provider:       provider,
+			ProviderUserID: oUserValue.ID,
+			ProviderEmail:  pgtype.Text{String: oUserValue.Email, Valid: oUserValue.Email != ""},
+			AccessToken:    pgtype.Text{String: oUserValue.AccessToken, Valid: oUserValue.AccessToken != ""},
+			RefreshToken:   pgtype.Text{String: oUserValue.RefreshToken, Valid: oUserValue.RefreshToken != ""},
+			TokenExpiresAt: pgtype.Timestamptz{Time: oUserValue.TokenExpiresAt, Valid: !oUserValue.TokenExpiresAt.IsZero()},
+			ProviderData:   oUserValue.RawData,
+		}
+
+		_, err = s.dao.UpdateOAuthConnection(ctx, tx, params)
+		if err != nil {
+			return nil, fmt.Errorf("update oauth connection failed: %w", err)
+		}
+	}
+
+	user.Load(&dbUser)
 
 	return user, nil
 }

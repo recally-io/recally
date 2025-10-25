@@ -19,6 +19,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.13.3
+	github.com/markbates/goth v1.82.0
 	github.com/minio/minio-go/v7 v7.0.82
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pgvector/pgvector-go v0.2.2
