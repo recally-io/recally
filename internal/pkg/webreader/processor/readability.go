@@ -1,13 +1,14 @@
 package processor
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/url"
 	"recally/internal/pkg/webreader"
 	"strings"
 
-	"github.com/go-shiori/go-readability"
+	"codeberg.org/readeck/go-readability/v2"
 )
 
 type ReadabilityProcessor struct{}
@@ -54,22 +55,33 @@ func (p *ReadabilityProcessor) Process(ctx context.Context, content *webreader.C
 	// }
 
 	// Set meta info
-	content.Title = article.Title
-	content.Author = article.Byline
-	content.Description = article.Excerpt
-	content.SiteName = article.SiteName
+	content.Title = article.Title()
+	content.Author = article.Byline()
+	content.Description = article.Excerpt()
+	content.SiteName = article.SiteName()
 
-	content.Cover = article.Image
-	content.Favicon = article.Favicon
+	content.Cover = article.ImageURL()
+	content.Favicon = article.Favicon()
 
 	// set text content
-	content.Text = article.TextContent
+	var textBuf bytes.Buffer
+	if err := article.RenderText(&textBuf); err == nil {
+		content.Text = textBuf.String()
+	}
+
 	// set clean HTML content processed by readability
-	content.Html = article.Content
+	var htmlBuf bytes.Buffer
+	if err := article.RenderHTML(&htmlBuf); err == nil {
+		content.Html = htmlBuf.String()
+	}
 
 	// Set the published and modified time
-	content.PublishedTime = article.PublishedTime
-	content.ModifiedTime = article.ModifiedTime
+	if publishedTime, err := article.PublishedTime(); err == nil {
+		content.PublishedTime = &publishedTime
+	}
+	if modifiedTime, err := article.ModifiedTime(); err == nil {
+		content.ModifiedTime = &modifiedTime
+	}
 
 	return nil
 }

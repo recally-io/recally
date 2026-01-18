@@ -6,13 +6,13 @@ toolchain go1.24.7
 
 require (
 	ariga.io/atlas-go-sdk v0.7.2
+	codeberg.org/readeck/go-readability/v2 v2.1.0
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
 	github.com/Mad-Pixels/goldmark-tgmd v0.0.10
 	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/go-rod/rod v0.116.2
-	github.com/go-shiori/go-readability v0.0.0-20241012063810-92284fa8a71f
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/invopop/jsonschema v0.12.0
