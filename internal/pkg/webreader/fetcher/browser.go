@@ -61,7 +61,7 @@ func (f *BrowserFetcher) loadBrowser() (*rod.Browser, error) {
 		Set("disable-gpu").
 		Set("no-sandbox").
 		Set("disable-dev-shm-usage")
-	
+
 	controlURL, err := l.Launch()
 	if err != nil {
 		return nil, fmt.Errorf("launch browser: %w", err)

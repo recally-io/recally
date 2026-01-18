@@ -119,7 +119,7 @@ type getAssistantRequest struct {
 // If there is an error while fetching the assistant, it returns an error with status code 500 (Internal Server Error).
 // Otherwise, it returns a JSON response with status code 200 (OK) and the assistant.
 
-// @Router			/assistants/{assistant-id} [get].
+// @Router	/assistants/{assistant-id} [get].
 func (h *assistantHandler) getAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -311,7 +311,7 @@ func (h *assistantHandler) deleteAssistant(c echo.Context) error {
 	return JsonResponse(c, http.StatusNoContent, nil)
 }
 
-// @Router			/assistants/{assistant-id}/attachments [get].
+// @Router	/assistants/{assistant-id}/attachments [get].
 func (h *assistantHandler) listAttachmentsByAssistant(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -383,7 +383,7 @@ func (h *assistantHandler) uploadAssistantAttachment(c echo.Context) error {
 	return JsonResponse(c, http.StatusCreated, attachment)
 }
 
-// @Router			/assistants/{assistant-id}/threads/{thread-id}/attachments [get].
+// @Router	/assistants/{assistant-id}/threads/{thread-id}/attachments [get].
 func (h *assistantHandler) listAttachmentsByThread(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -458,7 +458,7 @@ func (h *assistantHandler) uploadThreadAttachment(c echo.Context) error {
 	return JsonResponse(c, http.StatusCreated, attachment)
 }
 
-// @Router			/assistants/models [get].
+// @Router	/assistants/models [get].
 func (h *assistantHandler) listModels(c echo.Context) error {
 	models, err := h.service.ListModels(c.Request().Context())
 	if err != nil {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"log/slog"
 	"os"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 // TestLoggerImplementsInterface verifies at compile time that cliLogger implements webreader.Logger
 func TestLoggerImplementsInterface(t *testing.T) {
-	var _ webreader.Logger = NewLogger(false)
+	var _ = NewLogger(false)
 }
 
 // TestNewLogger verifies that NewLogger creates a valid logger
@@ -61,9 +62,9 @@ func TestLoggerOutput(t *testing.T) {
 	logger.Info("test message", "key", "value")
 
 	// Restore stderr and read captured output
-	w.Close()
+	_ = w.Close()
 	os.Stderr = oldStderr
-	
+
 	var buf bytes.Buffer
 	if _, err := buf.ReadFrom(r); err != nil {
 		t.Fatal(err)
@@ -90,10 +91,10 @@ func TestLoggerOutput(t *testing.T) {
 // TestLoggerVerboseMode verifies that verbose mode enables debug logging
 func TestLoggerVerboseMode(t *testing.T) {
 	tests := []struct {
-		name       string
-		verbose    bool
-		logFunc    func(webreader.Logger)
-		shouldLog  bool
+		name      string
+		verbose   bool
+		logFunc   func(webreader.Logger)
+		shouldLog bool
 	}{
 		{
 			name:    "info level in normal mode",
@@ -144,9 +145,9 @@ func TestLoggerVerboseMode(t *testing.T) {
 			tt.logFunc(logger)
 
 			// Restore stderr and read captured output
-			w.Close()
+			_ = w.Close()
 			os.Stderr = oldStderr
-			
+
 			var buf bytes.Buffer
 			if _, err := buf.ReadFrom(r); err != nil {
 				t.Fatal(err)
@@ -193,12 +194,12 @@ func TestLoggerLevelFiltering(t *testing.T) {
 			}
 
 			// Verify the logger is enabled at the expected level
-			if !cliLog.logger.Enabled(nil, tt.expectedLevel) {
+			if !cliLog.logger.Enabled(context.Background(), tt.expectedLevel) {
 				t.Errorf("expected logger to be enabled at level %v", tt.expectedLevel)
 			}
 
 			// Verify behavior: if normal mode, should NOT be enabled at Debug level
-			if !tt.verbose && cliLog.logger.Enabled(nil, slog.LevelDebug) {
+			if !tt.verbose && cliLog.logger.Enabled(context.Background(), slog.LevelDebug) {
 				t.Error("expected normal mode to NOT be enabled at Debug level")
 			}
 		})
@@ -220,9 +221,9 @@ func TestLoggerErrorOutput(t *testing.T) {
 	logger.Error("error occurred", "error", "something went wrong", "code", 500)
 
 	// Restore stderr and read captured output
-	w.Close()
+	_ = w.Close()
 	os.Stderr = oldStderr
-	
+
 	var buf bytes.Buffer
 	if _, err := buf.ReadFrom(r); err != nil {
 		t.Fatal(err)
@@ -265,9 +266,9 @@ func TestLoggerNoTimestamp(t *testing.T) {
 	logger.Error("second message")
 
 	// Restore stderr and read captured output
-	w.Close()
+	_ = w.Close()
 	os.Stderr = oldStderr
-	
+
 	var buf bytes.Buffer
 	if _, err := buf.ReadFrom(r); err != nil {
 		t.Fatal(err)

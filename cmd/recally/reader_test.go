@@ -178,10 +178,9 @@ func TestFetchAndProcess_ContextCancellation(t *testing.T) {
 
 	// Note: Actual behavior depends on fetcher implementation
 	// Mock fetcher doesn't respect context, but real fetchers should
-	if err != nil && !strings.Contains(err.Error(), "context canceled") {
-		// This is expected - mock doesn't implement context cancellation
-		// Real fetchers would return context.Canceled error
-	}
+	// This is expected - mock doesn't implement context cancellation
+	// Real fetchers would return context.Canceled error
+	_ = err
 }
 
 // TestFetchAndProcess_NilLogger tests that nil logger works (no-op)

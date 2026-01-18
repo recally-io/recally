@@ -275,7 +275,7 @@ func TestGetOutputDir(t *testing.T) {
 		}
 
 		// Verify directory was created (and clean up afterward)
-		defer os.RemoveAll(dir)
+		defer func() { _ = os.RemoveAll(dir) }()
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			t.Errorf("directory was not created: %s", dir)
 		}
@@ -368,7 +368,7 @@ func TestResolveOutputPath(t *testing.T) {
 		tmpDir := t.TempDir()
 
 		// Create multiple conflicting files
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			var filename string
 			if i == 0 {
 				filename = "test-article.md"
@@ -463,7 +463,7 @@ func TestResolveOutputPathConflictResolution(t *testing.T) {
 
 	// Resolve paths multiple times and verify they're all unique
 	paths := make([]string, 5)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		// Create the previously resolved path
 		if i > 0 {
 			if err := os.WriteFile(paths[i-1], []byte("test"), 0644); err != nil {
@@ -515,10 +515,10 @@ func TestGetOutputDirXDGDataHome(t *testing.T) {
 
 		// Save original value and restore after test
 		originalXDG := os.Getenv("XDG_DATA_HOME")
-		defer os.Setenv("XDG_DATA_HOME", originalXDG)
+		defer func() { _ = os.Setenv("XDG_DATA_HOME", originalXDG) }()
 
 		// Set custom XDG_DATA_HOME
-		os.Setenv("XDG_DATA_HOME", tmpDir)
+		_ = os.Setenv("XDG_DATA_HOME", tmpDir)
 
 		dir, err := GetOutputDir("", testDate)
 		if err != nil {
@@ -539,10 +539,10 @@ func TestGetOutputDirXDGDataHome(t *testing.T) {
 	t.Run("falls back to default when XDG_DATA_HOME is empty", func(t *testing.T) {
 		// Save original value and restore after test
 		originalXDG := os.Getenv("XDG_DATA_HOME")
-		defer os.Setenv("XDG_DATA_HOME", originalXDG)
+		defer func() { _ = os.Setenv("XDG_DATA_HOME", originalXDG) }()
 
 		// Unset XDG_DATA_HOME
-		os.Unsetenv("XDG_DATA_HOME")
+		_ = os.Unsetenv("XDG_DATA_HOME")
 
 		dir, err := GetOutputDir("", testDate)
 		if err != nil {
@@ -555,7 +555,7 @@ func TestGetOutputDirXDGDataHome(t *testing.T) {
 		}
 
 		// Clean up created directory
-		defer os.RemoveAll(dir)
+		defer func() { _ = os.RemoveAll(dir) }()
 	})
 
 	t.Run("custom dir takes precedence over XDG_DATA_HOME", func(t *testing.T) {
@@ -565,10 +565,10 @@ func TestGetOutputDirXDGDataHome(t *testing.T) {
 
 		// Save original value and restore after test
 		originalXDG := os.Getenv("XDG_DATA_HOME")
-		defer os.Setenv("XDG_DATA_HOME", originalXDG)
+		defer func() { _ = os.Setenv("XDG_DATA_HOME", originalXDG) }()
 
 		// Set XDG_DATA_HOME
-		os.Setenv("XDG_DATA_HOME", xdgDir)
+		_ = os.Setenv("XDG_DATA_HOME", xdgDir)
 
 		dir, err := GetOutputDir(customDir, testDate)
 		if err != nil {
@@ -602,7 +602,7 @@ func TestResolveOutputPathStatErrors(t *testing.T) {
 		if err := os.WriteFile(noReadFile, []byte("test"), 0000); err != nil {
 			t.Fatalf("failed to create test file: %v", err)
 		}
-		defer os.Chmod(noReadFile, 0644) // Restore permissions for cleanup
+		defer func() { _ = os.Chmod(noReadFile, 0644) }() // Restore permissions for cleanup
 
 		// Also remove read permission from directory to prevent stat
 		// Note: On most systems, we can still stat a file even without read permission
@@ -622,7 +622,7 @@ func TestResolveOutputPathStatErrors(t *testing.T) {
 		if err := os.Chmod(noExecDir, 0600); err != nil {
 			t.Fatalf("failed to chmod: %v", err)
 		}
-		defer os.Chmod(noExecDir, 0755) // Restore for cleanup
+		defer func() { _ = os.Chmod(noExecDir, 0755) }() // Restore for cleanup
 
 		_, err := ResolveOutputPath(noExecDir, "test-article")
 		if err == nil {

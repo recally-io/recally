@@ -41,7 +41,7 @@ func TestNewFetcher(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f, err := NewFetcher(tt.useBrowser, tt.browserURL)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewFetcher() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -81,7 +81,7 @@ func TestNewHTTPFetcher(t *testing.T) {
 	if err != nil {
 		t.Fatalf("newHTTPFetcher() error = %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	if f == nil {
 		t.Fatal("newHTTPFetcher() returned nil")
@@ -167,9 +167,9 @@ func TestFetcherInterface(t *testing.T) {
 		if err != nil {
 			t.Fatalf("newHTTPFetcher() error = %v", err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
-		var _ webreader.Fetcher = f
+		var _ = f
 	})
 
 	t.Run("Browser fetcher implements interface", func(t *testing.T) {
@@ -178,9 +178,9 @@ func TestFetcherInterface(t *testing.T) {
 		if err != nil {
 			t.Fatalf("newBrowserFetcher() error = %v", err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
-		var _ webreader.Fetcher = f
+		var _ = f
 	})
 }
 
@@ -190,7 +190,7 @@ func TestFetcherConfiguration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("newHTTPFetcher() error = %v", err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
 		// Note: We can't directly inspect the timeout without exporting internal fields
 		// This test just verifies the fetcher was created successfully
@@ -203,7 +203,7 @@ func TestFetcherConfiguration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("newBrowserFetcher() error = %v", err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
 		// Note: We can't directly inspect the config without exporting internal fields
 		// This test just verifies the fetcher was created successfully

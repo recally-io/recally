@@ -15,10 +15,10 @@ var version = "dev"
 
 // Exit codes
 const (
-	ExitSuccess     = 0 // Success
-	ExitFetchError  = 1 // Fetch/process error (network, parsing failures)
-	ExitUsageError  = 2 // Usage error (invalid flags, missing URL)
-	ExitFSError     = 3 // Filesystem error (permissions, disk full)
+	ExitSuccess    = 0 // Success
+	ExitFetchError = 1 // Fetch/process error (network, parsing failures)
+	ExitUsageError = 2 // Usage error (invalid flags, missing URL)
+	ExitFSError    = 3 // Filesystem error (permissions, disk full)
 )
 
 // CLI flags
