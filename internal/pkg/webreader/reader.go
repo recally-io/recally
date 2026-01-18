@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"recally/internal/pkg/logger"
 	"time"
 )
 
@@ -51,16 +50,35 @@ type Processor interface {
 	Name() string
 }
 
+// Logger defines the interface for logging in webreader
+// Implementations can provide their own logging behavior
+type Logger interface {
+	Info(msg string, args ...any)
+	Error(msg string, args ...any)
+}
+
+// noopLogger is a no-op logger that discards all log messages
+type noopLogger struct{}
+
+func (noopLogger) Info(msg string, args ...any)  {}
+func (noopLogger) Error(msg string, args ...any) {}
+
 // Reader represents a configurable web content reader
 type Reader struct {
 	fetcher    Fetcher
 	processors []Processor
+	logger     Logger
 }
 
 // New creates a new Reader instance
-func New(f Fetcher, processors ...Processor) *Reader {
+// If logger is nil, a no-op logger will be used
+func New(f Fetcher, logger Logger, processors ...Processor) *Reader {
+	if logger == nil {
+		logger = noopLogger{}
+	}
 	return &Reader{
 		fetcher:    f,
+		logger:     logger,
 		processors: processors,
 	}
 }
@@ -91,7 +109,7 @@ func (w *Reader) Process(ctx context.Context, content *Content) (*Content, error
 	// Post Process the content through each processor in sequence
 	for _, p := range w.processors {
 		if err := p.Process(ctx, content); err != nil {
-			logger.FromContext(ctx).Error("process error at processor", "processor", p.Name(), "err", err)
+			w.logger.Error("process error at processor", "processor", p.Name(), "err", err)
 		}
 	}
 

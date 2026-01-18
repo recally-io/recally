@@ -2,6 +2,7 @@ package reader
 
 import (
 	"fmt"
+	"recally/internal/pkg/logger"
 	"recally/internal/pkg/webreader"
 	"recally/internal/pkg/webreader/fetcher"
 	"recally/internal/pkg/webreader/processor"
@@ -12,7 +13,7 @@ import (
 
 func New(host string, opts fetcher.FetchOptions) (*webreader.Reader, error) {
 	if host == "x.com" || host == "twitter.com" {
-		return webreader.New(fetcher.NewTwitterFetcher()), nil
+		return webreader.New(fetcher.NewTwitterFetcher(), logger.Default), nil
 	}
 
 	var readerFetcher webreader.Fetcher
@@ -44,5 +45,5 @@ func New(host string, opts fetcher.FetchOptions) (*webreader.Reader, error) {
 		processor.NewMarkdownProcessor(host, processor.WithMarkdownBeforeHook(mdBeforeHooks...)),
 	}
 
-	return webreader.New(readerFetcher, processors...), nil
+	return webreader.New(readerFetcher, logger.Default, processors...), nil
 }
