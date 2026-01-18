@@ -92,6 +92,77 @@ description = "Build frontend for production"
 dir = "web"
 run = "bun run build"
 
+[tasks."build:cli"]
+description = "Build Recally CLI tool with version injection"
+run = '''
+#!/usr/bin/env bash
+set -e
+
+# Determine version from git
+VERSION=$(git describe --tags --always --dirty 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "dev")
+
+echo "🔧 Building recally CLI (version: $VERSION)..."
+
+# Build with version injection and size optimization
+go build \
+  -ldflags="-s -w -X main.version=$VERSION" \
+  -o bin/recally \
+  cmd/recally/*.go
+
+echo "✅ Built: bin/recally"
+
+# Show binary info
+if [ -f bin/recally ]; then
+  SIZE=$(du -h bin/recally | cut -f1)
+  echo "📦 Binary size: $SIZE"
+fi
+'''
+
+[tasks."build:cli:cross"]
+description = "Build Recally CLI for multiple platforms (Linux, macOS)"
+run = '''
+#!/usr/bin/env bash
+set -e
+
+# Determine version from git
+VERSION=$(git describe --tags --always --dirty 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "dev")
+
+echo "🔧 Building recally CLI for multiple platforms (version: $VERSION)..."
+
+# Create bin directory if it doesn't exist
+mkdir -p bin
+
+# Build for each platform
+# NOTE: Windows build currently not supported due to platform-specific syscalls (syscall.Statfs)
+# See cmd/recally/writer.go for disk space checking implementation
+PLATFORMS=(
+  "linux/amd64"
+  "linux/arm64"
+  "darwin/amd64"
+  "darwin/arm64"
+)
+
+for PLATFORM in "${PLATFORMS[@]}"; do
+  GOOS=${PLATFORM%/*}
+  GOARCH=${PLATFORM#*/}
+  OUTPUT="bin/recally-${GOOS}-${GOARCH}"
+  
+  echo "  Building for ${GOOS}/${GOARCH}..."
+  GOOS=$GOOS GOARCH=$GOARCH go build \
+    -ldflags="-s -w -X main.version=$VERSION" \
+    -o "$OUTPUT" \
+    cmd/recally/*.go
+  
+  if [ -f "$OUTPUT" ]; then
+    SIZE=$(du -h "$OUTPUT" | cut -f1)
+    echo "    ✅ ${OUTPUT} (${SIZE})"
+  fi
+done
+
+echo "✅ Cross-platform build complete!"
+echo "ℹ️  Note: Windows builds not included (requires platform-specific disk space implementation)"
+'''
+
 # ============================================
 # TEST TASKS
 # ============================================
