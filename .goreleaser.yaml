@@ -10,20 +10,16 @@ env:
   - GO111MODULE=on
   - GOPROXY=https://proxy.golang.org,direct
 
-# Pre-build hooks for generating required files
+# Pre-build hooks for generating required files (server only)
 before:
   hooks:
     - go mod tidy
-    - go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-    - go install github.com/swaggo/swag/cmd/swag@latest
-    - go generate ./...
-    - sqlc generate
-    - swag init -g internal/port/httpserver/router.go -o docs/swagger
 
 # Build configuration
 builds:
+  # CLI build - lightweight, no frontend dependencies
   - id: recally
-    main: ./main.go
+    main: ./cmd/recally
     binary: recally
     env:
       - CGO_ENABLED=0
@@ -35,28 +31,49 @@ builds:
     goarch:
       - amd64
       - arm64
-      - "386"
-    goarm:
-      - "7"
     ignore:
       - goos: windows
         goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+    tags:
+      - osusergo
+      - netgo
+
+  # Server build - full application with frontend
+  - id: recally-server
+    main: ./main.go
+    binary: recally-server
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
       - goos: windows
-        goarch: "386"
-    # Build metadata via ldflags
+        goarch: arm64
     ldflags:
       - -s -w
       - -X main.version={{.Version}}
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
       - -X main.builtBy=goreleaser
-    # Build tags for different features
     tags:
       - osusergo
       - netgo
-    # Pre-build hooks for frontend assets
     hooks:
       pre:
+        - cmd: go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+        - cmd: go install github.com/swaggo/swag/cmd/swag@latest
+        - cmd: go generate ./...
+        - cmd: sqlc generate
+        - cmd: swag init -g internal/port/httpserver/router.go -o docs/swagger
         - cmd: sh -c 'cd web && bun install && bun run build'
           env:
             - NODE_ENV=production
@@ -66,28 +83,44 @@ builds:
 
 # Archive configuration
 archives:
-  - id: default
+  # CLI archive - minimal
+  - id: recally
     builds:
       - recally
     name_template: >-
-      {{ .ProjectName }}_
+      recally_
       {{- .Version }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    formats:
-      - tar.gz
-      - zip
-    # Include additional files in the archive
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE*
+      - README*
+
+  # Server archive - includes migrations and config
+  - id: recally-server
+    builds:
+      - recally-server
+    name_template: >-
+      recally-server_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else }}{{ .Arch }}{{ end }}
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
     files:
       - LICENSE*
       - README*
       - CHANGELOG*
       - docs/README.md
       - database/migrations/**/*
-      - "*.example"
       - src: "VERSION"
         dst: "VERSION"
       - src: "env.example"
@@ -138,7 +171,8 @@ changelog:
 
 # Docker images configuration
 dockers:
-  - id: recally-docker
+  # CLI Docker images
+  - id: recally-docker-amd64
     goos: linux
     goarch: amd64
     ids:
@@ -146,19 +180,19 @@ dockers:
     image_templates:
       - "ghcr.io/recally-io/recally:latest"
       - "ghcr.io/recally-io/recally:{{ .Version }}"
-      - "ghcr.io/recally-io/recally:{{ .Major }}.{{ .Minor }}"
-    dockerfile: Dockerfile.goreleaser
+    dockerfile: Dockerfile.cli
     use: buildx
     build_flag_templates:
       - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description=AI-powered memory assistant for digital content"
+      - "--label=org.opencontainers.image.title=recally"
+      - "--label=org.opencontainers.image.description=CLI tool to save web articles as markdown"
       - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
       - "--label=org.opencontainers.image.source=https://github.com/recally-io/recally"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.licenses=MIT"
+
   - id: recally-docker-arm64
     goos: linux
     goarch: arm64
@@ -166,11 +200,54 @@ dockers:
       - recally
     image_templates:
       - "ghcr.io/recally-io/recally:{{ .Version }}-arm64"
+    dockerfile: Dockerfile.cli
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.title=recally"
+      - "--label=org.opencontainers.image.description=CLI tool to save web articles as markdown"
+      - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
+      - "--label=org.opencontainers.image.source=https://github.com/recally-io/recally"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+
+  # Server Docker images
+  - id: recally-server-docker-amd64
+    goos: linux
+    goarch: amd64
+    ids:
+      - recally-server
+    image_templates:
+      - "ghcr.io/recally-io/recally-server:latest"
+      - "ghcr.io/recally-io/recally-server:{{ .Version }}"
+      - "ghcr.io/recally-io/recally-server:{{ .Major }}.{{ .Minor }}"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.title=recally-server"
+      - "--label=org.opencontainers.image.description=AI-powered memory assistant for digital content"
+      - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
+      - "--label=org.opencontainers.image.source=https://github.com/recally-io/recally"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+
+  - id: recally-server-docker-arm64
+    goos: linux
+    goarch: arm64
+    ids:
+      - recally-server
+    image_templates:
+      - "ghcr.io/recally-io/recally-server:{{ .Version }}-arm64"
     dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title=recally-server"
       - "--label=org.opencontainers.image.description=AI-powered memory assistant for digital content"
       - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
       - "--label=org.opencontainers.image.source=https://github.com/recally-io/recally"
@@ -181,6 +258,7 @@ dockers:
 
 # Docker manifests for multi-platform images
 docker_manifests:
+  # CLI manifests
   - name_template: "ghcr.io/recally-io/recally:{{ .Version }}"
     image_templates:
       - "ghcr.io/recally-io/recally:{{ .Version }}"
@@ -189,6 +267,16 @@ docker_manifests:
     image_templates:
       - "ghcr.io/recally-io/recally:latest"
       - "ghcr.io/recally-io/recally:{{ .Version }}-arm64"
+
+  # Server manifests
+  - name_template: "ghcr.io/recally-io/recally-server:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/recally-io/recally-server:{{ .Version }}"
+      - "ghcr.io/recally-io/recally-server:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/recally-io/recally-server:latest"
+    image_templates:
+      - "ghcr.io/recally-io/recally-server:latest"
+      - "ghcr.io/recally-io/recally-server:{{ .Version }}-arm64"
 
 # Release configuration
 release:
@@ -203,28 +291,37 @@ release:
     
     ## Installation
     
-    ### Download Binary
-    Download the appropriate binary for your platform from the assets below.
+    ### CLI (`recally`)
+    Download the `recally_*` binary for your platform from the assets below.
     
-    ### Docker
     ```bash
+    # Docker
     docker pull ghcr.io/recally-io/recally:{{.Version}}
     ```
     
-    ### Homebrew (macOS/Linux)
+    ### Server (`recally-server`)
+    Download the `recally-server_*` binary for your platform from the assets below.
+    
     ```bash
-    brew install recally-io/tap/recally
+    # Docker
+    docker pull ghcr.io/recally-io/recally-server:{{.Version}}
     ```
   footer: |
     ## Docker Images
     
     Multi-platform Docker images are available:
+    
+    **CLI:**
     - `ghcr.io/recally-io/recally:{{.Version}}` (linux/amd64, linux/arm64)
-    - `ghcr.io/recally-io/recally:latest` (linux/amd64, linux/arm64)
+    - `ghcr.io/recally-io/recally:latest`
+    
+    **Server:**
+    - `ghcr.io/recally-io/recally-server:{{.Version}}` (linux/amd64, linux/arm64)
+    - `ghcr.io/recally-io/recally-server:latest`
     
     ## Checksums
     
-    You can verify the integrity of downloaded files using the checksums below:
+    Verify integrity of downloaded files:
     
     ```bash
     # macOS
@@ -238,34 +335,6 @@ release:
   replace_existing_draft: true
   target_commitish: "{{ .Commit }}"
   disable: false
-
-# Homebrew tap configuration
-brews:
-  - name: recally
-    repository:
-      owner: recally-io
-      name: homebrew-tap
-    url_template: "https://github.com/recally-io/recally/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    download_strategy: CurlDownloadStrategy
-    commit_author:
-      name: goreleaserbot
-      email: goreleaser@recally.io
-    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-    directory: Formula
-    homepage: "https://github.com/recally-io/recally"
-    description: "AI-powered memory assistant for digital content"
-    license: "MIT"
-    skip_upload: auto
-    custom_block: |
-      head "https://github.com/recally-io/recally.git"
-    dependencies:
-      - name: postgresql
-        type: optional
-    install: |
-      bin.install "recally"
-      (etc/"recally").install "env.example" => "config.env"
-    test: |
-      system "#{bin}/recally", "version"
 
 # Validation rules
 announce:
