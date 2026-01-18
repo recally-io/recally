@@ -180,10 +180,11 @@ dockers:
     image_templates:
       - "ghcr.io/recally-io/recally:latest"
       - "ghcr.io/recally-io/recally:{{ .Version }}"
-    dockerfile: Dockerfile.cli
+    dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - "--platform=linux/amd64"
+      - "--target=cli"
       - "--label=org.opencontainers.image.title=recally"
       - "--label=org.opencontainers.image.description=CLI tool to save web articles as markdown"
       - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
@@ -200,10 +201,11 @@ dockers:
       - recally
     image_templates:
       - "ghcr.io/recally-io/recally:{{ .Version }}-arm64"
-    dockerfile: Dockerfile.cli
+    dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - "--platform=linux/arm64"
+      - "--target=cli"
       - "--label=org.opencontainers.image.title=recally"
       - "--label=org.opencontainers.image.description=CLI tool to save web articles as markdown"
       - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
@@ -227,6 +229,7 @@ dockers:
     use: buildx
     build_flag_templates:
       - "--platform=linux/amd64"
+      - "--target=server"
       - "--label=org.opencontainers.image.title=recally-server"
       - "--label=org.opencontainers.image.description=AI-powered memory assistant for digital content"
       - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"
@@ -247,6 +250,7 @@ dockers:
     use: buildx
     build_flag_templates:
       - "--platform=linux/arm64"
+      - "--target=server"
       - "--label=org.opencontainers.image.title=recally-server"
       - "--label=org.opencontainers.image.description=AI-powered memory assistant for digital content"
       - "--label=org.opencontainers.image.url=https://github.com/recally-io/recally"

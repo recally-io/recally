@@ -1,31 +1,45 @@
 # Dockerfile for GoReleaser builds
 # This Dockerfile expects the binary to be pre-built by GoReleaser
+# Supports both CLI and Server targets via build args
 
+ARG TARGET=server
+
+# =============================================================================
+# CLI Target
+# =============================================================================
+FROM gcr.io/distroless/static-debian12:nonroot AS cli
+
+COPY recally /usr/local/bin/recally
+
+USER nonroot:nonroot
+WORKDIR /data
+
+ENTRYPOINT ["/usr/local/bin/recally"]
+
+# =============================================================================
+# Server Target
+# =============================================================================
 # Download Atlas CLI in a builder stage
 FROM alpine:latest AS atlas-builder
 RUN apk add --no-cache curl && \
     curl -sSf https://atlasgo.sh | sh -s -- --yes
 
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static-debian12:nonroot AS server
 
-# Copy Atlas CLI
 COPY --from=atlas-builder /usr/local/bin/atlas /usr/local/bin/atlas
-
-# Copy the binary from GoReleaser
 COPY recally-server /service/recally-server
 
-# Use non-root user for security
 USER nonroot:nonroot
-
-# Set working directory
 WORKDIR /service
 
-# Expose default port
 EXPOSE 1323
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD ["/service/recally-server", "health"]
 
-# Run the binary
 ENTRYPOINT ["/service/recally-server"]
+
+# =============================================================================
+# Final Target Selection
+# =============================================================================
+FROM ${TARGET} AS final
