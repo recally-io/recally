@@ -42,13 +42,32 @@ type BrowserFetcher struct {
 }
 
 func (f *BrowserFetcher) loadBrowser() (*rod.Browser, error) {
-	// https://go-rod.github.io/#/custom-launch?id=remotely-manage-the-launcher
-	l, err := launcher.NewManaged(f.config.ControlURL)
-	if err != nil {
-		return nil, fmt.Errorf("create new launcher: %w", err)
+	// If ControlURL is provided, use managed launcher (connect to existing browser service)
+	// Otherwise, launch a new browser instance
+	if f.config.ControlURL != "" {
+		// https://go-rod.github.io/#/custom-launch?id=remotely-manage-the-launcher
+		l, err := launcher.NewManaged(f.config.ControlURL)
+		if err != nil {
+			return nil, fmt.Errorf("create new launcher: %w", err)
+		}
+		l.Headless(true).Set("disable-gpu").Set("no-sandbox").Set("disable-dev-shm-usage")
+		browser := rod.New().Client(l.MustClient()).MustConnect()
+		return browser, nil
 	}
-	l.Headless(true).Set("disable-gpu").Set("no-sandbox").Set("disable-dev-shm-usage")
-	browser := rod.New().Client(l.MustClient()).MustConnect()
+
+	// Launch a new browser instance
+	l := launcher.New().
+		Headless(true).
+		Set("disable-gpu").
+		Set("no-sandbox").
+		Set("disable-dev-shm-usage")
+	
+	controlURL, err := l.Launch()
+	if err != nil {
+		return nil, fmt.Errorf("launch browser: %w", err)
+	}
+
+	browser := rod.New().ControlURL(controlURL).MustConnect()
 	return browser, nil
 }
 

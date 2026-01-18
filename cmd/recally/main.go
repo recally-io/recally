@@ -33,7 +33,7 @@ var (
 func init() {
 	// Define flags
 	flag.BoolVar(&flagBrowser, "browser", false, "Use browser fetcher instead of HTTP")
-	flag.StringVar(&flagBrowserURL, "browser-url", "http://localhost:9222", "Browser control URL for browser fetcher")
+	flag.StringVar(&flagBrowserURL, "browser-url", "", "Browser control URL (empty = launch new browser)")
 	flag.BoolVar(&flagVerbose, "verbose", false, "Enable debug logging")
 	flag.StringVar(&flagOutputDir, "output-dir", "", "Custom output directory (empty = use XDG default)")
 	flag.BoolVar(&flagVersion, "version", false, "Show version information")
@@ -50,7 +50,7 @@ Usage:
 
 Options:
   --browser              Use browser fetcher for JavaScript-heavy sites (default: false)
-  --browser-url string   Browser control URL (default: "http://localhost:9222")
+  --browser-url string   Browser control URL (empty = launch new browser)
   --verbose              Enable debug logging (default: false)
   --output-dir string    Custom output directory (empty = use XDG default)
   --version              Show version information
@@ -60,10 +60,10 @@ Examples:
   # Basic usage with HTTP fetcher
   recally https://example.com/article
 
-  # Use browser fetcher for JavaScript-heavy sites
+  # Use browser fetcher (launches new Chrome instance)
   recally --browser https://example.com/article
 
-  # Custom browser control URL
+  # Use existing browser service
   recally --browser --browser-url http://localhost:9222 https://example.com/article
 
   # Enable verbose logging
@@ -120,7 +120,7 @@ func run() int {
 	}
 
 	// Override browser URL from environment if not set via flag
-	if flagBrowser && flagBrowserURL == "http://localhost:9222" {
+	if flagBrowser && flagBrowserURL == "" {
 		if envURL := os.Getenv("BROWSER_CONTROL_URL"); envURL != "" {
 			flagBrowserURL = envURL
 		}
@@ -144,7 +144,7 @@ func execute(articleURL string) int {
 			"version", version,
 			"url", articleURL,
 			"browser_mode", flagBrowser,
-			"browser_url", flagBrowserURL,
+			"browser_url", getBrowserURLDescription(),
 			"output_dir", getOutputDirDescription(),
 		)
 	}
@@ -303,4 +303,12 @@ func isFilesystemError(err error) bool {
 	}
 
 	return false
+}
+
+// getBrowserURLDescription returns a human-readable description of the browser URL
+func getBrowserURLDescription() string {
+	if flagBrowserURL != "" {
+		return flagBrowserURL
+	}
+	return "(launching new browser)"
 }

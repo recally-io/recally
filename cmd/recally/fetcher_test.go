@@ -30,11 +30,11 @@ func TestNewFetcher(t *testing.T) {
 			wantType:   "browser",
 		},
 		{
-			name:       "Browser fetcher with empty URL",
+			name:       "Browser fetcher with empty URL (launches new browser)",
 			useBrowser: true,
 			browserURL: "",
-			wantErr:    true,
-			wantType:   "",
+			wantErr:    false,
+			wantType:   "browser",
 		},
 	}
 
@@ -109,9 +109,9 @@ func TestNewBrowserFetcher(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:       "empty URL",
+			name:       "empty URL (launches new browser)",
 			browserURL: "",
-			wantErr:    true,
+			wantErr:    false,
 		},
 		{
 			name:       "URL with path",
@@ -173,7 +173,8 @@ func TestFetcherInterface(t *testing.T) {
 	})
 
 	t.Run("Browser fetcher implements interface", func(t *testing.T) {
-		f, err := newBrowserFetcher("http://localhost:9222")
+		// Test with empty URL (launches new browser)
+		f, err := newBrowserFetcher("")
 		if err != nil {
 			t.Fatalf("newBrowserFetcher() error = %v", err)
 		}
@@ -197,8 +198,8 @@ func TestFetcherConfiguration(t *testing.T) {
 	})
 
 	t.Run("Browser fetcher has correct config", func(t *testing.T) {
-		browserURL := "http://localhost:9222"
-		f, err := newBrowserFetcher(browserURL)
+		// Test with empty URL (launches new browser)
+		f, err := newBrowserFetcher("")
 		if err != nil {
 			t.Fatalf("newBrowserFetcher() error = %v", err)
 		}

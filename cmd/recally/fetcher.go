@@ -36,13 +36,10 @@ func newHTTPFetcher() (webreader.Fetcher, error) {
 }
 
 // newBrowserFetcher creates browser fetcher with explicit config
-// browserURL: Chrome DevTools Protocol control URL
+// browserURL: Chrome DevTools Protocol control URL (empty = launch new browser)
 func newBrowserFetcher(browserURL string) (webreader.Fetcher, error) {
-	if browserURL == "" {
-		return nil, fmt.Errorf("browser URL is empty")
-	}
-
 	// Construct browser config explicitly (never use DefaultBrowserFetcher)
+	// If browserURL is empty, the browser fetcher will launch a new browser instance
 	config := fetcher.BrowserConfig{
 		Timeout:        120, // 2 minutes
 		ControlURL:     browserURL,
