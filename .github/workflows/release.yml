@@ -1,4 +1,4 @@
-name: Release
+name: Create Release Tag
 
 on:
   push:
@@ -7,31 +7,25 @@ on:
     paths:
       - 'VERSION'
 
+permissions:
+  contents: write
+
 jobs:
-  release:
+  create-tag:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Get version
         id: get_version
-        run: echo "::set-output name=version::$(cat VERSION)"
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
-      - name: Create tag
-        uses: rickstaa/action-create-tag@v1
-        with:
-          tag: ${{ steps.get_version.outputs.version }}
-          message: "Release ${{ steps.get_version.outputs.version }}"
-
-      - name: Create release
-        uses: actions/create-release@v1
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.get_version.outputs.version }}" -m "Release ${{ steps.get_version.outputs.version }}"
+          git push origin "${{ steps.get_version.outputs.version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.get_version.outputs.version }}
-          release_name: "Release ${{ steps.get_version.outputs.version }}"
-          body: |
-            See the commits for details.
-          draft: false
-          prerelease: false

@@ -25,7 +25,7 @@ EXPOSE 1323
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD ["/service/recally-server", "health"] || exit 1
+  CMD ["/service/recally-server", "health"]
 
 # Run the binary
 ENTRYPOINT ["/service/recally-server"]
