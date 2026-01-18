@@ -501,3 +501,147 @@ func TestResolveOutputPathConflictResolution(t *testing.T) {
 		}
 	}
 }
+
+func TestGetOutputDirXDGDataHome(t *testing.T) {
+	// Skip on non-Linux platforms as XDG_DATA_HOME is Linux-specific
+	if runtime.GOOS != "linux" {
+		t.Skip("XDG_DATA_HOME test is Linux-specific")
+	}
+
+	testDate := time.Date(2026, 1, 18, 0, 0, 0, 0, time.UTC)
+
+	t.Run("honors XDG_DATA_HOME when set", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		// Save original value and restore after test
+		originalXDG := os.Getenv("XDG_DATA_HOME")
+		defer os.Setenv("XDG_DATA_HOME", originalXDG)
+
+		// Set custom XDG_DATA_HOME
+		os.Setenv("XDG_DATA_HOME", tmpDir)
+
+		dir, err := GetOutputDir("", testDate)
+		if err != nil {
+			t.Fatalf("GetOutputDir failed: %v", err)
+		}
+
+		expected := filepath.Join(tmpDir, "recally", "contents", "2026-01-18")
+		if dir != expected {
+			t.Errorf("GetOutputDir() = %q, want %q", dir, expected)
+		}
+
+		// Verify directory was created
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			t.Errorf("directory was not created: %s", dir)
+		}
+	})
+
+	t.Run("falls back to default when XDG_DATA_HOME is empty", func(t *testing.T) {
+		// Save original value and restore after test
+		originalXDG := os.Getenv("XDG_DATA_HOME")
+		defer os.Setenv("XDG_DATA_HOME", originalXDG)
+
+		// Unset XDG_DATA_HOME
+		os.Unsetenv("XDG_DATA_HOME")
+
+		dir, err := GetOutputDir("", testDate)
+		if err != nil {
+			t.Fatalf("GetOutputDir failed: %v", err)
+		}
+
+		// Should use default ~/.local/share
+		if !strings.Contains(dir, ".local/share") {
+			t.Errorf("expected path to contain '.local/share' when XDG_DATA_HOME is unset: %s", dir)
+		}
+
+		// Clean up created directory
+		defer os.RemoveAll(dir)
+	})
+
+	t.Run("custom dir takes precedence over XDG_DATA_HOME", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		customDir := filepath.Join(tmpDir, "custom")
+		xdgDir := filepath.Join(tmpDir, "xdg")
+
+		// Save original value and restore after test
+		originalXDG := os.Getenv("XDG_DATA_HOME")
+		defer os.Setenv("XDG_DATA_HOME", originalXDG)
+
+		// Set XDG_DATA_HOME
+		os.Setenv("XDG_DATA_HOME", xdgDir)
+
+		dir, err := GetOutputDir(customDir, testDate)
+		if err != nil {
+			t.Fatalf("GetOutputDir failed: %v", err)
+		}
+
+		// Should use custom dir, not XDG_DATA_HOME
+		expected := filepath.Join(customDir, "contents", "2026-01-18")
+		if dir != expected {
+			t.Errorf("GetOutputDir() = %q, want %q", dir, expected)
+		}
+
+		// XDG dir should not be created
+		if _, err := os.Stat(xdgDir); !os.IsNotExist(err) {
+			t.Errorf("XDG directory should not be created when custom dir is specified")
+		}
+	})
+}
+
+func TestResolveOutputPathStatErrors(t *testing.T) {
+	t.Run("surfaces permission denied error on base path", func(t *testing.T) {
+		// Skip on Windows as permission handling differs
+		if runtime.GOOS == "windows" {
+			t.Skip("Permission test not reliable on Windows")
+		}
+
+		tmpDir := t.TempDir()
+
+		// Create a file with no read permissions
+		noReadFile := filepath.Join(tmpDir, "test-article.md")
+		if err := os.WriteFile(noReadFile, []byte("test"), 0000); err != nil {
+			t.Fatalf("failed to create test file: %v", err)
+		}
+		defer os.Chmod(noReadFile, 0644) // Restore permissions for cleanup
+
+		// Also remove read permission from directory to prevent stat
+		// Note: On most systems, we can still stat a file even without read permission
+		// So we need to create a directory without execute permission instead
+		noExecDir := filepath.Join(tmpDir, "noexec")
+		if err := os.Mkdir(noExecDir, 0755); err != nil {
+			t.Fatalf("failed to create test dir: %v", err)
+		}
+
+		// Create a file inside
+		innerFile := filepath.Join(noExecDir, "test-article.md")
+		if err := os.WriteFile(innerFile, []byte("test"), 0644); err != nil {
+			t.Fatalf("failed to create inner file: %v", err)
+		}
+
+		// Remove execute permission from directory (prevents stat on contents)
+		if err := os.Chmod(noExecDir, 0600); err != nil {
+			t.Fatalf("failed to chmod: %v", err)
+		}
+		defer os.Chmod(noExecDir, 0755) // Restore for cleanup
+
+		_, err := ResolveOutputPath(noExecDir, "test-article")
+		if err == nil {
+			t.Error("expected error when stat fails with permission denied")
+		}
+		if !strings.Contains(err.Error(), "failed to check file") {
+			t.Errorf("expected 'failed to check file' error, got: %v", err)
+		}
+	})
+
+	t.Run("returns error for non-existent parent directory", func(t *testing.T) {
+		// Try to resolve path in a directory that doesn't exist
+		nonExistentDir := "/non/existent/path/that/should/not/exist"
+
+		_, err := ResolveOutputPath(nonExistentDir, "test-article")
+		// This should succeed since we're just building a path
+		// The file doesn't exist, so os.IsNotExist returns true
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+}

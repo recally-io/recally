@@ -40,13 +40,18 @@ func GetOutputDir(customDir string, date time.Time) (string, error) {
 		// Convert config directory to data directory based on OS
 		switch runtime.GOOS {
 		case "linux":
-			// On Linux, UserConfigDir returns ~/.config
-			// We want ~/.local/share instead
-			homeDir, err := os.UserHomeDir()
-			if err != nil {
-				return "", fmt.Errorf("failed to get home directory: %w", err)
+			// Honor XDG_DATA_HOME per XDG Base Directory Specification
+			// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+			if xdgDataHome := os.Getenv("XDG_DATA_HOME"); xdgDataHome != "" {
+				baseDir = filepath.Join(xdgDataHome, "recally")
+			} else {
+				// Fallback to default: ~/.local/share
+				homeDir, err := os.UserHomeDir()
+				if err != nil {
+					return "", fmt.Errorf("failed to get home directory: %w", err)
+				}
+				baseDir = filepath.Join(homeDir, ".local", "share", "recally")
 			}
-			baseDir = filepath.Join(homeDir, ".local", "share", "recally")
 		case "darwin":
 			// On macOS, UserConfigDir returns ~/Library/Application Support
 			// This is actually what we want for data as well
@@ -143,9 +148,13 @@ func ResolveOutputPath(dir, title string) (string, error) {
 	basePath := filepath.Join(dir, baseFilename+".md")
 
 	// Check if file exists
-	if _, err := os.Stat(basePath); os.IsNotExist(err) {
-		// File doesn't exist, we can use this path
-		return basePath, nil
+	if _, err := os.Stat(basePath); err != nil {
+		if os.IsNotExist(err) {
+			// File doesn't exist, we can use this path
+			return basePath, nil
+		}
+		// Surface actual errors (permission denied, I/O errors, etc.)
+		return "", fmt.Errorf("failed to check file %s: %w", basePath, err)
 	}
 
 	// File exists, start appending counters
@@ -155,9 +164,13 @@ func ResolveOutputPath(dir, title string) (string, error) {
 		fullPath := filepath.Join(dir, filename)
 
 		// Check if this path exists
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			// Found a unique filename
-			return fullPath, nil
+		if _, err := os.Stat(fullPath); err != nil {
+			if os.IsNotExist(err) {
+				// Found a unique filename
+				return fullPath, nil
+			}
+			// Surface actual errors (permission denied, I/O errors, etc.)
+			return "", fmt.Errorf("failed to check file %s: %w", fullPath, err)
 		}
 
 		counter++
