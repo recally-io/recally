@@ -478,7 +478,7 @@ func TestResolveOutputPathConflictResolution(t *testing.T) {
 		paths[i] = path
 
 		// Verify the path is unique
-		for j := 0; j < i; j++ {
+		for j := range i {
 			if paths[i] == paths[j] {
 				t.Errorf("duplicate path generated: %s (iteration %d and %d)", paths[i], i, j)
 			}
