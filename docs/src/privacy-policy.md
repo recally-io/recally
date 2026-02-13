@@ -2,7 +2,7 @@
 
 **Last Updated:** 2025-01-22
 
-Thank you for using Recally! We are committed to protecting your privacy and ensuring you have a positive experience while using our AI-powered memory assistant. This Privacy Policy explains how we collect, use, and disclose your information when you use Recally, available through our cloud version at [recally.io](https://recally.io) and our self-hosted option.
+Thank you for using Recally! We are committed to protecting your privacy and ensuring you have a positive experience while using our AI-powered bookmark manager. This Privacy Policy explains how we collect, use, and disclose your information when you use Recally, available through our cloud version at [recally.io](https://recally.io) and our self-hosted option.
 
 **1. Information We Collect**
 

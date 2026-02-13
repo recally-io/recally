@@ -23,16 +23,11 @@
 //   FOR EACH ROW
 //   EXECUTE FUNCTION update_updated_at_column();
 //
-// Tables requiring triggers (22 total):
+// Tables requiring triggers (17 total):
 // - cache
 // - users
 // - auth_user_oauth_connections
 // - auth_api_keys
-// - assistants
-// - assistant_threads
-// - assistant_messages
-// - assistant_attachments
-// - assistant_embedddings (note: typo with 3 d's is intentional)
 // - content
 // - content_tags
 // - content_tags_mapping

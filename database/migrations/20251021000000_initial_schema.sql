@@ -58,8 +58,6 @@ CREATE TABLE "users" (
     "password_hash" TEXT,
     "email" VARCHAR(255),
     "phone" VARCHAR(50),
-    "activate_assistant_id" UUID,
-    "activate_thread_id" UUID,
     "status" VARCHAR(255) NOT NULL DEFAULT 'pending',
     "settings" JSONB DEFAULT '{}'::JSONB,
     "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -103,85 +101,6 @@ CREATE TABLE "auth_revoked_tokens" (
     "revoked_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "reason" VARCHAR(100),
     PRIMARY KEY ("jti")
-);
-
--- Assistants
--- ----------------------------------------------------------------------------
-
-CREATE TABLE "assistants" (
-    "id" SERIAL NOT NULL,
-    "uuid" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "user_id" UUID,
-    "name" VARCHAR(255) NOT NULL,
-    "description" TEXT,
-    "system_prompt" TEXT,
-    "model" VARCHAR(32) NOT NULL,
-    "metadata" JSONB DEFAULT '{}'::JSONB,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "assistant_threads" (
-    "id" SERIAL NOT NULL,
-    "uuid" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "user_id" UUID,
-    "assistant_id" UUID,
-    "name" VARCHAR(255) NOT NULL,
-    "description" TEXT,
-    "system_prompt" TEXT,
-    "model" VARCHAR(32) NOT NULL,
-    "metadata" JSONB DEFAULT '{}'::JSONB,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "assistant_messages" (
-    "id" SERIAL NOT NULL,
-    "uuid" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "user_id" UUID,
-    "assistant_id" UUID,
-    "thread_id" UUID,
-    "model" VARCHAR(32),
-    "role" VARCHAR(255) NOT NULL,
-    "text" TEXT,
-    "prompt_token" INTEGER,
-    "completion_token" INTEGER,
-    "embeddings" vector(1536),
-    "metadata" JSONB DEFAULT '{}'::JSONB,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "assistant_attachments" (
-    "id" SERIAL NOT NULL,
-    "uuid" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "user_id" UUID,
-    "assistant_id" UUID,
-    "thread_id" UUID,
-    "name" VARCHAR(255),
-    "type" VARCHAR(255),
-    "url" VARCHAR(512),
-    "size" INTEGER,
-    "metadata" JSONB DEFAULT '{}'::JSONB,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "assistant_embedddings" (
-    "id" SERIAL NOT NULL,
-    "uuid" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "user_id" UUID,
-    "attachment_id" UUID,
-    "text" TEXT NOT NULL,
-    "embeddings" vector(1536),
-    "metadata" JSONB DEFAULT '{}'::JSONB,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
 );
 
 -- Legacy Content System
