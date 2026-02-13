@@ -3,7 +3,7 @@
 -- Generated: 2025-10-21 22:52:51
 --
 -- This migration creates the complete database schema for Recally including:
--- - 22 tables across 5 domain areas
+-- - 17 tables across 4 domain areas
 -- - Vector extension for embeddings
 -- - Trigger function for automatic updated_at timestamps
 -- - BM25 indexes for full-text search (ParadeDB)
@@ -356,21 +356,6 @@ CREATE UNIQUE INDEX "uq_user_key_name" ON "auth_api_keys" ("user_id", "name");
 -- auth_revoked_tokens
 CREATE UNIQUE INDEX "uq_revoked_token" ON "auth_revoked_tokens" ("user_id", "jti");
 
--- assistants
-CREATE UNIQUE INDEX "assistants_uuid_key" ON "assistants" ("uuid");
-
--- assistant_threads
-CREATE UNIQUE INDEX "assistant_threads_uuid_key" ON "assistant_threads" ("uuid");
-
--- assistant_messages
-CREATE UNIQUE INDEX "assistant_messages_uuid_key" ON "assistant_messages" ("uuid");
-
--- assistant_attachments
-CREATE UNIQUE INDEX "assistant_attachments_uuid_key" ON "assistant_attachments" ("uuid");
-
--- assistant_embedddings
-CREATE UNIQUE INDEX "assistant_embedddings_uuid_key" ON "assistant_embedddings" ("uuid");
-
 -- content_tags
 CREATE UNIQUE INDEX "content_tags_name_user_id_key" ON "content_tags" ("name", "user_id");
 
@@ -399,26 +384,6 @@ ALTER TABLE "auth_api_keys" ADD CONSTRAINT "auth_api_keys_user_id_fkey" FOREIGN 
 
 -- auth_revoked_tokens
 ALTER TABLE "auth_revoked_tokens" ADD CONSTRAINT "auth_revoked_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("uuid");
-
--- assistants
-ALTER TABLE "assistants" ADD CONSTRAINT "assistants_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("uuid");
-
--- assistant_threads
-ALTER TABLE "assistant_threads" ADD CONSTRAINT "assistant_threads_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("uuid");
-ALTER TABLE "assistant_threads" ADD CONSTRAINT "assistant_threads_assistant_id_fkey" FOREIGN KEY ("assistant_id") REFERENCES "assistants" ("uuid");
-
--- assistant_messages
-ALTER TABLE "assistant_messages" ADD CONSTRAINT "assistant_messages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("uuid");
-ALTER TABLE "assistant_messages" ADD CONSTRAINT "assistant_messages_assistant_id_fkey" FOREIGN KEY ("assistant_id") REFERENCES "assistants" ("uuid");
-ALTER TABLE "assistant_messages" ADD CONSTRAINT "assistant_messages_thread_id_fkey" FOREIGN KEY ("thread_id") REFERENCES "assistant_threads" ("uuid");
-
--- assistant_attachments
-ALTER TABLE "assistant_attachments" ADD CONSTRAINT "assistant_attachments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("uuid");
-ALTER TABLE "assistant_attachments" ADD CONSTRAINT "assistant_attachments_assistant_id_fkey" FOREIGN KEY ("assistant_id") REFERENCES "assistants" ("uuid");
-ALTER TABLE "assistant_attachments" ADD CONSTRAINT "assistant_attachments_thread_id_fkey" FOREIGN KEY ("thread_id") REFERENCES "assistant_threads" ("uuid");
-
--- assistant_embedddings
-ALTER TABLE "assistant_embedddings" ADD CONSTRAINT "assistant_embedddings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("uuid");
 
 -- content
 ALTER TABLE "content" ADD CONSTRAINT "content_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("uuid");
@@ -492,27 +457,6 @@ CREATE INDEX "idx_auth_api_keys_expiry" ON "auth_api_keys" ("expires_at") WHERE 
 CREATE INDEX "idx_auth_revoked_tokens_expiry" ON "auth_revoked_tokens" ("expires_at");
 CREATE INDEX "idx_auth_revoked_tokens_user" ON "auth_revoked_tokens" ("user_id");
 
--- assistants
-CREATE INDEX "idx_assistants_user_created_at" ON "assistants" ("user_id", "created_at");
-
--- assistant_threads
-CREATE INDEX "idx_user_assistant_created_at" ON "assistant_threads" ("user_id", "assistant_id", "created_at");
-CREATE INDEX "idx_assistant_threads_assistant_created_at" ON "assistant_threads" ("assistant_id", "created_at");
-
--- assistant_messages
-CREATE INDEX "idx_assistant_messages_user_created_at" ON "assistant_messages" ("user_id", "created_at");
-CREATE INDEX "idx_assistant_messages_assistant_created_at" ON "assistant_messages" ("assistant_id", "created_at");
-CREATE INDEX "idx_assistant_messages_thread_created_at" ON "assistant_messages" ("thread_id", "created_at");
-
--- assistant_attachments
-CREATE INDEX "idx_assistant_attachments_user_created_at" ON "assistant_attachments" ("user_id", "created_at");
-CREATE INDEX "idx_assistant_attachments_assistant_created_at" ON "assistant_attachments" ("assistant_id", "created_at");
-CREATE INDEX "idx_assistant_attachments_thread_created_at" ON "assistant_attachments" ("thread_id", "created_at");
-
--- assistant_embedddings
-CREATE INDEX "idx_user" ON "assistant_embedddings" ("user_id");
-CREATE INDEX "idx_attachment" ON "assistant_embedddings" ("attachment_id");
-
 -- content
 CREATE INDEX "idx_content_user_id" ON "content" ("user_id");
 CREATE INDEX "idx_content_type" ON "content" ("type");
@@ -585,31 +529,6 @@ CREATE TRIGGER update_auth_user_oauth_connections_updated_at
 
 CREATE TRIGGER update_auth_api_keys_updated_at
     BEFORE UPDATE ON "auth_api_keys"
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_assistants_updated_at
-    BEFORE UPDATE ON "assistants"
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_assistant_threads_updated_at
-    BEFORE UPDATE ON "assistant_threads"
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_assistant_messages_updated_at
-    BEFORE UPDATE ON "assistant_messages"
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_assistant_attachments_updated_at
-    BEFORE UPDATE ON "assistant_attachments"
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_assistant_embedddings_updated_at
-    BEFORE UPDATE ON "assistant_embedddings"
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 

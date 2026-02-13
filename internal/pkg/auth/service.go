@@ -66,12 +66,10 @@ func (s *Service) CreateUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*U
 
 	dbUser := user.Dump()
 	params := db.CreateUserParams{
-		Username:            dbUser.Username,
-		Email:               dbUser.Email,
-		PasswordHash:        dbUser.PasswordHash,
-		ActivateAssistantID: dbUser.ActivateAssistantID,
-		ActivateThreadID:    dbUser.ActivateThreadID,
-		Status:              dbUser.Status,
+		Username:     dbUser.Username,
+		Email:        dbUser.Email,
+		PasswordHash: dbUser.PasswordHash,
+		Status:       dbUser.Status,
 	}
 
 	userModel, err := s.dao.CreateUser(ctx, tx, params)
@@ -147,8 +145,13 @@ func (s *Service) CreateTelegramUser(ctx context.Context, tx db.DBTX, userName, 
 func (s *Service) UpdateTelegramUser(ctx context.Context, tx db.DBTX, user *UserDTO) (*UserDTO, error) {
 	dbUser := user.Dump()
 	params := db.UpdateUserByIdParams{
-		ActivateAssistantID: dbUser.ActivateAssistantID,
-		ActivateThreadID:    dbUser.ActivateThreadID,
+		Uuid:         dbUser.Uuid,
+		Username:     dbUser.Username,
+		Email:        dbUser.Email,
+		Phone:        dbUser.Phone,
+		PasswordHash: dbUser.PasswordHash,
+		Status:       dbUser.Status,
+		Settings:     dbUser.Settings,
 	}
 
 	userModel, err := s.dao.UpdateUserById(ctx, tx, params)
@@ -228,15 +231,13 @@ func (s *Service) UpdateUser(ctx context.Context, tx db.DBTX, userId uuid.UUID, 
 
 	dbUser := user.Dump()
 	params := db.UpdateUserByIdParams{
-		Uuid:                dbUser.Uuid,
-		Username:            dbUser.Username,
-		Email:               dbUser.Email,
-		Phone:               dbUser.Phone,
-		PasswordHash:        dbUser.PasswordHash,
-		ActivateAssistantID: dbUser.ActivateAssistantID,
-		ActivateThreadID:    dbUser.ActivateThreadID,
-		Status:              dbUser.Status,
-		Settings:            dbUser.Settings,
+		Uuid:         dbUser.Uuid,
+		Username:     dbUser.Username,
+		Email:        dbUser.Email,
+		Phone:        dbUser.Phone,
+		PasswordHash: dbUser.PasswordHash,
+		Status:       dbUser.Status,
+		Settings:     dbUser.Settings,
 	}
 
 	if username != nil {
