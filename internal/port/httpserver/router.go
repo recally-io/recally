@@ -27,7 +27,6 @@ func (s *Service) registerRouters() {
 	v1Api := e.Group("/api/v1")
 
 	registerAuthHandlers(v1Api)
-	registerAssistantHandlers(v1Api, s)
 	registerFileHandlers(v1Api, s)
 	registerBookmarkHandlers(v1Api, s)
 	registerBookmarkShareHandlers(v1Api, s)
