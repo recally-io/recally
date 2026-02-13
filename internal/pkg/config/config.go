@@ -14,8 +14,8 @@ var Settings = &Config{}
 
 type OAuthConfig struct {
 	Endpoint string   `env:"ENDPOINT"`
-	Key      string   `env:"KEY,required"`
-	Secret   string   `env:"SECRET,required"`
+	Key      string   `env:"KEY"`
+	Secret   string   `env:"SECRET"`
 	Scopes   []string `env:"SCOPES"`
 }
 
@@ -49,7 +49,7 @@ func (db DatabaseConfig) URL() string {
 
 type OpenAIConfig struct {
 	BaseURL     string `env:"BASE_URL" envDefault:"https://api.openai.com"`
-	ApiKey      string `env:"API_KEY,required"`
+	ApiKey      string `env:"API_KEY"`
 	Model       string `env:"MODEL" envDefault:"gpt-4o-mini"`
 	VisionModel string `env:"VISION_MODEL" envDefault:"gpt-4o-mini"`
 }
