@@ -13,9 +13,9 @@
 -- Extensions
 -- ============================================================================
 
--- Vector extension for embeddings (pgvector)
--- Note: ParadeDB includes pg_search pre-installed
-CREATE EXTENSION IF NOT EXISTS vector;
+-- Note: pgvector and ParadeDB extensions are optional
+-- Uncomment the following line if your PostgreSQL instance supports pgvector:
+-- CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ============================================================================
 -- Trigger Function
@@ -516,15 +516,13 @@ CREATE TRIGGER update_files_updated_at
 -- BM25 Full-Text Search Indexes (ParadeDB)
 -- ============================================================================
 
--- BM25 index on content table
--- https://docs.paradedb.com/documentation/indexing/create_index
-CREATE INDEX idx_content_bm25_search
-ON content
-USING bm25 (id, title, description, summary, content, metadata)
-WITH (key_field = 'id');
+-- BM25 indexes require ParadeDB. Uncomment if your PostgreSQL instance supports it:
+-- CREATE INDEX idx_content_bm25_search
+-- ON content
+-- USING bm25 (id, title, description, summary, content, metadata)
+-- WITH (key_field = 'id');
 
--- BM25 index on bookmark_content table
-CREATE INDEX idx_bookmark_content_bm25_search
-ON bookmark_content
-USING bm25(id, title, description, summary, content, metadata)
-WITH (key_field = 'id');
+-- CREATE INDEX idx_bookmark_content_bm25_search
+-- ON bookmark_content
+-- USING bm25(id, title, description, summary, content, metadata)
+-- WITH (key_field = 'id');
