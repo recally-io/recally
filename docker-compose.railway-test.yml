@@ -1,0 +1,37 @@
+services:
+  recally:
+    image: vaayne/recally:latest
+    ports:
+      - "13233:1323"
+    environment:
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=1323
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_DATABASE=railway
+      - JWT_SECRET=test-secret-for-local-railway-testing
+      - S3_ENABLED=false
+      - OPENAI_BASE_URL=https://api.openai.com/v1
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: railway
+    ports:
+      - "15433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pg-test-data:/var/lib/postgresql/data
+
+volumes:
+  pg-test-data:

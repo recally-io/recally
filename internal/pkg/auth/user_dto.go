@@ -24,15 +24,15 @@ type UserSettings struct {
 }
 
 type UserDTO struct {
-	ID        uuid.UUID    `json:"id"`
-	Username  string       `json:"username"`
-	Email     string       `json:"email"`
-	Phone     string       `json:"phone"`
-	Password  string       `json:"password"`
-	Status    string       `json:"status"`
-	Settings  UserSettings `json:"settings"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"updated_at"`
+	ID                  uuid.UUID    `json:"id"`
+	Username            string       `json:"username"`
+	Email               string       `json:"email"`
+	Phone               string       `json:"phone"`
+	Password            string       `json:"password"`
+	Status              string       `json:"status"`
+	Settings            UserSettings `json:"settings"`
+	CreatedAt           time.Time    `json:"created_at"`
+	UpdatedAt           time.Time    `json:"updated_at"`
 }
 
 func (t *UserDTO) Load(d *db.User) {
@@ -57,12 +57,12 @@ func (t *UserDTO) Dump() *db.User {
 	settings, _ := json.Marshal(t.Settings)
 
 	return &db.User{
-		Uuid:         t.ID,
-		Username:     pgtype.Text{String: t.Username, Valid: t.Username != ""},
-		Email:        pgtype.Text{String: t.Email, Valid: t.Email != ""},
-		Phone:        pgtype.Text{String: t.Phone, Valid: t.Phone != ""},
-		PasswordHash: pgtype.Text{String: t.Password, Valid: t.Password != ""},
-		Status:       t.Status,
-		Settings:     settings,
+		Uuid:                t.ID,
+		Username:            pgtype.Text{String: t.Username, Valid: t.Username != ""},
+		Email:               pgtype.Text{String: t.Email, Valid: t.Email != ""},
+		Phone:               pgtype.Text{String: t.Phone, Valid: t.Phone != ""},
+		PasswordHash:        pgtype.Text{String: t.Password, Valid: t.Password != ""},
+		Status:              t.Status,
+		Settings:            settings,
 	}
 }
