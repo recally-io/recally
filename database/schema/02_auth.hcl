@@ -95,7 +95,7 @@ table "users" {
   }
 
   check "users_email_check" {
-    expr = "email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'"
+    expr = "email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$'"
   }
 
   check "users_contact_check" {

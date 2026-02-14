@@ -349,7 +349,7 @@ ALTER TABLE "files" ADD CONSTRAINT "files_user_id_fkey" FOREIGN KEY ("user_id") 
 -- ============================================================================
 
 -- users
-ALTER TABLE "users" ADD CONSTRAINT "users_email_check" CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$');
+ALTER TABLE "users" ADD CONSTRAINT "users_email_check" CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$');
 ALTER TABLE "users" ADD CONSTRAINT "users_contact_check" CHECK (email IS NOT NULL OR phone IS NOT NULL OR username IS NOT NULL);
 
 -- auth_api_keys
