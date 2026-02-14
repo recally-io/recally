@@ -11,7 +11,7 @@ By accessing or using the Service, whether through the cloud version or self-hos
 
 **2. Description of Service**
 
-Recally is an AI-powered memory assistant designed to help you capture, organize, and rediscover digital content. The Service allows you to save content from the web, documents, and other sources, and provides AI-driven features such as summarization, tagging, and search to enhance your knowledge management.
+Recally is an AI-powered bookmark manager designed to help you capture, organize, and rediscover digital content. The Service allows you to save content from the web, documents, and other sources, and provides AI-driven features such as summarization, tagging, and search to enhance your knowledge management.
 
 We offer both a cloud-based version of the Service accessible through [recally.io](https://recally.io) and a self-hosted option for Users who prefer to manage their own data and infrastructure.  Features and functionality may vary between these options.
 

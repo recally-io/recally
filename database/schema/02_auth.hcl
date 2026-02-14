@@ -36,16 +36,6 @@ table "users" {
     type = varchar(50)
   }
 
-  column "activate_assistant_id" {
-    null = true
-    type = uuid
-  }
-
-  column "activate_thread_id" {
-    null = true
-    type = uuid
-  }
-
   column "status" {
     null    = false
     type    = varchar(255)

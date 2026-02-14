@@ -1,6 +1,6 @@
 -- name: CreateUser :one
-INSERT INTO users (username, email, phone, password_hash, activate_assistant_id, activate_thread_id, status, settings)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO users (username, email, phone, password_hash, status, settings)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetUserById :one
@@ -17,7 +17,7 @@ SELECT * FROM users WHERE username = $1;
 
 -- name: UpdateUserById :one
 UPDATE users SET username = $2, email = $3, phone = $4, password_hash = $5,
-  activate_assistant_id=$6, activate_thread_id=$7, status = $8, settings = $9
+  status = $6, settings = $7
 WHERE uuid = $1
 RETURNING *;
 

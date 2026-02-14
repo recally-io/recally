@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"recally/internal/core/assistants"
 	"recally/internal/core/bookmarks"
 	"recally/internal/core/queue"
 	"recally/internal/pkg/auth"
@@ -16,9 +15,8 @@ type Handler struct {
 	cache cache.Cache
 	queue *queue.Queue
 
-	authService      *auth.Service
-	assistantService *assistants.Service
-	bookmarkService  *bookmarks.Service
+	authService     *auth.Service
+	bookmarkService *bookmarks.Service
 }
 
 func New(pool *db.Pool, llm *llms.LLM, queue *queue.Queue, opts ...Option) *Handler {
@@ -27,9 +25,8 @@ func New(pool *db.Pool, llm *llms.LLM, queue *queue.Queue, opts ...Option) *Hand
 		llm:              llm,
 		cache:            cache.MemCache,
 		queue:            queue,
-		authService:      auth.New(),
-		assistantService: assistants.NewService(llm, queue),
-		bookmarkService:  bookmarks.NewService(llm),
+		authService:     auth.New(),
+		bookmarkService: bookmarks.NewService(llm),
 	}
 	for _, opt := range opts {
 		opt(h)

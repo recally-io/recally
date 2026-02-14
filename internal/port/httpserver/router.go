@@ -6,10 +6,7 @@ import (
 	"recally/docs"
 	"recally/web"
 
-	_ "recally/docs/swagger"
-
 	"github.com/labstack/echo/v4"
-	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 //	@title			Recally API
@@ -27,7 +24,6 @@ func (s *Service) registerRouters() {
 	v1Api := e.Group("/api/v1")
 
 	registerAuthHandlers(v1Api)
-	registerAssistantHandlers(v1Api, s)
 	registerFileHandlers(v1Api, s)
 	registerBookmarkHandlers(v1Api, s)
 	registerBookmarkShareHandlers(v1Api, s)
@@ -46,9 +42,6 @@ func (s *Service) registerRouters() {
 
 		return JsonResponse(c, http.StatusOK, routes)
 	})
-
-	// Swagger
-	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Docs
 	e.GET("/docs/*", func(c echo.Context) error {

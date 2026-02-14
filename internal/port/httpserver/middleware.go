@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -36,11 +35,6 @@ func (s *Service) registerMiddlewares() {
 	e.Use(middleware.CORS())
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Skipper: func(c echo.Context) bool {
-			// skip for path like POST /api/v1/assistants/:assistant-id/threads/:thread-id/messages
-			if strings.HasPrefix(c.Path(), "/api/v1/assistants/") && strings.HasSuffix(c.Path(), "/messages") && c.Request().Method == http.MethodPost {
-				return true
-			}
-
 			return false
 		},
 		ErrorMessage: "custom timeout error message returns to client",
