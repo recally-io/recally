@@ -26,7 +26,8 @@ jobs:
     environment: ${{ inputs.environment }}
 
     env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: e54b6741-f790-47de-8147-adad987afe54
       RAILWAY_ENVIRONMENT: ${{ inputs.environment }}
       RAILWAY_SERVICE: ${{ inputs.service }}
 
@@ -39,6 +40,13 @@ jobs:
 
       - name: Verify Railway auth
         run: railway whoami
+
+      - name: Link Railway project
+        run: |
+          railway link \
+            --project "$RAILWAY_PROJECT_ID" \
+            --environment "$RAILWAY_ENVIRONMENT" \
+            --service "$RAILWAY_SERVICE"
 
       - name: Deploy to Railway
         run: |
