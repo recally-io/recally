@@ -1,8 +1,6 @@
 module recally
 
-go 1.24.6
-
-toolchain go1.24.7
+go 1.25.0
 
 require (
 	ariga.io/atlas-go-sdk v0.7.2
@@ -16,7 +14,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/invopop/jsonschema v0.12.0
-	github.com/jackc/pgx/v5 v5.7.2
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/minio/minio-go/v7 v7.0.82
