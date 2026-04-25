@@ -48,7 +48,7 @@ WORKDIR /go/src/app
 # Install Atlas CLI and other tools
 RUN apk add --no-cache curl && \
     curl -sSf https://atlasgo.sh | sh -s -- --yes && \
-    go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
+    go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.29.0 && \
     go install github.com/swaggo/swag/cmd/swag@latest
 
 COPY go.mod go.sum ./
