@@ -44,5 +44,4 @@ jobs:
         run: |
           railway up \
             --service "$RAILWAY_SERVICE" \
-            --environment "$RAILWAY_ENVIRONMENT" \
-            --ci
+            --environment "$RAILWAY_ENVIRONMENT"
