@@ -1,8 +1,6 @@
 name: Deploy to Railway
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -19,18 +17,18 @@ on:
         default: 'recally-web'
 
 concurrency:
-  group: railway-${{ github.event.inputs.environment || 'dev' }}
+  group: railway-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
+    environment: ${{ inputs.environment }}
 
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
-      RAILWAY_SERVICE: ${{ github.event.inputs.service || 'recally-web' }}
+      RAILWAY_ENVIRONMENT: ${{ inputs.environment }}
+      RAILWAY_SERVICE: ${{ inputs.service }}
 
     steps:
       - name: Checkout repository
