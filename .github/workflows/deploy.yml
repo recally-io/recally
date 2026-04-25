@@ -1,39 +1,47 @@
-name: Deploy to Dokploy
+name: Deploy to Railway
 
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Docker image tag to deploy'
+      environment:
+        description: 'Railway environment to deploy to'
         required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - production
+      service:
+        description: 'Railway service name'
+        required: true
+        default: 'recally-web'
+
+concurrency:
+  group: railway-${{ inputs.environment }}
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ inputs.environment }}
 
     env:
-      DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
-      DOKPLOY_HOST: ${{ secrets.DOKPLOY_HOST }}
-      DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_ENVIRONMENT: ${{ inputs.environment }}
+      RAILWAY_SERVICE: ${{ inputs.service }}
 
     steps:
-      - name: Update Docker Provider
-        run: |
-          curl -X POST "${{ env.DOKPLOY_HOST }}/api/application.saveDockerProvider" \
-          -H "Authorization: Bearer ${{ env.DOKPLOY_API_KEY }}" \
-          -H "Content-Type: application/json" \
-          -d '{
-            "dockerImage": "ghcr.io/recally-io/recally:${{ github.event.inputs.tag }}",
-            "applicationId": "${{ env.DOKPLOY_APP_ID }}"
-          }'
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Trigger Deployment
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Verify Railway auth
+        run: railway whoami
+
+      - name: Deploy to Railway
         run: |
-          curl -X POST "${{ env.DOKPLOY_HOST }}/api/application.deploy" \
-          -H "Authorization: Bearer ${{ env.DOKPLOY_API_KEY }}" \
-          -H "Content-Type: application/json" \
-          -H "accept: application/json" \
-          -d '{
-            "applicationId": "${{ env.DOKPLOY_APP_ID }}"
-          }'
+          railway up \
+            --service "$RAILWAY_SERVICE" \
+            --environment "$RAILWAY_ENVIRONMENT"
