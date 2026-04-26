@@ -34,6 +34,11 @@ jobs:
 
       - name: Verify Railway token is configured
         run: |
+          echo "RAILWAY_API_TOKEN length: ${#RAILWAY_API_TOKEN}"
+          echo "RAILWAY_TOKEN length: ${#RAILWAY_TOKEN}"
+          echo "RAILWAY_SERVICE: $RAILWAY_SERVICE"
+          echo "RAILWAY_ENVIRONMENT: $RAILWAY_ENVIRONMENT"
+          railway --version
           if [ -z "$RAILWAY_API_TOKEN" ] && [ -z "$RAILWAY_TOKEN" ]; then
             echo "::error::Neither RAILWAY_API_TOKEN nor RAILWAY_TOKEN is set in the 'production' environment secrets."
             exit 1
@@ -44,6 +49,7 @@ jobs:
 
       - name: Deploy to Railway
         run: |
+          set -x
           railway up \
             --service "$RAILWAY_SERVICE" \
             --environment "$RAILWAY_ENVIRONMENT" \
