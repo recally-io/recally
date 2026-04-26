@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -91,6 +92,16 @@ func (l *LLM) ListModels(ctx context.Context) ([]Model, error) {
 				ID:   m.ID,
 				Name: m.ID,
 			})
+		}
+
+		if envModel := os.Getenv("OPENAI_MODEL"); envModel != "" {
+			seen := make(map[string]bool, len(data))
+			for _, m := range data {
+				seen[m.ID] = true
+			}
+			if !seen[envModel] {
+				data = append([]Model{{ID: envModel, Name: envModel}}, data...)
+			}
 		}
 
 		return &data, nil

@@ -3,11 +3,12 @@ package llms
 import (
 	"context"
 
+	"recally/internal/pkg/config"
+
 	"github.com/sashabaranov/go-openai"
 )
 
 const (
-	defaultModel     = OpenAIGPT4oMini
 	ToolTypeFunction = "function"
 )
 
@@ -77,7 +78,7 @@ type Options struct {
 
 func (o Options) ToChatCompletionRequest() openai.ChatCompletionRequest {
 	if o.Model == "" {
-		o.Model = defaultModel
+		o.Model = config.Settings.OpenAI.Model
 	}
 
 	return openai.ChatCompletionRequest{
