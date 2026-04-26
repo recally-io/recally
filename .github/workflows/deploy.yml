@@ -6,7 +6,7 @@ on:
       service:
         description: 'Railway service name'
         required: true
-        default: 'recally-web'
+        default: 'recally'
 
 concurrency:
   group: railway-production
