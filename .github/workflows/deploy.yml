@@ -44,4 +44,5 @@ jobs:
         run: |
           railway up \
             --service "$RAILWAY_SERVICE" \
-            --environment "$RAILWAY_ENVIRONMENT"
+            --environment "$RAILWAY_ENVIRONMENT" \
+            --detach
