@@ -3,31 +3,24 @@ name: Deploy to Railway
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Railway environment to deploy to'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - production
       service:
         description: 'Railway service name'
         required: true
-        default: 'recally-web'
+        default: 'recally'
 
 concurrency:
-  group: railway-${{ inputs.environment }}
+  group: railway-production
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: production
 
     env:
+      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_ENVIRONMENT: ${{ inputs.environment }}
+      RAILWAY_ENVIRONMENT: production
       RAILWAY_SERVICE: ${{ inputs.service }}
 
     steps:
@@ -37,8 +30,15 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Verify Railway auth
-        run: railway whoami
+      - name: Verify Railway token is configured
+        run: |
+          if [ -z "$RAILWAY_API_TOKEN" ] && [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::Neither RAILWAY_API_TOKEN nor RAILWAY_TOKEN is set in the 'production' environment secrets."
+            exit 1
+          fi
+          if [ -n "$RAILWAY_API_TOKEN" ]; then
+            railway whoami
+          fi
 
       - name: Deploy to Railway
         run: |
