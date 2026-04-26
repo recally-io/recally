@@ -1,6 +1,8 @@
 name: Deploy to Railway
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       service:
@@ -21,7 +23,7 @@ jobs:
       RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       RAILWAY_ENVIRONMENT: production
-      RAILWAY_SERVICE: ${{ inputs.service }}
+      RAILWAY_SERVICE: ${{ inputs.service || 'recally-web' }}
 
     steps:
       - name: Checkout repository
