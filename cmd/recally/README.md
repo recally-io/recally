@@ -16,7 +16,7 @@ A standalone command-line tool for saving web articles as markdown files with fu
 ### From Source
 
 **Prerequisites:**
-- [Go 1.24+](https://go.dev/dl/)
+- [Go 1.25+](https://go.dev/dl/)
 - [mise](https://mise.jit.su/) (recommended for development)
 
 **Using mise (recommended):**
