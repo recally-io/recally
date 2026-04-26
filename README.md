@@ -89,7 +89,7 @@ Access at `http://localhost:1323`
 
 ### Tech Stack
 **Backend**
-[![Go](https://img.shields.io/badge/Go-1.24.6-00ADD8?logo=go)](https://go.dev/)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev/)
 [![Echo](https://img.shields.io/badge/Echo-v4.11-blue)](https://echo.labstack.com/)
 [![ParadeDB](https://img.shields.io/badge/ParadeDB-1.0-orange)](https://www.paradedb.com/)
 
