@@ -3,11 +3,11 @@
 # ============================================
 [tools]
 # Core runtimes
-go = "1.24"  # From go.mod
+go = "1.25"  # From go.mod
 bun = "1.3"
 # Go development tools
 "ubi:sqlc-dev/sqlc" = "1.29.0"
-"ubi:golangci/golangci-lint" = "2.2"
+"ubi:golangci/golangci-lint" = "2.11"
 "ubi:swaggo/swag" = "1.16.5"
 # Database tools
 atlas = "0.36.0"
