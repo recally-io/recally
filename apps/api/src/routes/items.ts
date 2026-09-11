@@ -251,8 +251,11 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     const item = await getItem(c.env.DB, auth.libraryId, c.req.param("id"));
     if (!item) throw new AppError("not_found", "item not found");
     const snapshots = await c.env.DB.prepare(
-      `SELECT id, captured_at, capture_method, content_quality, resource_quality, final_url
-       FROM snapshots WHERE item_id = ? AND library_id = ? ORDER BY captured_at DESC`,
+      `SELECT s.id, s.captured_at, s.capture_method, s.content_quality, s.resource_quality,
+              s.final_url, cr.id AS content_revision_id
+       FROM snapshots s
+       LEFT JOIN content_revisions cr ON cr.snapshot_id = s.id
+       WHERE s.item_id = ? AND s.library_id = ? ORDER BY s.captured_at DESC`,
     )
       .bind(item.id, auth.libraryId)
       .all();

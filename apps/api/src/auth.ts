@@ -1,6 +1,6 @@
 import type { TokenScope } from "@recally/contracts";
 import { AppError, sha256Hex } from "@recally/domain";
-import { getLibrary, getLibraryByAccessSub } from "@recally/storage";
+import { createLibrary, getLibrary, getLibraryByAccessSub } from "@recally/storage";
 import { createMiddleware } from "hono/factory";
 
 // Identity resolution order: scoped API token > Cloudflare Access JWT > dev
@@ -10,6 +10,7 @@ import { createMiddleware } from "hono/factory";
 export interface AuthContext {
   libraryId: string;
   actor: string; // token id or access subject
+  email: string | null;
   scopes: TokenScope[] | "access"; // "access" = full UI session
   via: "token" | "access" | "dev";
 }
@@ -22,6 +23,7 @@ declare module "hono" {
 
 interface AuthEnv {
   DB: D1Database;
+  ENVIRONMENT?: string;
   DEV_LIBRARY_ID?: string;
   ACCESS_TEAM_NAME?: string;
   ACCESS_AUD?: string;
@@ -52,6 +54,7 @@ async function authByToken(env: AuthEnv, raw: string): Promise<AuthContext | nul
   return {
     libraryId: row.library_id,
     actor: row.id,
+    email: null,
     scopes: JSON.parse(row.scopes) as TokenScope[],
     via: "token",
   };
@@ -95,7 +98,10 @@ function b64url(s: string): Uint8Array {
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
 
-async function verifyAccessJwt(env: AuthEnv, jwt: string): Promise<{ sub: string } | null> {
+async function verifyAccessJwt(
+  env: AuthEnv,
+  jwt: string,
+): Promise<{ sub: string; email: string | null } | null> {
   if (!env.ACCESS_TEAM_NAME || !env.ACCESS_AUD) return null;
   const [h, p, s] = jwt.split(".");
   if (!h || !p || !s) return null;
@@ -119,6 +125,7 @@ async function verifyAccessJwt(env: AuthEnv, jwt: string): Promise<{ sub: string
 
   const claims = JSON.parse(new TextDecoder().decode(b64url(p))) as {
     sub?: string;
+    email?: string;
     iss?: string;
     aud?: string | string[];
     exp?: number;
@@ -127,7 +134,7 @@ async function verifyAccessJwt(env: AuthEnv, jwt: string): Promise<{ sub: string
   if (claims.iss !== `https://${env.ACCESS_TEAM_NAME}.cloudflareaccess.com`) return null;
   const aud = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
   if (!aud.includes(env.ACCESS_AUD)) return null;
-  return { sub: claims.sub };
+  return { sub: claims.sub, email: claims.email ?? null };
 }
 
 async function authByAccess(env: AuthEnv, req: Request): Promise<AuthContext | null> {
@@ -137,11 +144,17 @@ async function authByAccess(env: AuthEnv, req: Request): Promise<AuthContext | n
   if (!jwt) return null;
   const verified = await verifyAccessJwt(env, jwt);
   if (!verified) return null;
-  const lib = await getLibraryByAccessSub(env.DB, verified.sub);
-  if (!lib) return null;
+  // First verified Access login = signup: provision a library on the spot.
+  const lib =
+    (await getLibraryByAccessSub(env.DB, verified.sub)) ??
+    (await createLibrary(env.DB, {
+      name: verified.email ?? verified.sub,
+      accessSub: verified.sub,
+    }));
   return {
     libraryId: lib.id,
     actor: verified.sub,
+    email: verified.email,
     scopes: "access",
     via: "access",
   };
@@ -158,12 +171,15 @@ export const requireAuth = createMiddleware<{ Bindings: AuthEnv }>(async (c, nex
   }
   auth ??= await authByAccess(c.env, c.req.raw);
 
-  if (!auth && c.env.DEV_LIBRARY_ID) {
+  // Dev bypass is inert on the production deployment — without it, recally.io
+  // would hand the dev library to anyone who hits the API unauthenticated.
+  if (!auth && c.env.DEV_LIBRARY_ID && c.env.ENVIRONMENT !== "production") {
     const lib = await getLibrary(c.env.DB, c.env.DEV_LIBRARY_ID);
     if (lib) {
       auth = {
         libraryId: lib.id,
         actor: "dev",
+        email: null,
         scopes: "access",
         via: "dev",
       };

@@ -17,6 +17,19 @@ interface Env {
 }
 
 export const jobsRoutes = new Hono<{ Bindings: Env }>()
+  .get("/", async (c) => {
+    const auth = c.get("auth") as AuthContext;
+    requireScope(auth, "items:read");
+    const { results } = await c.env.DB.prepare(
+      `SELECT j.id, j.kind, j.status, j.item_id, j.attempt_count, j.error,
+              j.created_at, j.updated_at, i.title AS item_title
+       FROM jobs j LEFT JOIN items i ON i.id = j.item_id
+       WHERE j.library_id = ? ORDER BY j.created_at DESC LIMIT 50`,
+    )
+      .bind(auth.libraryId)
+      .all();
+    return c.json({ jobs: results });
+  })
   .get("/:id", async (c) => {
     const auth = c.get("auth") as AuthContext;
     requireScope(auth, "items:read");

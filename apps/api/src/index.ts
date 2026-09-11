@@ -1,7 +1,7 @@
 import { newId, toErrorResponse } from "@recally/domain";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { requireAuth } from "./auth";
+import { type AuthContext, requireAuth } from "./auth";
 import { itemsRoutes } from "./routes/items";
 import {
   adminRoutes,
@@ -34,6 +34,20 @@ api.route("/", contentRoutes);
 api.route("/", adminRoutes);
 
 api.get("/health", (c) => c.json({ ok: true }));
+
+api.get("/me", async (c) => {
+  const auth = c.get("auth") as AuthContext;
+  const lib = await c.env.DB.prepare("SELECT name FROM libraries WHERE id = ?")
+    .bind(auth.libraryId)
+    .first<{ name: string }>();
+  return c.json({
+    library_id: auth.libraryId,
+    library_name: lib?.name ?? "",
+    actor: auth.actor,
+    email: auth.email,
+    via: auth.via,
+  });
+});
 
 app.route("/api/v1", api);
 
