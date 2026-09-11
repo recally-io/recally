@@ -1,0 +1,26 @@
+{
+  "name": "@recally/agent-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "0.85.1",
+    "@earendil-works/pi-ai": "0.85.1",
+    "@recally/capture": "workspace:*",
+    "@recally/contracts": "workspace:*",
+    "@recally/domain": "workspace:*",
+    "typebox": "^1.0.0",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20251014.0",
+    "typescript": "5.9.3"
+  }
+}

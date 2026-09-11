@@ -1,0 +1,66 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "recally-jobs",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Skill markdown bundles as text modules.
+  "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "recally-db",
+      "database_id": "REPLACE_ME",
+      "migrations_dir": "../../migrations"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "ARCHIVE_BUCKET", "bucket_name": "recally-archive" },
+    { "binding": "BACKUP_BUCKET", "bucket_name": "recally-backup" }
+  ],
+  "vectorize": [{ "binding": "VECTOR_INDEX", "index_name": "recally-chunks" }],
+  "ai": { "binding": "AI" },
+  "browser": { "binding": "BROWSER" },
+  // Self-bindings: the api worker dispatches into these classes; the cron here
+  // also uses them for outbox catch-up.
+  "workflows": [
+    {
+      "name": "recally-ingest",
+      "binding": "INGEST_WORKFLOW",
+      "class_name": "IngestWorkflow"
+    },
+    {
+      "name": "recally-enrich",
+      "binding": "ENRICH_WORKFLOW",
+      "class_name": "EnrichWorkflow"
+    },
+    {
+      "name": "recally-index",
+      "binding": "INDEX_WORKFLOW",
+      "class_name": "IndexWorkflow"
+    },
+    {
+      "name": "recally-digest",
+      "binding": "DIGEST_WORKFLOW",
+      "class_name": "DigestWorkflow"
+    },
+    {
+      "name": "recally-export",
+      "binding": "EXPORT_WORKFLOW",
+      "class_name": "ExportWorkflow"
+    },
+    {
+      "name": "recally-purge",
+      "binding": "PURGE_WORKFLOW",
+      "class_name": "PurgeWorkflow"
+    }
+  ],
+  "triggers": { "crons": ["* * * * *"] },
+  "vars": {
+    "ENVIRONMENT": "dev"
+    // Model roles pinned via vars (§10.1); override per environment.
+    // "CAPTURE_MODEL": "@cf/qwen/qwen3-30b-a3b-fp8",
+    // "AI_GATEWAY_NAME": "recally-gateway",
+    // "CLOUDFLARE_ACCOUNT_ID": "...",
+  }
+}

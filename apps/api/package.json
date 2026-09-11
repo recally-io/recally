@@ -1,0 +1,26 @@
+{
+  "name": "@recally/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@recally/ai": "workspace:*",
+    "@recally/contracts": "workspace:*",
+    "@recally/domain": "workspace:*",
+    "@recally/search": "workspace:*",
+    "@recally/skills": "workspace:*",
+    "@recally/storage": "workspace:*",
+    "hono": "^4.9.4",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250909.0",
+    "wrangler": "^4.34.0"
+  }
+}

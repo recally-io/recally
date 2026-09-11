@@ -1,355 +1,133 @@
 # ============================================
-# TOOLS - Pinned versions for reproducibility
+# TOOLS
 # ============================================
 [tools]
-# Core runtimes
-go = "1.25"  # From go.mod
-bun = "1.3"
-# Go development tools
-"ubi:sqlc-dev/sqlc" = "1.29.0"
-"ubi:golangci/golangci-lint" = "2.11"
-"ubi:swaggo/swag" = "1.16.5"
-# Database tools
-atlas = "0.36.0"
+node = "24"
+pnpm = "12"
+wrangler = "4"
 
 # ============================================
-# ENVIRONMENT VARIABLES
+# ENVIRONMENT
 # ============================================
 [env]
-# Database configuration (non-sensitive defaults)
-DB_HOST = "localhost"
-DB_PORT = "15432"
-DB_NAME = "recally"
-DB_USER = "postgres"
-DB_PASSWORD = "postgres"  # Default for development, override in .env
-
-# Load from .env file to override defaults (for secrets like DB_PASSWORD, API keys)
 _.file = [".env"]
 
-# Construct DATABASE_URL from components (after .env is loaded)
-DATABASE_URL = "postgresql://{{env.DB_USER}}:{{env.DB_PASSWORD}}@{{env.DB_HOST}}:{{env.DB_PORT}}/{{env.DB_NAME}}?sslmode=disable"
+# ============================================
+# DEVELOPMENT
+# ============================================
+[tasks."dev:api"]
+description = "Run App Worker locally (wrangler dev)"
+dir = "apps/api"
+run = "wrangler dev"
+
+[tasks."dev:jobs"]
+description = "Run Jobs Worker locally (wrangler dev)"
+dir = "apps/jobs"
+run = "wrangler dev"
+
+[tasks."dev:ui"]
+description = "Run web dev server (vite)"
+dir = "apps/web"
+run = "pnpm dev"
+alias = "dev-ui"
 
 # ============================================
-# LINTING TASKS
+# CODE QUALITY
 # ============================================
 [tasks."lint"]
-description = "Lint Go code and frontend"
-depends = ["lint:ui", "lint:go"]
+description = "Lint and format check (biome)"
+run = "pnpm lint"
 
-[tasks."lint:go"]
-description = "Lint Go code with golangci-lint"
-run = [
-  "go mod tidy",
-  "golangci-lint run --fix ./...",
-  # https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/modernize#hdr-Analyzer_modernize
-  "go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...",
-  "swag fmt"
-]
+[tasks."lint:fix"]
+description = "Lint and auto-fix (biome)"
+run = "pnpm lint:fix"
 
-[tasks."lint:ui"]
-description = "Lint frontend code with Biome"
-dir = "web"
-run = "bun run lint"
+[tasks."typecheck"]
+description = "Typecheck all workspaces"
+run = "pnpm typecheck"
+
+[tasks."test"]
+description = "Run unit tests (vitest)"
+run = "pnpm test"
 
 # ============================================
-# CODE GENERATION TASKS
-# ============================================
-[tasks."generate"]
-description = "Generate all code (Go + SQL + Swagger)"
-depends = ["generate:go", "generate:sql", "generate:spec"]
-
-[tasks."generate:go"]
-description = "Generate Go code"
-run = "go generate ./..."
-
-[tasks."generate:sql"]
-description = "Generate Go code from SQL using SQLC"
-run = "sqlc generate"
-
-[tasks."generate:spec"]
-description = "Generate Swagger API documentation"
-run = "swag init -g internal/port/httpserver/router.go -o docs/swagger"
-
-# ============================================
-# BUILD TASKS
+# BUILD
 # ============================================
 [tasks."build"]
-description = "Build everything (UI + Docs + Go)"
-depends = ["build:ui", "build:docs", "build:go"]
-
-[tasks."build:go"]
-description = "Build Go backend binary"
-depends = ["generate"]
-run = "go build -o bin/app main.go"
-
-[tasks."build:docs"]
-description = "Build documentation site"
-dir = "docs"
-run = "bun run docs:build"
-
-[tasks."build:ui"]
-description = "Build frontend for production"
-dir = "web"
-run = "bun run build"
-
-[tasks."build:cli"]
-description = "Build Recally CLI tool with version injection"
-run = '''
-#!/usr/bin/env bash
-set -e
-
-# Determine version from git
-VERSION=$(git describe --tags --always --dirty 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "dev")
-
-echo "🔧 Building recally CLI (version: $VERSION)..."
-
-# Build with version injection and size optimization
-go build \
-  -ldflags="-s -w -X main.version=$VERSION" \
-  -o bin/recally \
-  cmd/recally/*.go
-
-echo "✅ Built: bin/recally"
-
-# Show binary info
-if [ -f bin/recally ]; then
-  SIZE=$(du -h bin/recally | cut -f1)
-  echo "📦 Binary size: $SIZE"
-fi
-'''
-
-[tasks."build:cli:cross"]
-description = "Build Recally CLI for multiple platforms (Linux, macOS)"
-run = '''
-#!/usr/bin/env bash
-set -e
-
-# Determine version from git
-VERSION=$(git describe --tags --always --dirty 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "dev")
-
-echo "🔧 Building recally CLI for multiple platforms (version: $VERSION)..."
-
-# Create bin directory if it doesn't exist
-mkdir -p bin
-
-# Build for each platform
-# NOTE: Windows build currently not supported due to platform-specific syscalls (syscall.Statfs)
-# See cmd/recally/writer.go for disk space checking implementation
-PLATFORMS=(
-  "linux/amd64"
-  "linux/arm64"
-  "darwin/amd64"
-  "darwin/arm64"
-)
-
-for PLATFORM in "${PLATFORMS[@]}"; do
-  GOOS=${PLATFORM%/*}
-  GOARCH=${PLATFORM#*/}
-  OUTPUT="bin/recally-${GOOS}-${GOARCH}"
-  
-  echo "  Building for ${GOOS}/${GOARCH}..."
-  GOOS=$GOOS GOARCH=$GOARCH go build \
-    -ldflags="-s -w -X main.version=$VERSION" \
-    -o "$OUTPUT" \
-    cmd/recally/*.go
-  
-  if [ -f "$OUTPUT" ]; then
-    SIZE=$(du -h "$OUTPUT" | cut -f1)
-    echo "    ✅ ${OUTPUT} (${SIZE})"
-  fi
-done
-
-echo "✅ Cross-platform build complete!"
-echo "ℹ️  Note: Windows builds not included (requires platform-specific disk space implementation)"
-'''
+description = "Build all workspaces"
+run = "pnpm build"
 
 # ============================================
-# TEST TASKS
+# DATABASE (D1)
 # ============================================
-[tasks."test"]
-description = "Run Go tests"
-run = "go test ./..."
-
-# ============================================
-# DEVELOPMENT TASKS
-# ============================================
-[tasks."run"]
-description = "Build and run full application"
-depends = ["build"]
-run = "./bin/app"
-
-[tasks."run:go"]
-description = "Build and run backend with DEBUG_UI=true"
-depends = ["build:go"]
-env = { DEBUG_UI = "true" }
-run = "./bin/app"
-alias = "run-go"
-
-[tasks."run:ui"]
-description = "Run frontend development server"
-dir = "web"
-run = "bun run dev"
-alias = "run-ui"
-
-[tasks."dev:backend"]
-description = "Run backend with hot reload (no build)"
-env = { DEBUG_UI = "true" }
-run = "go run main.go"
-
-[tasks."dev:docs"]
-description = "Run documentation development server"
-dir = "docs"
-run = "bun run docs:dev"
-
-# ============================================
-# DATABASE TASKS
-# ============================================
-[tasks."db:up"]
-description = "Start PostgreSQL database"
-run = "docker compose up -d postgres"
-alias = "db-up"
-
 [tasks."migrate:new"]
-description = "Create new Atlas migration (usage: mise run migrate:new name=your_migration)"
-dir = "database"
-run = "atlas migrate diff {{arg(name='migration')}} --env local"
+description = "Create new D1 migration (usage: mise run migrate:new name=your_migration)"
+run = '''
+#!/usr/bin/env bash
+set -e
+name="{{arg(name='migration')}}"
+next=$(ls migrations/*.sql 2>/dev/null | sed 's|migrations/||; s|_.*||' | sort -n | tail -1)
+next=$(printf "%04d" $((10#${next:-0000} + 1)))
+file="migrations/${next}_${name}.sql"
+touch "$file"
+echo "Created $file"
+'''
 
-[tasks."migrate:up"]
-description = "Apply all pending Atlas migrations"
-dir = "database"
-run = "atlas migrate apply --env local --url \"$DATABASE_URL\""
+[tasks."migrate:local"]
+description = "Apply D1 migrations to local dev database"
+dir = "apps/api"
+run = "wrangler d1 migrations apply recally-dev --local"
 
 [tasks."migrate:status"]
-description = "Check Atlas migration status"
-dir = "database"
-run = "atlas migrate status --env local --url \"$DATABASE_URL\""
-
-[tasks."migrate:validate"]
-description = "Validate Atlas migrations"
-dir = "database"
-run = "atlas migrate validate --env local"
-
-[tasks."migrate:hash"]
-description = "Generate Atlas migration checksums"
-dir = "database"
-run = "atlas migrate hash"
-
-[tasks."migrate:down"]
-description = "Rollback last Atlas migration"
-dir = "database"
-run = "atlas migrate down --env local --url \"$DATABASE_URL\""
-
-[tasks."psql"]
-description = "Connect to PostgreSQL console via Docker"
-run = "docker compose exec postgres psql -U $DB_USER -d $DB_NAME"
+description = "Show local D1 migration status"
+dir = "apps/api"
+run = "wrangler d1 migrations list recally-dev --local"
 
 # ============================================
-# DOCKER TASKS
+# GENERATED TYPES
 # ============================================
-[tasks."docker:build"]
-description = "Build Docker images"
-run = "docker compose build"
-
-[tasks."docker:run"]
-description = "Run with docker compose (build + up)"
-run = "docker compose up --build"
-
-[tasks."docker:up"]
-description = "Start all services with docker compose (detached)"
-run = "docker compose up --build -d"
-
-[tasks."docker:down"]
-description = "Stop docker compose services"
-run = "docker compose down"
+[tasks."types"]
+description = "Regenerate worker-configuration.d.ts for app workers"
+run = "pnpm types"
 
 # ============================================
-# UTILITY TASKS
+# DEPLOY
 # ============================================
-[tasks."ngrok"]
-description = "Run ngrok tunnel to localhost (default: 1323)"
-run = "ngrok http ${PORT:-1323}"
+[tasks."deploy:jobs"]
+description = "Deploy Jobs Worker"
+dir = "apps/jobs"
+run = "wrangler deploy"
 
-[tasks."deploy"]
-description = "Deploy using dokploy"
-run = "dokploy app deploy"
+[tasks."deploy:api"]
+description = "Deploy App Worker (build web first)"
+depends = ["build:ui"]
+dir = "apps/api"
+run = "wrangler deploy"
 
-[tasks."help"]
-description = "Show available tasks"
-run = "mise tasks"
+[tasks."build:ui"]
+description = "Build web frontend"
+dir = "apps/web"
+run = "pnpm build"
 
+# ============================================
+# UTILITY
+# ============================================
 [tasks."setup"]
-description = "First-time project setup"
+description = "First-time setup: install deps, apply local migrations, generate types"
 run = '''
 #!/usr/bin/env bash
 set -e
-
-echo "🚀 Setting up Recally project..."
-
-# Check for .env file
-if [ ! -f .env ]; then
-  echo "⚠️  .env file not found. Please copy env.example to .env and configure it."
-  exit 1
-fi
-
-echo "📦 Installing Go dependencies..."
-go mod download || { echo "❌ Failed to download Go modules"; exit 1; }
-
-echo "📦 Installing frontend dependencies..."
-(cd web && bun install) || { echo "❌ Failed to install frontend deps"; exit 1; }
-
-echo "📦 Installing docs dependencies..."
-(cd docs && bun install) || { echo "❌ Failed to install docs deps"; exit 1; }
-
-echo "🐳 Starting database..."
-mise run db:up || { echo "❌ Failed to start database"; exit 1; }
-
-echo "⏳ Waiting for database to be ready..."
-until docker compose exec postgres pg_isready -U $DB_USER > /dev/null 2>&1; do
-  echo "  Waiting for PostgreSQL..."
-  sleep 1
-done
-echo "✅ Database is ready"
-
-echo "🗃️ Applying migrations..."
-mise run migrate:up || { echo "❌ Failed to apply migrations"; exit 1; }
-
-echo "🔧 Generating code..."
-mise run generate || { echo "❌ Failed to generate code"; exit 1; }
-
-echo "✅ Setup complete! Run 'mise run dev:backend' and 'mise run run:ui' to start developing."
+pnpm install
+pnpm types
+mise run migrate:local
+echo "Done. Run 'mise run dev:api' / 'dev:jobs' / 'dev:ui'."
 '''
 
 [tasks."doctor"]
-description = "Check tool versions and environment"
+description = "Check environment"
 run = '''
-echo "🔍 Recally Environment Check"
-echo "============================"
-mise --version
-echo ""
-echo "📦 Installed Tools:"
-mise list
-echo ""
-echo "🔧 Tool Versions:"
-go version
-bun --version
-atlas version
-sqlc version
-golangci-lint --version
-echo ""
-echo "🐳 Docker:"
-docker --version
-docker compose version
-echo ""
-echo "🗄️ Database:"
-docker compose ps postgres || echo "⚠️  Database not running (run: mise run db:up)"
-'''
-
-[tasks."clean"]
-description = "Clean build artifacts"
-run = '''
-rm -rf bin/
-rm -rf web/dist/
-rm -rf docs/.vitepress/dist/
-rm -rf coverage.out
-echo "✨ Cleaned build artifacts"
+echo "node: $(node --version)"
+echo "pnpm: $(pnpm --version)"
+echo "wrangler: $(wrangler --version)"
+wrangler whoami || true
 '''

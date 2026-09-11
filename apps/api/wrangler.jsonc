@@ -1,0 +1,37 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "recally-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "../web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "recally-dev",
+      "database_id": "00000000-0000-0000-0000-000000000000", // replace with real id for remote deploy
+      "migrations_dir": "../../migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "ARCHIVE_BUCKET", "bucket_name": "recally-archive-dev" }],
+  "vectorize": [{ "binding": "VECTOR_INDEX", "index_name": "recally-chunks-dev" }],
+  "ai": { "binding": "AI" },
+  // Workflow classes live in the Jobs Worker (plan §3.1); cross-script binding.
+  "workflows": [
+    {
+      "name": "ingest",
+      "binding": "INGEST_WORKFLOW",
+      "class_name": "IngestWorkflow",
+      "script_name": "recally-jobs"
+    }
+  ],
+  // Skill markdown bundles as text modules.
+  "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
+  "vars": {
+    "ENVIRONMENT": "dev"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@recally/jobs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@recally/agent-runtime": "workspace:*",
+    "@recally/ai": "workspace:*",
+    "@recally/capture": "workspace:*",
+    "@recally/contracts": "workspace:*",
+    "@recally/domain": "workspace:*",
+    "@recally/observability": "workspace:*",
+    "@recally/platform-cloudflare": "workspace:*",
+    "@recally/search": "workspace:*",
+    "@recally/site-adapters": "workspace:*",
+    "@recally/skills": "workspace:*",
+    "@recally/storage": "workspace:*",
+    "@recally/tools": "workspace:*",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251014.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.42.2"
+  }
+}

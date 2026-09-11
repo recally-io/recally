@@ -1,0 +1,21 @@
+# Copy to apps/api/.dev.vars and apps/jobs/.dev.vars for local dev.
+# Never commit real values.
+
+# Cloudflare Access (leave empty to use DEV_LIBRARY_ID auth bypass locally)
+ACCESS_TEAM_NAME=
+ACCESS_AUD=
+
+# Dev-only auth bypass: requests without credentials map to this library.
+# Must be empty in production.
+DEV_LIBRARY_ID=
+
+# Model roles (Workers AI model IDs)
+CAPTURE_MODEL=@cf/qwen/qwen3-30b-a3b-fp8
+VERIFY_MODEL=@cf/qwen/qwen3-30b-a3b-fp8
+SUMMARY_MODEL=@cf/qwen/qwen3-30b-a3b-fp8
+ANSWER_MODEL=@cf/qwen/qwen3-30b-a3b-fp8
+EMBEDDING_MODEL=@cf/baai/bge-m3
+
+# Pi → Workers AI transport (jobs worker). Gateway route needs no API token.
+AI_GATEWAY_NAME=
+CLOUDFLARE_ACCOUNT_ID=

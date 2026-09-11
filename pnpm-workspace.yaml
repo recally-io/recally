@@ -1,0 +1,13 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
+  - protobufjs
+allowBuilds:
+  '@google/genai': false
+  esbuild: true
+  protobufjs: true
+  workerd: true

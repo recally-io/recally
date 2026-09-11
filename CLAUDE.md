@@ -1,193 +1,65 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for agents working in this repository. The authoritative design is `docs/plan.md` (§ numbers below refer to it).
 
-## Project Overview
+## What this is
 
-Recally is an AI-powered memory assistant for digital content. It's a full-stack web application with:
-- Go backend using Echo framework
-- React frontend with TypeScript
-- PostgreSQL database with ParadeDB extensions for full-text search
-- Telegram bot integration
-- Browser extensions support
+Recally — a personal reading archive running entirely on Cloudflare. Users save URLs; a **Pi CaptureAgent** (skills + tools, not a fixed pipeline) decides per-URL whether to use `web_fetch`, a site adapter, or a Browser Run session; an **AnalysisAgent** then summarizes committed snapshots. See plan §1.2 for the governing principles — they are requirements, not suggestions:
 
-## Essential Commands
+- Skills encode strategy; tools expose capability; the agent owns orchestration.
+- Workflow is the durable supervisor, never the planner.
+- Model-generated text can never become the archived original (§7.1).
+- Every tool result is `UNTRUSTED_SOURCE` (§6.7, §14.3).
 
-### Development
-```bash
-# Full application with hot reload
-mise run dev:backend  # Backend (go run, hot reload)
-mise run run:ui       # Frontend dev server
+## Layout
 
-# Production-like run (with build)
-mise run run          # Build and run
-mise run run:go       # Build and run with DEBUG_UI=true
-
-# Database only
-mise run db:up
+```
+apps/
+  api/    App Worker (Hono). Auth, items/jobs/search/shares APIs, static web assets. No BROWSER binding.
+  jobs/   Jobs Worker. Pi runtime host, 6 Workflow classes, cron outbox dispatch. Owns BROWSER binding.
+  web/    React 19 + Vite + TanStack Router + Tailwind 4.
+packages/
+  domain/             ids, hashing, URL normalization, statuses, errors, budgets, versions
+  contracts/          zod schemas: API payloads + tool inputs
+  agent-runtime/      Pi wrapper (ToolSpec → AgentTool), per-turn durable loop contract
+  skills/             capture/SKILL.md + references, analyze/SKILL.md, revision loader
+  tools/              web-fetch/, site-registry/, browser/, archive/, read-source/, analysis/
+  site-adapters/      github, hackernews (+registry). Compiled-in only, never remote eval.
+  platform-cloudflare/  bindings: R2EvidenceStore, D1R2RunStore, ArchiveService, VectorIndex,
+                        BrowserSession, workflow dispatch, Pi/Workers-AI model wiring
+  storage/            D1 row types + queries + R2 key layout
+  ai/                 model roles, WorkersAIProvider (generate/embed), prompts, schemas
+  search/             CJK tokenizer, chunking, RRF, vector ids
+  observability/      usage reservation/settlement, audit events
+migrations/           D1 SQL migrations (manual, sequential numbering)
+evals/                capture fixtures/golden/strategy cases, analysis, search
+tests/                integration, fault-injection, security
+docs/                 plan.md, decisions/, runbooks/
 ```
 
-### Code Quality
+## Commands
+
 ```bash
-# Lint everything (Go + UI)
-mise run lint
-
-# Run tests
-mise run test
-
-# Generate code (SQL, Swagger)
-mise run generate
+pnpm install
+pnpm typecheck        # all packages
+pnpm test             # vitest
+pnpm lint             # biome
+cd apps/api && pnpm dev      # app worker (needs .dev.vars, D1 id)
+cd apps/jobs && pnpm dev     # jobs worker
+cd apps/web && pnpm dev      # vite dev server, proxies /api → :8787
 ```
 
-### Database Management
-```bash
-# Create new migration
-mise run migrate:new name=migration_name
+## Hard rules (from the plan, enforced in review)
 
-# Apply migrations
-mise run migrate:up
+- Tools never chain fetch→browser internally; `web_fetch` is one GET + extraction only (§6.2).
+- `propose_archive` is the only publish path; ArchiveService validates + commits (§5.10, §8.2).
+- Revision fencing: a run replays its pinned `agent_runtime_version + skill_revision + toolset_version` (§9.6). Bumping a skill never changes an in-flight run.
+- Item/`generation`/delete checks re-run before every external action and before commit (§9.7).
+- Vectorize hits must pass D1 permission/deletion/version checks before reaching the user (§11.4).
+- No tool ever gets: SQL, arbitrary JS eval, shell, cookie import, share/delete/budget authority (§6.8).
+- Adapters and skills are platform-neutral; only `platform-cloudflare` imports bindings (§3.5, ADR-06).
 
-# Check migration status
-mise run migrate:status
+## Known scaffold boundaries
 
-# Validate migrations
-mise run migrate:validate
-
-# Rollback last migration
-mise run migrate:down
-
-# Access PostgreSQL console
-mise run psql
-```
-
-### Building
-```bash
-# Build everything
-mise run build
-
-# Build Docker image
-mise run docker:build
-
-# Run with Docker Compose
-mise run docker:up
-```
-
-### Tool Management
-```bash
-# Install all tools defined in mise.toml
-mise install
-
-# List installed tools
-mise list
-
-# See all available tasks
-mise tasks
-
-# Check environment health
-mise run doctor
-```
-
-## Architecture Overview
-
-### Backend Structure (`/internal/`)
-- **core/**: Business logic
-  - `assistants/`: AI assistant functionality with conversation management
-  - `bookmarks/`: Content processing, embedding, and search
-  - `files/`: File storage and retrieval
-  - `queue/`: Background jobs (crawling, embedding, summarization)
-
-- **pkg/**: Shared packages
-  - `auth/`: JWT, OAuth, API key authentication
-  - `cache/`: Two-tier caching (DB + memory)
-  - `db/`: Database layer using SQLC for type-safe queries
-  - `llms/`: LLM integrations (OpenAI, Ollama)
-  - `rag/`: RAG implementation for semantic search
-  - `webreader/`: Web scraping and content extraction
-
-- **port/**: External interfaces
-  - `httpserver/`: REST API with Echo framework
-  - `bots/`: Telegram bot implementation
-
-### Frontend Structure (`/web/`)
-- Uses React 18 with TypeScript
-- TanStack Router for routing
-- SWR for data fetching
-- Tailwind CSS for styling
-- PWA support with service workers
-
-### Key Technologies
-- **Database**: PostgreSQL with ParadeDB extensions (pg_search, pgvector)
-- **Background Jobs**: River queue system
-- **Web Scraping**: go-rod for browser automation
-- **API Documentation**: Auto-generated Swagger/OpenAPI
-- **Code Generation**: SQLC for type-safe SQL
-
-## Development Workflow
-
-1. **Environment Setup**:
-   - Copy `env.example` to `.env`
-   - Set required variables (especially `JWT_SECRET`, `OPENAI_API_KEY`)
-   - Database runs on port 15432
-
-2. **Code Generation**:
-   - Run `mise run generate` after modifying SQL queries
-   - SQL queries in `/database/queries/` generate Go code via SQLC
-   - API spec auto-generated from Echo routes
-
-3. **Database Changes**:
-   - Create migrations with `mise run migrate:new name=feature_name`
-   - Migrations stored in `/database/migrations/`
-   - Always test migrations with `mise run migrate:up` and `mise run migrate:down`
-
-4. **Testing**:
-   - Backend tests: `mise run test`
-   - Integration tests use real PostgreSQL (via `mise run db:up`)
-
-## Important Patterns
-
-### API Structure
-- RESTful endpoints under `/api/v1/`
-- Authentication via JWT tokens or API keys
-- Request/response models in `/internal/port/httpserver/handlers/`
-
-### Background Jobs
-- Queue system using River
-- Jobs defined in `/internal/core/queue/`
-- Handles: web crawling, content embedding, summarization
-
-### Content Processing Flow
-1. User saves URL/content → Creates bookmark
-2. Queue job crawls and extracts content
-3. Content gets embedded for semantic search
-4. Optional: AI generates summary
-5. Content searchable via full-text and vector search
-
-### Authentication
-- JWT for web sessions
-- API keys for programmatic access
-- OAuth support (GitHub, Google)
-- Telegram bot authentication via chat ID
-
-## Common Tasks
-
-### Adding New API Endpoint
-1. Define handler in `/internal/port/httpserver/handlers/`
-2. Add route in `/internal/port/httpserver/routes.go`
-3. Run `mise run generate:spec` to update Swagger docs
-
-### Adding Database Query
-1. Write SQL in `/database/queries/`
-2. Run `mise run generate:sql`
-3. Use generated code in your Go files
-
-### Modifying Frontend
-1. Components in `/web/src/components/`
-2. Routes in `/web/src/routes/`
-3. API client in `/web/src/lib/api/`
-4. Run `mise run run:ui` for hot reload
-
-## Configuration Notes
-- Service FQDN required for OAuth callbacks and webhooks
-- ParadeDB provides PostgreSQL with built-in full-text search
-- Browser service (go-rod) required for web scraping
-- S3-compatible storage optional for file uploads
+- Pi on Workers is wired against real `@earendil-works/pi-agent-core` 0.85.1 APIs but M0-T02/T06/T07 verification (bundle, state restore, browser episode) is still open.
+- `source_documents`/`assets` asset pipeline, needs_input child runs, usage settlement, backup/export — stubbed or absent until their milestone.
