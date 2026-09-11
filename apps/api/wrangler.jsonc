@@ -34,6 +34,27 @@
   "vars": {
     "ENVIRONMENT": "dev",
     // Dev-only auth bypass: unauthenticated requests map to this library.
+    // Inert when ENVIRONMENT=production (see auth.ts).
     "DEV_LIBRARY_ID": "073440a4-915c-41df-a5da-b97c52ccb918"
+  },
+  "env": {
+    // recally.io — the public deployment. Same D1/R2/Vectorize/AI bindings are
+    // inherited from the top level; only vars + routes differ.
+    "prod": {
+      "workers_dev": true,
+      // Workers routes (not custom_domain): they coexist with the zone's
+      // existing proxied A records instead of requiring their deletion.
+      "routes": [
+        { "pattern": "recally.io/*", "zone_name": "recally.io" },
+        { "pattern": "www.recally.io/*", "zone_name": "recally.io" }
+      ],
+      "vars": {
+        "ENVIRONMENT": "production"
+        // Set after creating the Cloudflare Access app (Zero Trust →
+        // Applications → self-hosted, path: recally.io/app*):
+        // "ACCESS_TEAM_NAME": "<team>.cloudflareaccess.com subdomain part",
+        // "ACCESS_AUD": "<the app's AUD tag>"
+      }
+    }
   }
 }
