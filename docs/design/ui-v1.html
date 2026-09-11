@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recally — UI direction v1</title>
+<style>
+  :root {
+    --paper: #f7f5f0;
+    --surface: #fffdf9;
+    --ink: #1c1917;
+    --ink-2: #57534e;
+    --ink-3: #a8a29e;
+    --line: #e7e2d9;
+    --accent: #2f5d3a;        /* archival green */
+    --accent-soft: #e8f0e6;
+    --warn: #a16207;
+    --warn-soft: #faf0dc;
+    --live: #0369a1;
+    --live-soft: #e3f0f7;
+    --serif: "Iowan Old Style", "Palatino", "Palatino Linotype", Georgia, serif;
+    --sans: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: #ece9e2;
+    font-family: var(--sans);
+    color: var(--ink);
+    padding: 32px;
+  }
+  .frame {
+    max-width: 1180px;
+    margin: 0 auto 40px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -24px rgb(28 25 23 / .25);
+  }
+  .frame-label {
+    max-width: 1180px; margin: 0 auto 10px;
+    font: 600 11px/1 var(--mono); letter-spacing: .12em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+
+  /* ---------- chrome ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .logo { font: 700 15px/1 var(--serif); letter-spacing: .01em; }
+  .logo em { font-style: normal; color: var(--accent); }
+  .savebar {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: var(--ink-3); font-size: 13px;
+  }
+  .savebar kbd {
+    font: 11px var(--mono); color: var(--ink-3);
+    border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 4px; padding: 1px 5px; background: var(--surface);
+  }
+  .nav { display: flex; gap: 2px; }
+  .nav a {
+    font-size: 12.5px; color: var(--ink-2); text-decoration: none;
+    padding: 5px 10px; border-radius: 6px;
+  }
+  .nav a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+  /* ---------- library ---------- */
+  .lib { display: grid; grid-template-columns: 1fr; }
+  .lib-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 22px 26px 12px;
+  }
+  .lib-head h1 { font: 400 24px/1.2 var(--serif); }
+  .lib-head .count { font-size: 12px; color: var(--ink-3); }
+  .lib-tools {
+    display: flex; gap: 8px; padding: 0 26px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .chip {
+    font-size: 12px; color: var(--ink-2);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 11px; background: var(--surface);
+  }
+  .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .rows { }
+  .row {
+    display: grid; grid-template-columns: 4px 1fr auto; gap: 0 16px;
+    padding: 15px 26px 15px 22px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    align-items: start;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .bar { width: 4px; border-radius: 2px; align-self: stretch; }
+  .bar.read { background: transparent; }
+  .bar.unread { background: var(--accent); }
+  .bar.capturing { background: var(--live); }
+  .r-title { font: 600 14.5px/1.4 var(--sans); margin-bottom: 3px; }
+  .r-title .unread & { }
+  .row.read .r-title { font-weight: 400; color: var(--ink-2); }
+  .r-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); }
+  .r-sum { font-size: 12.5px; color: var(--ink-2); margin-top: 5px; line-height: 1.5; max-width: 62ch; }
+  .favicon {
+    width: 14px; height: 14px; border-radius: 3px; display: inline-block;
+    vertical-align: -2px; margin-right: 2px;
+    background: var(--accent-soft); color: var(--accent);
+    font: 700 8px/14px var(--sans); text-align: center;
+  }
+  .badge {
+    font: 600 10px/1 var(--sans); letter-spacing: .04em; text-transform: uppercase;
+    border-radius: 4px; padding: 3px 6px;
+  }
+  .badge.complete { background: var(--accent-soft); color: var(--accent); }
+  .badge.partial { background: var(--warn-soft); color: var(--warn); }
+  .badge.live { background: var(--live-soft); color: var(--live); }
+  .badge.live::before { content: "●"; font-size: 8px; margin-right: 4px; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .r-right { text-align: right; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; padding-top: 2px; }
+
+  /* ---------- reader ---------- */
+  .reader { display: grid; grid-template-columns: 1fr 300px; min-height: 560px; }
+  .article {
+    background: var(--surface);
+    padding: 44px 56px 60px;
+    border-right: 1px solid var(--line);
+  }
+  .a-kicker { font: 600 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .a-title { font: 400 30px/1.25 var(--serif); margin-bottom: 10px; letter-spacing: -.01em; }
+  .a-meta { font-size: 12.5px; color: var(--ink-3); margin-bottom: 30px; display: flex; gap: 10px; align-items: center; }
+  .a-body { font: 400 16.5px/1.75 var(--serif); color: #292524; max-width: 65ch; }
+  .a-body p { margin-bottom: 1.2em; }
+  .a-body .drop { color: var(--ink-3); }
+  .aside { padding: 28px 24px; background: var(--paper); }
+  .aside h3 { font: 600 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); margin: 26px 0 10px; }
+  .aside h3:first-child { margin-top: 0; }
+  .aside p, .aside li { font-size: 12.5px; line-height: 1.6; color: var(--ink-2); }
+  .aside ul { padding-left: 16px; }
+  .aside li { margin-bottom: 6px; }
+  .aside li::marker { color: var(--accent); }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 12px; }
+  .kv dt { color: var(--ink-3); } .kv dd { color: var(--ink-2); }
+  .note {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; font-size: 12.5px; color: var(--ink-2); line-height: 1.55;
+  }
+  .note .hl { background: #fbf3d0; padding: 0 2px; border-radius: 2px; }
+  .progress { height: 3px; background: var(--line); border-radius: 2px; margin-top: 8px; }
+  .progress i { display: block; height: 100%; width: 34%; background: var(--accent); border-radius: 2px; }
+
+  /* ---------- search ---------- */
+  .search { padding: 40px 60px 60px; background: var(--surface); }
+  .s-box {
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 10px; margin-bottom: 30px;
+  }
+  .s-box input { border: 0; outline: 0; background: none; font: 400 26px/1.2 var(--serif); width: 100%; color: var(--ink); }
+  .s-mode { display: flex; gap: 6px; margin-bottom: 26px; }
+  .s-hit { display: grid; grid-template-columns: 1fr auto; gap: 4px 20px; padding: 14px 0; border-bottom: 1px solid var(--line); max-width: 720px; }
+  .s-hit .t { font-size: 14px; font-weight: 600; }
+  .s-hit .sn { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; grid-column: 1; }
+  .s-hit .sn mark { background: #fbf3d0; border-radius: 2px; padding: 0 1px; }
+  .s-hit .sc { font: 11px var(--mono); color: var(--ink-3); padding-top: 3px; }
+  .answer {
+    max-width: 720px; background: var(--accent-soft); border-radius: 10px;
+    padding: 18px 20px; margin-bottom: 26px;
+  }
+  .answer .who { font: 600 10.5px/1 var(--mono); letter-spacing: .1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .answer p { font-size: 13.5px; line-height: 1.65; color: var(--ink); }
+  .answer .cite { font: 11px var(--mono); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<p class="frame-label">01 — Library（收件箱式列表）</p>
+<div class="frame">
+  <div class="topbar">
+    <span class="logo">Re<em>call</em>ly</span>
+    <div class="savebar">
+      <span>⌘V</span><span>Paste a URL to archive it…</span>
+      <span style="margin-left:auto"><kbd>⌘K</kbd></span>
+    </div>
+    <nav class="nav">
+      <a class="on" href="#">Library</a><a href="#">Search</a><a href="#">Jobs</a><a href="#">Settings</a>
+    </nav>
+  </div>
+  <div class="lib">
+    <div class="lib-head">
+      <h1>Library</h1>
+      <span class="count">1,284 saved · 312 unread</span>
+    </div>
+    <div class="lib-tools">
+      <span class="chip on">All</span><span class="chip">Unread</span><span class="chip">Partial</span><span class="chip">Notes</span>
+      <span class="chip" style="margin-left:auto">Sort: newest ↓</span>
+    </div>
+    <div class="rows">
+      <div class="row unread">
+        <i class="bar unread"></i>
+        <div>
+          <div class="r-title">Don't let anyone take away your big box of cables</div>
+          <div class="r-meta">
+            <span class="favicon">H</span>news.ycombinator.com · HN item · 214 comments · saved 2h ago
+          </div>
+          <div class="r-sum">A thread defending the humble cable drawer — adapters, wall-warts, and the quiet joy of never buying a charger twice. Comment tree captured partially.</div>
+        </div>
+        <div class="r-right">
+          <span class="badge partial">partial</span>
+          <div style="margin-top:6px">12 min read</div>
+        </div>
+      </div>
+      <div class="row unread">
+        <i class="bar unread"></i>
+        <div>
+          <div class="r-title">Don't Let Anyone Take Away Your Big Box of Cables — Jim Nielsen's Blog</div>
+          <div class="r-meta">
+            <span class="favicon">J</span>blog.jim-nielsen.com · article · saved 2h ago
+          </div>
+          <div class="r-sum">"Speaking of being on the internet and finding things that make you go, 'Hey! It's not just me!'" — an ode to keeping the box.</div>
+        </div>
+        <div class="r-right">
+          <span class="badge complete">complete</span>
+          <div style="margin-top:6px">4 min read</div>
+        </div>
+      </div>
+      <div class="row">
+        <i class="bar capturing"></i>
+        <div>
+          <div class="r-title">The unreasonable effectiveness of plaintext</div>
+          <div class="r-meta">
+            <span class="favicon">P</span>plaintxt.dev · capturing via browser — step 7/24
+            <span style="color:var(--live)">· fetching assets</span>
+          </div>
+          <div class="progress"><i></i></div>
+        </div>
+        <div class="r-right">
+          <span class="badge live">capturing</span>
+        </div>
+      </div>
+      <div class="row read">
+        <i class="bar read"></i>
+        <div>
+          <div class="r-title">How I use Typed's column shorthands</div>
+          <div class="r-meta"><span class="favicon">T</span>typed.sakun.co · read Sep 8 · note attached</div>
+        </div>
+        <div class="r-right"><span class="badge complete">complete</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="frame-label">02 — Reader（正文 + 证据侧栏）</p>
+<div class="frame">
+  <div class="reader">
+    <div class="article">
+      <div class="a-kicker">blog.jim-nielsen.com</div>
+      <h1 class="a-title">Don't Let Anyone Take Away Your Big Box of Cables</h1>
+      <div class="a-meta">
+        Jim Nielsen · captured Sep 11, 2026 · <span class="badge complete">complete</span> · verified ✓
+      </div>
+      <div class="a-body">
+        <p><span class="drop">Speaking of being on the internet and finding things</span> that make you go, "Hey! It's not just me!" — I have a big box of cables. Adapters, dongles, wall-warts. A museum of connectivity.</p>
+        <p>Every few years someone writes an essay about throwing it all away. Minimalism! And every few years, the box saves me: a friend's old hard drive, a hotel TV that only takes coax, a keyboard from 2004 that still works perfectly.</p>
+        <p>The cables aren't clutter. They're optionality. They're the physical form of "I might need this later" — and later always comes.</p>
+      </div>
+    </div>
+    <div class="aside">
+      <h3>Summary</h3>
+      <p>A short essay defending the habit of keeping spare cables: they convert future inconvenience into a solved problem.</p>
+      <h3>Key points</h3>
+      <ul>
+        <li>Cable boxes are optionality, not clutter <span class="cite">[b2–b5]</span></li>
+        <li>Decluttering essays recur every few years; the box keeps winning <span class="cite">[b3]</span></li>
+      </ul>
+      <h3>Provenance</h3>
+      <dl class="kv">
+        <dt>source</dt><dd>response_body · ext-0002</dd>
+        <dt>run</dt><dd>19fe11b4 · 4 turns</dd>
+        <dt>snapshot</dt><dd>b4a3a4aa</dd>
+      </dl>
+      <h3>My note</h3>
+      <div class="note">Same energy as <span class="hl">"every backup is a promise"</span> — cross-ref the 2024 essay.</div>
+      <h3>Actions</h3>
+      <p style="font-size:12.5px">↻ Re-capture · ⇪ Export · ◈ Share link</p>
+    </div>
+  </div>
+</div>
+
+<p class="frame-label">03 — Search / Ask（结果 + 证据引用）</p>
+<div class="frame">
+  <div class="search">
+    <div class="s-box"><input value="cables" spellcheck="false"><kbd style="font:11px var(--mono);color:var(--ink-3)">⏎ search · ⇧⏎ ask</kbd></div>
+    <div class="answer">
+      <div class="who">Answer · 2 sources</div>
+      <p>You've saved two takes on cable hoarding — Nielsen's essay <span class="cite">[b1–b3]</span> and the HN thread it spawned <span class="cite">[b4–b9]</span>. Both argue the box is cheap insurance; the thread adds the counterpoint that labeling beats volume.</p>
+    </div>
+    <div class="s-hit">
+      <div class="t">Don't let anyone take away your big box of cables</div><span class="sc">fts 0.87</span>
+      <div class="sn">…instead of rubber bands with <mark>cables</mark> they survive long stints in the garage much better. I double the <mark>cables</mark> over until they're short…</div>
+    </div>
+    <div class="s-hit">
+      <div class="t">Don't Let Anyone Take Away Your Big Box of Cables</div><span class="sc">vec 0.81</span>
+      <div class="sn">…a museum of connectivity. Every few years someone writes an essay about throwing it all away…</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

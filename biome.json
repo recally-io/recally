@@ -6,7 +6,13 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/worker-configuration.d.ts", "!**/dist", "!docs/plan.md"]
+    "includes": [
+      "**",
+      "!**/worker-configuration.d.ts",
+      "!**/dist",
+      "!docs/plan.md",
+      "!apps/web/src/index.css"
+    ]
   },
   "formatter": {
     "enabled": true,

@@ -1,85 +1,143 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type Item } from "../api";
+import { Badge, DomainChip, domainOf, timeAgo } from "../components/bits";
+
+const JOB_ACTIVE = new Set(["queued", "running", "pending", "cancel_requested"]);
+
+type Filter = "all" | "unread" | "partial";
 
 export function LibraryPage() {
   const [items, setItems] = useState<Item[]>([]);
-  const [url, setUrl] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const refresh = useCallback(
+    () =>
+      api
+        .listItems()
+        .then((r) => {
+          setItems(r.items);
+          setLoaded(true);
+        })
+        .catch((e) => setError(e.message)),
+    [],
+  );
 
   useEffect(() => {
-    api
-      .listItems()
-      .then((r) => setItems(r.items))
-      .catch((e) => setError(e.message));
-  }, []);
+    void refresh();
+  }, [refresh]);
 
-  const refresh = () =>
-    api
-      .listItems()
-      .then((r) => setItems(r.items))
-      .catch((e) => setError(e.message));
+  // Poll while any item has an in-flight job so capture progress shows live.
+  const hasActive = items.some((i) => i.latest_job && JOB_ACTIVE.has(i.latest_job.status));
+  useEffect(() => {
+    if (!hasActive) return;
+    const t = setInterval(() => void refresh(), 4000);
+    return () => clearInterval(t);
+  }, [hasActive, refresh]);
 
-  const save = async () => {
-    if (!url.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await api.saveUrl(url.trim());
-      setUrl("");
-      setTimeout(refresh, 500);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const filtered = useMemo(
+    () =>
+      items.filter((i) => {
+        if (filter === "unread") return i.read_status !== "read";
+        if (filter === "partial") return i.content_quality === "partial";
+        return true;
+      }),
+    [items, filter],
+  );
+  const unread = items.filter((i) => i.read_status !== "read").length;
+
+  const chip = (f: Filter, label: string) => (
+    <button
+      key={f}
+      type="button"
+      onClick={() => setFilter(f)}
+      className={`rounded-full border px-3 py-1 text-xs ${
+        filter === f
+          ? "border-accent bg-accent-soft font-semibold text-accent"
+          : "border-line bg-surface text-ink-2 hover:border-ink-3"
+      }`}
+    >
+      {label}
+    </button>
+  );
 
   return (
-    <div>
-      <form
-        className="mb-6 flex gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void save();
-        }}
-      >
-        <input
-          className="flex-1 rounded border px-3 py-2 text-sm"
-          placeholder="Paste a URL to archive…"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
-          disabled={busy}
-        >
-          save
-        </button>
-      </form>
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-      <ul className="divide-y">
-        {items.map((it) => (
-          <li key={it.id} className="py-3">
-            <Link
-              to="/items/$itemId"
-              params={{ itemId: it.id }}
-              className="font-medium hover:underline"
-            >
-              {it.title ?? it.original_url}
-            </Link>
-            <div className="mt-0.5 text-xs text-neutral-500">
-              {new Date(it.saved_at).toLocaleString()} · {it.read_status}
-              {it.current_snapshot_id ? " · archived" : " · capturing…"}
-            </div>
-          </li>
-        ))}
-        {items.length === 0 && (
-          <li className="py-8 text-center text-sm text-neutral-400">nothing saved yet</li>
-        )}
+    <div className="mx-auto max-w-4xl">
+      <div className="flex items-baseline justify-between px-6 pt-6 pb-3">
+        <h1 className="font-serif text-2xl">Library</h1>
+        <span className="text-xs text-ink-3">
+          {items.length} saved · {unread} unread
+        </span>
+      </div>
+      <div className="flex gap-2 border-b border-line px-6 pb-3">
+        {chip("all", "All")}
+        {chip("unread", "Unread")}
+        {chip("partial", "Partial")}
+      </div>
+      {error && <p className="px-6 py-3 text-sm text-danger">{error}</p>}
+      <ul>
+        {filtered.map((it) => {
+          const capturing = it.latest_job && JOB_ACTIVE.has(it.latest_job.status);
+          const failed = it.latest_job?.status === "failed" && !it.current_snapshot_id;
+          return (
+            <li key={it.id}>
+              <Link
+                to="/app/items/$itemId"
+                params={{ itemId: it.id }}
+                className="grid grid-cols-[4px_1fr_auto] gap-x-4 border-b border-line bg-surface px-6 py-3.5 hover:bg-paper/60"
+              >
+                <i
+                  className={`w-1 self-stretch rounded-sm ${
+                    capturing
+                      ? "bg-live"
+                      : failed
+                        ? "bg-warn"
+                        : it.read_status !== "read"
+                          ? "bg-accent"
+                          : ""
+                  }`}
+                />
+                <div className="min-w-0">
+                  <div
+                    className={`truncate text-[14.5px] leading-snug ${
+                      it.read_status === "read" ? "font-normal text-ink-2" : "font-semibold"
+                    }`}
+                  >
+                    {it.title ?? domainOf(it.original_url)}
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-ink-3">
+                    <DomainChip url={it.original_url} />
+                    <span>·</span>
+                    <span>saved {timeAgo(it.saved_at)}</span>
+                    {capturing && (
+                      <span className="text-live">
+                        · {it.latest_job!.kind} {it.latest_job!.status}
+                      </span>
+                    )}
+                    {failed && <span className="text-warn">· capture failed</span>}
+                  </div>
+                </div>
+                <div className="pt-0.5 text-right">
+                  {capturing ? (
+                    <Badge label="running" />
+                  ) : it.content_quality ? (
+                    <Badge label={it.content_quality} />
+                  ) : null}
+                </div>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
+      {loaded && filtered.length === 0 && (
+        <p className="py-16 text-center text-sm text-ink-3">
+          {items.length === 0
+            ? "Nothing saved yet — paste a URL above to archive it."
+            : "No items match this filter."}
+        </p>
+      )}
     </div>
   );
 }
