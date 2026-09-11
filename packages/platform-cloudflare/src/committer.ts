@@ -36,7 +36,7 @@ export class ArchiveService implements Committer {
     const run = await db
       .prepare("SELECT * FROM capture_runs WHERE id = ? AND library_id = ?")
       .bind(ctx.runId, ctx.libraryId)
-      .first<{ generation: number; item_id: string }>();
+      .first<{ generation: number; item_id: string; target_url: string }>();
     const item = run
       ? await db
           .prepare(
@@ -58,12 +58,17 @@ export class ArchiveService implements Committer {
     // Validate sources + block ranges against stored evidence.
     const problems: string[] = [];
     const selectedBlocks: Array<{ id: string; kind: string; text: string }> = [];
+    const knownSources = (await runStore.listSources(ctx)).map((s) => s.sourceId);
+    let finalUrl = "";
     for (const sourceId of proposal.sourceIds) {
       const stored = await runStore.getSource(ctx, sourceId);
       if (!stored) {
-        problems.push(`unknown source ${sourceId}`);
+        problems.push(
+          `unknown source ${sourceId}; sources saved this run: ${knownSources.join(", ") || "none"}`,
+        );
         continue;
       }
+      if (!finalUrl) finalUrl = stored.ref.url;
       const ranges = proposal.selectedBlockRanges.filter((r) => r.sourceId === sourceId);
       const body = await evidence.getText(stored.bodyKey);
       if (body === null) {
@@ -86,7 +91,7 @@ export class ArchiveService implements Committer {
         const endIdx = blocks.findIndex((b) => b.id === range.endBlockId);
         if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
           problems.push(
-            `invalid block range ${range.startBlockId}..${range.endBlockId} on ${sourceId}`,
+            `invalid block range ${range.startBlockId}..${range.endBlockId} on ${sourceId} (valid: ${blocks[0]?.id}..${blocks[blocks.length - 1]?.id}, ${blocks.length} blocks)`,
           );
           continue;
         }
@@ -94,11 +99,16 @@ export class ArchiveService implements Committer {
       }
     }
     if (selectedBlocks.length === 0) {
-      problems.push("no content selected");
+      problems.push(
+        "no content selected — pass block ranges for fetched/rendered sources; adapter_record and manual sources archive whole-body and need no ranges",
+      );
     }
     if (problems.length) return { status: "rejected", problems };
 
-    // Optional independent model check on real content evidence (§7.3).
+    // Optional independent model check on real content evidence (§7.3). A
+    // verifier *verdict* can reject; a verifier infra failure degrades to
+    // partial — unverifiable is not the same as verified (one retry first,
+    // schema drift on this model has been observed on dev).
     let contentQuality: "complete" | "partial" | "unavailable" = proposal.claimedQuality;
     if (this.deps.verify) {
       const head = selectedBlocks
@@ -111,20 +121,33 @@ export class ArchiveService implements Committer {
         .map((b) => b.text)
         .join("\n")
         .slice(-3000);
-      const verdict = await this.deps.verify({
+      const verifyInput = {
         title: null,
         headText: head,
         tailText: tail,
         missingParts: proposal.missingParts,
         claimedQuality: proposal.claimedQuality,
-      });
-      if (verdict.verdict === "wrong") {
+      };
+      let verdict: Verification | null = null;
+      let verifyError: string | null = null;
+      for (let attempt = 0; attempt < 2 && !verdict; attempt++) {
+        try {
+          verdict = await this.deps.verify(verifyInput);
+        } catch (err) {
+          verifyError = err instanceof Error ? err.message : String(err);
+        }
+      }
+      if (verdict?.verdict === "wrong") {
         return {
           status: "rejected",
           problems: ["verifier: content does not match the page", ...verdict.problems],
         };
       }
-      if (verdict.verdict === "partial" || proposal.missingParts.length > 0) {
+      if (verifyError && !verdict) {
+        console.warn(`verifier failed twice for run ${ctx.runId}: ${verifyError.slice(0, 400)}`);
+        proposal.missingParts.push("verifier unavailable — quality unverified");
+        contentQuality = "partial";
+      } else if (verdict?.verdict === "partial" || proposal.missingParts.length > 0) {
         contentQuality = "partial";
       }
     } else if (proposal.missingParts.length > 0) {
@@ -213,7 +236,7 @@ export class ArchiveService implements Committer {
           run.item_id,
           ctx.runId,
           now,
-          proposal.sourceIds[0] ?? "",
+          finalUrl.startsWith("browser:") ? run.target_url : finalUrl || run.target_url,
           "fetch",
           manifestKey,
           manifestPut.sha256,

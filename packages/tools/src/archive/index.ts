@@ -42,7 +42,7 @@ export function proposeArchiveTool(deps: ToolDeps): ToolSpec {
     name: "propose_archive",
     label: "Propose archive",
     description:
-      "Submit your archive proposal: which sources and block ranges are the real content, which assets are required, what is missing. The archive service validates and may reject — revise or finish partial instead of retrying the same proposal.",
+      "Submit your archive proposal: which sources and block ranges are the real content, which assets are required, what is missing. sourceIds must be ids from earlier tool results (e.g. the 'source <uuid>' in a capture result), and block ranges use block ids from read_source/extract_content (e.g. 'b1'). adapter_record and manual sources archive whole-body — pass no block ranges for them. The archive service validates and may reject — revise or finish partial instead of retrying the same proposal.",
     schema: archiveProposalInput,
     async execute(ctx, args) {
       if (!deps.committer) throw new AppError("internal", "committer not configured");

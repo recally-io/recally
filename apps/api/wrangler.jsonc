@@ -13,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "recally-dev",
-      "database_id": "00000000-0000-0000-0000-000000000000", // replace with real id for remote deploy
+      "database_id": "9bac2bc2-57dd-4d9c-8868-682aeb290350",
       "migrations_dir": "../../migrations"
     }
   ],
@@ -32,6 +32,8 @@
   // Skill markdown bundles as text modules.
   "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
   "vars": {
-    "ENVIRONMENT": "dev"
+    "ENVIRONMENT": "dev",
+    // Dev-only auth bypass: unauthenticated requests map to this library.
+    "DEV_LIBRARY_ID": "073440a4-915c-41df-a5da-b97c52ccb918"
   }
 }

@@ -4,7 +4,7 @@ import { sha256Hex } from "./hash";
 // instead of overwriting old ones (plan §9.6).
 export const PIPELINE_VERSION = "pipe-0001";
 export const POLICY_VERSION = "pol-0001";
-export const EXTRACTOR_VERSION = "ext-0001";
+export const EXTRACTOR_VERSION = "ext-0002";
 export const TOKENIZER_VERSION = "tok-0001";
 export const EMBEDDING_VERSION = "emb-0001";
 export const PROMPT_VERSIONS = {

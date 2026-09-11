@@ -13,7 +13,10 @@ export const DEFAULT_LIMITS = {
     concurrency: 3,
   },
   agent: {
-    maxModelCalls: 12,
+    // Live-tuned on dev: a real capture takes ~15-20 model calls (site
+    // probing, retries after tool errors, block-range exploration) — 12
+    // turned every retryable failure into budget_exceeded.
+    maxModelCalls: 24,
     maxInputTokens: 64_000,
     maxOutputTokens: 8_000,
     maxFormatRepairs: 1,

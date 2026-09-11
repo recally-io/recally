@@ -19,6 +19,7 @@ export const readSourceInput = z.object({
 export const siteListInput = z.object({ url_ref: z.string() });
 export const siteRunInput = z.object({
   adapter_id: z.string(),
+  url: z.string(), // the page url this adapter should process
   input: z.record(z.string(), z.unknown()).default({}),
 });
 

@@ -94,6 +94,42 @@ export class D1R2RunStore implements RunStore {
     };
   }
 
+  async listSources(ctx: ToolContext): Promise<SourceRef[]> {
+    const rows = await this.db
+      .prepare(
+        `SELECT id, url, kind, sha256, byte_size, r2_key FROM source_documents
+         WHERE run_id = ? AND library_id = ? ORDER BY created_at`,
+      )
+      .bind(ctx.runId, ctx.libraryId)
+      .all<{
+        id: string;
+        url: string;
+        kind: SourceRef["kind"];
+        sha256: string;
+        byte_size: number;
+        r2_key: string;
+      }>();
+    return (rows.results ?? []).map((r) => ({
+      sourceId: r.id,
+      url: r.url,
+      kind: r.kind,
+      sha256: r.sha256,
+      byteSize: r.byte_size,
+      evidenceRef: r.r2_key,
+    }));
+  }
+
+  async countToolCalls(ctx: ToolContext, toolName: string): Promise<number> {
+    const row = await this.db
+      .prepare(
+        `SELECT count(*) AS n FROM agent_events
+         WHERE run_id = ? AND library_id = ? AND kind = 'tool_call' AND substr(summary, 1, ?) = ?`,
+      )
+      .bind(ctx.runId, ctx.libraryId, toolName.length + 1, `${toolName}:`)
+      .first<{ n: number }>();
+    return row?.n ?? 0;
+  }
+
   async saveObservation(ctx: ToolContext, observation: unknown): Promise<string> {
     const obsId = newId();
     const key = r2Keys.observation(ctx.libraryId, ctx.runId, ctx.attemptId, obsId);

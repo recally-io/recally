@@ -46,6 +46,23 @@ export function chunkBlocks(blocks: SourceBlock[]): Chunk[] {
   for (const b of blocks) {
     const t = approxTokens(b.text);
     const atomic = b.kind === "code" || b.kind === "table";
+    // A single oversized block (adapter records archive whole-body, layout
+    // tables) must never become one oversized chunk — embedding models have
+    // hard context limits. Split on whitespace near the char budget.
+    if (t > target * 1.5) {
+      flush();
+      const maxChars = Math.ceil(target * 1.5 * 4);
+      for (let i = 0; i < b.text.length; ) {
+        let end = Math.min(i + maxChars, b.text.length);
+        if (end < b.text.length) {
+          const ws = b.text.lastIndexOf(" ", end);
+          if (ws > i + maxChars / 2) end = ws;
+        }
+        chunks.push({ blockRange: { start: b.id, end: b.id }, text: b.text.slice(i, end) });
+        i = end;
+      }
+      continue;
+    }
     if (!atomic && tokens + t > target) flush();
     buf.push(b);
     tokens += t;

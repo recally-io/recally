@@ -47,7 +47,10 @@ export function browserOpenTool(deps: ToolDeps): ToolSpec {
       "Open a controlled browser session on a URL you already observed. Expensive — only when fetched/adapted evidence has a concrete gap a browser could reach.",
     schema: browserOpenInput,
     async execute(ctx, args) {
-      if (ctx.budget.browserEpisodesLeft <= 0) {
+      // ctx.budget is rebuilt per durable turn, so enforce against persisted
+      // tool_call events — that count survives step/isolate boundaries.
+      const episodes = await deps.runStore.countToolCalls(ctx, "browser_open");
+      if (episodes >= ctx.budget.browserEpisodesLeft) {
         throw new AppError("budget_exceeded", "browser episode budget exhausted");
       }
       const { url_ref } = browserOpenInput.parse(args);
@@ -98,7 +101,7 @@ export function browserObserveTool(deps: ToolDeps): ToolSpec {
   };
 }
 
-export function browserActTool(_deps: ToolDeps): ToolSpec {
+export function browserActTool(deps: ToolDeps): ToolSpec {
   return {
     name: "browser_act",
     label: "Browser action",
@@ -106,7 +109,8 @@ export function browserActTool(_deps: ToolDeps): ToolSpec {
       "One reading-scoped action: wait_for a selector, scroll, expand (click) an observed target, or navigate to an observed same-article link. Never login/post/purchase/fill forms.",
     schema: browserActInput,
     async execute(ctx, args) {
-      if (ctx.budget.browserActionsLeft <= 0) {
+      const actions = await deps.runStore.countToolCalls(ctx, "browser_act");
+      if (actions >= ctx.budget.browserActionsLeft) {
         throw new AppError("budget_exceeded", "browser action budget exhausted");
       }
       const session = sessions.get(ctx.runId);

@@ -37,7 +37,11 @@ export interface RunStore {
     },
   ): Promise<SourceRef>;
   getSource(ctx: ToolContext, sourceId: string): Promise<StoredSource | null>;
+  listSources(ctx: ToolContext): Promise<SourceRef[]>;
   saveObservation(ctx: ToolContext, observation: unknown): Promise<string>;
+  // Count of this run's persisted tool_call events for a tool — the only
+  // durable usage signal, since ctx.budget is rebuilt fresh every turn.
+  countToolCalls(ctx: ToolContext, toolName: string): Promise<number>;
 }
 
 export interface BrowserSessionHandle {

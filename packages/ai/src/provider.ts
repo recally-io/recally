@@ -68,25 +68,67 @@ export class WorkersAIProvider implements ModelProvider {
       );
     }
 
+    // gpt-oss models answer in Responses API shape (output[] with output_text),
+    // chat models in {response} — normalize all observed shapes to one text.
     const res = raw as {
       response?: unknown;
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
+      output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;
+      choices?: Array<{ message?: { content?: unknown } }>;
+      usage?: {
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        input_tokens?: number;
+        output_tokens?: number;
+      };
     };
-    const text =
-      typeof res?.response === "string" ? res.response : JSON.stringify(res?.response ?? {});
+    let text = "";
+    if (typeof res?.response === "string" && res.response) {
+      text = res.response;
+    } else if (res?.response && typeof res.response === "object") {
+      text = JSON.stringify(res.response);
+    } else {
+      const msg = res?.output?.find((o) => o.type === "message");
+      const outputText = msg?.content?.find((c) => c.type === "output_text")?.text;
+      const choice = res?.choices?.[0]?.message?.content;
+      text =
+        outputText ?? (typeof choice === "string" ? choice : choice ? JSON.stringify(choice) : "");
+    }
+    if (!text) {
+      throw new AppError(
+        "model_unavailable",
+        `model ${args.model} returned no text; raw: ${JSON.stringify(raw).slice(0, 300)}`,
+        { retryable: true },
+      );
+    }
     let parsed: unknown;
     try {
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(text.replace(/<think>[\s\S]*?<\/think>/g, "").trim());
     } catch {
-      throw new AppError("model_unavailable", "model returned non-JSON output");
+      throw new AppError(
+        "model_unavailable",
+        `model ${args.model} returned non-JSON output: ${text.slice(0, 300)}`,
+        { retryable: true },
+      );
     }
-    const value = args.schema.parse(parsed);
+    const checked = args.schema.safeParse(parsed);
+    if (!checked.success) {
+      const issues = checked.error.issues
+        .map((i) => `${i.path.join(".") || "output"}: ${i.message}`)
+        .join("; ");
+      // Include a raw slice — off-schema output is a model-compat bug you
+      // can't fix blind (e.g. enum casing, think-tag residue).
+      throw new AppError(
+        "model_unavailable",
+        `model ${args.model} output failed schema: ${issues}. raw: ${text.slice(0, 300)}`,
+        { retryable: true },
+      );
+    }
     return {
-      value,
+      value: checked.data,
       model: args.model,
       usage: {
-        inputTokens: res?.usage?.prompt_tokens ?? 0,
-        outputTokens: res?.usage?.completion_tokens ?? 0,
+        inputTokens: res?.usage?.prompt_tokens ?? res?.usage?.input_tokens ?? 0,
+        outputTokens: res?.usage?.completion_tokens ?? res?.usage?.output_tokens ?? 0,
       },
     };
   }

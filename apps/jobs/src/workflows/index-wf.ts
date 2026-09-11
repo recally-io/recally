@@ -16,6 +16,24 @@ interface IndexParams {
 // pending → submitted → queryable separately (§11.4).
 export class IndexWorkflow extends WorkflowEntrypoint<Env, IndexParams> {
   async run(event: WorkflowEvent<IndexParams>, step: WorkflowStep) {
+    const { jobId } = event.payload;
+    const env = this.env;
+
+    try {
+      return await this.runInner(event, step);
+    } catch (err) {
+      // Same guard as IngestWorkflow: an exhausted step must not leave the
+      // job 'running' forever.
+      await env.DB.prepare(
+        "UPDATE jobs SET status = 'failed', result = 'workflow_error', error = ?, updated_at = ? WHERE id = ?",
+      )
+        .bind(err instanceof Error ? err.message.slice(0, 500) : String(err), nowIso(), jobId)
+        .run();
+      throw err;
+    }
+  }
+
+  private async runInner(event: WorkflowEvent<IndexParams>, step: WorkflowStep) {
     const { jobId, libraryId } = event.payload;
     const env = this.env;
 
@@ -47,7 +65,18 @@ export class IndexWorkflow extends WorkflowEntrypoint<Env, IndexParams> {
     const chunks = await step.do("chunk-fts", async () => {
       const chunked = chunkBlocks(blocks);
       const now = nowIso();
-      const stmts: D1PreparedStatement[] = [];
+      // Idempotent re-index: a prior attempt (or the same step retried after
+      // partial batch) leaves chunks behind — clear them or the ordinal
+      // UNIQUE constraint fails forever.
+      const stmts: D1PreparedStatement[] = [
+        env.DB.prepare(
+          "DELETE FROM search_index WHERE library_id = ? AND entity_type = 'chunk' AND entity_id IN (SELECT id FROM chunks WHERE content_revision_id = ? AND library_id = ?)",
+        ).bind(libraryId, content_revision_id, libraryId),
+        env.DB.prepare("DELETE FROM chunks WHERE content_revision_id = ? AND library_id = ?").bind(
+          content_revision_id,
+          libraryId,
+        ),
+      ];
       const rows: Array<{ id: string; text: string }> = [];
       for (let i = 0; i < chunked.length; i++) {
         const c = chunked[i]!;
@@ -84,26 +113,33 @@ export class IndexWorkflow extends WorkflowEntrypoint<Env, IndexParams> {
       const ai = new WorkersAIProvider(env.AI as never);
       const vectors = new VectorIndex(env.VECTOR_INDEX);
       const pairs: Array<{ chunkId: string; vectorId: string }> = [];
-      for (const c of chunks) {
+      // Batched embed+upsert: one AI.run per ~32 chunks. Sequential per-chunk
+      // calls overran the step's wall-clock on a 73-chunk revision (runtime
+      // killed the isolate as hung).
+      const BATCH = 32;
+      for (let i = 0; i < chunks.length; i += BATCH) {
+        const batch = chunks.slice(i, i + BATCH);
         const { vectors: vecs } = await ai.embed({
           model: models.embedding,
-          texts: [c.text],
+          texts: batch.map((c) => c.text),
         });
-        const vid = await vectorId({
-          libraryId,
-          contentRevisionId: content_revision_id,
-          chunkId: c.id,
-          embeddingVersion: EMBEDDING_VERSION,
-        });
-        await vectors.upsert([
-          {
+        const upserts = [];
+        for (const [j, c] of batch.entries()) {
+          const vid = await vectorId({
+            libraryId,
+            contentRevisionId: content_revision_id,
+            chunkId: c.id,
+            embeddingVersion: EMBEDDING_VERSION,
+          });
+          upserts.push({
             id: vid,
-            values: vecs[0]!,
+            values: vecs[j]!,
             namespace: libraryId,
             metadata: { chunk_id: c.id },
-          },
-        ]);
-        pairs.push({ chunkId: c.id, vectorId: vid });
+          });
+          pairs.push({ chunkId: c.id, vectorId: vid });
+        }
+        await vectors.upsert(upserts);
       }
       const now = nowIso();
       await env.DB.batch(

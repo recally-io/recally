@@ -17,20 +17,40 @@ export function readSourceTool(deps: ToolDeps): ToolSpec {
     async execute(ctx, args) {
       const { source_id, block_ids, start_block, end_block } = readSourceInput.parse(args);
       const stored = await deps.runStore.getSource(ctx, source_id);
-      if (!stored) throw new AppError("invalid_input", `unknown source ${source_id}`);
+      if (!stored) {
+        const known = (await deps.runStore.listSources(ctx)).map((s) => s.sourceId);
+        throw new AppError(
+          "invalid_input",
+          `unknown source ${source_id}; sources saved this run: ${known.join(", ") || "none yet"}`,
+        );
+      }
       const html = await deps.evidence.getText(stored.bodyKey);
       if (html === null) throw new AppError("internal", `missing source body ${stored.bodyKey}`);
 
       const { blocks } = await parseBlocks(html);
+      // Non-HTML bodies (adapter JSON, plain text) parse to zero blocks —
+      // return the raw body instead of an empty read.
+      if (blocks.length === 0) {
+        return {
+          content:
+            html.slice(0, MAX_CHARS) +
+            (html.length > MAX_CHARS ? "\n[truncated — body shown raw, no blocks]" : ""),
+          details: { source_id, blocks: [], truncated: html.length > MAX_CHARS },
+        };
+      }
+      const rangeHint = `valid blocks: ${blocks[0]?.id}..${blocks[blocks.length - 1]?.id} (${blocks.length} total)`;
       let selected = blocks;
       if (block_ids?.length) {
         const wanted = new Set(block_ids);
         selected = blocks.filter((b) => wanted.has(b.id));
+        if (selected.length === 0) {
+          throw new AppError("invalid_input", `no matching block ids; ${rangeHint}`);
+        }
       } else if (start_block || end_block) {
         const start = blocks.findIndex((b) => b.id === start_block);
         const end = blocks.findIndex((b) => b.id === end_block);
         if (start === -1 || end === -1 || end < start) {
-          throw new AppError("invalid_input", "block range not found in source");
+          throw new AppError("invalid_input", `block range not found in source; ${rangeHint}`);
         }
         selected = blocks.slice(start, end + 1);
       }

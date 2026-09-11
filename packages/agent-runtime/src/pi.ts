@@ -4,7 +4,14 @@ import type { Api, Model } from "@earendil-works/pi-ai";
 import type { ToolContext } from "@recally/capture";
 import { Type } from "typebox";
 import { z } from "zod";
-import type { AgentRuntime, RunOutcome, ToolSpec, TurnInput, TurnResult } from "./spec";
+import type {
+  AgentRuntime,
+  RunOutcome,
+  ToolOutcome,
+  ToolSpec,
+  TurnInput,
+  TurnResult,
+} from "./spec";
 
 // Pi adapter (§5.2, ADR-02/06). Boundary verified by M0-T02: bundle size,
 // compat flags, and state serialize/restore on a real Worker. Our code never
@@ -39,8 +46,29 @@ function toPiTool(spec: ToolSpec, ctx: ToolContext, collected: Collected): Agent
       params,
     ): Promise<import("@earendil-works/pi-agent-core").AgentToolResult<unknown>> => {
       collected.events.push({ kind: "tool_call", toolName: spec.name });
-      const args = spec.schema.parse(params);
-      const outcome = await spec.execute(ctx, args);
+      let outcome: ToolOutcome;
+      try {
+        const args = spec.schema.parse(params);
+        outcome = await spec.execute(ctx, args);
+      } catch (err) {
+        // ZodError.message is a JSON blob the model can't act on — flatten
+        // issues into `path: message` so a bad-args retry can self-correct.
+        const message =
+          err instanceof z.ZodError
+            ? err.issues.map((i) => `${i.path.join(".") || "input"}: ${i.message}`).join("; ")
+            : err instanceof Error
+              ? err.message
+              : String(err);
+        collected.events.push({
+          kind: "tool_result",
+          toolName: spec.name,
+          reasonCode: "error",
+          summary: `${spec.name} failed: ${message}`.slice(0, 500),
+        });
+        throw err instanceof z.ZodError
+          ? new Error(`${spec.name} invalid arguments: ${message}`)
+          : err;
+      }
       collected.events.push({
         kind: "tool_result",
         toolName: spec.name,
@@ -118,8 +146,15 @@ export class PiRuntime implements AgentRuntime {
     });
 
     try {
+      const last = restored.messages[restored.messages.length - 1] as { role?: string } | undefined;
       if (restored.messages.length === 0) {
         await agent.prompt(input.goal);
+      } else if (last?.role === "assistant") {
+        // The model ended its turn talking instead of calling a tool — a
+        // continue() can't resume from an assistant message, so nudge it.
+        await agent.prompt(
+          "Continue the task. Use tools to make progress; call propose_archive or finish when done.",
+        );
       } else {
         agent.state.messages = restored.messages as AgentMessage[];
         await agent.continue();

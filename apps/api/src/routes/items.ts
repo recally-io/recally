@@ -88,6 +88,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
         title: body.source.title ?? null,
         ...(body.note !== undefined ? { note: body.note } : {}),
         jobKind: "ingest",
+        runRevisions: await runRevisions(c.env),
         jobPayload: JSON.stringify({
           kind: "manual",
           content: body.source.content,
@@ -331,13 +332,17 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     if (!item) throw new AppError("not_found", "item not found");
     const now = nowIso();
     const jobId = newId();
+    const runId = newId();
     const generation = item.capture_generation + 1;
+    const rev = await runRevisions(c.env);
     await c.env.DB.batch([
       c.env.DB.prepare("UPDATE items SET capture_generation = ?, updated_at = ? WHERE id = ?").bind(
         generation,
         now,
         item.id,
       ),
+      // Job before run: capture_runs.job_id references jobs(id) and D1
+      // enforces FKs per statement inside a batch.
       c.env.DB.prepare(
         `INSERT INTO jobs (id, library_id, kind, item_id, generation, payload, created_at, updated_at)
          VALUES (?, ?, 'ingest', ?, ?, ?, ?, ?)`,
@@ -351,6 +356,29 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
           url: item.original_url,
           recapture: true,
         }),
+        now,
+        now,
+      ),
+      c.env.DB.prepare(
+        `INSERT INTO capture_runs
+         (id, library_id, item_id, job_id, generation, agent_runtime_version, skill_revision,
+          toolset_version, policy_version, pipeline_version, model_config_version,
+          requested_at, target_url, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(
+        runId,
+        auth.libraryId,
+        item.id,
+        jobId,
+        generation,
+        rev.agentRuntimeVersion,
+        rev.skillRevision,
+        rev.toolsetVersion,
+        rev.policyVersion,
+        rev.pipelineVersion,
+        rev.modelConfigVersion,
+        now,
+        item.original_url,
         now,
         now,
       ),
@@ -383,6 +411,8 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     if (!body.content) throw new AppError("invalid_input", "content required");
     const now = nowIso();
     const jobId = newId();
+    const runId = newId();
+    const rev = await runRevisions(c.env);
     await c.env.DB.batch([
       c.env.DB.prepare(
         `INSERT INTO jobs (id, library_id, kind, item_id, payload, created_at, updated_at)
@@ -396,6 +426,29 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
           content: body.content,
           title: body.title ?? null,
         }),
+        now,
+        now,
+      ),
+      c.env.DB.prepare(
+        `INSERT INTO capture_runs
+         (id, library_id, item_id, job_id, generation, agent_runtime_version, skill_revision,
+          toolset_version, policy_version, pipeline_version, model_config_version,
+          requested_at, target_url, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(
+        runId,
+        auth.libraryId,
+        item.id,
+        jobId,
+        item.capture_generation,
+        rev.agentRuntimeVersion,
+        rev.skillRevision,
+        rev.toolsetVersion,
+        rev.policyVersion,
+        rev.pipelineVersion,
+        rev.modelConfigVersion,
+        now,
+        item.original_url,
         now,
         now,
       ),

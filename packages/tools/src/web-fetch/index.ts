@@ -53,6 +53,10 @@ export async function safeFetch(
         headers: {
           "user-agent": "recally-archive/0.1 (+personal reading archive)",
           accept: "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.5",
+          // Only advertise encodings we can decode ourselves (workerd's
+          // DecompressionStream has no br); otherwise brotli bytes reach the
+          // parser as garbage.
+          "accept-encoding": "gzip, deflate",
         },
       });
     } catch (err) {
@@ -80,7 +84,18 @@ export async function safeFetch(
     }
 
     const contentType = res.headers.get("content-type") ?? "";
-    const body = await readLimited(res, maxBytes);
+    let body = await readLimited(res, maxBytes);
+    // A still-set content-encoding means the runtime did not decompress for
+    // us — do it ourselves so downstream parsers see real bytes.
+    const encoding = res.headers.get("content-encoding")?.toLowerCase();
+    if (encoding === "gzip" || encoding === "deflate") {
+      const ds = new DecompressionStream(encoding);
+      body = new Uint8Array(
+        await new Response(new Blob([new Uint8Array(body)]).stream().pipeThrough(ds)).arrayBuffer(),
+      );
+    }
+    // brotli has no DecompressionStream in workerd — leave it as evidence and
+    // let extraction report unavailable instead of producing garbage.
     const headers: Record<string, string> = {};
     res.headers.forEach((v, k) => {
       if (HEADER_ALLOWLIST.has(k.toLowerCase())) headers[k.toLowerCase()] = v;
@@ -153,6 +168,38 @@ const SKIP_TAGS = new Set([
   "FORM",
   "IFRAME",
 ]);
+const INLINE_TAGS = new Set([
+  "A",
+  "ABBR",
+  "B",
+  "BDI",
+  "BDO",
+  "BR",
+  "CITE",
+  "CODE",
+  "DATA",
+  "DFN",
+  "EM",
+  "I",
+  "KBD",
+  "MARK",
+  "Q",
+  "S",
+  "SAMP",
+  "SMALL",
+  "SPAN",
+  "STRONG",
+  "SUB",
+  "SUP",
+  "TIME",
+  "U",
+  "VAR",
+  "WBR",
+]);
+// Past this size a "block" element is really a layout container — HN nests
+// whole comment trees in tables, and one atomic block leaves the agent no
+// usable ranges to select.
+const MAX_ATOMIC_BLOCK_CHARS = 8_000;
 
 function blockKind(tag: string): ContentBlock["kind"] {
   switch (tag) {
@@ -193,26 +240,52 @@ export async function parseBlocks(html: string): Promise<ParsedSource> {
     tagName: string;
     textContent?: string | null;
     getAttribute?: (n: string) => string | null;
-    children?: ArrayLike<unknown>;
+    childNodes?: ArrayLike<unknown>;
   }) => {
     if (node.nodeType !== 1) return;
     const tag = node.tagName;
     if (SKIP_TAGS.has(tag)) return;
-    if (BLOCK_TAGS.has(tag)) {
-      const text = (node.textContent ?? "").replace(/\s+/g, " ").trim();
+    const text = (node.textContent ?? "").replace(/\s+/g, " ").trim();
+    if (BLOCK_TAGS.has(tag) && (text.length <= MAX_ATOMIC_BLOCK_CHARS || text.length === 0)) {
       if (text.length > 0 || tag === "IMG" || tag === "FIGURE") {
         blocks.push({ id: `b${++seq}`, kind: blockKind(tag), text });
       }
       return;
     }
-    if (tag === "A") {
-      const href = node.getAttribute?.("href") ?? "";
-      const text = (node.textContent ?? "").trim();
-      if (href && text) links.push({ id: `l${++linkSeq}`, text: text.slice(0, 200), href });
+    // Container or oversized block element: flush direct inline text as a
+    // paragraph block (e.g. text sitting bare in div/td like HN commtext),
+    // then descend into non-inline children in document order.
+    let inline = "";
+    const flush = () => {
+      const t = inline.replace(/\s+/g, " ").trim();
+      if (t) blocks.push({ id: `b${++seq}`, kind: "paragraph", text: t });
+      inline = "";
+    };
+    for (const child of Array.from(node.childNodes ?? [])) {
+      const c = child as {
+        nodeType: number;
+        tagName?: string;
+        textContent?: string | null;
+        getAttribute?: (n: string) => string | null;
+      };
+      if (c.nodeType === 3 || (c.nodeType === 1 && INLINE_TAGS.has(c.tagName ?? ""))) {
+        inline += ` ${c.textContent ?? ""}`;
+        if (c.tagName === "A") {
+          const href = c.getAttribute?.("href") ?? "";
+          const t = (c.textContent ?? "").trim();
+          if (href && t) links.push({ id: `l${++linkSeq}`, text: t.slice(0, 200), href });
+        }
+      } else {
+        flush();
+        walk(c as never);
+      }
     }
-    for (const child of Array.from(node.children ?? [])) walk(child as never);
+    flush();
   };
-  walk(document.documentElement as never);
+  // No document.body fallback: its linkedom getter itself throws when the
+  // document has no documentElement (empty/plain-text/JSON bodies).
+  const root = document.documentElement;
+  if (root) walk(root as never);
 
   const meta = (sel: string, attr: string) =>
     document.querySelector(sel)?.getAttribute(attr)?.trim();
@@ -395,8 +468,12 @@ export function extractContentTool(deps: ToolDeps): ToolSpec {
 
 function summarizeObservation(o: Observation): string {
   const total = o.blockIndex.reduce((s, b) => s + b.chars, 0);
+  const first = o.blockIndex[0]?.id;
+  const last = o.blockIndex[o.blockIndex.length - 1]?.id;
   return [
     `pageKind=${o.pageKind} status=${o.responseStatus ?? "?"} blocks=${o.blockIndex.length} chars=${total}`,
+    o.blockIndex.length ? `block ids: ${first}..${last}` : "",
+    o.source ? `source: ${o.source.sourceId}` : "",
     `titles: ${o.titleCandidates.slice(0, 3).join(" | ") || "-"}`,
     `head: ${o.headText.slice(0, 300)}`,
     `tail: ${o.tailText.slice(-300)}`,

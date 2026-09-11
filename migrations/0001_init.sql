@@ -193,7 +193,7 @@ CREATE TABLE source_documents (
   url          TEXT NOT NULL,
   kind         TEXT NOT NULL
                CHECK (kind IN ('response_body', 'rendered_dom', 'screenshot', 'observation',
-                               'response_metadata', 'decision')),
+                               'response_metadata', 'decision', 'adapter_record', 'manual')),
   content_type TEXT,
   r2_key       TEXT NOT NULL UNIQUE,
   sha256       TEXT NOT NULL,

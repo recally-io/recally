@@ -97,7 +97,8 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
     }
 
     const maxTurns = DEFAULT_LIMITS.agent.maxModelCalls;
-    for (let turn = 0; turn <= maxTurns; turn++) {
+    try {
+      for (let turn = 0; turn <= maxTurns; turn++) {
       const result = await step.do(`turn-${turn}`, async () => {
         const { ctx, deps, runtime, skill } = await assembleRun(env, run, attemptId);
 
@@ -126,9 +127,19 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
         });
 
         // Persist Pi state + audit events inside the same step (§9.4).
+        // Sequences come from MAX+1 like saveObservation's mid-turn writes —
+        // a separate turn*100 namespace collides with them under UNIQUE.
         const stateKey = r2Keys.piState(libraryId, run.id, turn);
         await evidence.put(stateKey, turnResult.serializedState, "application/json");
         const now = nowIso();
+        const seqBase =
+          (
+            await env.DB.prepare(
+              "SELECT COALESCE(MAX(sequence), -1) + 1 AS s FROM agent_events WHERE run_id = ? AND attempt_id = ?",
+            )
+              .bind(run.id, attemptId)
+              .first<{ s: number }>()
+          )?.s ?? 0;
         await env.DB.batch([
           env.DB.prepare(
             "INSERT INTO agent_states (id, library_id, run_id, sequence, state_key, created_at) VALUES (?, ?, ?, ?, ?, ?)",
@@ -138,18 +149,17 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
           ).bind(stateKey, now, run.id),
           ...turnResult.events.map((e, i) =>
             env.DB.prepare(
-              `INSERT INTO agent_events (id, library_id, run_id, attempt_id, sequence, kind, tool_name, reason_code, summary, evidence_ref, usage, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO agent_events (id, library_id, run_id, attempt_id, sequence, kind, reason_code, summary, evidence_ref, usage, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             ).bind(
               newId(),
               libraryId,
               run.id,
               attemptId,
-              turn * 100 + i,
+              seqBase + i,
               e.kind,
-              e.toolName ?? null,
               e.reasonCode ?? null,
-              e.summary ?? null,
+              e.toolName ? `${e.toolName}: ${e.summary ?? ""}` : (e.summary ?? null),
               e.evidenceRef ?? null,
               e.usage ? JSON.stringify(e.usage) : null,
               now,
@@ -206,6 +216,22 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
         }
       });
       return;
+      }
+    } catch (err) {
+      // A step that exhausts retries would otherwise leave the job 'running'
+      // forever (observed: agent_events UNIQUE collision errored a run while
+      // its job row stayed running). Mark it failed, then rethrow so the
+      // workflow instance still reports the error.
+      const now = nowIso();
+      await env.DB.batch([
+        env.DB.prepare(
+          "UPDATE jobs SET status = 'failed', result = 'workflow_error', error = ?, updated_at = ? WHERE id = ?",
+        ).bind(err instanceof Error ? err.message.slice(0, 500) : String(err), now, jobId),
+        env.DB.prepare(
+          "UPDATE capture_runs SET status = 'failed', outcome_code = 'failed', updated_at = ? WHERE id = ?",
+        ).bind(now, run.id),
+      ]);
+      throw err;
     }
   }
 }

@@ -23,8 +23,9 @@ export async function dispatchJob(
   const id = workflowInstanceId(jobId, restartGeneration);
   try {
     return await binding.create({ id, params });
-  } catch {
+  } catch (err) {
     // Duplicate id = already dispatched; report the existing instance.
-    return { id };
+    if (String(err).includes("already")) return { id };
+    throw err;
   }
 }

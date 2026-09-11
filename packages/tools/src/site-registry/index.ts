@@ -36,12 +36,11 @@ export function siteRunTool(deps: ToolDeps): ToolSpec {
       "Execute a registered site adapter for a URL. Returns the structured record with provenance. The adapter cannot publish an archive itself.",
     schema: siteRunInput,
     async execute(ctx, args) {
-      const { adapter_id, input } = siteRunInput.parse(args);
+      const { adapter_id, url, input } = siteRunInput.parse(args);
       if (!deps.adapterFetch) {
         throw new AppError("not_implemented", "adapter fetch not configured");
       }
       const adapter = getAdapter(adapter_id);
-      const url = String(input.url ?? ctxRef(ctx));
       const parsedArgs = adapter.inputSchema().parse(input);
       const result = await adapter.run(
         { url, args: parsedArgs as Record<string, unknown> },
@@ -64,16 +63,10 @@ export function siteRunTool(deps: ToolDeps): ToolSpec {
       });
       const preview = JSON.stringify(result.record).slice(0, 2000);
       return {
-        content: `adapter ${adapter_id} record (${preview.length} preview chars):\n${preview}`,
+        content: `adapter ${adapter_id} record saved as source ${source.sourceId} (${preview.length} preview chars; adapter records archive whole-body — propose with this sourceId and no block ranges):\n${preview}`,
         details: { adapter: adapter_id, mediaRefs: result.mediaRefs },
         resultRef: obsRef,
       };
     },
   };
-}
-
-function ctxRef(ctx: { runId: string }): string {
-  // Adapter input must carry the url explicitly; this guard exists so a missing
-  // url fails clearly instead of silently fetching an undefined target.
-  throw new AppError("invalid_input", `input.url required (run ${ctx.runId})`);
 }
