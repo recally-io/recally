@@ -59,9 +59,9 @@ export class EnrichWorkflow extends WorkflowEntrypoint<Env, EnrichParams> {
           "application/json",
         );
         await env.DB.prepare(
-          `INSERT INTO ai_artifacts (id, library_id, item_id, content_revision_id, type, model_id,
-            prompt_version, output_key, coverage, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO ai_artifacts (id, library_id, item_id, input_content_revision_id, type, model_id,
+            prompt_version, output, coverage, status, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'verified', ?)`,
         )
           .bind(
             artifactId,
@@ -71,7 +71,7 @@ export class EnrichWorkflow extends WorkflowEntrypoint<Env, EnrichParams> {
             artifact.type,
             artifact.modelId,
             artifact.promptVersion,
-            r2Keys.artifact(libraryId, artifactId),
+            JSON.stringify(artifact.output),
             JSON.stringify(artifact.coverage ?? null),
             now,
           )

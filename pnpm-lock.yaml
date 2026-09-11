@@ -249,7 +249,7 @@ importers:
         version: 0.85.1(supports-color@10.2.2)(ws@8.21.3)(zod@4.6.1)
       '@earendil-works/pi-ai':
         specifier: 0.85.1
-        version: 0.85.1
+        version: 0.85.1(supports-color@10.2.2)(ws@8.21.3)(zod@4.6.1)
       '@recally/capture':
         specifier: workspace:*
         version: link:../capture
@@ -366,6 +366,9 @@ importers:
       '@recally/domain':
         specifier: workspace:*
         version: link:../domain
+      '@recally/site-adapters':
+        specifier: workspace:*
+        version: link:../site-adapters
       '@recally/storage':
         specifier: workspace:*
         version: link:../storage

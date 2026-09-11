@@ -2,6 +2,7 @@ import type { Verification } from "@recally/ai";
 import type { ToolContext } from "@recally/capture";
 import type { ArchiveProposal } from "@recally/contracts";
 import { EXTRACTOR_VERSION, newId, nowIso, PIPELINE_VERSION } from "@recally/domain";
+import { renderAdapterRecord } from "@recally/site-adapters";
 import { r2Keys } from "@recally/storage";
 import type { CommitResult, Committer } from "@recally/tools";
 import { parseBlocks } from "@recally/tools";
@@ -75,8 +76,21 @@ export class ArchiveService implements Committer {
         problems.push(`missing source body ${sourceId}`);
         continue;
       }
-      if (stored.ref.kind === "adapter_record" || stored.ref.kind === "manual") {
-        // Structured records and user-submitted content: whole body is one block.
+      if (stored.ref.kind === "adapter_record") {
+        // Structured records get a deterministic readable rendering when one
+        // exists (§7.1); the JSON body remains the evidence either way.
+        const rendered = renderAdapterRecord(body);
+        if (rendered?.length) {
+          selectedBlocks.push(
+            ...rendered.map((b, i) => ({ id: `${sourceId}:r${i}`, kind: b.kind, text: b.text })),
+          );
+        } else {
+          selectedBlocks.push({ id: `${sourceId}:record`, kind: "paragraph", text: body });
+        }
+        continue;
+      }
+      if (stored.ref.kind === "manual") {
+        // User-submitted content: whole body is one block.
         selectedBlocks.push({
           id: `${sourceId}:record`,
           kind: "paragraph",
@@ -162,7 +176,9 @@ export class ArchiveService implements Committer {
           ? `## ${b.text}`
           : b.kind === "code"
             ? `\`\`\`\n${b.text}\n\`\`\``
-            : b.text,
+            : b.kind === "quote"
+              ? `> ${b.text}`
+              : b.text,
       )
       .join("\n\n");
     const blocksJsonl = selectedBlocks.map((b) => JSON.stringify(b)).join("\n");

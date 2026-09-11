@@ -18,6 +18,7 @@
     "@recally/capture": "workspace:*",
     "@recally/contracts": "workspace:*",
     "@recally/domain": "workspace:*",
+    "@recally/site-adapters": "workspace:*",
     "@recally/storage": "workspace:*",
     "@recally/tools": "workspace:*"
   },
