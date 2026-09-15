@@ -33,13 +33,14 @@
   "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
   "vars": {
     "ENVIRONMENT": "dev",
-    // Dev-only auth bypass: unauthenticated requests map to this library.
-    // Inert when ENVIRONMENT=production (see auth.ts).
+    // Single-user instance: unauthenticated requests map to this library.
+    // Requests with a valid rcl_ Bearer token resolve to that token's library.
     "DEV_LIBRARY_ID": "073440a4-915c-41df-a5da-b97c52ccb918"
   },
   "env": {
-    // recally.io — the public deployment. Same D1/R2/Vectorize/AI bindings are
-    // inherited from the top level; only vars + routes differ.
+    // recally.io — the public deployment. Bindings and vars are NOT inherited
+    // from the top level by named environments; they are duplicated here and
+    // point at the same D1/R2/Vectorize/AI resources.
     "prod": {
       "workers_dev": true,
       // Workers routes (not custom_domain): they coexist with the zone's
@@ -48,12 +49,27 @@
         { "pattern": "recally.io/*", "zone_name": "recally.io" },
         { "pattern": "www.recally.io/*", "zone_name": "recally.io" }
       ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "recally-dev",
+          "database_id": "9bac2bc2-57dd-4d9c-8868-682aeb290350"
+        }
+      ],
+      "r2_buckets": [{ "binding": "ARCHIVE_BUCKET", "bucket_name": "recally-archive-dev" }],
+      "vectorize": [{ "binding": "VECTOR_INDEX", "index_name": "recally-chunks-dev" }],
+      "ai": { "binding": "AI" },
+      "workflows": [
+        {
+          "name": "ingest",
+          "binding": "INGEST_WORKFLOW",
+          "class_name": "IngestWorkflow",
+          "script_name": "recally-jobs"
+        }
+      ],
       "vars": {
-        "ENVIRONMENT": "production"
-        // Set after creating the Cloudflare Access app (Zero Trust →
-        // Applications → self-hosted, path: recally.io/app*):
-        // "ACCESS_TEAM_NAME": "<team>.cloudflareaccess.com subdomain part",
-        // "ACCESS_AUD": "<the app's AUD tag>"
+        "ENVIRONMENT": "production",
+        "DEV_LIBRARY_ID": "073440a4-915c-41df-a5da-b97c52ccb918"
       }
     }
   }

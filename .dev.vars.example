@@ -1,12 +1,8 @@
 # Copy to apps/api/.dev.vars and apps/jobs/.dev.vars for local dev.
 # Never commit real values.
 
-# Cloudflare Access (leave empty to use DEV_LIBRARY_ID auth bypass locally)
-ACCESS_TEAM_NAME=
-ACCESS_AUD=
-
-# Dev-only auth bypass: requests without credentials map to this library.
-# Must be empty in production.
+# Single-user instance: requests without a valid rcl_ Bearer token map to
+# this library. (Auth is intentionally minimal for now.)
 DEV_LIBRARY_ID=
 
 # Model roles (Workers AI model IDs)

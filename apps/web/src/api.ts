@@ -1,5 +1,5 @@
-// Thin fetch client against the app worker. Dev bypass token comes from
-// .dev.vars (DEV_BYPASS_TOKEN) via a dev-only header — real auth is Access JWT.
+// Thin fetch client against the app worker. Requests without a token resolve
+// to the default library; VITE_API_TOKEN sets an optional rcl_ Bearer token.
 const headers = () => {
   const h: Record<string, string> = { "content-type": "application/json" };
   const t = import.meta.env.VITE_API_TOKEN;

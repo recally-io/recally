@@ -100,6 +100,6 @@ PATCH is version-checked; on `conflict` re-read the item and retry once.
 
 ## Errors
 
-`{"error", "message", "code?"}` — `needs_login` = bad/missing token,
-`forbidden` = missing scope, `conflict` = stale version/job state,
+`{"error", "message", "code?"}` — `forbidden` = token missing scope,
+`conflict` = stale version/job state,
 `not_found` = deleted or never existed.
