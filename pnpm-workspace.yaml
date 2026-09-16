@@ -2,6 +2,13 @@ packages:
   - "apps/*"
   - "packages/*"
 
+overrides:
+  effect: 4.0.0-rc.112
+  "@effect/platform": 4.0.0-rc.112
+  "@effect/platform-node": 4.0.0-rc.112
+  "@effect/platform-node-shared": 4.0.0-rc.112
+  "@effect/vitest": 4.0.0-rc.112
+
 onlyBuiltDependencies:
   - esbuild
   - workerd
@@ -9,5 +16,6 @@ onlyBuiltDependencies:
 allowBuilds:
   '@google/genai': false
   esbuild: true
+  msgpackr-extract: set this to true or false
   protobufjs: true
   workerd: true

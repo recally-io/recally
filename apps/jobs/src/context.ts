@@ -20,7 +20,7 @@ import { type LoadedSkill, loadSkill } from "@recally/skills";
 import type { CaptureRunRow } from "@recally/storage";
 import type { ToolDeps } from "@recally/tools";
 import { safeFetch } from "@recally/tools";
-import type { Env } from "./env";
+import type { IngestEnv } from "./env";
 
 export interface RunAssembly {
   ctx: ToolContext;
@@ -55,7 +55,7 @@ async function adapterFetch(url: string): Promise<unknown> {
 }
 
 export async function assembleRun(
-  env: Env,
+  env: IngestEnv,
   run: CaptureRunRow,
   attemptId: string,
 ): Promise<RunAssembly> {

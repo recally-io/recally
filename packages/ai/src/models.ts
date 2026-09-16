@@ -18,11 +18,11 @@ export const DEFAULT_MODELS: ModelRoles = {
 };
 
 export interface ModelEnv {
-  CAPTURE_MODEL?: string;
-  VERIFY_MODEL?: string;
-  SUMMARY_MODEL?: string;
-  ANSWER_MODEL?: string;
-  EMBEDDING_MODEL?: string;
+  CAPTURE_MODEL?: string | undefined;
+  VERIFY_MODEL?: string | undefined;
+  SUMMARY_MODEL?: string | undefined;
+  ANSWER_MODEL?: string | undefined;
+  EMBEDDING_MODEL?: string | undefined;
 }
 
 export function resolveModels(env: ModelEnv): ModelRoles {

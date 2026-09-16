@@ -4,9 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "build": "wrangler deploy --dry-run --outdir dist",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
@@ -16,11 +13,12 @@
     "@recally/search": "workspace:*",
     "@recally/skills": "workspace:*",
     "@recally/storage": "workspace:*",
+    "alchemy": "2.0.0-beta.77",
+    "effect": "4.0.0-rc.115",
     "hono": "^4.9.4",
     "zod": "^4.1.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250909.0",
-    "wrangler": "^4.34.0"
+    "@cloudflare/workers-types": "^4.20250909.0"
   }
 }

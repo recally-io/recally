@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["@cloudflare/workers-types"],
-    "lib": ["ES2023", "WebWorker"]
+    "lib": ["ES2023"]
   },
-  "include": ["src", "../../packages/**/*.ts", "../../packages/**/*.md"]
+  "include": ["src", "../../packages/**/*.ts", "../../infra/**/*.ts"]
 }

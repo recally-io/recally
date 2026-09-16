@@ -1,25 +1,25 @@
 import { sha256Hex } from "@recally/domain";
-import analyzeSkill from "../analyze/SKILL.md";
-import captureQuality from "../capture/references/quality.md";
-import captureSourceTypes from "../capture/references/source-types.md";
-import captureSkill from "../capture/SKILL.md";
 
-// Skill revisions are content hashes: a run pins the exact text it saw, a new
-// revision only affects new runs (§5.3, §9.6, ADR-07). Revisions are computed
-// once per isolate and cached.
-
-const SKILL_FILES: Record<string, Record<string, string>> = {
+// Skill markdown loads through `?raw` dynamic imports: the worker bundle
+// inlines them via rolldown's raw plugin, vitest/vite handle them natively,
+// and the alchemy CLI's stack-graph loader never evaluates them (loadSkill
+// only runs at runtime). Static `.md` imports would break `alchemy plan` —
+// its loader has no text-module support.
+const textLoaders: Record<string, Record<string, () => Promise<string>>> = {
   capture: {
-    "SKILL.md": captureSkill,
-    "references/quality.md": captureQuality,
-    "references/source-types.md": captureSourceTypes,
+    "SKILL.md": () => import("../capture/SKILL.md?raw").then((m) => m.default),
+    "references/quality.md": () =>
+      import("../capture/references/quality.md?raw").then((m) => m.default),
+    "references/source-types.md": () =>
+      import("../capture/references/source-types.md?raw").then((m) => m.default),
   },
   analyze: {
-    "SKILL.md": analyzeSkill,
+    "SKILL.md": () => import("../analyze/SKILL.md?raw").then((m) => m.default),
   },
 };
 
-export type SkillName = keyof typeof SKILL_FILES;
+const SKILL_NAMES = Object.keys(textLoaders);
+export type SkillName = (typeof SKILL_NAMES)[number];
 
 export interface LoadedSkill {
   name: SkillName;
@@ -34,9 +34,9 @@ export function loadSkill(name: SkillName): Promise<LoadedSkill> {
   let cached = revisionCache.get(name);
   if (!cached) {
     cached = (async () => {
-      const files: Record<string, string> = SKILL_FILES[name]!;
+      const files = textLoaders[name]!;
       const ordered = Object.keys(files).sort();
-      const prompt = ordered.map((f) => files[f]!).join("\n\n---\n\n");
+      const prompt = (await Promise.all(ordered.map((f) => files[f]!()))).join("\n\n---\n\n");
       const revision = `skill-${(await sha256Hex(prompt)).slice(0, 12)}`;
       return { name, revision, prompt };
     })();

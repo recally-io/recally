@@ -41,13 +41,19 @@ docs/                 plan.md, decisions/, runbooks/
 
 ```bash
 pnpm install
-pnpm typecheck        # all packages
-pnpm test             # vitest
+pnpm typecheck        # root stack program + all packages
+pnpm test             # vitest (ALCHEMY_INTEG=1 adds live-stack tests)
 pnpm lint             # biome
-cd apps/api && pnpm dev      # app worker (needs .dev.vars, D1 id)
-cd apps/jobs && pnpm dev     # jobs worker
-cd apps/web && pnpm dev      # vite dev server, proxies /api → :8787
+pnpm build            # build web SPA (required before deploy/dev)
+pnpm deploy           # web build + alchemy deploy (first deploy: --adopt)
+pnpm dev              # alchemy dev — workers in workerd, web via Vite, hot reload
+pnpm plan             # preview stack changes without applying
+alchemy profile edit --add Cloudflare   # one-time Cloudflare auth (OAuth)
 ```
+
+Infra lives in a single root Stack (`alchemy.run.ts`) + `infra/`; both workers
+are Effectful Constructors (`apps/*/src/worker.ts`). There is no wrangler
+config; worker types come from the worker files, not `wrangler types`.
 
 ## Hard rules (from the plan, enforced in review)
 

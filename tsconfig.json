@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["@cloudflare/workers-types"],
+    "lib": ["ES2023"]
+  },
+  // Typechecks the Stack, infra declarations, and (transitively) both worker
+  // entry graphs. Per-package typechecks remain for library code.
+  "include": ["alchemy.run.ts", "infra/**/*.ts"]
+}

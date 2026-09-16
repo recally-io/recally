@@ -1,24 +1,22 @@
-import type { WorkflowBinding } from "@recally/platform-cloudflare";
+// Runtime environment handed to the platform-neutral code. Under alchemy the
+// typed binding clients are closed over in each worker/workflow Construction
+// phase; `.raw` exposes the native objects this interface describes.
+import type { Ai, D1Database, Fetcher, R2Bucket } from "@cloudflare/workers-types";
 
-export interface Env {
+export interface JobsEnv {
   DB: D1Database;
   ARCHIVE_BUCKET: R2Bucket;
-  BACKUP_BUCKET: R2Bucket;
-  VECTOR_INDEX: VectorizeIndex;
   AI: Ai;
+  CAPTURE_MODEL?: string | undefined;
+  VERIFY_MODEL?: string | undefined;
+  SUMMARY_MODEL?: string | undefined;
+  ANSWER_MODEL?: string | undefined;
+  EMBEDDING_MODEL?: string | undefined;
+  AI_GATEWAY_NAME?: string | undefined;
+  CLOUDFLARE_ACCOUNT_ID?: string | undefined;
+}
+
+// Only the ingest (capture agent) runtime can open browser episodes.
+export interface IngestEnv extends JobsEnv {
   BROWSER: Fetcher;
-  INGEST_WORKFLOW: WorkflowBinding;
-  ENRICH_WORKFLOW: WorkflowBinding;
-  INDEX_WORKFLOW: WorkflowBinding;
-  DIGEST_WORKFLOW: WorkflowBinding;
-  EXPORT_WORKFLOW: WorkflowBinding;
-  PURGE_WORKFLOW: WorkflowBinding;
-  ENVIRONMENT?: string;
-  CAPTURE_MODEL?: string;
-  VERIFY_MODEL?: string;
-  SUMMARY_MODEL?: string;
-  ANSWER_MODEL?: string;
-  EMBEDDING_MODEL?: string;
-  AI_GATEWAY_NAME?: string;
-  CLOUDFLARE_ACCOUNT_ID?: string;
 }

@@ -2,6 +2,7 @@ import { newId, toErrorResponse } from "@recally/domain";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { type AuthContext, requireAuth } from "./auth";
+import type { Env } from "./env";
 import { itemsRoutes } from "./routes/items";
 import {
   adminRoutes,

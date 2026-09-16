@@ -7,16 +7,34 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm --filter @recally/web build",
+    "dev": "alchemy dev",
+    "deploy": "pnpm --filter @recally/web build && alchemy deploy",
+    "plan": "alchemy plan",
+    "destroy": "alchemy destroy",
+    "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
     "test": "vitest run",
     "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "types": "pnpm --filter @recally/api exec wrangler types && pnpm --filter @recally/jobs exec wrangler types"
+    "lint:fix": "biome check --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
+    "@cloudflare/workers-types": "^4.20260702.1",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@effect/platform-node": "4.0.0-rc.112",
+    "alchemy": "2.0.0-beta.77",
+    "effect": "4.0.0-rc.112"
+  },
+  "pnpm": {
+    "overrides": {
+      "effect": "4.0.0-rc.112",
+      "@effect/platform": "4.0.0-rc.112",
+      "@effect/platform-node": "4.0.0-rc.112",
+      "@effect/platform-node-shared": "4.0.0-rc.112",
+      "@effect/vitest": "4.0.0-rc.112"
+    }
   }
 }
