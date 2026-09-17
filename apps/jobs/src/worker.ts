@@ -75,7 +75,10 @@ export default class Jobs extends Cloudflare.Worker<Jobs>()(
   {
     // Stage-scoped physical name derived by alchemy (see apps/api worker).
     main: import.meta.url,
-    compatibility: { date: "2025-10-01", flags: ["nodejs_compat"] },
+    // Must match the app worker: alchemy's bridge merges the Node platform
+    // layer (Terminal/Stdio) into every Worker, and NodeTerminal needs the
+    // `process.stdin` polyfill that only newer compatibility dates provide.
+    compatibility: { date: "2026-09-11", flags: ["nodejs_compat"] },
   },
   Effect.gen(function* () {
     const dbClient = yield* Cloudflare.D1.QueryDatabase(Database);
