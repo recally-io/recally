@@ -1,14 +1,21 @@
+import type { ItemView } from "@recally/contracts";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, type Item } from "../api";
+import { api, errorMessage } from "../api";
 import { Badge, DomainChip, domainOf, timeAgo } from "../components/bits";
-
-const JOB_ACTIVE = new Set(["queued", "running", "pending", "cancel_requested"]);
+import { isJobLive } from "../components/job-status";
+import { useRefreshWhileActive } from "../components/use-refresh-while-active";
 
 type Filter = "all" | "unread" | "partial";
 
+const FILTERS: Record<Filter, (item: ItemView) => boolean> = {
+  all: () => true,
+  unread: (item) => item.read_status !== "read",
+  partial: (item) => item.content_quality === "partial",
+};
+
 export function LibraryPage() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<ItemView[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -21,7 +28,7 @@ export function LibraryPage() {
           setItems(r.items);
           setLoaded(true);
         })
-        .catch((e) => setError(e.message)),
+        .catch((e) => setError(errorMessage(e))),
     [],
   );
 
@@ -29,28 +36,12 @@ export function LibraryPage() {
     void refresh();
   }, [refresh]);
 
-  // Poll while any item has an in-flight job so capture progress shows live.
-  const hasActive = items.some((i) => i.latest_job && JOB_ACTIVE.has(i.latest_job.status));
-  useEffect(() => {
-    if (!hasActive) return;
-    const t = setInterval(() => void refresh(), 4000);
+  const hasActive = items.some((i) => i.latest_job && isJobLive(i.latest_job.status));
+  useRefreshWhileActive(hasActive, refresh);
 
-    return () => clearInterval(t);
-  }, [hasActive, refresh]);
+  const filtered = useMemo(() => items.filter(FILTERS[filter]), [items, filter]);
 
-  const filtered = useMemo(
-    () =>
-      items.filter((i) => {
-        if (filter === "unread") return i.read_status !== "read";
-
-        if (filter === "partial") return i.content_quality === "partial";
-
-        return true;
-      }),
-    [items, filter],
-  );
-
-  const unread = items.filter((i) => i.read_status !== "read").length;
+  const unread = items.filter(FILTERS.unread).length;
 
   const chip = (f: Filter, label: string) => (
     <button
@@ -83,7 +74,7 @@ export function LibraryPage() {
       {error && <p className="px-6 py-3 text-sm text-danger">{error}</p>}
       <ul>
         {filtered.map((it) => {
-          const capturing = it.latest_job && JOB_ACTIVE.has(it.latest_job.status);
+          const capturing = it.latest_job && isJobLive(it.latest_job.status);
           const failed = it.latest_job?.status === "failed" && !it.current_snapshot_id;
 
           return (

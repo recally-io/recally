@@ -1,8 +1,5 @@
 import type {
-  ArtifactStatus,
-  ArtifactType,
   ContentQuality,
-  IndexState,
   JobKind,
   JobStatus,
   ReadStatus,
@@ -102,67 +99,5 @@ export interface SnapshotRow {
   content_quality: ContentQuality;
   resource_quality: ResourceQuality;
   committed_at: string;
-  created_at: string;
-}
-
-export interface ContentRevisionRow {
-  id: string;
-  library_id: string;
-  snapshot_id: string;
-  item_id: string;
-  extractor_version: string;
-  selected_source_blocks: string;
-  body_hash: string;
-  article_key: string;
-  blocks_key: string;
-  language: string | null;
-  token_count: number | null;
-  created_at: string;
-}
-
-export interface ArtifactRow {
-  id: string;
-  library_id: string;
-  item_id: string;
-  type: ArtifactType;
-  status: ArtifactStatus;
-  input_snapshot_id: string | null;
-  input_content_revision_id: string | null;
-  model_id: string | null;
-  prompt_version: string | null;
-  pipeline_version: string | null;
-  operation_key: string | null;
-  output: string;
-  citations: string;
-  coverage: string | null;
-  usage: string | null;
-  created_at: string;
-}
-
-export interface ChunkRow {
-  id: string;
-  library_id: string;
-  content_revision_id: string;
-  item_id: string;
-  ordinal: number;
-  block_range: string;
-  text: string;
-  text_hash: string;
-  tokenizer_version: string;
-  embedding_version: string | null;
-  vector_id: string | null;
-  index_state: IndexState;
-  created_at: string;
-}
-
-export interface ApiTokenRow {
-  id: string;
-  library_id: string;
-  name: string;
-  token_hash: string;
-  scopes: string;
-  last_used_at: string | null;
-  expires_at: string | null;
-  revoked_at: string | null;
   created_at: string;
 }

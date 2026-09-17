@@ -58,5 +58,3 @@ export const DEFAULT_LIMITS = {
     batchSize: 50,
   },
 } as const;
-
-export type Limits = typeof DEFAULT_LIMITS;

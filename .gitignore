@@ -6,7 +6,8 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# Cloudflare / alchemy
+# Cloudflare / alchemy (wrangler local state still appears for tail/d1 debug)
+.wrangler/
 .alchemy/
 
 # Env

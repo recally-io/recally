@@ -20,7 +20,7 @@ const textLoaders: Record<string, Record<string, () => Promise<string>>> = {
 
 const SKILL_NAMES = Object.keys(textLoaders);
 
-export type SkillName = (typeof SKILL_NAMES)[number];
+type SkillName = (typeof SKILL_NAMES)[number];
 
 export interface LoadedSkill {
   name: SkillName;

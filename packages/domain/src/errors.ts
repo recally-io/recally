@@ -1,5 +1,5 @@
 // Error protocol per plan §12.5: { code, message, request_id, retryable, next_action }.
-export const ERROR_CODES = [
+const ERROR_CODES = [
   "needs_login",
   "forbidden",
   "not_found",
@@ -19,7 +19,7 @@ export const ERROR_CODES = [
   "internal",
 ] as const;
 
-export type ErrorCode = (typeof ERROR_CODES)[number];
+type ErrorCode = (typeof ERROR_CODES)[number];
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
   needs_login: 401,
@@ -62,7 +62,7 @@ export class AppError extends Error {
   }
 }
 
-export interface ErrorResponse {
+interface ErrorResponse {
   code: ErrorCode;
   message: string;
   request_id: string;

@@ -1,6 +1,4 @@
 import {
-  ARTIFACT_STATUSES,
-  ARTIFACT_TYPES,
   CONTENT_QUALITIES,
   JOB_KINDS,
   JOB_STATUSES,
@@ -11,7 +9,7 @@ import { z } from "zod";
 
 // --- Item submission (plan §12.1) ---
 
-export const itemSourceSchema = z.discriminatedUnion("kind", [
+const itemSourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("url"), url: z.url() }),
   z.object({
     kind: z.literal("content"),
@@ -27,17 +25,6 @@ export const createItemSchema = z.object({
   note: z.string().max(10_000).optional(),
   enrichment: z.enum(["auto", "defer"]).default("auto"),
 });
-
-export type CreateItemInput = z.infer<typeof createItemSchema>;
-
-export const createItemResponseSchema = z.object({
-  item_id: z.string(),
-  job_id: z.string(),
-  status_url: z.string(),
-  current_phase: z.string(),
-});
-
-export type CreateItemResponse = z.infer<typeof createItemResponseSchema>;
 
 // --- Views ---
 
@@ -66,8 +53,6 @@ export const itemListSchema = z.object({
   items: z.array(itemViewSchema),
   next_cursor: z.string().nullable(),
 });
-
-export type ItemList = z.infer<typeof itemListSchema>;
 
 export const jobViewSchema = z.object({
   id: z.string(),
@@ -141,14 +126,4 @@ export const createTokenSchema = z.object({
   name: z.string().min(1).max(100),
   scopes: z.array(z.enum(TOKEN_SCOPES)).min(1),
   expires_in_days: z.number().int().positive().max(365).nullable().default(null),
-});
-
-// --- Artifacts ---
-
-export const artifactViewSchema = z.object({
-  id: z.string(),
-  type: z.enum(ARTIFACT_TYPES),
-  status: z.enum(ARTIFACT_STATUSES),
-  output: z.unknown(),
-  created_at: z.string(),
 });

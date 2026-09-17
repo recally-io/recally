@@ -8,7 +8,7 @@ import type { ToolDeps } from "../deps";
 // adapters; run persists the structured record as evidence. Adapter output is
 // untrusted observation like everything else.
 
-export function siteListTool(_deps: ToolDeps): ToolSpec {
+export function siteListTool(): ToolSpec {
   return {
     name: "site_list",
     label: "List site adapters",

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { adapterProvenance } from "./provenance";
 import type { AdapterFetch, AdapterResult, SiteAdapter } from "./types";
 
 // github.com/{owner}/{repo} → repo record via the public REST API.
@@ -60,10 +61,7 @@ export const githubRepoAdapter: SiteAdapter = {
         pushed_at: repoData.pushed_at ?? null,
         readme_markdown: readme,
       },
-      provenance: {
-        endpointUrls: [repoUrl, readmeUrl],
-        fetchedAt: new Date().toISOString(),
-      },
+      provenance: adapterProvenance([repoUrl, readmeUrl]),
       mediaRefs: (repoData.owner as { avatar_url?: string } | undefined)?.avatar_url
         ? [
             {

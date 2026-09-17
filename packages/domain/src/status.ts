@@ -26,7 +26,7 @@ export const READ_STATUSES = ["unread", "reading", "read", "archived"] as const;
 
 export type ReadStatus = (typeof READ_STATUSES)[number];
 
-export const INDEX_STATES = ["pending", "submitted", "queryable", "stale", "removed"] as const;
+const INDEX_STATES = ["pending", "submitted", "queryable", "stale", "removed"] as const;
 
 export type IndexState = (typeof INDEX_STATES)[number];
 
@@ -37,7 +37,3 @@ export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
 export const ARTIFACT_STATUSES = ["pending", "verified", "unverified_import", "failed"] as const;
 
 export type ArtifactStatus = (typeof ARTIFACT_STATUSES)[number];
-
-export const CAPTURE_METHODS = ["fetch", "browser", "manual"] as const;
-
-export type CaptureMethod = (typeof CAPTURE_METHODS)[number];

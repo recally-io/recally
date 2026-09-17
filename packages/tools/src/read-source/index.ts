@@ -1,6 +1,7 @@
 import type { ToolSpec } from "@recally/agent-runtime";
 import { readSourceInput } from "@recally/contracts";
 import { AppError } from "@recally/domain";
+import { selectBlockRange } from "../content-blocks";
 import type { ToolDeps } from "../deps";
 import { parseBlocks } from "../web-fetch";
 
@@ -55,14 +56,13 @@ export function readSourceTool(deps: ToolDeps): ToolSpec {
           throw new AppError("invalid_input", `no matching block ids; ${rangeHint}`);
         }
       } else if (start_block || end_block) {
-        const start = blocks.findIndex((b) => b.id === start_block);
-        const end = blocks.findIndex((b) => b.id === end_block);
+        const range = selectBlockRange(blocks, start_block, end_block);
 
-        if (start === -1 || end === -1 || end < start) {
+        if (!range) {
           throw new AppError("invalid_input", `block range not found in source; ${rangeHint}`);
         }
 
-        selected = blocks.slice(start, end + 1);
+        selected = range;
       }
 
       let out = "";

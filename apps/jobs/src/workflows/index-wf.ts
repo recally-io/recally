@@ -1,19 +1,16 @@
 import { resolveModels, WorkersAIProvider } from "@recally/ai";
-import { newId, nowIso } from "@recally/domain";
+import { newId, nowIso, TOKENIZER_VERSION } from "@recally/domain";
 import { R2EvidenceStore, VectorIndex as VectorIndexClient } from "@recally/platform-cloudflare";
 import { chunkBlocks, EMBEDDING_VERSION, tokenizeForFts, vectorId } from "@recally/search";
 import { r2Keys } from "@recally/storage";
+import { parseBlocksJsonl } from "@recally/tools/content-blocks";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { definedModelVars, ModelVarsConfig } from "../../../../infra/model-env";
+import { ModelVarsConfig } from "../../../../infra/model-env";
 import { ArchiveBucket, Database, VectorIndex } from "../../../../infra/resources";
-import type { JobsEnv } from "../env";
-
-interface IndexParams {
-  jobId: string;
-  libraryId: string;
-}
+import { JobsBaseLayer, makeJobsEnv } from "../bindings";
+import { loadRunningJob, markWorkflowError, type WorkflowInput } from "./common";
 
 // IndexWorkflow is deterministic: chunk → FTS → embed → vectorize, no agent.
 // FTS and chunk rows commit in one D1 batch; Vectorize tracks
@@ -27,7 +24,7 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
     const vecClient = yield* Cloudflare.Vectorize.SearchIndex(VectorIndex);
     const modelVars = yield* ModelVarsConfig;
 
-    return Effect.fn(function* (input: IndexParams) {
+    return Effect.fn(function* (input: WorkflowInput) {
       const [db, r2, aiRaw, vec] = yield* Effect.all([
         dbClient.raw,
         bucketClient.raw,
@@ -35,12 +32,7 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
         vecClient.raw,
       ]);
 
-      const env: JobsEnv = {
-        DB: db,
-        ARCHIVE_BUCKET: r2,
-        AI: aiRaw,
-        ...definedModelVars(modelVars),
-      };
+      const env = makeJobsEnv(db, r2, aiRaw, modelVars);
 
       const evidence = new R2EvidenceStore(r2);
       const { jobId, libraryId } = input;
@@ -48,20 +40,7 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
       const pipeline = Effect.gen(function* () {
         const job = yield* Cloudflare.Workflows.task(
           "load",
-          Effect.tryPromise(async () => {
-            const j = await db
-              .prepare("SELECT * FROM jobs WHERE id = ? AND library_id = ?")
-              .bind(jobId, libraryId)
-              .first<{ id: string; item_id: string; payload: string }>();
-
-            if (!j) throw new Error(`job ${jobId} not found`);
-            await db
-              .prepare("UPDATE jobs SET status = 'running', updated_at = ? WHERE id = ?")
-              .bind(nowIso(), jobId)
-              .run();
-
-            return j;
-          }).pipe(Effect.orDie),
+          Effect.tryPromise(() => loadRunningJob(db, libraryId, jobId)).pipe(Effect.orDie),
         );
 
         const { content_revision_id } = JSON.parse(job.payload) as {
@@ -79,10 +58,7 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
 
             if (!jsonl) throw new Error(`no blocks for ${content_revision_id}`);
 
-            return jsonl
-              .split("\n")
-              .filter(Boolean)
-              .map((l) => JSON.parse(l) as { id: string; kind: string; text: string });
+            return parseBlocksJsonl(jsonl);
           }).pipe(Effect.orDie),
         );
 
@@ -127,7 +103,7 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
                     i,
                     JSON.stringify(c.blockRange),
                     c.text,
-                    "tok-v1",
+                    TOKENIZER_VERSION,
                     EMBEDDING_VERSION,
                     now,
                   ),
@@ -212,32 +188,12 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
       yield* pipeline.pipe(
         Effect.catchDefect((err) =>
           Effect.gen(function* () {
-            yield* Effect.tryPromise(async () => {
-              await db
-                .prepare(
-                  "UPDATE jobs SET status = 'failed', result = 'workflow_error', error = ?, updated_at = ? WHERE id = ?",
-                )
-                .bind(
-                  err instanceof Error ? err.message.slice(0, 500) : String(err),
-                  nowIso(),
-                  jobId,
-                )
-                .run();
-            }).pipe(Effect.ignore);
+            yield* markWorkflowError(db, jobId, null, err instanceof Error ? err : String(err));
 
             return yield* Effect.die(err);
           }),
         ),
       );
     });
-  }).pipe(
-    Effect.provide(
-      Layer.mergeAll(
-        Cloudflare.D1.QueryDatabaseBinding,
-        Cloudflare.R2.ReadWriteBucketBinding,
-        Cloudflare.Workers.AIBinding,
-        Cloudflare.Vectorize.SearchIndexBinding,
-      ),
-    ),
-  ),
+  }).pipe(Effect.provide(Layer.mergeAll(JobsBaseLayer, Cloudflare.Vectorize.SearchIndexBinding))),
 ) {}

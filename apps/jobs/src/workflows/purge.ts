@@ -2,11 +2,7 @@ import { nowIso } from "@recally/domain";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Effect from "effect/Effect";
 import { Database } from "../../../../infra/resources";
-
-interface JobParams {
-  jobId: string;
-  libraryId: string;
-}
+import { markNotImplemented, type WorkflowInput } from "./common";
 
 // PurgeWorkflow (§15.1): tombstone-first delete. M5 scope — this skeleton
 // clears search index rows and marks the job; R2/Vectorize sweep lands there.
@@ -15,7 +11,7 @@ export class PurgeWorkflow extends Cloudflare.Workflow<PurgeWorkflow>()(
   Effect.gen(function* () {
     const dbClient = yield* Cloudflare.D1.QueryDatabase(Database);
 
-    return Effect.fn(function* (input: JobParams) {
+    return Effect.fn(function* (input: WorkflowInput) {
       const db = yield* dbClient.raw;
       const { jobId, libraryId } = input;
 
@@ -64,19 +60,12 @@ export class ExportWorkflow extends Cloudflare.Workflow<ExportWorkflow>()(
   Effect.gen(function* () {
     const dbClient = yield* Cloudflare.D1.QueryDatabase(Database);
 
-    return Effect.fn(function* (input: JobParams) {
+    return Effect.fn(function* (input: WorkflowInput) {
       const db = yield* dbClient.raw;
       const { jobId } = input;
       yield* Cloudflare.Workflows.task(
         "todo",
-        Effect.tryPromise(async () => {
-          await db
-            .prepare(
-              "UPDATE jobs SET status = 'failed', result = 'not_implemented', updated_at = ? WHERE id = ?",
-            )
-            .bind(nowIso(), jobId)
-            .run();
-        }).pipe(Effect.orDie),
+        Effect.tryPromise(() => markNotImplemented(db, jobId)).pipe(Effect.orDie),
       );
     });
   }).pipe(Effect.provide(Cloudflare.D1.QueryDatabaseBinding)),
@@ -88,19 +77,12 @@ export class DigestWorkflow extends Cloudflare.Workflow<DigestWorkflow>()(
   Effect.gen(function* () {
     const dbClient = yield* Cloudflare.D1.QueryDatabase(Database);
 
-    return Effect.fn(function* (input: JobParams) {
+    return Effect.fn(function* (input: WorkflowInput) {
       const db = yield* dbClient.raw;
       const { jobId } = input;
       yield* Cloudflare.Workflows.task(
         "todo",
-        Effect.tryPromise(async () => {
-          await db
-            .prepare(
-              "UPDATE jobs SET status = 'failed', result = 'not_implemented', updated_at = ? WHERE id = ?",
-            )
-            .bind(nowIso(), jobId)
-            .run();
-        }).pipe(Effect.orDie),
+        Effect.tryPromise(() => markNotImplemented(db, jobId)).pipe(Effect.orDie),
       );
     });
   }).pipe(Effect.provide(Cloudflare.D1.QueryDatabaseBinding)),

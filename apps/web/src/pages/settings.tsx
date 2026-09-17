@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
-import { type ApiToken, api, type Me } from "../api";
+import { TOKEN_SCOPES, type TokenScope } from "@recally/contracts";
+import { useCallback, useEffect, useState } from "react";
+import { type ApiToken, api, errorMessage, type Me } from "../api";
 import { timeAgo } from "../components/bits";
 
-const ALL_SCOPES = [
-  { id: "items:read", label: "items:read", hint: "read library + content" },
-  { id: "items:write", label: "items:write", hint: "save urls, re-capture" },
-  { id: "search:read", label: "search:read", hint: "search the archive" },
-  { id: "notes:write", label: "notes:write", hint: "write notes" },
-  { id: "shares:write", label: "shares:write", hint: "create share links" },
-] as const;
+const SCOPE_HINTS: Partial<Record<TokenScope, string>> = {
+  "items:read": "read library + content",
+  "items:write": "save urls, re-capture",
+  "search:read": "search the archive",
+  "notes:write": "write notes",
+  "shares:write": "create share links",
+};
+
+const VISIBLE_SCOPES = TOKEN_SCOPES.filter((scope) => SCOPE_HINTS[scope]);
 
 export function SettingsPage() {
   const [me, setMe] = useState<Me | null>(null);
@@ -22,18 +25,15 @@ export function SettingsPage() {
   const [fresh, setFresh] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = () => {
+  const refreshTokens = useCallback(() => api.listTokens().then((r) => setTokens(r.tokens)), []);
+
+  useEffect(() => {
     api
       .me()
       .then(setMe)
-      .catch((e) => setError(e.message));
-    api
-      .listTokens()
-      .then((r) => setTokens(r.tokens))
-      .catch(() => {});
-  };
-
-  useEffect(load, []);
+      .catch((e) => setError(errorMessage(e)));
+    void refreshTokens().catch(() => {});
+  }, [refreshTokens]);
 
   const create = async () => {
     if (!name.trim() || scopes.size === 0) return;
@@ -42,9 +42,9 @@ export function SettingsPage() {
       const r = await api.createToken(name.trim(), [...scopes], null);
       setFresh(r.token);
       setName("");
-      api.listTokens().then((r2) => setTokens(r2.tokens));
+      await refreshTokens();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(errorMessage(e));
     }
   };
 
@@ -90,25 +90,25 @@ export function SettingsPage() {
           onChange={(e) => setName(e.target.value)}
         />
         <div className="mb-3 flex flex-wrap gap-2">
-          {ALL_SCOPES.map((s) => (
+          {VISIBLE_SCOPES.map((scope) => (
             <button
-              key={s.id}
+              key={scope}
               type="button"
-              title={s.hint}
+              title={SCOPE_HINTS[scope]}
               onClick={() => {
                 const next = new Set(scopes);
 
-                if (next.has(s.id)) next.delete(s.id);
-                else next.add(s.id);
+                if (next.has(scope)) next.delete(scope);
+                else next.add(scope);
                 setScopes(next);
               }}
               className={`rounded-full border px-3 py-1 font-mono text-[11px] ${
-                scopes.has(s.id)
+                scopes.has(scope)
                   ? "border-accent bg-accent-soft font-semibold text-accent"
                   : "border-line text-ink-3 hover:border-ink-3"
               }`}
             >
-              {s.label}
+              {scope}
             </button>
           ))}
         </div>
@@ -147,12 +147,7 @@ export function SettingsPage() {
             <button
               type="button"
               className="rounded-md border border-line px-2.5 py-1 text-[11.5px] text-ink-2 hover:border-danger hover:text-danger"
-              onClick={() =>
-                void api
-                  .revokeToken(t.id)
-                  .then(() => api.listTokens())
-                  .then((r) => setTokens(r.tokens))
-              }
+              onClick={() => void api.revokeToken(t.id).then(refreshTokens)}
             >
               revoke
             </button>

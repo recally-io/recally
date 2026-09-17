@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { adapterProvenance } from "./provenance";
 import type { AdapterFetch, AdapterResult, SiteAdapter } from "./types";
 
 // news.ycombinator.com/item?id=N → item + comment tree via the Algolia HN API.
@@ -65,10 +66,7 @@ export const hackernewsItemAdapter: SiteAdapter = {
         comments_truncated: truncated,
         children: data.children ?? [],
       },
-      provenance: {
-        endpointUrls: [endpoint],
-        fetchedAt: new Date().toISOString(),
-      },
+      provenance: adapterProvenance([endpoint]),
       mediaRefs: [],
       canonicalUrl: `https://news.ycombinator.com/item?id=${data.id}`,
     };

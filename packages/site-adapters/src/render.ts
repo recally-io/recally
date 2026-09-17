@@ -24,6 +24,10 @@ export function renderAdapterRecord(bodyJson: string): RenderedBlock[] | null {
   return null;
 }
 
+function formatMeta(parts: Array<string | null | undefined>): string {
+  return parts.filter(Boolean).join(" · ");
+}
+
 // --- HN ---
 
 interface HnNode {
@@ -48,16 +52,14 @@ function renderHnItem(r: HnItem): RenderedBlock[] {
 
   if (r.title) blocks.push({ kind: "heading", text: r.title });
 
-  const meta = [
+  const meta = formatMeta([
     r.points != null ? `${r.points} points` : null,
     r.author ? `by ${r.author}` : null,
     r.created_at ? new Date(r.created_at).toDateString() : null,
     r.comment_count_fetched != null
       ? `${r.comment_count_fetched} comments${r.comments_truncated ? " (truncated)" : ""}`
       : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ]);
 
   if (meta) blocks.push({ kind: "paragraph", text: meta });
 
@@ -145,16 +147,14 @@ function renderGithubRepo(r: GhRepo): RenderedBlock[] {
 
   if (r.description) blocks.push({ kind: "paragraph", text: r.description });
 
-  const meta = [
+  const meta = formatMeta([
     r.stars != null ? `${r.stars} stars` : null,
     r.language,
     r.license,
     r.pushed_at ? `updated ${new Date(r.pushed_at).toDateString()}` : null,
     r.topics?.length ? r.topics.join(", ") : null,
     r.homepage,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ]);
 
   if (meta) blocks.push({ kind: "paragraph", text: meta });
 

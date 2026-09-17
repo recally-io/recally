@@ -1,6 +1,6 @@
 import { sha256Hex } from "./hash";
 
-export interface OperationKeyInput {
+interface OperationKeyInput {
   libraryId: string;
   inputRevision: string;
   stage: string;

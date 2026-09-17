@@ -1,7 +1,7 @@
 import { DEFAULT_LIMITS } from "@recally/domain";
 import { tokenizeForFts } from "./tokenize";
 
-export interface SourceBlock {
+interface SourceBlock {
   id: string;
   kind: string;
   text: string;

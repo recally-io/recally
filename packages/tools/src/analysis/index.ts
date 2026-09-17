@@ -1,7 +1,9 @@
 import type { ToolSpec } from "@recally/agent-runtime";
 import { summaryOutputSchema } from "@recally/ai";
+import type { ContentBlock, ToolContext } from "@recally/capture";
 import { AppError } from "@recally/domain";
 import { z } from "zod";
+import { parseBlocksJsonl } from "../content-blocks";
 import type { ToolDeps } from "../deps";
 
 // AnalysisAgent toolset (§10.1): read-only over one fixed snapshot. No web,
@@ -27,23 +29,18 @@ const proposeSummaryInput = z.object({
   }),
 });
 
-interface BlocksDoc {
-  blocks: Array<{ id: string; kind: string; text: string }>;
-}
-
-async function loadBlocks(deps: ToolDeps, ctx: unknown, revisionId: string): Promise<BlocksDoc> {
+async function loadBlocks(
+  deps: ToolDeps,
+  ctx: ToolContext,
+  revisionId: string,
+): Promise<ContentBlock[]> {
   // blocks.jsonl layout: one {id, kind, text} per line (§4.4).
   if (!deps.readRevisionBlocks) throw new AppError("internal", "revision reader not configured");
-  const jsonl = await deps.readRevisionBlocks(ctx as never, revisionId);
+  const jsonl = await deps.readRevisionBlocks(ctx, revisionId);
 
   if (jsonl === null) throw new AppError("not_found", `no blocks for revision ${revisionId}`);
 
-  return {
-    blocks: jsonl
-      .split("\n")
-      .filter(Boolean)
-      .map((l) => JSON.parse(l)),
-  };
+  return parseBlocksJsonl(jsonl);
 }
 
 export function analysisTools(deps: ToolDeps): ToolSpec[] {
@@ -55,16 +52,16 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
       schema: readOutlineInput,
       async execute(_ctx, args) {
         const { content_revision_id } = readOutlineInput.parse(args);
-        const doc = await loadBlocks(deps, _ctx, content_revision_id);
+        const blocks = await loadBlocks(deps, _ctx, content_revision_id);
 
-        const index = doc.blocks.map((b) => ({
+        const index = blocks.map((b) => ({
           id: b.id,
           kind: b.kind,
           chars: b.text.length,
         }));
 
         return {
-          content: `${doc.blocks.length} blocks, ${index.reduce((s, b) => s + b.chars, 0)} chars`,
+          content: `${blocks.length} blocks, ${index.reduce((s, b) => s + b.chars, 0)} chars`,
           details: { index },
         };
       },
@@ -76,8 +73,8 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
       schema: readBlocksInput,
       async execute(_ctx, args) {
         const { content_revision_id, start, count } = readBlocksInput.parse(args);
-        const doc = await loadBlocks(deps, _ctx, content_revision_id);
-        const slice = doc.blocks.slice(start, start + count);
+        const blocks = await loadBlocks(deps, _ctx, content_revision_id);
+        const slice = blocks.slice(start, start + count);
 
         const text = slice
           .map((b) => `[${b.id}] ${b.text}`)
@@ -86,7 +83,7 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
 
         return {
           content: text || "(empty range)",
-          details: { start, count: slice.length, total: doc.blocks.length },
+          details: { start, count: slice.length, total: blocks.length },
         };
       },
     },
