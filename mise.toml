@@ -4,7 +4,6 @@
 [tools]
 node = "24"
 pnpm = "12"
-wrangler = "4"
 
 # ============================================
 # ENVIRONMENT
@@ -15,18 +14,12 @@ _.file = [".env"]
 # ============================================
 # DEVELOPMENT
 # ============================================
-[tasks."dev:api"]
-description = "Run App Worker locally (wrangler dev)"
-dir = "apps/api"
-run = "wrangler dev"
-
-[tasks."dev:jobs"]
-description = "Run Jobs Worker locally (wrangler dev)"
-dir = "apps/jobs"
-run = "wrangler dev"
+[tasks."dev"]
+description = "Run both workers + web in workerd (alchemy dev)"
+run = "alchemy dev"
 
 [tasks."dev:ui"]
-description = "Run web dev server (vite)"
+description = "Run web dev server (vite) against the running alchemy dev worker"
 dir = "apps/web"
 run = "pnpm dev"
 alias = "dev-ui"
@@ -58,7 +51,7 @@ run = "pnpm test"
 # BUILD
 # ============================================
 [tasks."build"]
-description = "Build all workspaces"
+description = "Build web SPA (required before deploy/dev)"
 run = "pnpm build"
 
 # ============================================
@@ -76,55 +69,36 @@ file="migrations/${next}_${name}.sql"
 touch "$file"
 echo "Created $file"
 '''
-
-[tasks."migrate:local"]
-description = "Apply D1 migrations to local dev database"
-dir = "apps/api"
-run = "wrangler d1 migrations apply recally-dev --local"
-
-[tasks."migrate:status"]
-description = "Show local D1 migration status"
-dir = "apps/api"
-run = "wrangler d1 migrations list recally-dev --local"
-
-# ============================================
-# GENERATED TYPES
-# ============================================
-[tasks."types"]
-description = "Regenerate worker-configuration.d.ts for app workers"
-run = "pnpm types"
+# Migrations are applied by alchemy (deploy, and `alchemy dev` against the local
+# D1 simulator) from the `migrations` prop in infra/resources.ts — there is no
+# separate apply/status command.
 
 # ============================================
 # DEPLOY
 # ============================================
-[tasks."deploy:jobs"]
-description = "Deploy Jobs Worker"
-dir = "apps/jobs"
-run = "wrangler deploy"
+[tasks."deploy"]
+description = "Build web + deploy the stack (stage: --stage or $ALCHEMY_STAGE)"
+run = "pnpm deploy"
 
-[tasks."deploy:api"]
-description = "Deploy App Worker (build web first)"
-depends = ["build:ui"]
-dir = "apps/api"
-run = "wrangler deploy"
+[tasks."plan"]
+description = "Preview stack changes without applying"
+run = "pnpm plan"
 
-[tasks."build:ui"]
-description = "Build web frontend"
-dir = "apps/web"
-run = "pnpm build"
+[tasks."destroy"]
+description = "Delete every resource in the current stage"
+run = "pnpm destroy"
 
 # ============================================
 # UTILITY
 # ============================================
 [tasks."setup"]
-description = "First-time setup: install deps, apply local migrations, generate types"
+description = "First-time setup: install deps, build the SPA"
 run = '''
 #!/usr/bin/env bash
 set -e
 pnpm install
-pnpm types
-mise run migrate:local
-echo "Done. Run 'mise run dev:api' / 'dev:jobs' / 'dev:ui'."
+pnpm build
+echo "Done. Auth with 'alchemy profile edit --add Cloudflare', then 'mise run dev'."
 '''
 
 [tasks."doctor"]
@@ -132,6 +106,5 @@ description = "Check environment"
 run = '''
 echo "node: $(node --version)"
 echo "pnpm: $(pnpm --version)"
-echo "wrangler: $(wrangler --version)"
-wrangler whoami || true
+alchemy profile list || true
 '''

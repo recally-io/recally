@@ -21,24 +21,15 @@
     "effect": "4.0.0-rc.112"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260702.1",
+    "@cloudflare/workers-types": "4.20251014.0",
     "@oxlint/plugins": "1.83.0",
     "oxfmt": "0.68.0",
     "oxlint": "1.83.0",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@12.3.4",
-  "pnpm": {
-    "overrides": {
-      "effect": "4.0.0-rc.112",
-      "@effect/platform": "4.0.0-rc.112",
-      "@effect/platform-node": "4.0.0-rc.112",
-      "@effect/platform-node-shared": "4.0.0-rc.112",
-      "@effect/vitest": "4.0.0-rc.112"
-    }
-  }
+  "packageManager": "pnpm@12.3.4"
 }

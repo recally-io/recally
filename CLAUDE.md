@@ -48,7 +48,7 @@ pnpm lint:fix         # oxlint autofix
 pnpm format           # oxfmt
 pnpm format:check     # oxfmt without writing
 pnpm build            # build web SPA (required before deploy/dev)
-pnpm deploy           # web build + alchemy deploy (first deploy: --adopt)
+pnpm deploy           # web build + alchemy deploy (stage defaults to live_$USER)
 pnpm dev              # alchemy dev — workers in workerd, web via Vite, hot reload
 pnpm plan             # preview stack changes without applying
 alchemy profile edit --add Cloudflare   # one-time Cloudflare auth (OAuth)
@@ -56,7 +56,9 @@ alchemy profile edit --add Cloudflare   # one-time Cloudflare auth (OAuth)
 
 Infra lives in a single root Stack (`alchemy.run.ts`) + `infra/`; both workers
 are Effectful Constructors (`apps/*/src/worker.ts`). There is no wrangler
-config; worker types come from the worker files, not `wrangler types`.
+config; worker types come from the worker files, not `wrangler types`. Every
+resource name (worker scripts included) is stage-derived, so `--stage prod` is
+a physically separate stack — never pin a physical name in `infra/`.
 
 ## Code quality gate
 

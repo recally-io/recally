@@ -3,7 +3,11 @@
 // marking queryable. namespace scopes queries; it is not an auth boundary.
 
 export class VectorIndex {
-  constructor(private readonly index: VectorizeIndex) {}
+  // `Vectorize` is the bound-index binding (one index per binding), which is
+  // what alchemy's SearchIndex binding hands over. `VectorizeIndex` would be
+  // the multi-index variant and differs only in `describe()`, which this
+  // adapter never calls.
+  constructor(private readonly index: Vectorize) {}
 
   async upsert(
     vectors: Array<{

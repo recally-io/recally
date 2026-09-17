@@ -2,8 +2,9 @@
 
 The infra is a single root Stack (`alchemy.run.ts`) powered by alchemy
 (Infrastructure-as-Effects, Effect v4 rc). Resources are declared once in
-`infra/resources.ts` and bound into both workers. Wrangler configs are gone;
-`alchemy` owns provisioning, bundling, migrations, and cron.
+`infra/resources.ts` and bound into both workers. Wrangler is gone from the
+repo and from the account: `alchemy` owns provisioning, bundling, migrations,
+and cron.
 
 ## One-time setup
 
@@ -13,42 +14,43 @@ The infra is a single root Stack (`alchemy.run.ts`) powered by alchemy
    pnpm exec alchemy profile edit --add Cloudflare
    ```
 
-   Credentials land in `~/.alchemy/profiles.json` (profile `default`).
-   No `CLOUDFLARE_API_TOKEN` env var and no `wrangler login` needed.
+   Credentials land under `~/.alchemy/` (profile `default`). No
+   `CLOUDFLARE_API_TOKEN` env var and no `wrangler login` needed.
 
 2. Create `.env` from `.env.example` and fill `DEV_LIBRARY_ID` (and model
    overrides if desired). Values present at deploy time are bound to the
    workers as secrets; unset keys fall back to the code defaults in
    `packages/ai/src/models.ts`.
 
-## First deploy (adopts existing resources)
+   `DEV_LIBRARY_ID` only opens the anonymous auth path if a `libraries` row
+   with that id exists — on a fresh database every `/api/v1` request answers
+   `needs_login` until one is provisioned (Access login, or an insert).
 
-The dev resources created under wrangler (D1 `recally-dev`, R2
-`recally-archive-dev` / `recally-backup-dev`, Vectorize `recally-chunks-dev`,
-both worker scripts) are adopted — not recreated — by the first deploy:
-
-```
-pnpm build        # web SPA → apps/web/dist (worker assets)
-pnpm exec alchemy deploy --adopt --yes
-```
-
-- D1 migration history applied by `wrangler d1 migrations apply` is copied
-  into alchemy's `__alchemy_migrations` bookkeeping automatically.
-- `--adopt` is only needed on the first deploy (foreign ownership tags).
-- Outputs printed at the end: `apiUrl`, `jobsUrl` (workers.dev).
-
-## Routine deploy / plan / destroy
+## Deploy
 
 ```
-pnpm deploy          # web build + alchemy deploy (dev stage)
-pnpm plan            # diff without applying
-pnpm exec alchemy destroy   # delete every resource in the stage
+pnpm deploy                  # web build + alchemy deploy
+pnpm exec alchemy deploy --yes
 ```
 
-Stages isolate everything: `alchemy deploy --stage prod` is a physically
-separate copy. `dev`/`prod` sharing the same physical resources (the old
-wrangler setup) is intentionally NOT reproduced; when prod launches, make the
-resource names stage-conditional in `infra/resources.ts`.
+Outputs printed at the end: `apiUrl`, `jobsUrl` (workers.dev).
+
+Every resource name — the two worker scripts included — is derived from the
+app, the logical id, and the stage. The deploy stage defaults to `live_$USER`
+and `alchemy dev` to `dev_$USER`; override with `--stage <name>` or
+`$ALCHEMY_STAGE`. Two stages therefore never share a D1, bucket, index, or
+script, and no `--adopt` is ever needed.
+
+D1 migrations in `migrations/` are applied on create and recorded in alchemy's
+`__alchemy_migrations` table. There is no separate apply or status command.
+
+## Routine plan / destroy
+
+```
+pnpm plan                    # diff without applying
+pnpm destroy                 # delete every resource in the stage
+pnpm exec alchemy plan --stage prod
+```
 
 ## Local development
 
@@ -58,8 +60,8 @@ pnpm dev     # alchemy dev
 ```
 
 - Workers run locally in workerd with hot reload; D1/R2 are local simulators
-  (fresh and empty — not the adopted remote resources). Pin a resource live in
-  dev with `Alchemy.remote()` if you need real data.
+  (fresh and empty — not the deployed resources). Pin a resource live in dev
+  with `Alchemy.remote()` if you need real data.
 - Web: keep `pnpm --filter @recally/web dev` for SPA HMR and point
   `vite.config.ts`'s proxy at the api worker's local URL that `alchemy dev`
   prints.
@@ -72,8 +74,8 @@ pnpm dev     # alchemy dev
 ALCHEMY_INTEG=1 pnpm test tests/integration/stack.test.ts
 ```
 
-Deploys an isolated `alchemy-integ` stage, asserts /health + share 404 + SPA
-fallback, then destroys (keep with `NO_DESTROY=1`).
+Deploys an isolated `alchemy-integ` stage, asserts SPA fallback + share 404 +
+the auth gate, then destroys (keep with `NO_DESTROY=1`).
 
 ## Notes / gotchas
 
@@ -85,6 +87,12 @@ fallback, then destroys (keep with `NO_DESTROY=1`).
   evaluates them because `loadSkill` imports them dynamically (runtime only).
 - `BACKUP_BUCKET` is managed by the Stack but not bound into any worker yet —
   the export milestone (§15.2) binds it.
-- Old wrangler workflow names (`recally-ingest`, …) are superseded by
-  alchemy-managed names derived from the host worker; in-flight instances from
-  the wrangler era are not migrated (dev-only concern).
+- The wrangler-era resources (`recally-api`/`recally-jobs`/`recally-api-prod`
+  scripts, D1 `recally-dev`, both `recally-*-dev` buckets, Vectorize
+  `recally-chunks-dev`) were deleted on 2026-09-17; their data was not carried
+  over. In particular `recally.io` and `www.recally.io` no longer have a route
+  bound, so the public hostname is dark until a stage binds it (see below).
+- Binding `recally.io` needs a decision first: alchemy stages do not share a
+  data plane, so the route belongs to whichever stage serves real data. Add it
+  via the Worker's `routes` prop (zone routes, like the wrangler `env.prod`
+  config) once that is settled.

@@ -3,13 +3,14 @@ import * as Cloudflare from "alchemy/Cloudflare";
 import * as Effect from "effect/Effect";
 import Api from "./apps/api/src/worker";
 import Jobs from "./apps/jobs/src/worker";
-import { ArchiveBucket, BackupBucket, Database, VectorIndex } from "./infra/resources";
+import { ArchiveBucket, Database, VectorIndex } from "./infra/resources";
 
 // Recally — personal reading archive on Cloudflare (plan §3).
 // Single Stack: both workers + shared D1/R2/Vectorize in one plan.
 //
-// First deploy adopts the pre-existing wrangler-provisioned resources:
-//   pnpm alchemy deploy --adopt
+// Every resource (including both worker scripts) is named from the stage, so
+// `alchemy deploy --stage prod` provisions a physically separate stack. The
+// stage defaults to `live_$USER`; pin it with `--stage` or `$ALCHEMY_STAGE`.
 export default Alchemy.Stack(
   "Recally",
   {
@@ -20,7 +21,6 @@ export default Alchemy.Stack(
     // Shared data plane — declared once, bound into both workers.
     yield* Database;
     yield* ArchiveBucket;
-    yield* BackupBucket;
     yield* VectorIndex;
 
     const api = yield* Api;

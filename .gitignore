@@ -6,10 +6,8 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# Wrangler / Cloudflare / alchemy
-.wrangler/
+# Cloudflare / alchemy
 .alchemy/
-worker-configuration.d.ts
 
 # Env
 .env

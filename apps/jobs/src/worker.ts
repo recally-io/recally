@@ -83,7 +83,7 @@ const sweepOutbox = (db: JobsEnv["DB"], bindings: Record<string, WorkflowBinding
 export default class Jobs extends Cloudflare.Worker<Jobs>()(
   "Jobs",
   {
-    name: "recally-jobs",
+    // Stage-scoped physical name derived by alchemy (see apps/api worker).
     main: import.meta.url,
     compatibility: { date: "2025-10-01", flags: ["nodejs_compat"] },
   },

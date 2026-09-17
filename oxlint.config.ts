@@ -1,8 +1,8 @@
 import { defineConfig } from "oxlint";
 
 // anti-slop (vendored at tools/oxlint/anti-slop) owns the opinionated
-// TypeScript and Effect rules. Biome stays the formatter and keeps its own
-// recommended ruleset, so `pnpm lint` runs both.
+// TypeScript and Effect rules. Oxfmt is the formatter (`pnpm format`); the
+// anti-slop blank-line layout rule is what keeps spacing consistent in lint.
 //
 // Rules are vendored, not dependency-managed: edit them under
 // tools/oxlint/anti-slop/ to match this repo's standards. See UPSTREAM.md

@@ -17,7 +17,8 @@ import app from "./index";
 export default class Api extends Cloudflare.Worker<Api>()(
   "Api",
   {
-    name: "recally-api",
+    // No `name` override: alchemy derives a stage-scoped physical name, so
+    // each stage deploys its own script instead of overwriting a shared one.
     main: import.meta.url,
     compatibility: { date: "2026-09-11", flags: ["nodejs_compat"] },
     // Assets are served first; requests matching no asset invoke the Worker,

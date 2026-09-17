@@ -3,8 +3,7 @@
 // These are read with effect/Config during the Construction phase, which makes
 // alchemy bind them onto the worker environment (docs: environments/secrets).
 // Only keys that are actually set get bound; unset keys stay unset and the
-// code-level defaults in @recally/ai apply — identical semantics to the old
-// wrangler vars + .dev.vars setup.
+// code-level defaults in @recally/ai apply.
 //
 // This module is imported by worker files in apps/*, so it must stay free of
 // @recally/* imports (root-level files aren't workspace packages).
