@@ -24,6 +24,7 @@ export class D1R2RunStore implements RunStore {
     },
   ): Promise<SourceRef> {
     const sourceId = newId();
+
     const file =
       input.kind === "screenshot"
         ? "screenshot.webp"
@@ -32,6 +33,7 @@ export class D1R2RunStore implements RunStore {
           : input.kind === "adapter_record"
             ? "record.json"
             : "response-body.html";
+
     const key = r2Keys.source(ctx.libraryId, ctx.runId, ctx.attemptId, sourceId, file);
     const put = await this.evidence.put(key, input.body, input.contentType);
     await this.db
@@ -54,6 +56,7 @@ export class D1R2RunStore implements RunStore {
         nowIso(),
       )
       .run();
+
     return {
       sourceId,
       url: input.url,
@@ -79,7 +82,9 @@ export class D1R2RunStore implements RunStore {
         sha256: string;
         byte_size: number;
       }>();
+
     if (!row) return null;
+
     return {
       ref: {
         sourceId: row.id,
@@ -109,6 +114,7 @@ export class D1R2RunStore implements RunStore {
         byte_size: number;
         r2_key: string;
       }>();
+
     return (rows.results ?? []).map((r) => ({
       sourceId: r.id,
       url: r.url,
@@ -127,6 +133,7 @@ export class D1R2RunStore implements RunStore {
       )
       .bind(ctx.runId, ctx.libraryId, toolName.length + 1, `${toolName}:`)
       .first<{ n: number }>();
+
     return row?.n ?? 0;
   }
 
@@ -134,6 +141,7 @@ export class D1R2RunStore implements RunStore {
     const obsId = newId();
     const key = r2Keys.observation(ctx.libraryId, ctx.runId, ctx.attemptId, obsId);
     await this.evidence.put(key, JSON.stringify(observation), "application/json");
+
     // Next sequence for this attempt: count existing events. Sequence conflicts
     // surface via the UNIQUE(run_id, attempt_id, sequence) constraint.
     const seq = await this.db
@@ -142,6 +150,7 @@ export class D1R2RunStore implements RunStore {
       )
       .bind(ctx.runId, ctx.attemptId)
       .first<{ seq: number }>();
+
     await this.db
       .prepare(
         `INSERT INTO agent_events (id, library_id, run_id, attempt_id, sequence, kind, evidence_ref, created_at)
@@ -149,6 +158,7 @@ export class D1R2RunStore implements RunStore {
       )
       .bind(newId(), ctx.libraryId, ctx.runId, ctx.attemptId, seq?.seq ?? 1, key, nowIso())
       .run();
+
     return key;
   }
 }

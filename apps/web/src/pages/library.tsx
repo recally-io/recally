@@ -34,6 +34,7 @@ export function LibraryPage() {
   useEffect(() => {
     if (!hasActive) return;
     const t = setInterval(() => void refresh(), 4000);
+
     return () => clearInterval(t);
   }, [hasActive, refresh]);
 
@@ -41,11 +42,14 @@ export function LibraryPage() {
     () =>
       items.filter((i) => {
         if (filter === "unread") return i.read_status !== "read";
+
         if (filter === "partial") return i.content_quality === "partial";
+
         return true;
       }),
     [items, filter],
   );
+
   const unread = items.filter((i) => i.read_status !== "read").length;
 
   const chip = (f: Filter, label: string) => (
@@ -81,6 +85,7 @@ export function LibraryPage() {
         {filtered.map((it) => {
           const capturing = it.latest_job && JOB_ACTIVE.has(it.latest_job.status);
           const failed = it.latest_job?.status === "failed" && !it.current_snapshot_id;
+
           return (
             <li key={it.id}>
               <Link

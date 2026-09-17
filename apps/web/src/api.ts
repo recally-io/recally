@@ -3,7 +3,9 @@
 const headers = () => {
   const h: Record<string, string> = { "content-type": "application/json" };
   const t = import.meta.env.VITE_API_TOKEN;
+
   if (t) h.authorization = `Bearer ${t}`;
+
   return h;
 };
 
@@ -20,13 +22,15 @@ export class ApiError extends Error {
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
-    headers: { ...headers(), ...(init?.headers ?? {}) },
+    headers: { ...headers(), ...init?.headers },
   });
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const b = body as { message?: string; code?: string; error?: string };
     throw new ApiError(res.status, b.code ?? b.error ?? "", b.message ?? `${res.status}`);
   }
+
   return res.json() as Promise<T>;
 }
 

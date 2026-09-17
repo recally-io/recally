@@ -18,6 +18,7 @@ export const ERROR_CODES = [
   "write_barrier",
   "internal",
 ] as const;
+
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -56,6 +57,7 @@ export class AppError extends Error {
     this.code = code;
     this.httpStatus = HTTP_STATUS[code];
     this.retryable = opts.retryable ?? false;
+
     if (opts.nextAction !== undefined) this.nextAction = opts.nextAction;
   }
 }
@@ -79,9 +81,12 @@ export function toErrorResponse(
       request_id: requestId,
       retryable: err.retryable,
     };
+
     if (err.nextAction !== undefined) body.next_action = err.nextAction;
+
     return { status: err.httpStatus, body };
   }
+
   return {
     status: 500,
     body: {

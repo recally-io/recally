@@ -43,7 +43,8 @@ docs/                 plan.md, decisions/, runbooks/
 pnpm install
 pnpm typecheck        # root stack program + all packages
 pnpm test             # vitest (ALCHEMY_INTEG=1 adds live-stack tests)
-pnpm lint             # biome
+pnpm lint             # oxlint (anti-slop) + biome
+pnpm lint:fix         # autofix spacing, then biome format
 pnpm build            # build web SPA (required before deploy/dev)
 pnpm deploy           # web build + alchemy deploy (first deploy: --adopt)
 pnpm dev              # alchemy dev — workers in workerd, web via Vite, hot reload
@@ -54,6 +55,21 @@ alchemy profile edit --add Cloudflare   # one-time Cloudflare auth (OAuth)
 Infra lives in a single root Stack (`alchemy.run.ts`) + `infra/`; both workers
 are Effectful Constructors (`apps/*/src/worker.ts`). There is no wrangler
 config; worker types come from the worker files, not `wrangler types`.
+
+## Code quality gate
+
+`pnpm lint` runs two tools. Biome is the formatter and keeps its recommended
+ruleset. [anti-slop](https://github.com/dmmulroy/anti-slop) is **vendored** at
+`tools/oxlint/anti-slop/` (see its `UPSTREAM.md`) and owns the opinionated
+TypeScript + Effect rules: no `unknown` at boundaries, no type-assertion
+laundering, no chained `as`, a `SAFETY:` comment on every remaining non-const
+assertion, and a blank-line layout rule.
+
+Treat a new anti-slop finding as a design signal, not lint noise. Fix the
+underlying type or boundary; a `SAFETY:` comment is only correct when the
+invariant really is checked nearby. The rules are ours to edit — change them in
+`tools/oxlint/anti-slop/` and record the deviation in its `UPSTREAM.md` rather
+than weakening severity in `oxlint.config.ts`.
 
 ## Hard rules (from the plan, enforced in review)
 

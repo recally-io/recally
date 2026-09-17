@@ -14,12 +14,14 @@
     "destroy": "alchemy destroy",
     "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
     "test": "vitest run",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint": "oxlint && biome check .",
+    "lint:fix": "oxlint --fix && biome check --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
     "@cloudflare/workers-types": "^4.20260702.1",
+    "@oxlint/plugins": "1.83.0",
+    "oxlint": "1.83.0",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },

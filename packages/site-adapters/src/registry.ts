@@ -13,6 +13,8 @@ export function listAdapters(url: URL): AdapterDescriptor[] {
 
 export function getAdapter(id: string): SiteAdapter {
   const adapter = ADAPTERS.find((a) => a.descriptor.id === id);
+
   if (!adapter) throw new AppError("invalid_input", `unknown adapter ${id}`);
+
   return adapter;
 }

@@ -46,6 +46,7 @@ export async function safeFetch(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort("timeout"), timeoutMs);
     let res: Response;
+
     try {
       res = await fetchFn(url, {
         signal: controller.signal,
@@ -65,6 +66,7 @@ export async function safeFetch(
           retryable: true,
         });
       }
+
       throw new AppError(
         "source_unavailable",
         `fetch failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -76,9 +78,11 @@ export async function safeFetch(
 
     if (res.status >= 300 && res.status < 400) {
       const location = res.headers.get("location");
+
       if (!location) {
         throw new AppError("source_unavailable", `redirect ${res.status} without location`);
       }
+
       url = checkUrlTarget(new URL(location, url).toString()).toString();
       continue;
     }
@@ -88,18 +92,21 @@ export async function safeFetch(
     // A still-set content-encoding means the runtime did not decompress for
     // us — do it ourselves so downstream parsers see real bytes.
     const encoding = res.headers.get("content-encoding")?.toLowerCase();
+
     if (encoding === "gzip" || encoding === "deflate") {
       const ds = new DecompressionStream(encoding);
       body = new Uint8Array(
         await new Response(new Blob([new Uint8Array(body)]).stream().pipeThrough(ds)).arrayBuffer(),
       );
     }
+
     // brotli has no DecompressionStream in workerd — leave it as evidence and
     // let extraction report unavailable instead of producing garbage.
     const headers: Record<string, string> = {};
     res.headers.forEach((v, k) => {
       if (HEADER_ALLOWLIST.has(k.toLowerCase())) headers[k.toLowerCase()] = v;
     });
+
     return {
       finalUrl: url,
       status: res.status,
@@ -109,32 +116,41 @@ export async function safeFetch(
       sha256: await sha256Hex(body),
     };
   }
+
   throw new AppError("policy_denied", `more than ${maxRedirects} redirects`);
 }
 
 async function readLimited(res: Response, maxBytes: number): Promise<Uint8Array> {
   const reader = res.body?.getReader();
+
   if (!reader) return new Uint8Array(await res.arrayBuffer());
   const parts: Uint8Array[] = [];
   let total = 0;
+
   for (;;) {
     const { done, value } = await reader.read();
+
     if (done) break;
     total += value.byteLength;
+
     if (total > maxBytes) {
       await reader.cancel();
       throw new AppError("incomplete_content", `body exceeded ${maxBytes} bytes`, {
         nextAction: "archive_partial",
       });
     }
+
     parts.push(value);
   }
+
   const out = new Uint8Array(total);
   let offset = 0;
+
   for (const c of parts) {
     out.set(c, offset);
     offset += c.byteLength;
   }
+
   return out;
 }
 
@@ -156,6 +172,7 @@ const BLOCK_TAGS = new Set([
   "FIGURE",
   "IMG",
 ]);
+
 const SKIP_TAGS = new Set([
   "SCRIPT",
   "STYLE",
@@ -168,6 +185,7 @@ const SKIP_TAGS = new Set([
   "FORM",
   "IFRAME",
 ]);
+
 const INLINE_TAGS = new Set([
   "A",
   "ABBR",
@@ -196,6 +214,7 @@ const INLINE_TAGS = new Set([
   "VAR",
   "WBR",
 ]);
+
 // Past this size a "block" element is really a layout container — HN nests
 // whole comment trees in tables, and one atomic block leaves the agent no
 // usable ranges to select.
@@ -244,23 +263,30 @@ export async function parseBlocks(html: string): Promise<ParsedSource> {
   }) => {
     if (node.nodeType !== 1) return;
     const tag = node.tagName;
+
     if (SKIP_TAGS.has(tag)) return;
     const text = (node.textContent ?? "").replace(/\s+/g, " ").trim();
+
     if (BLOCK_TAGS.has(tag) && (text.length <= MAX_ATOMIC_BLOCK_CHARS || text.length === 0)) {
       if (text.length > 0 || tag === "IMG" || tag === "FIGURE") {
         blocks.push({ id: `b${++seq}`, kind: blockKind(tag), text });
       }
+
       return;
     }
+
     // Container or oversized block element: flush direct inline text as a
     // paragraph block (e.g. text sitting bare in div/td like HN commtext),
     // then descend into non-inline children in document order.
     let inline = "";
+
     const flush = () => {
       const t = inline.replace(/\s+/g, " ").trim();
+
       if (t) blocks.push({ id: `b${++seq}`, kind: "paragraph", text: t });
       inline = "";
     };
+
     for (const child of Array.from(node.childNodes ?? [])) {
       const c = child as {
         nodeType: number;
@@ -268,11 +294,14 @@ export async function parseBlocks(html: string): Promise<ParsedSource> {
         textContent?: string | null;
         getAttribute?: (n: string) => string | null;
       };
+
       if (c.nodeType === 3 || (c.nodeType === 1 && INLINE_TAGS.has(c.tagName ?? ""))) {
         inline += ` ${c.textContent ?? ""}`;
+
         if (c.tagName === "A") {
           const href = c.getAttribute?.("href") ?? "";
           const t = (c.textContent ?? "").trim();
+
           if (href && t) links.push({ id: `l${++linkSeq}`, text: t.slice(0, 200), href });
         }
       } else {
@@ -280,20 +309,25 @@ export async function parseBlocks(html: string): Promise<ParsedSource> {
         walk(c as never);
       }
     }
+
     flush();
   };
+
   // No document.body fallback: its linkedom getter itself throws when the
   // document has no documentElement (empty/plain-text/JSON bodies).
   const root = document.documentElement;
+
   if (root) walk(root as never);
 
   const meta = (sel: string, attr: string) =>
     document.querySelector(sel)?.getAttribute(attr)?.trim();
+
   const titles = [
     meta("meta[property='og:title']", "content"),
     document.querySelector("title")?.textContent?.trim(),
     document.querySelector("h1")?.textContent?.trim(),
   ].filter((t): t is string => Boolean(t));
+
   const authors = [
     meta("meta[name='author']", "content"),
     meta("meta[property='article:author']", "content"),
@@ -309,18 +343,22 @@ export async function extractCandidates(
 ): Promise<{ parsed: ParsedSource; candidate: BodyCandidate }> {
   const parsed = await parseBlocks(html);
   const all = parsed.blocks.map((b) => b.id);
+
   const chars = (ids: string[]) => {
     const byId = new Map(parsed.blocks.map((b) => [b.id, b]));
+
     return ids.reduce((sum, id) => sum + (byId.get(id)?.text.length ?? 0), 0);
   };
 
   if (extractor === "defuddle") {
     const { Defuddle } = await import("defuddle/node");
     const doc = await Defuddle(html);
+
     // Map defuddle's article html back onto our block list by parsing it.
     if (doc.content) {
       const inner = await parseBlocks(doc.content);
       const ids = inner.blocks.map((b) => b.id);
+
       return {
         parsed: {
           ...parsed,
@@ -333,20 +371,24 @@ export async function extractCandidates(
         },
       };
     }
+
     return {
       parsed,
       candidate: { mode: "defuddle", blockIds: all, charCount: chars(all) },
     };
   }
+
   if (extractor === "structure") {
     // First heading to last content block.
     const firstHeading = parsed.blocks.findIndex((b) => b.kind === "heading");
     const ids = firstHeading >= 0 ? all.slice(firstHeading) : all;
+
     return {
       parsed,
       candidate: { mode: "structure", blockIds: ids, charCount: chars(ids) },
     };
   }
+
   return {
     parsed,
     candidate: { mode: "wide", blockIds: all, charCount: chars(all) },
@@ -359,11 +401,14 @@ export function buildObservation(
   candidate: BodyCandidate,
 ): Observation {
   const byId = new Map(parsed.blocks.map((b) => [b.id, b]));
+
   const selected = candidate.blockIds
     .map((id) => byId.get(id))
     .filter((b): b is ContentBlock => !!b);
+
   const bodyText = selected.map((b) => b.text).join("\n");
   const navShare = parsed.blocks.length ? selected.length / parsed.blocks.length : 0;
+
   const pageKind: Observation["pageKind"] =
     fetched.status === 401 || fetched.status === 403
       ? "login_wall"
@@ -409,17 +454,20 @@ export function webFetchTool(deps: ToolDeps): ToolSpec {
     async execute(ctx, args) {
       const { url_ref } = webFetchInput.parse(args);
       const fetched = await safeFetch(url_ref, deps.fetchFn ?? fetch);
+
       const source = await deps.runStore.saveSource(ctx, {
         url: fetched.finalUrl,
         kind: "response_body",
         contentType: fetched.contentType,
         body: fetched.body,
       });
+
       const html = new TextDecoder().decode(fetched.body);
       const { parsed, candidate } = await extractCandidates(html, "wide");
       const observation = buildObservation(fetched, parsed, candidate);
       observation.source = source;
       const obsRef = await deps.runStore.saveObservation(ctx, observation);
+
       return {
         content: summarizeObservation(observation),
         details: observation,
@@ -439,10 +487,13 @@ export function extractContentTool(deps: ToolDeps): ToolSpec {
     async execute(ctx, args) {
       const { source_id, extractor } = extractContentInput.parse(args);
       const stored = await deps.runStore.getSource(ctx, source_id);
+
       if (!stored) throw new AppError("invalid_input", `unknown source ${source_id}`);
       const html = await deps.evidence.getText(stored.bodyKey);
+
       if (!html) throw new AppError("internal", `missing source body ${stored.bodyKey}`);
       const { parsed, candidate } = await extractCandidates(html, extractor);
+
       const observation = buildObservation(
         {
           finalUrl: stored.ref.url,
@@ -455,8 +506,10 @@ export function extractContentTool(deps: ToolDeps): ToolSpec {
         parsed,
         candidate,
       );
+
       observation.source = stored.ref;
       const obsRef = await deps.runStore.saveObservation(ctx, observation);
+
       return {
         content: summarizeObservation(observation),
         details: observation,
@@ -470,6 +523,7 @@ function summarizeObservation(o: Observation): string {
   const total = o.blockIndex.reduce((s, b) => s + b.chars, 0);
   const first = o.blockIndex[0]?.id;
   const last = o.blockIndex[o.blockIndex.length - 1]?.id;
+
   return [
     `pageKind=${o.pageKind} status=${o.responseStatus ?? "?"} blocks=${o.blockIndex.length} chars=${total}`,
     o.blockIndex.length ? `block ids: ${first}..${last}` : "",

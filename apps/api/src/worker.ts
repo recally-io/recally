@@ -31,10 +31,12 @@ export default class Api extends Cloudflare.Worker<Api>()(
   Effect.gen(function* () {
     const dbClient = yield* Cloudflare.D1.QueryDatabase(Database);
     const bucketClient = yield* Cloudflare.R2.ReadWriteBucket(ArchiveBucket);
+
     const devLibraryId = yield* Config.string("DEV_LIBRARY_ID").pipe(
       Config.option,
       Effect.map((o) => Option.getOrUndefined(o)),
     );
+
     const captureModel = yield* Config.string("CAPTURE_MODEL").pipe(
       Config.option,
       Effect.map((o) => Option.getOrUndefined(o)),
@@ -43,11 +45,13 @@ export default class Api extends Cloudflare.Worker<Api>()(
     return {
       fetch: Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest;
+
         const [db, r2, workerEnv] = yield* Effect.all([
           dbClient.raw,
           bucketClient.raw,
           Cloudflare.Workers.WorkerEnvironment,
         ]);
+
         const env: Env = {
           DB: db,
           ARCHIVE_BUCKET: r2,
@@ -55,9 +59,11 @@ export default class Api extends Cloudflare.Worker<Api>()(
           ...(devLibraryId !== undefined ? { DEV_LIBRARY_ID: devLibraryId } : {}),
           ...(captureModel !== undefined ? { CAPTURE_MODEL: captureModel } : {}),
         };
+
         const response = yield* Effect.promise(() =>
           Promise.resolve(app.fetch(request.source as unknown as Request, env)),
         );
+
         return HttpServerResponse.fromWeb(response);
       }),
     };

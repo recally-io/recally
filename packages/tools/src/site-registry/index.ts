@@ -18,6 +18,7 @@ export function siteListTool(_deps: ToolDeps): ToolSpec {
     async execute(_ctx, args) {
       const { url_ref } = siteListInput.parse(args);
       const matches = listAdapters(new URL(url_ref));
+
       return {
         content: matches.length
           ? matches.map((a) => `${a.id} — ${a.summary}`).join("\n")
@@ -37,22 +38,27 @@ export function siteRunTool(deps: ToolDeps): ToolSpec {
     schema: siteRunInput,
     async execute(ctx, args) {
       const { adapter_id, url, input } = siteRunInput.parse(args);
+
       if (!deps.adapterFetch) {
         throw new AppError("not_implemented", "adapter fetch not configured");
       }
+
       const adapter = getAdapter(adapter_id);
       const parsedArgs = adapter.inputSchema().parse(input);
+
       const result = await adapter.run(
         { url, args: parsedArgs as Record<string, unknown> },
         ctx,
         deps.adapterFetch,
       );
+
       const source = await deps.runStore.saveSource(ctx, {
         url: result.canonicalUrl ?? url,
         kind: "adapter_record",
         contentType: "application/json",
         body: JSON.stringify(result.record, null, 2),
       });
+
       const obsRef = await deps.runStore.saveObservation(ctx, {
         source,
         url,
@@ -61,7 +67,9 @@ export function siteRunTool(deps: ToolDeps): ToolSpec {
         provenance: result.provenance,
         mediaRefs: result.mediaRefs,
       });
+
       const preview = JSON.stringify(result.record).slice(0, 2000);
+
       return {
         content: `adapter ${adapter_id} record saved as source ${source.sourceId} (${preview.length} preview chars; adapter records archive whole-body — propose with this sourceId and no block ranges):\n${preview}`,
         details: { adapter: adapter_id, mediaRefs: result.mediaRefs },

@@ -38,12 +38,14 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
 
     return Effect.fn(function* (input: EnrichParams) {
       const [db, r2, aiRaw] = yield* Effect.all([dbClient.raw, bucketClient.raw, aiClient.raw]);
+
       const env: JobsEnv = {
         DB: db,
         ARCHIVE_BUCKET: r2,
         AI: aiRaw,
         ...definedModelVars(modelVars),
       };
+
       const evidence = new R2EvidenceStore(r2);
       const { jobId, libraryId } = input;
 
@@ -54,14 +56,17 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
             .prepare("SELECT * FROM jobs WHERE id = ? AND library_id = ?")
             .bind(jobId, libraryId)
             .first<{ id: string; item_id: string; payload: string }>();
+
           if (!j) throw new Error(`job ${jobId} not found`);
           await db
             .prepare("UPDATE jobs SET status = 'running', updated_at = ? WHERE id = ?")
             .bind(nowIso(), jobId)
             .run();
+
           return j;
         }).pipe(Effect.orDie),
       );
+
       const { content_revision_id } = JSON.parse(job.payload) as {
         content_revision_id: string;
       };
@@ -102,11 +107,13 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
               now,
             )
             .run();
+
           return artifactId;
         },
       };
 
       const models = resolveModels(env);
+
       const runtime = new PiRuntime({
         streamFn: cfStreamFn(env as never),
         resolveModel: (id) => resolveCfModel(id, env as never),
@@ -140,6 +147,7 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
       // threads through step outputs, so a replayed run restores state from
       // the journal instead of a mutable closure.
       let serialized: string | null = null;
+
       for (let turn = 0; turn <= MAX_TURNS; turn++) {
         const result = yield* Cloudflare.Workflows.task(
           `turn-${turn}`,
@@ -148,7 +156,9 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
               .prepare("SELECT status FROM jobs WHERE id = ?")
               .bind(jobId)
               .first<{ status: string }>();
+
             if (j?.status === "cancelled") return { done: "cancelled" as const };
+
             const r = await runtime.runTurn({
               serializedState: serialized,
               systemPrompt: skill.prompt,
@@ -159,15 +169,19 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
               maxTurns: MAX_TURNS,
               turn,
             });
+
             return {
               done: r.outcome.kind === "continue" ? null : r.outcome.kind,
               serializedState: r.serializedState,
             };
           }).pipe(Effect.orDie),
         );
+
         serialized = result.serializedState ?? serialized;
+
         if (result.done) break;
       }
+
       void serialized;
 
       yield* Cloudflare.Workflows.task(

@@ -12,6 +12,7 @@ export async function vectorId(parts: {
   embeddingVersion: string;
 }): Promise<string> {
   const raw = `${parts.libraryId}|${parts.contentRevisionId}|${parts.chunkId}|${parts.embeddingVersion}`;
+
   return `v-${(await sha256Hex(raw)).slice(0, 56)}`;
 }
 

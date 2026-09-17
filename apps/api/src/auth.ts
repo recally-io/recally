@@ -31,6 +31,7 @@ interface AuthEnv {
 
 async function authByToken(env: AuthEnv, raw: string): Promise<AuthContext | null> {
   const hash = await sha256Hex(raw);
+
   const row = await env.DB.prepare(
     `SELECT t.*, l.id AS lib FROM api_tokens t
      WHERE t.token_hash = ? AND t.revoked_at IS NULL`,
@@ -42,13 +43,17 @@ async function authByToken(env: AuthEnv, raw: string): Promise<AuthContext | nul
       scopes: string;
       expires_at: string | null;
     }>();
+
   if (!row) return null;
+
   if (row.expires_at && row.expires_at < new Date().toISOString()) return null;
   const lib = await getLibrary(env.DB, row.library_id);
+
   if (!lib) return null;
   await env.DB.prepare("UPDATE api_tokens SET last_used_at = ? WHERE id = ?")
     .bind(new Date().toISOString(), row.id)
     .run();
+
   return {
     libraryId: row.library_id,
     actor: row.id,
@@ -71,6 +76,7 @@ export const requireAuth = createMiddleware<{ Bindings: AuthEnv }>(async (c, nex
   // No token (or an unrecognized one): fall back to the default library.
   if (!auth && c.env.DEV_LIBRARY_ID) {
     const lib = await getLibrary(c.env.DB, c.env.DEV_LIBRARY_ID);
+
     if (lib) {
       auth = {
         libraryId: lib.id,

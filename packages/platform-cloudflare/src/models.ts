@@ -26,25 +26,30 @@ const provider = cloudflareWorkersAIProvider();
 
 export function resolveCfModel(modelId: string, env: ModelEnv): CfModel {
   const model = provider.getModels().find((m: CfModel) => m.id === modelId);
+
   if (!model) throw new Error(`unknown Workers AI model ${modelId}`);
+
   if (env.AI_GATEWAY_NAME) {
     return {
       ...model,
       baseUrl: `https://workers-binding.ai/ai-gateway/gateways/${env.AI_GATEWAY_NAME}/workers-ai`,
     };
   }
+
   // run() mode: the fetch adapter ignores the URL, but it must parse.
   return { ...model, baseUrl: "https://workers-binding.ai/ai/v1" };
 }
 
 export function cfStreamFn(env: ModelEnv): StreamFn {
   let boundFetch: typeof fetch | undefined;
+
   if (env.AI_GATEWAY_NAME && env.AI.fetch) {
     boundFetch = env.AI.fetch.bind(env.AI);
   } else if (env.AI.run) {
     const run = env.AI.run.bind(env.AI);
     boundFetch = (_input, init) => {
       const { model, ...input } = JSON.parse(String(init?.body ?? "{}"));
+
       // The AI binding validates inputs against a strict schema: assistant
       // messages carrying tool_calls must have string content (null 400s).
       if (Array.isArray(input.messages)) {
@@ -53,9 +58,11 @@ export function cfStreamFn(env: ModelEnv): StreamFn {
           content: m.content ?? "",
         }));
       }
+
       return run(model, input, { returnRawResponse: true });
     };
   }
+
   return (model, context, options) =>
     provider.streamSimple(model as CfModel, context, {
       ...options,

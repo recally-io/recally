@@ -33,6 +33,7 @@ export class VectorIndex {
       namespace,
       returnMetadata: "none",
     });
+
     return res.matches.map((m) => ({ id: m.id, score: m.score }));
   }
 

@@ -31,6 +31,7 @@ export function ItemPage() {
   const snap: Snapshot | undefined = detail?.snapshots.find(
     (s) => s.id === detail.item.current_snapshot_id,
   );
+
   const revId = snap?.content_revision_id ?? null;
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export function ItemPage() {
   useEffect(() => {
     if (!active) return;
     const t = setInterval(() => void refresh(), 4000);
+
     return () => clearInterval(t);
   }, [active, refresh]);
 
@@ -65,6 +67,7 @@ export function ItemPage() {
   const summary = parseSummary(detail?.artifacts);
 
   if (error) return <p className="p-8 text-sm text-danger">{error}</p>;
+
   if (!detail) return <p className="p-8 text-sm text-ink-3">loading…</p>;
   const { item } = detail;
 
@@ -202,6 +205,7 @@ function EmptyNote({ text }: { text: string }) {
 
 function Action({ label, onClick }: { label: string; onClick: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
+
   return (
     <button
       type="button"
@@ -271,7 +275,9 @@ function NoteEditor({
 
 function parseSummary(artifacts: ItemDetail["artifacts"] | undefined): SummaryOutput | null {
   const a = artifacts?.find((x) => x.type === "summary" && x.status === "verified");
+
   if (!a) return null;
+
   try {
     return JSON.parse(a.output) as SummaryOutput;
   } catch {

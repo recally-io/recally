@@ -28,10 +28,13 @@ const TRACKING_PARAMS = new Set([
 export function normalizeUrl(raw: string): string {
   const url = new URL(raw);
   url.protocol = url.protocol.toLowerCase();
+
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new Error(`unsupported url scheme ${url.protocol}`);
   }
+
   url.hostname = url.hostname.toLowerCase();
+
   if (
     (url.protocol === "https:" && url.port === "443") ||
     (url.protocol === "http:" && url.port === "80")
@@ -45,6 +48,7 @@ export function normalizeUrl(raw: string): string {
   });
   kept.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
   url.search = "";
+
   for (const [key, value] of kept) url.searchParams.append(key, value);
 
   return url.toString();

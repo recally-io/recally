@@ -34,12 +34,14 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
         aiClient.raw,
         vecClient.raw,
       ]);
+
       const env: JobsEnv = {
         DB: db,
         ARCHIVE_BUCKET: r2,
         AI: aiRaw,
         ...definedModelVars(modelVars),
       };
+
       const evidence = new R2EvidenceStore(r2);
       const { jobId, libraryId } = input;
 
@@ -51,17 +53,21 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
               .prepare("SELECT * FROM jobs WHERE id = ? AND library_id = ?")
               .bind(jobId, libraryId)
               .first<{ id: string; item_id: string; payload: string }>();
+
             if (!j) throw new Error(`job ${jobId} not found`);
             await db
               .prepare("UPDATE jobs SET status = 'running', updated_at = ? WHERE id = ?")
               .bind(nowIso(), jobId)
               .run();
+
             return j;
           }).pipe(Effect.orDie),
         );
+
         const { content_revision_id } = JSON.parse(job.payload) as {
           content_revision_id: string;
         };
+
         if (!job.item_id) throw new Error("index job missing item_id");
 
         const blocks = yield* Cloudflare.Workflows.task(
@@ -70,7 +76,9 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
             const jsonl = await evidence.getText(
               r2Keys.contentBlocks(libraryId, content_revision_id),
             );
+
             if (!jsonl) throw new Error(`no blocks for ${content_revision_id}`);
+
             return jsonl
               .split("\n")
               .filter(Boolean)
@@ -83,6 +91,7 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
           Effect.tryPromise(async () => {
             const chunked = chunkBlocks(blocks);
             const now = nowIso();
+
             // Idempotent re-index: a prior attempt (or the same step retried after
             // partial batch) leaves chunks behind — clear them or the ordinal
             // UNIQUE constraint fails forever.
@@ -96,7 +105,9 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
                 .prepare("DELETE FROM chunks WHERE content_revision_id = ? AND library_id = ?")
                 .bind(content_revision_id, libraryId),
             ];
+
             const rows: Array<{ id: string; text: string }> = [];
+
             for (let i = 0; i < chunked.length; i++) {
               const c = chunked[i]!;
               const id = newId();
@@ -127,7 +138,9 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
                   .bind(libraryId, id, tokenizeForFts(c.text)),
               );
             }
+
             await db.batch(stmts);
+
             return rows.map((r, i) => ({ ...r, ordinal: i }));
           }).pipe(Effect.orDie),
         );
@@ -143,13 +156,17 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
             // calls overran the step's wall-clock on a 73-chunk revision (runtime
             // killed the isolate as hung).
             const BATCH = 32;
+
             for (let i = 0; i < chunks.length; i += BATCH) {
               const batch = chunks.slice(i, i + BATCH);
+
               const { vectors: vecs } = await ai.embed({
                 model: models.embedding,
                 texts: batch.map((c) => c.text),
               });
+
               const upserts = [];
+
               for (const [j, c] of batch.entries()) {
                 const vid = await vectorId({
                   libraryId,
@@ -157,6 +174,7 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
                   chunkId: c.id,
                   embeddingVersion: EMBEDDING_VERSION,
                 });
+
                 upserts.push({
                   id: vid,
                   values: vecs[j]!,
@@ -165,8 +183,10 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
                 });
                 pairs.push({ chunkId: c.id, vectorId: vid });
               }
+
               await vectors.upsert(upserts);
             }
+
             const now = nowIso();
             await db.batch(
               pairs.map((p) =>
@@ -204,6 +224,7 @@ export class IndexWorkflow extends Cloudflare.Workflow<IndexWorkflow>()(
                 )
                 .run();
             }).pipe(Effect.ignore);
+
             return yield* Effect.die(err);
           }),
         ),

@@ -18,8 +18,10 @@ export function tokenizeForFts(text: string): string {
       word = "";
     }
   };
+
   const flushCjk = () => {
     if (cjkRun.length === 1) out.push(cjkRun[0] as string);
+
     for (let i = 0; i + 1 < cjkRun.length; i++) out.push(cjkRun[i]! + cjkRun[i + 1]!);
     cjkRun = [];
   };
@@ -36,8 +38,10 @@ export function tokenizeForFts(text: string): string {
       flushCjk();
     }
   }
+
   flushWord();
   flushCjk();
+
   return out.join(" ");
 }
 
@@ -45,6 +49,8 @@ export function tokenizeForFts(text: string): string {
 // raw text into SQL. Tokens become an implicit AND of quoted terms.
 export function buildFtsQuery(input: string): string {
   const tokens = tokenizeForFts(input).split(/\s+/).filter(Boolean).slice(0, 20);
+
   if (tokens.length === 0) return "";
+
   return tokens.map((t) => `"${t.replace(/"/g, '""')}"`).join(" ");
 }

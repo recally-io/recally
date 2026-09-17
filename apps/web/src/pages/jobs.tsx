@@ -27,6 +27,7 @@ export function JobsPage() {
   useEffect(() => {
     if (!hasActive) return;
     const t = setInterval(() => void refresh(), 4000);
+
     return () => clearInterval(t);
   }, [hasActive, refresh]);
 

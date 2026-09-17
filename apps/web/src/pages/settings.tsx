@@ -14,9 +14,11 @@ export function SettingsPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [tokens, setTokens] = useState<ApiToken[]>([]);
   const [name, setName] = useState("");
+
   const [scopes, setScopes] = useState<Set<string>>(
     new Set(["items:read", "items:write", "search:read"]),
   );
+
   const [fresh, setFresh] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,10 +32,12 @@ export function SettingsPage() {
       .then((r) => setTokens(r.tokens))
       .catch(() => {});
   };
+
   useEffect(load, []);
 
   const create = async () => {
     if (!name.trim() || scopes.size === 0) return;
+
     try {
       const r = await api.createToken(name.trim(), [...scopes], null);
       setFresh(r.token);
@@ -93,6 +97,7 @@ export function SettingsPage() {
               title={s.hint}
               onClick={() => {
                 const next = new Set(scopes);
+
                 if (next.has(s.id)) next.delete(s.id);
                 else next.add(s.id);
                 setScopes(next);

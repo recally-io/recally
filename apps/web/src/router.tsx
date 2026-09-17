@@ -28,14 +28,18 @@ function SaveBar() {
         inputRef.current?.focus();
       }
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   const save = async () => {
     const url = value.trim();
+
     if (!url || busy) return;
     setBusy(true);
+
     try {
       const r = await api.saveUrl(url);
       setValue("");
@@ -73,8 +77,10 @@ function SaveBar() {
 
 function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
   const link = (to: string, label: string, exact = false) => {
     const on = exact ? pathname === to : pathname.startsWith(to);
+
     return (
       <Link
         to={to}
@@ -86,6 +92,7 @@ function AppShell() {
       </Link>
     );
   };
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 flex items-center gap-4 border-b border-line bg-surface px-5 py-2.5">

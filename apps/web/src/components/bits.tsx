@@ -1,9 +1,14 @@
 export function timeAgo(iso: string): string {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+
   if (s < 60) return "just now";
+
   if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+
   if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+
   if (s < 86400 * 30) return `${Math.floor(s / 86400)}d ago`;
+
   return new Date(iso).toLocaleDateString();
 }
 
@@ -17,6 +22,7 @@ export function domainOf(url: string): string {
 
 export function DomainChip({ url }: { url: string }) {
   const d = domainOf(url);
+
   return (
     <span className="inline-flex items-center gap-1">
       <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-[3px] bg-accent-soft font-sans text-[8px] font-bold leading-none text-accent">
@@ -45,6 +51,7 @@ const BADGE_STYLES: Record<string, string> = {
 export function Badge({ label }: { label: string }) {
   const cls = BADGE_STYLES[label] ?? "bg-paper text-ink-3";
   const live = label === "running" || label === "queued";
+
   return (
     <span
       className={`inline-flex items-center rounded px-1.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide ${cls}`}
@@ -59,6 +66,7 @@ export function Badge({ label }: { label: string }) {
 // them and render React nodes — everything else is plain text. */
 export function Snippet({ text }: { text: string }) {
   const parts = text.split(/<\/?b>/g);
+
   return (
     <span className="text-ink-2">
       {parts.map((p, i) =>

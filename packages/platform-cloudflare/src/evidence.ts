@@ -21,6 +21,7 @@ export class R2EvidenceStore {
       httpMetadata: { contentType },
       sha256,
     });
+
     return { key, sha256, byteSize: bytes.byteLength };
   }
 
@@ -32,22 +33,27 @@ export class R2EvidenceStore {
   ): Promise<PutResult | null> {
     const bytes = typeof body === "string" ? new TextEncoder().encode(body) : body;
     const sha256 = await sha256Hex(bytes);
+
     const res = await this.bucket.put(key, bytes as unknown as ArrayBuffer, {
       httpMetadata: { contentType },
       sha256,
       onlyIf: { etagDoesNotMatch: "*" },
     });
+
     if (!res) return null;
+
     return { key, sha256, byteSize: bytes.byteLength };
   }
 
   async getText(key: string): Promise<string | null> {
     const obj = await this.bucket.get(key);
+
     return obj ? obj.text() : null;
   }
 
   async getBytes(key: string): Promise<Uint8Array | null> {
     const obj = await this.bucket.get(key);
+
     return obj ? new Uint8Array(await obj.arrayBuffer()) : null;
   }
 }

@@ -12,7 +12,9 @@ import { execFileSync } from "node:child_process";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
 const enabled = !!process.env.ALCHEMY_INTEG;
+
 const stage = "alchemy-integ";
+
 const alchemyBin = "node_modules/.bin/alchemy";
 
 let apiUrl: string | undefined;
@@ -28,6 +30,7 @@ beforeAll(() => {
   const out = alchemy(["deploy", "--adopt", "--stage", stage, "--yes"]);
   // Stack outputs are printed at the end of the deploy; pick the api URL.
   const match = out.match(/https:\/\/recally-api[-a-z0-9.]*\.workers\.dev/);
+
   if (!match) throw new Error(`could not find api url in deploy output:\n${out}`);
   apiUrl = match[0];
 }, 900_000);

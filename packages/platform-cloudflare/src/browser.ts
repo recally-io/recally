@@ -28,15 +28,18 @@ export class BrowserSession {
     const browser = await launch(env.BROWSER);
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
+
     return new BrowserSession(browser, page);
   }
 
   async observe(): Promise<PageObservation> {
     const title: string = await this.page.title();
     const url: string = this.page.url();
+
     const text: string = await this.page.evaluate(
       "document.body ? document.body.innerText.slice(0, 20000) : ''",
     );
+
     // Minimal actionable targets: links and buttons with labels. Real node-ref
     // discipline (refs die on DOM change) is enforced by the tool layer.
     const nodeRefs: PageObservation["nodeRefs"] = await this.page.evaluate(`(() => {
@@ -47,6 +50,7 @@ export class BrowserSession {
         label: (el.innerText || el.getAttribute('aria-label') || '').slice(0, 120),
       }));
     })()`);
+
     return { url, title, text, nodeRefs };
   }
 

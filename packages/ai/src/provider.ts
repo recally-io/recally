@@ -48,6 +48,7 @@ export class WorkersAIProvider implements ModelProvider {
     maxOutputTokens?: number;
   }): Promise<ModelResult<T>> {
     let raw: unknown;
+
     try {
       raw = await this.ai.run(args.model, {
         messages: [
@@ -81,7 +82,9 @@ export class WorkersAIProvider implements ModelProvider {
         output_tokens?: number;
       };
     };
+
     let text = "";
+
     if (typeof res?.response === "string" && res.response) {
       text = res.response;
     } else if (res?.response && typeof res.response === "object") {
@@ -93,6 +96,7 @@ export class WorkersAIProvider implements ModelProvider {
       text =
         outputText ?? (typeof choice === "string" ? choice : choice ? JSON.stringify(choice) : "");
     }
+
     if (!text) {
       throw new AppError(
         "model_unavailable",
@@ -100,7 +104,9 @@ export class WorkersAIProvider implements ModelProvider {
         { retryable: true },
       );
     }
+
     let parsed: unknown;
+
     try {
       parsed = JSON.parse(text.replace(/<think>[\s\S]*?<\/think>/g, "").trim());
     } catch {
@@ -110,11 +116,14 @@ export class WorkersAIProvider implements ModelProvider {
         { retryable: true },
       );
     }
+
     const checked = args.schema.safeParse(parsed);
+
     if (!checked.success) {
       const issues = checked.error.issues
         .map((i) => `${i.path.join(".") || "output"}: ${i.message}`)
         .join("; ");
+
       // Include a raw slice — off-schema output is a model-compat bug you
       // can't fix blind (e.g. enum casing, think-tag residue).
       throw new AppError(
@@ -123,6 +132,7 @@ export class WorkersAIProvider implements ModelProvider {
         { retryable: true },
       );
     }
+
     return {
       value: checked.data,
       model: args.model,
@@ -138,6 +148,7 @@ export class WorkersAIProvider implements ModelProvider {
       data?: number[][];
       usage?: { prompt_tokens?: number };
     };
+
     return {
       vectors: res?.data ?? [],
       usage: { inputTokens: res?.usage?.prompt_tokens ?? 0, outputTokens: 0 },

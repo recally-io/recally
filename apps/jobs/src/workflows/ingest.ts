@@ -37,6 +37,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
     ) =>
       Effect.tryPromise(async () => {
         const now = nowIso();
+
         const stmts = [
           db
             .prepare(
@@ -44,6 +45,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
             )
             .bind(err instanceof Error ? err.message.slice(0, 500) : String(err), now, jobId),
         ];
+
         if (runId) {
           stmts.push(
             db
@@ -53,6 +55,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
               .bind(now, runId),
           );
         }
+
         await db.batch(stmts);
       }).pipe(Effect.ignore);
 
@@ -63,6 +66,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
         aiClient.raw,
         browserClient.raw,
       ]);
+
       const env: IngestEnv = {
         DB: db,
         ARCHIVE_BUCKET: r2,
@@ -70,6 +74,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
         BROWSER: browserRaw as unknown as IngestEnv["BROWSER"],
         ...definedModelVars(modelVars),
       };
+
       const evidence = new R2EvidenceStore(r2);
       const { jobId, libraryId } = input;
       // Set once "init" completes so the failure handler can also close out
@@ -81,11 +86,14 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
           "init",
           Effect.tryPromise(async () => {
             const job = await getJob(db, libraryId, jobId);
+
             if (!job) throw new AppError("not_found", `job ${jobId}`);
+
             const run = await db
               .prepare("SELECT * FROM capture_runs WHERE job_id = ? AND library_id = ?")
               .bind(jobId, libraryId)
               .first<CaptureRunRow>();
+
             if (!run) throw new AppError("not_found", `run for job ${jobId}`);
 
             const item = await db
@@ -94,10 +102,12 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
               )
               .bind(run.item_id, libraryId)
               .first<{ deleted_at: string | null; capture_generation: number }>();
+
             if (!item || item.deleted_at || item.capture_generation !== run.generation) {
               await updateJobStatus(db, jobId, "failed", {
                 error: "stale_generation",
               });
+
               return null;
             }
 
@@ -116,18 +126,22 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
                 .prepare("UPDATE capture_runs SET status = 'running', updated_at = ? WHERE id = ?")
                 .bind(now, run.id),
             ]);
+
             return { run, job, attemptId };
           }).pipe(Effect.orDie),
         );
+
         if (!init) return;
         failedRunId = init.run.id;
         const { run, attemptId } = init;
+
         const payload = JSON.parse(init.job.payload) as {
           kind: string;
           url?: string;
           text?: string;
           content?: string;
         };
+
         const manualText = payload.text ?? payload.content;
 
         // Manual content: user-submitted text archives directly — no agent
@@ -137,12 +151,14 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
             "manual-commit",
             Effect.tryPromise(async () => {
               const { deps, ctx } = await assembleRun(env, run, attemptId);
+
               const source = await deps.runStore.saveSource(ctx, {
                 url: payload.url ?? "manual:input",
                 kind: "manual",
                 contentType: "text/plain",
                 body: manualText,
               });
+
               const result = await deps.committer!.commit(ctx, {
                 sourceIds: [source.sourceId],
                 selectedBlockRanges: [],
@@ -152,6 +168,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
                 missingParts: [],
                 claimedQuality: "complete",
               });
+
               if (result.status !== "accepted")
                 throw new AppError("internal", "manual commit rejected");
               await updateJobStatus(db, jobId, "succeeded", {
@@ -159,10 +176,12 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
               });
             }).pipe(Effect.orDie),
           );
+
           return;
         }
 
         const maxTurns = DEFAULT_LIMITS.agent.maxModelCalls;
+
         for (let turn = 0; turn <= maxTurns; turn++) {
           const result = yield* Cloudflare.Workflows.task(
             `turn-${turn}`,
@@ -171,6 +190,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
 
               // Cancellation/generation fence before every model call (§9.7).
               const job = await getJob(db, libraryId, jobId);
+
               if (!job || job.status === "cancelled" || job.cancel_requested) {
                 return { kind: "cancelled" as const };
               }
@@ -179,6 +199,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
                 .prepare("SELECT pi_state_key FROM capture_runs WHERE id = ?")
                 .bind(run.id)
                 .first<{ pi_state_key: string | null }>();
+
               const serializedState = freshRun?.pi_state_key
                 ? await evidence.getText(freshRun.pi_state_key)
                 : null;
@@ -200,6 +221,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
               const stateKey = r2Keys.piState(libraryId, run.id, turn);
               await evidence.put(stateKey, turnResult.serializedState, "application/json");
               const now = nowIso();
+
               const seqBase =
                 (
                   await db
@@ -209,6 +231,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
                     .bind(run.id, attemptId)
                     .first<{ s: number }>()
                 )?.s ?? 0;
+
               await db.batch([
                 db
                   .prepare(
@@ -239,6 +262,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
                     ),
                 ),
               ]);
+
               return { kind: "outcome" as const, outcome: turnResult.outcome };
             }).pipe(Effect.orDie),
           );
@@ -248,15 +272,19 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
               "mark-cancelled",
               Effect.tryPromise(() => updateJobStatus(db, jobId, "cancelled")).pipe(Effect.orDie),
             );
+
             return;
           }
+
           const outcome = result.outcome;
+
           if (outcome.kind === "continue") continue;
 
           yield* Cloudflare.Workflows.task(
             "finalize",
             Effect.tryPromise(async () => {
               const now = nowIso();
+
               if (outcome.kind === "proposed") {
                 // ArchiveService already published the snapshot.
                 await db.batch([
@@ -273,12 +301,14 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
                 ]);
               } else if (outcome.kind === "finished") {
                 const o = outcome as { outcome: string; reasonCode: string };
+
                 const jobStatus =
                   o.outcome === "needs_input"
                     ? "needs_input"
                     : o.outcome === "complete" || o.outcome === "partial"
                       ? "succeeded"
                       : "failed";
+
                 await db.batch([
                   db
                     .prepare("UPDATE jobs SET status = ?, result = ?, updated_at = ? WHERE id = ?")
@@ -310,6 +340,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
               }
             }).pipe(Effect.orDie),
           );
+
           return;
         }
       });
@@ -322,6 +353,7 @@ export class IngestWorkflow extends Cloudflare.Workflow<IngestWorkflow>()(
         Effect.catchDefect((err) =>
           Effect.gen(function* () {
             yield* markWorkflowError(db, jobId, failedRunId, err);
+
             return yield* Effect.die(err);
           }),
         ),

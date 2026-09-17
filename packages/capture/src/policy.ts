@@ -12,8 +12,10 @@ const BLOCKED_SUFFIXES = [".localhost", ".internal", ".localdomain", ".home.arpa
 
 function isPrivateIPv4(ip: string): boolean {
   const parts = ip.split(".").map(Number);
+
   if (parts.length !== 4 || parts.some((n) => Number.isNaN(n) || n < 0 || n > 255)) return false;
   const [a, b] = parts as [number, number, number, number];
+
   return (
     a === 10 ||
     a === 127 ||
@@ -28,6 +30,7 @@ function isPrivateIPv4(ip: string): boolean {
 
 function isBlockedIPv6(ip: string): boolean {
   const normalized = ip.toLowerCase().replace(/^\[|\]$/g, "");
+
   return (
     normalized === "::1" ||
     normalized === "::" ||
@@ -42,6 +45,7 @@ const IPV4_RE = /^\d{1,3}(\.\d{1,3}){3}$/;
 
 export function checkUrlTarget(rawUrl: string): URL {
   let url: URL;
+
   try {
     url = new URL(rawUrl);
   } catch {
@@ -51,24 +55,31 @@ export function checkUrlTarget(rawUrl: string): URL {
   if (url.protocol !== "https:" && url.protocol !== "http:") {
     throw new AppError("policy_denied", `scheme ${url.protocol} not allowed`);
   }
+
   if (url.username || url.password) {
     throw new AppError("policy_denied", "url userinfo not allowed");
   }
+
   const port = url.port ? Number(url.port) : url.protocol === "https:" ? 443 : 80;
+
   if (![80, 443, 8080, 8443].includes(port)) {
     throw new AppError("policy_denied", `port ${port} not allowed`);
   }
 
   const host = url.hostname.toLowerCase();
+
   if (BLOCKED_HOSTNAMES.has(host) || BLOCKED_SUFFIXES.some((s) => host.endsWith(s))) {
     throw new AppError("policy_denied", `host ${host} not allowed`);
   }
+
   if (IPV4_RE.test(host) && isPrivateIPv4(host)) {
     throw new AppError("policy_denied", `private address ${host} not allowed`);
   }
+
   if (host.includes(":") && isBlockedIPv6(host)) {
     throw new AppError("policy_denied", `private address ${host} not allowed`);
   }
+
   return url;
 }
 
@@ -106,6 +117,7 @@ export function checkBrowserUpgrade(reasonCode: string, evidenceIds: string[]): 
       `browser upgrade reason ${reasonCode} is not evidence-backed`,
     );
   }
+
   if (evidenceIds.length === 0) {
     throw new AppError("policy_denied", "browser upgrade requires cited observations");
   }

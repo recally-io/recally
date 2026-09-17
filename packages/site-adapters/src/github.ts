@@ -14,6 +14,7 @@ export const githubRepoAdapter: SiteAdapter = {
   match(url: URL): boolean {
     if (url.hostname !== "github.com") return false;
     const parts = url.pathname.split("/").filter(Boolean);
+
     // owner/repo only — issues/pulls/actions are different record types.
     return parts.length === 2 && !parts[1]!.includes(".");
   },
@@ -26,6 +27,7 @@ export const githubRepoAdapter: SiteAdapter = {
     const repoData = (await fetchJson(repoUrl)) as Record<string, unknown>;
 
     let readme: string | null = null;
+
     try {
       const readmeData = (await fetchJson(
         `${readmeUrl}?${new URLSearchParams({ ref: "HEAD" })}`,
@@ -33,6 +35,7 @@ export const githubRepoAdapter: SiteAdapter = {
         content?: string;
         encoding?: string;
       };
+
       if (readmeData.content && readmeData.encoding === "base64") {
         readme = new TextDecoder().decode(
           Uint8Array.from(atob(readmeData.content.replace(/\s/g, "")), (c) => c.charCodeAt(0)),

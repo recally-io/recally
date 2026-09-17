@@ -17,15 +17,18 @@ export function archiveAssetTool(deps: ToolDeps): ToolSpec {
       const { asset_ref } = archiveAssetInput.parse(args);
       const url = checkUrlTarget(asset_ref);
       const { safeFetch } = await import("../web-fetch/index.js");
+
       const fetched = await safeFetch(url.toString(), deps.fetchFn ?? fetch, {
         maxBytes: 5 * 1024 * 1024,
       });
+
       const source = await deps.runStore.saveSource(ctx, {
         url: fetched.finalUrl,
         kind: "response_body",
         contentType: fetched.contentType,
         body: fetched.body,
       });
+
       return {
         content: `asset archived: ${source.sourceId} (${source.byteSize} bytes, ${fetched.contentType})`,
         details: { asset: source.sourceId },
@@ -48,6 +51,7 @@ export function proposeArchiveTool(deps: ToolDeps): ToolSpec {
       if (!deps.committer) throw new AppError("internal", "committer not configured");
       const proposal = archiveProposalInput.parse(args);
       const result = await deps.committer.commit(ctx, proposal);
+
       if (result.status === "accepted") {
         return {
           content: `archive accepted: snapshot ${result.snapshotId}`,
@@ -56,6 +60,7 @@ export function proposeArchiveTool(deps: ToolDeps): ToolSpec {
           details: result,
         };
       }
+
       return {
         content: `archive ${result.status}: ${(result.problems ?? []).join("; ")}`,
         details: result,
@@ -73,6 +78,7 @@ export function finishTool(_deps: ToolDeps): ToolSpec {
     schema: finishInput,
     async execute(_ctx, args) {
       const f = finishInput.parse(args);
+
       return {
         content: `run finished: ${f.outcome} (${f.reason_code})`,
         terminate: true,

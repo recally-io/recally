@@ -19,6 +19,7 @@ const textLoaders: Record<string, Record<string, () => Promise<string>>> = {
 };
 
 const SKILL_NAMES = Object.keys(textLoaders);
+
 export type SkillName = (typeof SKILL_NAMES)[number];
 
 export interface LoadedSkill {
@@ -32,15 +33,18 @@ const revisionCache = new Map<SkillName, Promise<LoadedSkill>>();
 
 export function loadSkill(name: SkillName): Promise<LoadedSkill> {
   let cached = revisionCache.get(name);
+
   if (!cached) {
     cached = (async () => {
       const files = textLoaders[name]!;
       const ordered = Object.keys(files).sort();
       const prompt = (await Promise.all(ordered.map((f) => files[f]!()))).join("\n\n---\n\n");
       const revision = `skill-${(await sha256Hex(prompt)).slice(0, 12)}`;
+
       return { name, revision, prompt };
     })();
     revisionCache.set(name, cached);
   }
+
   return cached;
 }

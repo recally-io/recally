@@ -25,6 +25,7 @@ interface SessionRegistry {
 // lifetime of a browser episode. Never reused across runs.
 const sessions: SessionRegistry = (() => {
   const map = new Map<string, BrowserSessionHandle>();
+
   return {
     get: (id) => map.get(id) ?? null,
     set: (id, s) => void map.set(id, s),
@@ -36,6 +37,7 @@ function requireBrowser(deps: ToolDeps): BrowserFactory {
   if (!deps.browser) {
     throw new AppError("not_implemented", "browser capability not configured");
   }
+
   return deps.browser;
 }
 
@@ -50,14 +52,17 @@ export function browserOpenTool(deps: ToolDeps): ToolSpec {
       // ctx.budget is rebuilt per durable turn, so enforce against persisted
       // tool_call events — that count survives step/isolate boundaries.
       const episodes = await deps.runStore.countToolCalls(ctx, "browser_open");
+
       if (episodes >= ctx.budget.browserEpisodesLeft) {
         throw new AppError("budget_exceeded", "browser episode budget exhausted");
       }
+
       const { url_ref } = browserOpenInput.parse(args);
       checkUrlTarget(url_ref);
       const session = await requireBrowser(deps).open(url_ref);
       sessions.set(ctx.runId, session);
       const obs = await session.observe();
+
       const ref = await deps.runStore.saveObservation(ctx, {
         url: obs.url,
         fetchedAt: nowIso(),
@@ -66,6 +71,7 @@ export function browserOpenTool(deps: ToolDeps): ToolSpec {
         textPreview: obs.text.slice(0, 2000),
         nodeRefs: obs.nodeRefs,
       });
+
       return {
         content: `browser open: ${obs.title || obs.url}\n${obs.text.slice(0, 1500)}`,
         details: { url: obs.url, nodeRefs: obs.nodeRefs },
@@ -84,14 +90,17 @@ export function browserObserveTool(deps: ToolDeps): ToolSpec {
     schema: browserObserveInput,
     async execute(ctx) {
       const session = sessions.get(ctx.runId);
+
       if (!session) throw new AppError("invalid_input", "no browser session — call browser_open");
       const obs = await session.observe();
+
       const ref = await deps.runStore.saveObservation(ctx, {
         url: obs.url,
         fetchedAt: nowIso(),
         textPreview: obs.text.slice(0, 2000),
         nodeRefs: obs.nodeRefs,
       });
+
       return {
         content: `${obs.title || obs.url}\n${obs.text.slice(0, 1500)}`,
         details: { url: obs.url, nodeRefs: obs.nodeRefs },
@@ -110,12 +119,16 @@ export function browserActTool(deps: ToolDeps): ToolSpec {
     schema: browserActInput,
     async execute(ctx, args) {
       const actions = await deps.runStore.countToolCalls(ctx, "browser_act");
+
       if (actions >= ctx.budget.browserActionsLeft) {
         throw new AppError("budget_exceeded", "browser action budget exhausted");
       }
+
       const session = sessions.get(ctx.runId);
+
       if (!session) throw new AppError("invalid_input", "no browser session — call browser_open");
       const { action, target } = browserActInput.parse(args);
+
       switch (action) {
         case "scroll":
           await session.scroll();
@@ -134,7 +147,9 @@ export function browserActTool(deps: ToolDeps): ToolSpec {
           await session.navigate(target);
           break;
       }
+
       const obs = await session.observe();
+
       return {
         content: `acted ${action}: now ${obs.title || obs.url}\n${obs.text.slice(0, 1000)}`,
         details: { action, url: obs.url },
@@ -152,28 +167,35 @@ export function browserCaptureTool(deps: ToolDeps): ToolSpec {
     schema: browserCaptureInput,
     async execute(ctx, args) {
       const session = sessions.get(ctx.runId);
+
       if (!session) throw new AppError("invalid_input", "no browser session — call browser_open");
       const { mode } = browserCaptureInput.parse(args);
+
       if (mode === "rendered_dom" || mode === "text") {
         const dom = await session.renderedDom();
+
         const source = await deps.runStore.saveSource(ctx, {
           url: "browser:session",
           kind: "rendered_dom",
           contentType: "text/html",
           body: dom,
         });
+
         return {
           content: `captured rendered DOM as source ${source.sourceId}`,
           resultRef: source.evidenceRef,
         };
       }
+
       const shot = await session.screenshot();
+
       const source = await deps.runStore.saveSource(ctx, {
         url: "browser:session",
         kind: "screenshot",
         contentType: "image/webp",
         body: shot,
       });
+
       return {
         content: `captured screenshot as source ${source.sourceId}`,
         resultRef: source.evidenceRef,
@@ -191,7 +213,9 @@ export function browserCloseTool(_deps: ToolDeps): ToolSpec {
     async execute(ctx) {
       const session = sessions.get(ctx.runId);
       sessions.delete(ctx.runId);
+
       if (session) await session.close();
+
       return { content: "browser session closed" };
     },
   };

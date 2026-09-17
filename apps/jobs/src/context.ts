@@ -34,6 +34,7 @@ export function budgetFor(run: CaptureRunRow): CaptureBudgets {
   // Run row carries budget JSON when customized; defaults otherwise (§16.1).
   const b = (run.budget ? JSON.parse(run.budget) : {}) as Record<string, number | undefined>;
   const L = DEFAULT_LIMITS;
+
   return {
     turnsLeft: b.turns ?? L.agent.maxModelCalls,
     modelCallsLeft: b.model_calls ?? L.agent.maxModelCalls,
@@ -51,6 +52,7 @@ export function budgetFor(run: CaptureRunRow): CaptureBudgets {
 async function adapterFetch(url: string): Promise<unknown> {
   checkUrlTarget(url);
   const res = await safeFetch(url, fetch, { maxBytes: 2 * 1024 * 1024 });
+
   return JSON.parse(new TextDecoder().decode(res.body));
 }
 
@@ -112,6 +114,7 @@ export async function assembleRun(
   };
 
   const skill = await loadSkill("capture");
+
   const runtime = new PiRuntime({
     streamFn: cfStreamFn({
       AI: env.AI as never,

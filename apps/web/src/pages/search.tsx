@@ -13,6 +13,7 @@ export function SearchPage() {
   const run = useCallback(async (query: string) => {
     if (!query.trim()) return;
     setError(null);
+
     try {
       const r = await api.search(query.trim());
       setHits(r.results);
@@ -26,6 +27,7 @@ export function SearchPage() {
   useEffect(() => {
     inputRef.current?.focus();
     const initial = new URLSearchParams(location.search).get("q");
+
     if (initial) {
       setQ(initial);
       void run(initial);

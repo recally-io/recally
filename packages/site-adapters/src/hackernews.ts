@@ -25,6 +25,7 @@ export const hackernewsItemAdapter: SiteAdapter = {
     const args = inputSchema.parse(input.args);
     const id = new URL(input.url).searchParams.get("id");
     const endpoint = `https://hn.algolia.com/api/v1/items/${id}`;
+
     const data = (await fetchJson(endpoint)) as {
       id: number;
       title?: string;
@@ -38,12 +39,14 @@ export const hackernewsItemAdapter: SiteAdapter = {
     };
 
     let comments = 0;
+
     const countComments = (nodes: unknown[] | undefined) => {
       for (const n of nodes ?? []) {
         comments++;
         countComments((n as { children?: unknown[] }).children);
       }
     };
+
     countComments(data.children);
     const truncated = comments > args.max_comments;
 

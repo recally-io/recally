@@ -21,6 +21,7 @@ export async function dispatchJob(
   params: unknown,
 ): Promise<WorkflowInstanceRef> {
   const id = workflowInstanceId(jobId, restartGeneration);
+
   try {
     return await binding.create({ id, params });
   } catch (err) {

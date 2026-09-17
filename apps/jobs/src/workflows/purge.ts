@@ -18,6 +18,7 @@ export class PurgeWorkflow extends Cloudflare.Workflow<PurgeWorkflow>()(
     return Effect.fn(function* (input: JobParams) {
       const db = yield* dbClient.raw;
       const { jobId, libraryId } = input;
+
       const loaded = yield* Cloudflare.Workflows.task(
         "load",
         Effect.tryPromise(async () => {
@@ -25,11 +26,13 @@ export class PurgeWorkflow extends Cloudflare.Workflow<PurgeWorkflow>()(
             .prepare("SELECT item_id, payload FROM jobs WHERE id = ?")
             .bind(jobId)
             .first<{ item_id: string; payload: string }>();
+
           return {
             item_id: j?.item_id ?? (JSON.parse(j?.payload ?? "{}").item_id as string),
           };
         }).pipe(Effect.orDie),
       );
+
       yield* Cloudflare.Workflows.task(
         "purge-fts",
         Effect.tryPromise(async () => {

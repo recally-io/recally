@@ -34,6 +34,7 @@ const TOOLSET_VERSION = "toolset-0001";
 async function runRevisions(env: Env) {
   const skill = await loadSkill("capture");
   const mcfg = await modelConfigVersion({ ...resolveModels(env) });
+
   return {
     agentRuntimeVersion: "pi-0.85.1",
     skillRevision: skill.revision,
@@ -67,10 +68,12 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
           response: string;
           payload_hash: string;
         }>();
+
       if (prior) {
         if (prior.payload_hash !== payloadHash) {
           throw new AppError("conflict", "idempotency key reused with different input");
         }
+
         return c.newResponse(prior.response, {
           status: prior.status_code as 202,
         });
@@ -80,6 +83,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     if (body.source.kind === "content") {
       // Pasted content enters the same archive path via a manual capture.
       const now = nowIso();
+
       const { item, job } = await createItemWithJob(c.env.DB, {
         libraryId: auth.libraryId,
         originalUrl: `manual:${newId()}`,
@@ -96,13 +100,16 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
           capture_intent: body.capture_intent ?? null,
         }),
       });
+
       void now;
+
       const res = json({
         item_id: item.id,
         job_id: job.id,
         status_url: `/api/v1/jobs/${job.id}`,
         current_phase: "queued",
       });
+
       if (idemKey) {
         await c.env.DB.prepare(
           `INSERT OR IGNORE INTO idempotency_records
@@ -122,6 +129,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
           )
           .run();
       }
+
       return c.json(res, 202);
     }
 
@@ -129,6 +137,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     const hash = await normalizedUrlHash(normalized);
 
     const existing = await findActiveItemByUrlHash(c.env.DB, auth.libraryId, hash);
+
     if (existing) {
       // Plain re-save returns the existing item (plan §2.5); re-capture is an
       // explicit POST /items/{id}/captures.
@@ -138,6 +147,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
         status_url: `/api/v1/items/${existing.id}`,
         current_phase: "already_saved",
       });
+
       return c.json(res, 200);
     }
 
@@ -164,6 +174,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
       status_url: `/api/v1/jobs/${job.id}`,
       current_phase: "queued",
     });
+
     if (idemKey) {
       await c.env.DB.prepare(
         `INSERT OR IGNORE INTO idempotency_records
@@ -183,16 +194,19 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
         )
         .run();
     }
+
     return c.json(res, 202);
   })
 
   .get("/", async (c) => {
     const auth = c.get("auth") as AuthContext;
     requireScope(auth, "items:read");
+
     const { items, nextCursor } = await listItems(c.env.DB, auth.libraryId, {
       cursor: c.req.query("cursor") ?? undefined,
       limit: Number(c.req.query("limit") ?? 50),
     });
+
     const latestJobs = items.length
       ? await c.env.DB.prepare(
           `SELECT item_id, id, kind, status FROM jobs j1
@@ -202,9 +216,11 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
           .bind(...items.map((i) => i.id))
           .all<{ item_id: string; id: string; kind: string; status: string }>()
       : { results: [] };
+
     const jobByItem = new Map(latestJobs.results.map((j) => [j.item_id, j]));
 
     const snapIds = items.map((i) => i.current_snapshot_id).filter(Boolean) as string[];
+
     const snaps = snapIds.length
       ? await c.env.DB.prepare(
           `SELECT id, content_quality, resource_quality FROM snapshots WHERE id IN (${snapIds.map(() => "?").join(",")})`,
@@ -216,6 +232,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
             resource_quality: string;
           }>()
       : { results: [] };
+
     const snapById = new Map(snaps.results.map((s) => [s.id, s]));
 
     return c.json({
@@ -249,7 +266,9 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     const auth = c.get("auth") as AuthContext;
     requireScope(auth, "items:read");
     const item = await getItem(c.env.DB, auth.libraryId, c.req.param("id"));
+
     if (!item) throw new AppError("not_found", "item not found");
+
     const snapshots = await c.env.DB.prepare(
       `SELECT s.id, s.captured_at, s.capture_method, s.content_quality, s.resource_quality,
               s.final_url, cr.id AS content_revision_id
@@ -259,17 +278,20 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     )
       .bind(item.id, auth.libraryId)
       .all();
+
     const notes = await c.env.DB.prepare(
       "SELECT id, body, version, updated_at FROM notes WHERE item_id = ? AND library_id = ?",
     )
       .bind(item.id, auth.libraryId)
       .all();
+
     const artifacts = await c.env.DB.prepare(
       `SELECT id, type, status, output, created_at FROM ai_artifacts
        WHERE item_id = ? AND library_id = ? ORDER BY created_at DESC`,
     )
       .bind(item.id, auth.libraryId)
       .all();
+
     return c.json({
       item,
       snapshots: snapshots.results,
@@ -283,26 +305,32 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     requireScope(auth, "items:write");
     const body = patchItemSchema.parse(await c.req.json());
     const item = await getItem(c.env.DB, auth.libraryId, c.req.param("id"));
+
     if (!item) throw new AppError("not_found", "item not found");
     const sets: string[] = [];
     const binds: unknown[] = [];
+
     if (body.title !== undefined) {
       sets.push("title = ?");
       binds.push(body.title);
     }
+
     if (body.read_status !== undefined) {
       sets.push("read_status = ?");
       binds.push(body.read_status);
+
       if (body.read_status === "read" && !item.first_read_at) {
         sets.push("first_read_at = ?", "last_read_at = ?");
         binds.push(nowIso(), nowIso());
       }
     }
+
     sets.push("updated_at = ?");
     binds.push(nowIso(), item.id, auth.libraryId);
     await c.env.DB.prepare(`UPDATE items SET ${sets.join(", ")} WHERE id = ? AND library_id = ?`)
       .bind(...(binds as never[]))
       .run();
+
     return c.json({ ok: true });
   })
 
@@ -310,6 +338,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     const auth = c.get("auth") as AuthContext;
     requireScope(auth, "items:write");
     const ok = await deleteItem(c.env.DB, auth.libraryId, c.req.param("id"));
+
     if (!ok) throw new AppError("not_found", "item not found");
     // Purge job cleans vectors/objects asynchronously; API refuses immediately.
     const now = nowIso();
@@ -324,6 +353,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
          VALUES (?, ?, ?, 'purge', ?, ?, ?)`,
       ).bind(newId(), auth.libraryId, jobId, "{}", now, now),
     ]);
+
     return c.json({ ok: true, purge_job_id: jobId });
   })
 
@@ -332,6 +362,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     const auth = c.get("auth") as AuthContext;
     requireScope(auth, "items:write");
     const item = await getItem(c.env.DB, auth.libraryId, c.req.param("id"));
+
     if (!item) throw new AppError("not_found", "item not found");
     const now = nowIso();
     const jobId = newId();
@@ -401,6 +432,7 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
         now,
       ),
     ]);
+
     return c.json({ job_id: jobId, generation }, 202);
   })
 
@@ -409,8 +441,10 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
     const auth = c.get("auth") as AuthContext;
     requireScope(auth, "items:write");
     const item = await getItem(c.env.DB, auth.libraryId, c.req.param("id"));
+
     if (!item) throw new AppError("not_found", "item not found");
     const body = (await c.req.json()) as { content?: string; title?: string };
+
     if (!body.content) throw new AppError("invalid_input", "content required");
     const now = nowIso();
     const jobId = newId();
@@ -471,5 +505,6 @@ export const itemsRoutes = new Hono<{ Bindings: Env }>()
         now,
       ),
     ]);
+
     return c.json({ job_id: jobId }, 202);
   });

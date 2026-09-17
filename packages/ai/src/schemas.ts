@@ -8,6 +8,7 @@ export const verificationSchema = z.object({
   problems: z.array(z.string()).default([]),
   missingParts: z.array(z.string()).default([]),
 });
+
 export type Verification = z.infer<typeof verificationSchema>;
 
 // Summary artifact payload (plan §10.2).
@@ -23,4 +24,5 @@ export const summaryOutputSchema = z.object({
   entities: z.array(z.string()).default([]),
   caveats: z.array(z.string()).default([]),
 });
+
 export type SummaryOutput = z.infer<typeof summaryOutputSchema>;

@@ -10,13 +10,17 @@ export interface RenderedBlock {
 
 export function renderAdapterRecord(bodyJson: string): RenderedBlock[] | null {
   let record: { kind?: string };
+
   try {
     record = JSON.parse(bodyJson);
   } catch {
     return null;
   }
+
   if (record.kind === "hn_item") return renderHnItem(record as never);
+
   if (record.kind === "github_repo") return renderGithubRepo(record as never);
+
   return null;
 }
 
@@ -41,7 +45,9 @@ interface HnItem extends HnNode {
 
 function renderHnItem(r: HnItem): RenderedBlock[] {
   const blocks: RenderedBlock[] = [];
+
   if (r.title) blocks.push({ kind: "heading", text: r.title });
+
   const meta = [
     r.points != null ? `${r.points} points` : null,
     r.author ? `by ${r.author}` : null,
@@ -52,19 +58,25 @@ function renderHnItem(r: HnItem): RenderedBlock[] {
   ]
     .filter(Boolean)
     .join(" · ");
+
   if (meta) blocks.push({ kind: "paragraph", text: meta });
+
   if (r.url) blocks.push({ kind: "paragraph", text: r.url });
+
   if (r.text) blocks.push({ kind: "paragraph", text: htmlToText(r.text) });
 
   if (r.children?.length) {
     blocks.push({ kind: "heading", text: "Comments" });
+
     const walk = (nodes: HnNode[], depth: number) => {
       for (const n of nodes) {
         const body = htmlToText(n.text ?? "");
+
         if (!body) {
           walk(n.children ?? [], depth);
           continue;
         }
+
         // Depth is carried as extra `>` markers inside the quote text, so the
         // committed markdown is a proper nested blockquote.
         blocks.push({
@@ -74,8 +86,10 @@ function renderHnItem(r: HnItem): RenderedBlock[] {
         walk(n.children ?? [], depth + 1);
       }
     };
+
     walk(r.children, 0);
   }
+
   return blocks;
 }
 
@@ -126,8 +140,11 @@ interface GhRepo {
 
 function renderGithubRepo(r: GhRepo): RenderedBlock[] {
   const blocks: RenderedBlock[] = [];
+
   if (r.full_name) blocks.push({ kind: "heading", text: r.full_name });
+
   if (r.description) blocks.push({ kind: "paragraph", text: r.description });
+
   const meta = [
     r.stars != null ? `${r.stars} stars` : null,
     r.language,
@@ -138,11 +155,14 @@ function renderGithubRepo(r: GhRepo): RenderedBlock[] {
   ]
     .filter(Boolean)
     .join(" · ");
+
   if (meta) blocks.push({ kind: "paragraph", text: meta });
+
   if (r.readme_markdown) {
     blocks.push({ kind: "heading", text: "README" });
     blocks.push(...markdownToBlocks(r.readme_markdown));
   }
+
   return blocks;
 }
 
@@ -150,9 +170,12 @@ function renderGithubRepo(r: GhRepo): RenderedBlock[] {
 // committed article keeps headings and code fences instead of raw markup.
 function markdownToBlocks(md: string): RenderedBlock[] {
   const blocks: RenderedBlock[] = [];
+
   for (const chunk of md.split(/\n{2,}/)) {
     const t = chunk.trim();
+
     if (!t) continue;
+
     if (/^#{1,6}\s/.test(t)) {
       const line = t.split("\n")[0] ?? t;
       blocks.push({ kind: "heading", text: line.replace(/^#{1,6}\s+/, "") });
@@ -162,5 +185,6 @@ function markdownToBlocks(md: string): RenderedBlock[] {
       blocks.push({ kind: "paragraph", text: t });
     }
   }
+
   return blocks;
 }

@@ -30,10 +30,12 @@ describe("rrfFuse", () => {
     const b = { id: "b" };
     const c = { id: "c" };
     const d = { id: "d" };
+
     const merged = rrfFuse([
       [a, b, c],
       [b, d, a],
     ]);
+
     expect(merged[0]!.item.id).toBe("b"); // b ranks 2nd and 1st
   });
 });
@@ -45,6 +47,7 @@ describe("chunkBlocks", () => {
       kind: "paragraph",
       text: "word ".repeat(50),
     }));
+
     const chunks = chunkBlocks(blocks);
     expect(chunks.length).toBeGreaterThan(1);
     expect(chunks[0]!.blockRange.start).toBe("b0");

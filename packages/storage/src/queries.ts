@@ -10,6 +10,7 @@ export async function assertWritable(db: D1Database, libraryId: string): Promise
     .prepare("SELECT mode FROM library_maintenance WHERE library_id = ?")
     .bind(libraryId)
     .first<{ mode: string }>();
+
   if (row?.mode === "write_barrier") {
     throw new AppError("write_barrier", "library is in backup write barrier", {
       retryable: true,
@@ -44,7 +45,9 @@ export async function createLibrary(
     .bind(id, input.name, input.timezone ?? "UTC", input.accessSub ?? null, now, now)
     .run();
   const row = await getLibrary(db, id);
+
   if (!row) throw new AppError("internal", "library insert failed");
+
   return row;
 }
 
@@ -85,21 +88,26 @@ export async function listItems(
   const limit = Math.min(opts.limit ?? 50, 100);
   let sql = "SELECT * FROM items WHERE library_id = ? AND deleted_at IS NULL";
   const binds: unknown[] = [libraryId];
+
   if (opts.cursor) {
     const [savedAt, id] = atob(opts.cursor).split("|");
     sql += " AND (saved_at < ? OR (saved_at = ? AND id < ?))";
     binds.push(savedAt, savedAt, id);
   }
+
   sql += " ORDER BY saved_at DESC, id DESC LIMIT ?";
   binds.push(limit + 1);
+
   const { results } = await db
     .prepare(sql)
     .bind(...(binds as never[]))
     .all<ItemRow>();
+
   const hasMore = results.length > limit;
   const items = hasMore ? results.slice(0, limit) : results;
   const last = items[items.length - 1];
   const nextCursor = hasMore && last ? btoa(`${last.saved_at}|${last.id}`) : null;
+
   return { items, nextCursor };
 }
 
@@ -208,11 +216,14 @@ export async function createItemWithJob(
     ...(runStmt ? [runStmt] : []),
     ...(noteStmt ? [noteStmt] : []),
   ];
+
   await db.batch(stmts);
 
   const item = await getItem(db, input.libraryId, itemId);
   const job = await getJob(db, input.libraryId, jobId);
+
   if (!item || !job) throw new AppError("internal", "item creation failed");
+
   return { item, job };
 }
 
@@ -225,6 +236,7 @@ export async function deleteItem(
 ): Promise<boolean> {
   await assertWritable(db, libraryId);
   const now = nowIso();
+
   const result = await db.batch([
     db
       .prepare(
@@ -245,6 +257,7 @@ export async function deleteItem(
       )
       .bind(newId(), libraryId, itemId, now),
   ]);
+
   return (result[0]?.meta.changes ?? 0) > 0;
 }
 
@@ -296,6 +309,7 @@ export async function requestJobCancel(
     )
     .bind(nowIso(), jobId, libraryId)
     .run();
+
   return (r.meta.changes ?? 0) > 0;
 }
 
@@ -310,6 +324,7 @@ export async function dueOutbox(db: D1Database, now: string, limit: number): Pro
     )
     .bind(now, limit)
     .all<OutboxRow>();
+
   return results;
 }
 

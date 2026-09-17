@@ -27,6 +27,7 @@ export const createItemSchema = z.object({
   note: z.string().max(10_000).optional(),
   enrichment: z.enum(["auto", "defer"]).default("auto"),
 });
+
 export type CreateItemInput = z.infer<typeof createItemSchema>;
 
 export const createItemResponseSchema = z.object({
@@ -35,6 +36,7 @@ export const createItemResponseSchema = z.object({
   status_url: z.string(),
   current_phase: z.string(),
 });
+
 export type CreateItemResponse = z.infer<typeof createItemResponseSchema>;
 
 // --- Views ---
@@ -57,12 +59,14 @@ export const itemViewSchema = z.object({
     })
     .nullable(),
 });
+
 export type ItemView = z.infer<typeof itemViewSchema>;
 
 export const itemListSchema = z.object({
   items: z.array(itemViewSchema),
   next_cursor: z.string().nullable(),
 });
+
 export type ItemList = z.infer<typeof itemListSchema>;
 
 export const jobViewSchema = z.object({
@@ -76,6 +80,7 @@ export const jobViewSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
 });
+
 export type JobView = z.infer<typeof jobViewSchema>;
 
 export const patchItemSchema = z
@@ -90,6 +95,7 @@ export const patchItemSchema = z
 export const createNoteSchema = z.object({
   body: z.string().min(1).max(50_000),
 });
+
 export const patchNoteSchema = z.object({
   body: z.string().min(1).max(50_000),
   version: z.number().int().positive(),
@@ -128,6 +134,7 @@ export const TOKEN_SCOPES = [
   "settings:write",
   "tokens:manage",
 ] as const;
+
 export type TokenScope = (typeof TOKEN_SCOPES)[number];
 
 export const createTokenSchema = z.object({

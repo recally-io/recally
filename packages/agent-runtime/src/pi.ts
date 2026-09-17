@@ -47,6 +47,7 @@ function toPiTool(spec: ToolSpec, ctx: ToolContext, collected: Collected): Agent
     ): Promise<import("@earendil-works/pi-agent-core").AgentToolResult<unknown>> => {
       collected.events.push({ kind: "tool_call", toolName: spec.name });
       let outcome: ToolOutcome;
+
       try {
         const args = spec.schema.parse(params);
         outcome = await spec.execute(ctx, args);
@@ -59,6 +60,7 @@ function toPiTool(spec: ToolSpec, ctx: ToolContext, collected: Collected): Agent
             : err instanceof Error
               ? err.message
               : String(err);
+
         collected.events.push({
           kind: "tool_result",
           toolName: spec.name,
@@ -69,15 +71,18 @@ function toPiTool(spec: ToolSpec, ctx: ToolContext, collected: Collected): Agent
           ? new Error(`${spec.name} invalid arguments: ${message}`)
           : err;
       }
+
       collected.events.push({
         kind: "tool_result",
         toolName: spec.name,
         summary: outcome.content.slice(0, 500),
         ...(outcome.resultRef !== undefined ? { evidenceRef: outcome.resultRef } : {}),
       });
+
       if (outcome.terminate && outcome.runOutcome) {
         collected.endRun = outcome.runOutcome;
       }
+
       return {
         content: [{ type: "text" as const, text: outcome.content }],
         details: outcome.details,
@@ -104,6 +109,7 @@ export class PiRuntime implements AgentRuntime {
   async runTurn(input: TurnInput): Promise<TurnResult> {
     if (input.turn >= input.maxTurns) {
       const state = input.serializedState ?? JSON.stringify({ messages: [] });
+
       return {
         outcome: { kind: "budget_exhausted" },
         serializedState: state,
@@ -112,6 +118,7 @@ export class PiRuntime implements AgentRuntime {
     }
 
     const collected: Collected = { events: [] };
+
     const restored: PersistedState = input.serializedState
       ? (JSON.parse(input.serializedState) as PersistedState)
       : { messages: [] };
@@ -135,6 +142,7 @@ export class PiRuntime implements AgentRuntime {
             reason: `tool ${toolCall.name} is not available to this agent`,
           };
         }
+
         return undefined;
       },
     });
@@ -147,6 +155,7 @@ export class PiRuntime implements AgentRuntime {
 
     try {
       const last = restored.messages[restored.messages.length - 1] as { role?: string } | undefined;
+
       if (restored.messages.length === 0) {
         await agent.prompt(input.goal);
       } else if (last?.role === "assistant") {
@@ -159,12 +168,14 @@ export class PiRuntime implements AgentRuntime {
         agent.state.messages = restored.messages as AgentMessage[];
         await agent.continue();
       }
+
       await agent.waitForIdle();
     } catch (err) {
       collected.events.push({
         kind: "tool_result",
         summary: `agent error: ${err instanceof Error ? err.message : String(err)}`,
       });
+
       return {
         outcome: {
           kind: "finished",
@@ -178,6 +189,7 @@ export class PiRuntime implements AgentRuntime {
 
     const serializedState = JSON.stringify({ messages: agent.state.messages });
     const outcome: RunOutcome = collected.endRun ?? { kind: "continue" };
+
     return { outcome, serializedState, events: collected.events };
   }
 }

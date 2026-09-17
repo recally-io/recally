@@ -25,22 +25,32 @@ app.use("*", async (c, next) => {
 app.route("/s", publicRoutes);
 
 const api = new Hono<{ Bindings: Env }>();
+
 api.use("*", requireAuth);
+
 api.route("/items", itemsRoutes);
+
 api.route("/jobs", jobsRoutes);
+
 api.route("/search", searchRoutes);
+
 api.route("/ask", askRoutes);
+
 api.route("/shares", sharesRoutes);
+
 api.route("/", contentRoutes);
+
 api.route("/", adminRoutes);
 
 api.get("/health", (c) => c.json({ ok: true }));
 
 api.get("/me", async (c) => {
   const auth = c.get("auth") as AuthContext;
+
   const lib = await c.env.DB.prepare("SELECT name FROM libraries WHERE id = ?")
     .bind(auth.libraryId)
     .first<{ name: string }>();
+
   return c.json({
     library_id: auth.libraryId,
     library_name: lib?.name ?? "",
@@ -54,14 +64,18 @@ app.route("/api/v1", api);
 
 app.onError((err, c) => {
   const requestId = newId();
+
   if (err instanceof HTTPException) {
     const { status, body } = toErrorResponse(
       Object.assign(new Error(err.message), { name: "HTTPException" }),
       requestId,
     );
+
     return c.json(body, status as 500);
   }
+
   const { status, body } = toErrorResponse(err, requestId);
+
   return c.json(body, status as 500);
 });
 

@@ -38,6 +38,7 @@ export class ArchiveService implements Committer {
       .prepare("SELECT * FROM capture_runs WHERE id = ? AND library_id = ?")
       .bind(ctx.runId, ctx.libraryId)
       .first<{ generation: number; item_id: string; target_url: string }>();
+
     const item = run
       ? await db
           .prepare(
@@ -50,8 +51,11 @@ export class ArchiveService implements Committer {
             current_snapshot_id: string | null;
           }>()
       : null;
+
     if (!run || !item) return { status: "rejected", problems: ["run or item not found"] };
+
     if (item.deleted_at) return { status: "rejected", problems: ["item deleted"] };
+
     if (run.generation !== item.capture_generation || run.generation !== ctx.generation) {
       return { status: "rejected", problems: ["stale_generation"] };
     }
@@ -61,25 +65,31 @@ export class ArchiveService implements Committer {
     const selectedBlocks: Array<{ id: string; kind: string; text: string }> = [];
     const knownSources = (await runStore.listSources(ctx)).map((s) => s.sourceId);
     let finalUrl = "";
+
     for (const sourceId of proposal.sourceIds) {
       const stored = await runStore.getSource(ctx, sourceId);
+
       if (!stored) {
         problems.push(
           `unknown source ${sourceId}; sources saved this run: ${knownSources.join(", ") || "none"}`,
         );
         continue;
       }
+
       if (!finalUrl) finalUrl = stored.ref.url;
       const ranges = proposal.selectedBlockRanges.filter((r) => r.sourceId === sourceId);
       const body = await evidence.getText(stored.bodyKey);
+
       if (body === null) {
         problems.push(`missing source body ${sourceId}`);
         continue;
       }
+
       if (stored.ref.kind === "adapter_record") {
         // Structured records get a deterministic readable rendering when one
         // exists (§7.1); the JSON body remains the evidence either way.
         const rendered = renderAdapterRecord(body);
+
         if (rendered?.length) {
           selectedBlocks.push(
             ...rendered.map((b, i) => ({ id: `${sourceId}:r${i}`, kind: b.kind, text: b.text })),
@@ -87,8 +97,10 @@ export class ArchiveService implements Committer {
         } else {
           selectedBlocks.push({ id: `${sourceId}:record`, kind: "paragraph", text: body });
         }
+
         continue;
       }
+
       if (stored.ref.kind === "manual") {
         // User-submitted content: whole body is one block.
         selectedBlocks.push({
@@ -98,25 +110,31 @@ export class ArchiveService implements Committer {
         });
         continue;
       }
+
       const { blocks } = await parseBlocks(body);
       const _byId = new Map(blocks.map((b) => [b.id, b]));
+
       for (const range of ranges) {
         const startIdx = blocks.findIndex((b) => b.id === range.startBlockId);
         const endIdx = blocks.findIndex((b) => b.id === range.endBlockId);
+
         if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
           problems.push(
             `invalid block range ${range.startBlockId}..${range.endBlockId} on ${sourceId} (valid: ${blocks[0]?.id}..${blocks[blocks.length - 1]?.id}, ${blocks.length} blocks)`,
           );
           continue;
         }
+
         selectedBlocks.push(...blocks.slice(startIdx, endIdx + 1));
       }
     }
+
     if (selectedBlocks.length === 0) {
       problems.push(
         "no content selected — pass block ranges for fetched/rendered sources; adapter_record and manual sources archive whole-body and need no ranges",
       );
     }
+
     if (problems.length) return { status: "rejected", problems };
 
     // Optional independent model check on real content evidence (§7.3). A
@@ -124,17 +142,20 @@ export class ArchiveService implements Committer {
     // partial — unverifiable is not the same as verified (one retry first,
     // schema drift on this model has been observed on dev).
     let contentQuality: "complete" | "partial" | "unavailable" = proposal.claimedQuality;
+
     if (this.deps.verify) {
       const head = selectedBlocks
         .slice(0, 8)
         .map((b) => b.text)
         .join("\n")
         .slice(0, 3000);
+
       const tail = selectedBlocks
         .slice(-8)
         .map((b) => b.text)
         .join("\n")
         .slice(-3000);
+
       const verifyInput = {
         title: null,
         headText: head,
@@ -142,8 +163,10 @@ export class ArchiveService implements Committer {
         missingParts: proposal.missingParts,
         claimedQuality: proposal.claimedQuality,
       };
+
       let verdict: Verification | null = null;
       let verifyError: string | null = null;
+
       for (let attempt = 0; attempt < 2 && !verdict; attempt++) {
         try {
           verdict = await this.deps.verify(verifyInput);
@@ -151,12 +174,14 @@ export class ArchiveService implements Committer {
           verifyError = err instanceof Error ? err.message : String(err);
         }
       }
+
       if (verdict?.verdict === "wrong") {
         return {
           status: "rejected",
           problems: ["verifier: content does not match the page", ...verdict.problems],
         };
       }
+
       if (verifyError && !verdict) {
         console.warn(`verifier failed twice for run ${ctx.runId}: ${verifyError.slice(0, 400)}`);
         proposal.missingParts.push("verifier unavailable — quality unverified");
@@ -181,6 +206,7 @@ export class ArchiveService implements Committer {
               : b.text,
       )
       .join("\n\n");
+
     const blocksJsonl = selectedBlocks.map((b) => JSON.stringify(b)).join("\n");
     const now = nowIso();
     const snapshotId = newId();
@@ -195,6 +221,7 @@ export class ArchiveService implements Committer {
       evidence.put(articleKey, articleMd, "text/markdown"),
       evidence.put(blocksKey, blocksJsonl, "application/jsonl"),
     ]);
+
     await evidence.put(
       provenanceKey,
       JSON.stringify({
@@ -221,6 +248,7 @@ export class ArchiveService implements Committer {
       content_quality: contentQuality,
       pipeline_version: PIPELINE_VERSION,
     };
+
     const manifestPut = await evidence.put(
       manifestKey,
       JSON.stringify(manifest, null, 2),
@@ -235,6 +263,7 @@ export class ArchiveService implements Committer {
           .bind(item.current_snapshot_id)
           .first<{ content_quality: string }>()
       : null;
+
     const keepCurrent = current?.content_quality === "complete" && contentQuality === "partial";
 
     const enrichJobId = newId();

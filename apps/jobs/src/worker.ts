@@ -49,19 +49,25 @@ const sweepOutbox = (db: JobsEnv["DB"], bindings: Record<string, WorkflowBinding
     const now = nowIso();
     const due = await dueOutbox(db, now, 20);
     console.log(`outbox sweep: ${due.length} due`);
+
     for (const row of due) {
       const job = await getJob(db, row.library_id, row.job_id);
+
       if (!job || job.status === "cancelled") {
         await markOutboxDispatched(db, row.id);
         continue;
       }
+
       const bindingKey = KIND_BINDINGS[job.kind];
+
       if (!bindingKey) continue;
+
       try {
         const instance = await dispatchJob(bindings[bindingKey]!, job.id, job.generation, {
           jobId: job.id,
           libraryId: job.library_id,
         });
+
         await claimJobInstance(db, job.id, instance.id);
         await markOutboxDispatched(db, row.id);
         console.log(`dispatched ${job.kind} job ${job.id} → ${instance.id}`);
@@ -117,14 +123,18 @@ export default class Jobs extends Cloudflare.Worker<Jobs>()(
       (env: JobsEnv) =>
       async (request: Request): Promise<Response | null> => {
         const url = new URL(request.url);
+
         if (url.pathname === "/health") return Response.json({ ok: true });
+
         if (url.pathname === "/probe") {
           const ai = env.AI as unknown as {
             run: (m: string, i: unknown) => Promise<unknown>;
             fetch?: typeof fetch;
           };
+
           const out: Record<string, unknown> = {};
           const model = url.searchParams.get("model") ?? "@cf/qwen/qwen3-30b-a3b-fp8";
+
           try {
             out.run = await ai.run(model, {
               messages: [{ role: "user", content: "say ok" }],
@@ -133,6 +143,7 @@ export default class Jobs extends Cloudflare.Worker<Jobs>()(
           } catch (e) {
             out.run_error = String(e);
           }
+
           if (url.searchParams.has("toolconv")) {
             try {
               out.toolconv = await ai.run(model, {
@@ -171,6 +182,7 @@ export default class Jobs extends Cloudflare.Worker<Jobs>()(
               out.toolconv_error = String(e);
             }
           }
+
           if (ai.fetch) {
             for (const [name, u] of [
               ["direct", "https://workers-binding.ai/ai/v1/chat/completions"],
@@ -189,6 +201,7 @@ export default class Jobs extends Cloudflare.Worker<Jobs>()(
                     max_tokens: 8,
                   }),
                 });
+
                 out[name] = { status: r.status, body: (await r.text()).slice(0, 300) };
               } catch (e) {
                 out[`${name}_error`] = String(e);
@@ -197,18 +210,23 @@ export default class Jobs extends Cloudflare.Worker<Jobs>()(
           } else {
             out.fetch = "undefined";
           }
+
           return Response.json(out);
         }
+
         if (url.pathname === "/probe-pi") {
           const { cfStreamFn, resolveCfModel } = await import("@recally/platform-cloudflare");
           const stream = cfStreamFn(env as never);
+
           const model = resolveCfModel(
             url.searchParams.get("model") ?? "@cf/qwen/qwen3-30b-a3b-fp8",
             env as never,
           );
+
           const events: string[] = [];
           let last: unknown = null;
           const withTools = url.searchParams.has("tools");
+
           try {
             const s = await Promise.resolve(
               stream(
@@ -240,15 +258,18 @@ export default class Jobs extends Cloudflare.Worker<Jobs>()(
                 {} as never,
               ),
             );
+
             for await (const ev of s) {
               events.push(ev.type);
               last = ev;
             }
+
             return Response.json({ events: events.slice(0, 30), last });
           } catch (e) {
             return Response.json({ events, error: String(e) });
           }
         }
+
         return null;
       };
 
@@ -256,16 +277,20 @@ export default class Jobs extends Cloudflare.Worker<Jobs>()(
       fetch: Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest;
         const [db, r2, aiRaw] = yield* Effect.all([dbClient.raw, bucketClient.raw, aiClient.raw]);
+
         const env: JobsEnv = {
           DB: db,
           ARCHIVE_BUCKET: r2,
           AI: aiRaw,
           ...definedModelVars(modelVars),
         };
+
         const response = yield* Effect.promise(() =>
           Promise.resolve(probe(env)(request.source as unknown as Request)),
         );
+
         if (response) return HttpServerResponse.fromWeb(response);
+
         return HttpServerResponse.text("not found", { status: 404 });
       }),
     };

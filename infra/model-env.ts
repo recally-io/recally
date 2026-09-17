@@ -34,15 +34,23 @@ const readOptional = (key: string) =>
 // become properties (exactOptionalPropertyTypes-safe).
 export function definedModelVars(vars: ModelVars): Partial<ModelVars> {
   const out: Partial<ModelVars> = {};
+
   if (vars.CAPTURE_MODEL !== undefined) out.CAPTURE_MODEL = vars.CAPTURE_MODEL;
+
   if (vars.VERIFY_MODEL !== undefined) out.VERIFY_MODEL = vars.VERIFY_MODEL;
+
   if (vars.SUMMARY_MODEL !== undefined) out.SUMMARY_MODEL = vars.SUMMARY_MODEL;
+
   if (vars.ANSWER_MODEL !== undefined) out.ANSWER_MODEL = vars.ANSWER_MODEL;
+
   if (vars.EMBEDDING_MODEL !== undefined) out.EMBEDDING_MODEL = vars.EMBEDDING_MODEL;
+
   if (vars.AI_GATEWAY_NAME !== undefined) out.AI_GATEWAY_NAME = vars.AI_GATEWAY_NAME;
+
   if (vars.CLOUDFLARE_ACCOUNT_ID !== undefined) {
     out.CLOUDFLARE_ACCOUNT_ID = vars.CLOUDFLARE_ACCOUNT_ID;
   }
+
   return out;
 }
 

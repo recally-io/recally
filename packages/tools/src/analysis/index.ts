@@ -9,11 +9,13 @@ import type { ToolDeps } from "../deps";
 // the archive.
 
 const readOutlineInput = z.object({ content_revision_id: z.string() });
+
 const readBlocksInput = z.object({
   content_revision_id: z.string(),
   start: z.number().int().nonnegative().default(0),
   count: z.number().int().positive().max(200).default(60),
 });
+
 const proposeSummaryInput = z.object({
   content_revision_id: z.string(),
   language: z.string(),
@@ -33,7 +35,9 @@ async function loadBlocks(deps: ToolDeps, ctx: unknown, revisionId: string): Pro
   // blocks.jsonl layout: one {id, kind, text} per line (§4.4).
   if (!deps.readRevisionBlocks) throw new AppError("internal", "revision reader not configured");
   const jsonl = await deps.readRevisionBlocks(ctx as never, revisionId);
+
   if (jsonl === null) throw new AppError("not_found", `no blocks for revision ${revisionId}`);
+
   return {
     blocks: jsonl
       .split("\n")
@@ -52,11 +56,13 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
       async execute(_ctx, args) {
         const { content_revision_id } = readOutlineInput.parse(args);
         const doc = await loadBlocks(deps, _ctx, content_revision_id);
+
         const index = doc.blocks.map((b) => ({
           id: b.id,
           kind: b.kind,
           chars: b.text.length,
         }));
+
         return {
           content: `${doc.blocks.length} blocks, ${index.reduce((s, b) => s + b.chars, 0)} chars`,
           details: { index },
@@ -72,10 +78,12 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
         const { content_revision_id, start, count } = readBlocksInput.parse(args);
         const doc = await loadBlocks(deps, _ctx, content_revision_id);
         const slice = doc.blocks.slice(start, start + count);
+
         const text = slice
           .map((b) => `[${b.id}] ${b.text}`)
           .join("\n")
           .slice(0, 20_000);
+
         return {
           content: text || "(empty range)",
           details: { start, count: slice.length, total: doc.blocks.length },
@@ -90,6 +98,7 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
       async execute(ctx, args) {
         const { content_revision_id } = readOutlineInput.parse(args);
         const stored = await deps.runStore.getSource(ctx, content_revision_id);
+
         return {
           content: stored
             ? `revision ${content_revision_id}`
@@ -105,6 +114,7 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
       schema: proposeSummaryInput,
       async execute(ctx, args) {
         const input = proposeSummaryInput.parse(args);
+
         if (deps.persistArtifact) {
           await deps.persistArtifact(ctx, {
             type: "summary",
@@ -115,6 +125,7 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
             promptVersion: ctx.skillRevision,
           });
         }
+
         return {
           content: "summary submitted",
           terminate: true,
@@ -134,6 +145,7 @@ export function analysisTools(deps: ToolDeps): ToolSpec[] {
       schema: z.object({ reason_code: z.string().max(120) }),
       async execute(_ctx, args) {
         const { reason_code } = args as { reason_code: string };
+
         return {
           content: `analysis finished: ${reason_code}`,
           terminate: true,
