@@ -43,8 +43,10 @@ docs/                 plan.md, decisions/, runbooks/
 pnpm install
 pnpm typecheck        # root stack program + all packages
 pnpm test             # vitest (ALCHEMY_INTEG=1 adds live-stack tests)
-pnpm lint             # oxlint (anti-slop) + biome
-pnpm lint:fix         # autofix spacing, then biome format
+pnpm lint             # oxlint, including the vendored anti-slop rules
+pnpm lint:fix         # oxlint autofix
+pnpm format           # oxfmt
+pnpm format:check     # oxfmt without writing
 pnpm build            # build web SPA (required before deploy/dev)
 pnpm deploy           # web build + alchemy deploy (first deploy: --adopt)
 pnpm dev              # alchemy dev — workers in workerd, web via Vite, hot reload
@@ -58,8 +60,9 @@ config; worker types come from the worker files, not `wrangler types`.
 
 ## Code quality gate
 
-`pnpm lint` runs two tools. Biome is the formatter and keeps its recommended
-ruleset. [anti-slop](https://github.com/dmmulroy/anti-slop) is **vendored** at
+`pnpm lint` is [Oxlint](https://oxc.rs/docs/guide/usage/linter), configured in
+`oxlint.config.ts`. `pnpm format` is Oxfmt (`oxfmt.config.ts`). Biome is gone.
+[anti-slop](https://github.com/dmmulroy/anti-slop) is **vendored** at
 `tools/oxlint/anti-slop/` (see its `UPSTREAM.md`) and owns the opinionated
 TypeScript + Effect rules: no `unknown` at boundaries, no type-assertion
 laundering, no chained `as`, a `SAFETY:` comment on every remaining non-const

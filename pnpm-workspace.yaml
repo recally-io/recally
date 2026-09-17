@@ -14,7 +14,7 @@ onlyBuiltDependencies:
   - workerd
   - protobufjs
 allowBuilds:
-  '@google/genai': false
+  "@google/genai": false
   esbuild: true
   # Optional native accelerator for msgpackr; the JS fallback is sufficient.
   msgpackr-extract: false

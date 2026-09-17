@@ -35,12 +35,16 @@ alias = "dev-ui"
 # CODE QUALITY
 # ============================================
 [tasks."lint"]
-description = "Lint and format check (biome)"
+description = "Lint (oxlint + anti-slop)"
 run = "pnpm lint"
 
 [tasks."lint:fix"]
-description = "Lint and auto-fix (biome)"
+description = "Lint and autofix (oxlint)"
 run = "pnpm lint:fix"
+
+[tasks."format"]
+description = "Format (oxfmt)"
+run = "pnpm format"
 
 [tasks."typecheck"]
 description = "Typecheck all workspaces"

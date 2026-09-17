@@ -58,7 +58,7 @@ export function chunkBlocks(blocks: SourceBlock[]): Chunk[] {
       flush();
       const maxChars = Math.ceil(target * 1.5 * 4);
 
-      for (let i = 0; i < b.text.length; ) {
+      for (let i = 0; i < b.text.length;) {
         let end = Math.min(i + maxChars, b.text.length);
 
         if (end < b.text.length) {
