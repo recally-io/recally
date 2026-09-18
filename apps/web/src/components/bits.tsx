@@ -40,12 +40,9 @@ const BADGE_STYLES: Record<string, string> = {
   unknown: "bg-paper text-ink-3",
   running: "bg-live-soft text-live",
   queued: "bg-live-soft text-live",
-  pending: "bg-paper text-ink-3",
   succeeded: "bg-accent-soft text-accent",
   failed: "bg-warn-soft text-warn",
-  canceled: "bg-paper text-ink-3",
-  cancel_requested: "bg-warn-soft text-warn",
-  workflow_error: "bg-warn-soft text-warn",
+  cancelled: "bg-paper text-ink-3",
 };
 
 export function Badge({ label }: { label: string }) {

@@ -27,7 +27,7 @@ export function captureTools(deps: ToolDeps): ToolSpec[] {
     webFetchTool(deps),
     extractContentTool(deps),
     readSourceTool(deps),
-    siteListTool(deps),
+    siteListTool(),
     siteRunTool(deps),
     ...archiveTools(deps),
   ];

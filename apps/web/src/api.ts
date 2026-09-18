@@ -1,3 +1,6 @@
+import { itemListSchema, itemViewSchema, jobViewSchema, type JobView } from "@recally/contracts";
+import { z } from "zod";
+
 // Thin fetch client against the app worker. Requests without a token resolve
 // to the default library; VITE_API_TOKEN sets an optional rcl_ Bearer token.
 const headers = () => {
@@ -9,16 +12,6 @@ const headers = () => {
   return h;
 };
 
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public code: string,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
@@ -27,90 +20,72 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    const b = body as { message?: string; code?: string; error?: string };
-    throw new ApiError(res.status, b.code ?? b.error ?? "", b.message ?? `${res.status}`);
+
+    const parsed = z.object({ message: z.string().optional() }).safeParse(body);
+
+    const b = parsed.success ? parsed.data : {};
+    throw new Error(b.message ?? `${res.status}`);
   }
 
-  return res.json() as Promise<T>;
+  return res.json();
 }
 
-export interface Item {
-  id: string;
-  original_url: string;
-  title: string | null;
-  saved_at: string;
-  read_status: string;
-  current_snapshot_id: string | null;
-  capture_generation: number;
-  content_quality: string | null;
-  resource_quality: string | null;
-  latest_job: { id: string; kind: string; status: string } | null;
+export function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
-export interface Snapshot {
-  id: string;
-  captured_at: string;
-  capture_method: string;
-  content_quality: string;
-  resource_quality: string;
-  final_url: string;
-  content_revision_id: string | null;
-}
+const snapshotSchema = z.object({
+  id: z.string(),
+  captured_at: z.string(),
+  capture_method: z.string(),
+  content_quality: z.string(),
+  resource_quality: z.string(),
+  final_url: z.string(),
+  content_revision_id: z.string().nullable(),
+});
 
-export interface Note {
-  id: string;
-  body: string;
-  version: number;
-  updated_at: string;
-}
+const noteSchema = z.object({ id: z.string(), body: z.string(), version: z.number() });
 
-export interface Artifact {
-  id: string;
-  type: string;
-  status: string;
-  output: string;
-  created_at: string;
-}
+const artifactSchema = z.object({ type: z.string(), status: z.string(), output: z.string() });
 
-export interface SummaryOutput {
-  short_summary?: string;
-  key_points?: string[];
-  topics?: string[];
-  entities?: string[];
-  caveats?: string[];
-}
+// Item detail returns the stored row, without the list endpoint's quality/job joins.
+const itemDetailSchema = z.object({
+  item: itemViewSchema
+    .omit({ content_quality: true, resource_quality: true })
+    .partial({ latest_job: true }),
+  snapshots: z.array(snapshotSchema),
+  notes: z.array(noteSchema),
+  artifacts: z.array(artifactSchema),
+});
 
-export interface ItemDetail {
-  item: Item;
-  snapshots: Snapshot[];
-  notes: Note[];
-  artifacts: Artifact[];
-}
+const jobSchema = jobViewSchema.omit({ updated_at: true, outcome_code: true });
 
-export interface Job {
-  id: string;
-  kind: string;
-  status: string;
-  item_id: string;
-  attempt_count: number;
-  error: string | null;
-  created_at: string;
-  updated_at: string;
-  item_title?: string | null;
-}
+const jobListSchema = z.object({
+  jobs: z.array(jobSchema.extend({ item_title: z.string().nullable().optional() })),
+});
 
-export interface JobEvent {
-  sequence: number;
-  kind: string;
-  reason_code: string | null;
-  summary: string | null;
-  created_at: string;
-}
+const jobDetailSchema = jobSchema.extend({
+  events: z.array(
+    z.object({
+      sequence: z.number(),
+      kind: z.string(),
+      reason_code: z.string().nullable(),
+      summary: z.string().nullable(),
+    }),
+  ),
+});
 
-export interface JobDetail extends Job {
-  outcome_code: string | null;
-  events: JobEvent[];
-}
+export type Snapshot = z.infer<typeof snapshotSchema>;
+
+export type Note = z.infer<typeof noteSchema>;
+
+export type ItemDetail = z.infer<typeof itemDetailSchema>;
+
+export type JobListEntry = Omit<JobView, "updated_at" | "outcome_code"> & {
+  item_title?: string | null | undefined;
+};
+
+export type JobDetail = z.infer<typeof jobDetailSchema>;
 
 export interface SearchHit {
   item_id: string;
@@ -121,7 +96,6 @@ export interface SearchHit {
 }
 
 export interface Me {
-  library_id: string;
   library_name: string;
   actor: string;
   email: string | null;
@@ -133,8 +107,6 @@ export interface ApiToken {
   name: string;
   scopes: string;
   last_used_at: string | null;
-  expires_at: string | null;
-  created_at: string;
 }
 
 export const api = {
@@ -147,12 +119,12 @@ export const api = {
     }),
   revokeToken: (id: string) => req<{ ok: true }>(`/api/v1/tokens/${id}`, { method: "DELETE" }),
   listItems: (cursor?: string) =>
-    req<{ items: Item[]; next_cursor: string | null }>(
-      `/api/v1/items${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+    req(`/api/v1/items${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`).then((body) =>
+      itemListSchema.parse(body),
     ),
-  getItem: (id: string) => req<ItemDetail>(`/api/v1/items/${id}`),
+  getItem: (id: string) => req(`/api/v1/items/${id}`).then((body) => itemDetailSchema.parse(body)),
   saveUrl: (url: string, note?: string) =>
-    req<{ item_id: string; job_id: string; status_url: string }>("/api/v1/items", {
+    req<{ item_id: string }>("/api/v1/items", {
       method: "POST",
       headers: { "Idempotency-Key": crypto.randomUUID() },
       body: JSON.stringify({
@@ -165,16 +137,15 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(body),
     }),
-  deleteItem: (id: string) => req<{ ok: true }>(`/api/v1/items/${id}`, { method: "DELETE" }),
   recapture: (itemId: string) =>
     req<{ job_id: string }>(`/api/v1/items/${itemId}/captures`, { method: "POST" }),
-  listJobs: () => req<{ jobs: Job[] }>("/api/v1/jobs"),
-  getJob: (id: string) => req<JobDetail>(`/api/v1/jobs/${id}`),
+  listJobs: () => req("/api/v1/jobs").then((body) => jobListSchema.parse(body)),
+  getJob: (id: string) => req(`/api/v1/jobs/${id}`).then((body) => jobDetailSchema.parse(body)),
   cancelJob: (id: string) => req<{ ok: true }>(`/api/v1/jobs/${id}/cancel`, { method: "POST" }),
   search: (q: string) =>
     req<{ results: SearchHit[]; mode: string }>(`/api/v1/search?q=${encodeURIComponent(q)}`),
   article: (revisionId: string) =>
-    req<{ article_md: string | null; blocks: unknown[] }>(`/api/v1/content/${revisionId}`),
+    req<{ article_md: string | null }>(`/api/v1/content/${revisionId}`),
   addNote: (itemId: string, body: string) =>
     req<{ note_id: string; version: number }>(`/api/v1/items/${itemId}/notes`, {
       method: "POST",

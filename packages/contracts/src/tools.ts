@@ -67,5 +67,3 @@ export const finishInput = z.object({
   reason_code: z.string().max(120),
   evidence_refs: z.array(z.string()).default([]),
 });
-
-export type FinishInput = z.infer<typeof finishInput>;

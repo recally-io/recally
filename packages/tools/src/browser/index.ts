@@ -1,5 +1,5 @@
-import type { ToolSpec } from "@recally/agent-runtime";
-import { checkUrlTarget } from "@recally/capture";
+import type { ToolOutcome, ToolSpec } from "@recally/agent-runtime";
+import { checkUrlTarget, type ToolContext } from "@recally/capture";
 import {
   browserActInput,
   browserCaptureInput,
@@ -15,23 +15,66 @@ import type { BrowserFactory, BrowserSessionHandle, ToolDeps } from "../deps";
 // state lives in a per-run session registry so consecutive calls share one
 // session inside a browser episode (§9.5).
 
-interface SessionRegistry {
-  get(runId: string): BrowserSessionHandle | null;
-  set(runId: string, s: BrowserSessionHandle): void;
-  delete(runId: string): void;
+// Valid inside one Workflow step (one browser episode), isolated by run id.
+const sessions = new Map<string, BrowserSessionHandle>();
+
+type BrowserObservation = Awaited<ReturnType<BrowserSessionHandle["observe"]>>;
+
+function requireSession(runId: string): BrowserSessionHandle {
+  const session = sessions.get(runId);
+
+  if (!session) throw new AppError("invalid_input", "no browser session — call browser_open");
+
+  return session;
 }
 
-// In-memory registry: valid inside one Workflow step, which is exactly the
-// lifetime of a browser episode. Never reused across runs.
-const sessions: SessionRegistry = (() => {
-  const map = new Map<string, BrowserSessionHandle>();
+function formatBrowserObservation(obs: BrowserObservation, prefix: string, limit: number): string {
+  return `${prefix}${obs.title || obs.url}\n${obs.text.slice(0, limit)}`;
+}
+
+async function saveBrowserObservation(
+  deps: ToolDeps,
+  ctx: ToolContext,
+  obs: BrowserObservation,
+  pageKind?: "unknown",
+): Promise<ToolOutcome> {
+  const observation = {
+    url: obs.url,
+    fetchedAt: nowIso(),
+    textPreview: obs.text.slice(0, 2000),
+    nodeRefs: obs.nodeRefs,
+  };
+
+  const resultRef = await deps.runStore.saveObservation(
+    ctx,
+    pageKind ? { ...observation, pageKind, title: obs.title } : observation,
+  );
 
   return {
-    get: (id) => map.get(id) ?? null,
-    set: (id, s) => void map.set(id, s),
-    delete: (id) => void map.delete(id),
+    content: formatBrowserObservation(obs, pageKind ? "browser open: " : "", 1500),
+    details: { url: obs.url, nodeRefs: obs.nodeRefs },
+    resultRef,
   };
-})();
+}
+
+async function saveBrowserCapture(
+  deps: ToolDeps,
+  ctx: ToolContext,
+  capture: {
+    body: string | Uint8Array;
+    kind: "rendered_dom" | "screenshot";
+    contentType: string;
+    label: string;
+  },
+): Promise<ToolOutcome> {
+  const { label, ...input } = capture;
+  const source = await deps.runStore.saveSource(ctx, { url: "browser:session", ...input });
+
+  return {
+    content: `captured ${label} as source ${source.sourceId}`,
+    resultRef: source.evidenceRef,
+  };
+}
 
 function requireBrowser(deps: ToolDeps): BrowserFactory {
   if (!deps.browser) {
@@ -63,20 +106,7 @@ export function browserOpenTool(deps: ToolDeps): ToolSpec {
       sessions.set(ctx.runId, session);
       const obs = await session.observe();
 
-      const ref = await deps.runStore.saveObservation(ctx, {
-        url: obs.url,
-        fetchedAt: nowIso(),
-        pageKind: "unknown",
-        title: obs.title,
-        textPreview: obs.text.slice(0, 2000),
-        nodeRefs: obs.nodeRefs,
-      });
-
-      return {
-        content: `browser open: ${obs.title || obs.url}\n${obs.text.slice(0, 1500)}`,
-        details: { url: obs.url, nodeRefs: obs.nodeRefs },
-        resultRef: ref,
-      };
+      return saveBrowserObservation(deps, ctx, obs, "unknown");
     },
   };
 }
@@ -89,23 +119,10 @@ export function browserObserveTool(deps: ToolDeps): ToolSpec {
       "Re-observe the current page: title, url, text summary, node refs. Old refs die after any act.",
     schema: browserObserveInput,
     async execute(ctx) {
-      const session = sessions.get(ctx.runId);
-
-      if (!session) throw new AppError("invalid_input", "no browser session — call browser_open");
+      const session = requireSession(ctx.runId);
       const obs = await session.observe();
 
-      const ref = await deps.runStore.saveObservation(ctx, {
-        url: obs.url,
-        fetchedAt: nowIso(),
-        textPreview: obs.text.slice(0, 2000),
-        nodeRefs: obs.nodeRefs,
-      });
-
-      return {
-        content: `${obs.title || obs.url}\n${obs.text.slice(0, 1500)}`,
-        details: { url: obs.url, nodeRefs: obs.nodeRefs },
-        resultRef: ref,
-      };
+      return saveBrowserObservation(deps, ctx, obs);
     },
   };
 }
@@ -124,34 +141,38 @@ export function browserActTool(deps: ToolDeps): ToolSpec {
         throw new AppError("budget_exceeded", "browser action budget exhausted");
       }
 
-      const session = sessions.get(ctx.runId);
-
-      if (!session) throw new AppError("invalid_input", "no browser session — call browser_open");
+      const session = requireSession(ctx.runId);
       const { action, target } = browserActInput.parse(args);
 
-      switch (action) {
-        case "scroll":
-          await session.scroll();
-          break;
-        case "wait_for":
-          if (!target) throw new AppError("invalid_input", "wait_for requires target selector");
-          await session.waitFor(target);
-          break;
-        case "expand":
-          if (!target) throw new AppError("invalid_input", "expand requires an observed target");
-          await session.click(target);
-          break;
-        case "navigate_same_article":
-          if (!target) throw new AppError("invalid_input", "navigate requires an observed link");
-          checkUrlTarget(target);
-          await session.navigate(target);
-          break;
+      if (action === "scroll") {
+        await session.scroll();
+      } else {
+        const targetErrors = {
+          wait_for: "wait_for requires target selector",
+          expand: "expand requires an observed target",
+          navigate_same_article: "navigate requires an observed link",
+        };
+
+        if (!target) throw new AppError("invalid_input", targetErrors[action]);
+
+        switch (action) {
+          case "wait_for":
+            await session.waitFor(target);
+            break;
+          case "expand":
+            await session.click(target);
+            break;
+          case "navigate_same_article":
+            checkUrlTarget(target);
+            await session.navigate(target);
+            break;
+        }
       }
 
       const obs = await session.observe();
 
       return {
-        content: `acted ${action}: now ${obs.title || obs.url}\n${obs.text.slice(0, 1000)}`,
+        content: formatBrowserObservation(obs, `acted ${action}: now `, 1000),
         details: { action, url: obs.url },
       };
     },
@@ -166,45 +187,29 @@ export function browserCaptureTool(deps: ToolDeps): ToolSpec {
       "Persist current rendered DOM, a screenshot, or text as evidence. Returns a source ref you can propose for archive.",
     schema: browserCaptureInput,
     async execute(ctx, args) {
-      const session = sessions.get(ctx.runId);
-
-      if (!session) throw new AppError("invalid_input", "no browser session — call browser_open");
+      const session = requireSession(ctx.runId);
       const { mode } = browserCaptureInput.parse(args);
 
       if (mode === "rendered_dom" || mode === "text") {
-        const dom = await session.renderedDom();
-
-        const source = await deps.runStore.saveSource(ctx, {
-          url: "browser:session",
+        return saveBrowserCapture(deps, ctx, {
+          body: await session.renderedDom(),
           kind: "rendered_dom",
           contentType: "text/html",
-          body: dom,
+          label: "rendered DOM",
         });
-
-        return {
-          content: `captured rendered DOM as source ${source.sourceId}`,
-          resultRef: source.evidenceRef,
-        };
       }
 
-      const shot = await session.screenshot();
-
-      const source = await deps.runStore.saveSource(ctx, {
-        url: "browser:session",
+      return saveBrowserCapture(deps, ctx, {
+        body: await session.screenshot(),
         kind: "screenshot",
         contentType: "image/webp",
-        body: shot,
+        label: "screenshot",
       });
-
-      return {
-        content: `captured screenshot as source ${source.sourceId}`,
-        resultRef: source.evidenceRef,
-      };
     },
   };
 }
 
-export function browserCloseTool(_deps: ToolDeps): ToolSpec {
+export function browserCloseTool(): ToolSpec {
   return {
     name: "browser_close",
     label: "Close browser",
@@ -227,6 +232,6 @@ export function browserTools(deps: ToolDeps): ToolSpec[] {
     browserObserveTool(deps),
     browserActTool(deps),
     browserCaptureTool(deps),
-    browserCloseTool(deps),
+    browserCloseTool(),
   ];
 }

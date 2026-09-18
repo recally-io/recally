@@ -1,6 +1,8 @@
 import type { TokenScope } from "@recally/contracts";
 import { AppError, sha256Hex } from "@recally/domain";
 import { getLibrary } from "@recally/storage";
+import type { Context } from "hono";
+import type { Env } from "./env";
 import { createMiddleware } from "hono/factory";
 
 // Identity resolution order: scoped API token > default library.
@@ -19,13 +21,11 @@ export interface AuthContext {
 declare module "hono" {
   interface ContextVariableMap {
     auth: AuthContext;
+    requestId: string;
   }
 }
 
-interface AuthEnv {
-  DB: D1Database;
-  DEV_LIBRARY_ID?: string;
-}
+type AuthEnv = Pick<Env, "DB" | "DEV_LIBRARY_ID">;
 
 // --- API token ---
 
@@ -33,7 +33,7 @@ async function authByToken(env: AuthEnv, raw: string): Promise<AuthContext | nul
   const hash = await sha256Hex(raw);
 
   const row = await env.DB.prepare(
-    `SELECT t.*, l.id AS lib FROM api_tokens t
+    `SELECT t.* FROM api_tokens t
      WHERE t.token_hash = ? AND t.revoked_at IS NULL`,
   )
     .bind(hash)
@@ -93,8 +93,16 @@ export const requireAuth = createMiddleware<{ Bindings: AuthEnv }>(async (c, nex
   await next();
 });
 
-export function requireScope(auth: AuthContext, scope: TokenScope): void {
+export function authFor(c: Context<{ Bindings: Env }>, scope: TokenScope): AuthContext {
+  const auth = c.get("auth");
+
   if (auth.scopes !== "access" && !auth.scopes.includes(scope)) {
     throw new AppError("forbidden", `missing scope ${scope}`);
   }
+
+  return auth;
+}
+
+export function randomToken(prefix: string): string {
+  return `${prefix}${crypto.randomUUID().replaceAll("-", "")}${crypto.randomUUID().replaceAll("-", "")}`;
 }

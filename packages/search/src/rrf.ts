@@ -1,12 +1,14 @@
+import { DEFAULT_LIMITS } from "@recally/domain";
+
 // Reciprocal rank fusion (plan §11.3): fuse ranked lists by position, never
 // add raw scores across FTS and vector sources.
-export interface RankedItem {
+interface RankedItem {
   id: string;
 }
 
 export function rrfFuse<T extends RankedItem>(
   lists: Array<Array<T>>,
-  k = 60,
+  k: number = DEFAULT_LIMITS.search.rrfK,
 ): Array<{ item: T; score: number }> {
   const scores = new Map<string, { item: T; score: number }>();
 

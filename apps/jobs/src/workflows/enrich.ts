@@ -1,27 +1,16 @@
-import { PiRuntime } from "@recally/agent-runtime";
 import { resolveModels } from "@recally/ai";
 import { newId, nowIso } from "@recally/domain";
-import {
-  cfStreamFn,
-  D1R2RunStore,
-  R2EvidenceStore,
-  resolveCfModel,
-} from "@recally/platform-cloudflare";
+import { D1R2RunStore, R2EvidenceStore } from "@recally/platform-cloudflare";
 import { loadSkill } from "@recally/skills";
 import { r2Keys } from "@recally/storage";
 import type { ToolDeps } from "@recally/tools";
 import { analysisTools } from "@recally/tools";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import { definedModelVars, ModelVarsConfig } from "../../../../infra/model-env";
+import { ModelVarsConfig } from "../../../../infra/model-env";
 import { ArchiveBucket, Database } from "../../../../infra/resources";
-import type { JobsEnv } from "../env";
-
-interface EnrichParams {
-  jobId: string;
-  libraryId: string;
-}
+import { JobsBaseLayer, makeJobsEnv, createPiRuntime } from "../bindings";
+import { loadRunningJob, type WorkflowInput } from "./common";
 
 const MAX_TURNS = 16;
 
@@ -36,35 +25,17 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
     const aiClient = yield* Cloudflare.Workers.AI();
     const modelVars = yield* ModelVarsConfig;
 
-    return Effect.fn(function* (input: EnrichParams) {
+    return Effect.fn(function* (input: WorkflowInput) {
       const [db, r2, aiRaw] = yield* Effect.all([dbClient.raw, bucketClient.raw, aiClient.raw]);
 
-      const env: JobsEnv = {
-        DB: db,
-        ARCHIVE_BUCKET: r2,
-        AI: aiRaw,
-        ...definedModelVars(modelVars),
-      };
+      const env = makeJobsEnv(db, r2, aiRaw, modelVars);
 
       const evidence = new R2EvidenceStore(r2);
       const { jobId, libraryId } = input;
 
       const job = yield* Cloudflare.Workflows.task(
         "load",
-        Effect.tryPromise(async () => {
-          const j = await db
-            .prepare("SELECT * FROM jobs WHERE id = ? AND library_id = ?")
-            .bind(jobId, libraryId)
-            .first<{ id: string; item_id: string; payload: string }>();
-
-          if (!j) throw new Error(`job ${jobId} not found`);
-          await db
-            .prepare("UPDATE jobs SET status = 'running', updated_at = ? WHERE id = ?")
-            .bind(nowIso(), jobId)
-            .run();
-
-          return j;
-        }).pipe(Effect.orDie),
+        Effect.tryPromise(() => loadRunningJob(db, libraryId, jobId)).pipe(Effect.orDie),
       );
 
       const { content_revision_id } = JSON.parse(job.payload) as {
@@ -114,16 +85,14 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
 
       const models = resolveModels(env);
 
-      const runtime = new PiRuntime({
-        streamFn: cfStreamFn(env as never),
-        resolveModel: (id) => resolveCfModel(id, env as never),
-      });
+      const runtime = createPiRuntime(env);
 
       // Per-run budget: wall-clock deadlines must anchor to the run, not to
       // isolate cold start, so the ctx is built inside the body.
       const ctx = {
         libraryId,
-        itemId: job.item_id,
+        // ArchiveService creates enrich jobs with the committed item id.
+        itemId: job.item_id!,
         runId: jobId,
         attemptId: jobId,
         generation: 1,
@@ -182,8 +151,6 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
         if (result.done) break;
       }
 
-      void serialized;
-
       yield* Cloudflare.Workflows.task(
         "finish",
         Effect.tryPromise(async () => {
@@ -196,13 +163,5 @@ export class EnrichWorkflow extends Cloudflare.Workflow<EnrichWorkflow>()(
         }).pipe(Effect.orDie),
       );
     });
-  }).pipe(
-    Effect.provide(
-      Layer.mergeAll(
-        Cloudflare.D1.QueryDatabaseBinding,
-        Cloudflare.R2.ReadWriteBucketBinding,
-        Cloudflare.Workers.AIBinding,
-      ),
-    ),
-  ),
+  }).pipe(Effect.provide(JobsBaseLayer)),
 ) {}

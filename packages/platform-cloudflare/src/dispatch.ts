@@ -1,7 +1,7 @@
 // Workflow dispatch adapter (§9.3). Instance IDs are deterministic so a retried
 // dispatch reads the same instance instead of creating a duplicate.
 
-export interface WorkflowInstanceRef {
+interface WorkflowInstanceRef {
   id: string;
 }
 
@@ -10,17 +10,13 @@ export interface WorkflowBinding {
   get(id: string): Promise<{ status(): Promise<{ status: string }> }>;
 }
 
-export function workflowInstanceId(jobId: string, restartGeneration: number): string {
-  return `job-${jobId}-r${restartGeneration}`;
-}
-
 export async function dispatchJob(
   binding: WorkflowBinding,
   jobId: string,
   restartGeneration: number,
   params: unknown,
 ): Promise<WorkflowInstanceRef> {
-  const id = workflowInstanceId(jobId, restartGeneration);
+  const id = `job-${jobId}-r${restartGeneration}`;
 
   try {
     return await binding.create({ id, params });

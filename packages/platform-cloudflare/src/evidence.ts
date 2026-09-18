@@ -5,7 +5,7 @@ import { sha256Hex } from "@recally/domain";
 // Keys come only from r2Keys; callers (and the model) cannot pick arbitrary
 // buckets or paths.
 
-export interface PutResult {
+interface PutResult {
   key: string;
   sha256: string;
   byteSize: number;

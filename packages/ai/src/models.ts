@@ -1,6 +1,6 @@
 // Model roles per plan §10.1. Config is fixed at job start; upgrading the
 // capture model never regenerates embeddings.
-export interface ModelRoles {
+interface ModelRoles {
   capture: string;
   verify: string;
   summary: string;
@@ -8,7 +8,7 @@ export interface ModelRoles {
   embedding: string;
 }
 
-export const DEFAULT_MODELS: ModelRoles = {
+const DEFAULT_MODELS: ModelRoles = {
   // Compatibility baseline, not a quality claim — M0 evaluates alternatives.
   capture: "@cf/qwen/qwen3-30b-a3b-fp8",
   verify: "@cf/qwen/qwen3-30b-a3b-fp8",

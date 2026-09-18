@@ -9,6 +9,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@recally/ai": "workspace:*",
+    "@recally/contracts": "workspace:*",
+    "@recally/domain": "workspace:*",
     "@tanstack/react-router": "^1.114.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

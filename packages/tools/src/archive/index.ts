@@ -1,8 +1,8 @@
 import type { ToolSpec } from "@recally/agent-runtime";
-import { checkUrlTarget } from "@recally/capture";
 import { archiveAssetInput, archiveProposalInput, finishInput } from "@recally/contracts";
-import { AppError } from "@recally/domain";
+import { AppError, DEFAULT_LIMITS } from "@recally/domain";
 import type { ToolDeps } from "../deps";
+import { safeFetch } from "../web-fetch";
 
 // archive_asset (§6.4): fetch an already-observed asset into evidence storage.
 // Policy re-checks the target — "observed" is not a network bypass.
@@ -15,11 +15,9 @@ export function archiveAssetTool(deps: ToolDeps): ToolSpec {
     schema: archiveAssetInput,
     async execute(ctx, args) {
       const { asset_ref } = archiveAssetInput.parse(args);
-      const url = checkUrlTarget(asset_ref);
-      const { safeFetch } = await import("../web-fetch/index.js");
 
-      const fetched = await safeFetch(url.toString(), deps.fetchFn ?? fetch, {
-        maxBytes: 5 * 1024 * 1024,
+      const fetched = await safeFetch(asset_ref, deps.fetchFn ?? fetch, {
+        maxBytes: DEFAULT_LIMITS.assets.maxAssetBytes,
       });
 
       const source = await deps.runStore.saveSource(ctx, {
@@ -69,7 +67,7 @@ export function proposeArchiveTool(deps: ToolDeps): ToolSpec {
   };
 }
 
-export function finishTool(_deps: ToolDeps): ToolSpec {
+export function finishTool(): ToolSpec {
   return {
     name: "finish",
     label: "Finish run",
@@ -94,5 +92,5 @@ export function finishTool(_deps: ToolDeps): ToolSpec {
 }
 
 export function archiveTools(deps: ToolDeps): ToolSpec[] {
-  return [archiveAssetTool(deps), proposeArchiveTool(deps), finishTool(deps)];
+  return [archiveAssetTool(deps), proposeArchiveTool(deps), finishTool()];
 }

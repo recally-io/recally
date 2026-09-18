@@ -21,7 +21,7 @@ interface PersistedState {
   messages: unknown[]; // Pi AgentMessage[] — serialized verbatim
 }
 
-export interface PiRuntimeOptions {
+interface PiRuntimeOptions {
   streamFn: StreamFn;
   resolveModel: (modelId: string) => Model<Api>;
   runtimeVersion?: string;

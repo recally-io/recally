@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, type SearchHit } from "../api";
+import { api, errorMessage, type SearchHit } from "../api";
 import { DomainChip, Snippet } from "../components/bits";
 
 export function SearchPage() {
@@ -19,7 +19,7 @@ export function SearchPage() {
       setHits(r.results);
       setSearched(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(errorMessage(e));
     }
   }, []);
 

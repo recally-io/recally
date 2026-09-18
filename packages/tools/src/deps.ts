@@ -1,4 +1,5 @@
 import type { SourceRef, ToolContext } from "@recally/capture";
+import type { AdapterFetch } from "@recally/site-adapters";
 
 // Platform-neutral seams. Cloudflare implementations live in
 // packages/platform-cloudflare; the agent core and tools never import
@@ -21,7 +22,6 @@ export interface EvidenceStore {
 export interface StoredSource {
   ref: SourceRef;
   bodyKey: string;
-  blocksKey: string | null;
 }
 
 // Run-scoped persistence for sources/observations/events. The jobs worker
@@ -63,8 +63,6 @@ export interface BrowserSessionHandle {
 export interface BrowserFactory {
   open(url: string): Promise<BrowserSessionHandle>;
 }
-
-export type AdapterFetch = (url: string) => Promise<unknown>;
 
 // Final commit boundary (§5.10, §8.2). The agent can only propose; the
 // committer validates, persists the manifest, and publishes — implemented

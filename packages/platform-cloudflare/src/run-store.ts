@@ -95,7 +95,6 @@ export class D1R2RunStore implements RunStore {
         evidenceRef: row.r2_key,
       },
       bodyKey: row.r2_key,
-      blocksKey: null,
     };
   }
 

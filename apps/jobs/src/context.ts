@@ -1,4 +1,3 @@
-import { PiRuntime } from "@recally/agent-runtime";
 import {
   CAPTURE_VERIFY_SYSTEM,
   resolveModels,
@@ -11,24 +10,15 @@ import { DEFAULT_LIMITS } from "@recally/domain";
 import {
   ArchiveService,
   BrowserSession,
-  cfStreamFn,
   D1R2RunStore,
   R2EvidenceStore,
-  resolveCfModel,
 } from "@recally/platform-cloudflare";
-import { type LoadedSkill, loadSkill } from "@recally/skills";
+import { loadSkill } from "@recally/skills";
 import type { CaptureRunRow } from "@recally/storage";
 import type { ToolDeps } from "@recally/tools";
 import { safeFetch } from "@recally/tools";
 import type { IngestEnv } from "./env";
-
-export interface RunAssembly {
-  ctx: ToolContext;
-  deps: ToolDeps;
-  runtime: PiRuntime;
-  skill: LoadedSkill;
-  run: CaptureRunRow;
-}
+import { createPiRuntime } from "./bindings";
 
 export function budgetFor(run: CaptureRunRow): CaptureBudgets {
   // Run row carries budget JSON when customized; defaults otherwise (§16.1).
@@ -56,11 +46,7 @@ async function adapterFetch(url: string): Promise<unknown> {
   return JSON.parse(new TextDecoder().decode(res.body));
 }
 
-export async function assembleRun(
-  env: IngestEnv,
-  run: CaptureRunRow,
-  attemptId: string,
-): Promise<RunAssembly> {
+export async function assembleRun(env: IngestEnv, run: CaptureRunRow, attemptId: string) {
   const evidence = new R2EvidenceStore(env.ARCHIVE_BUCKET);
   const runStore = new D1R2RunStore(env.DB, evidence);
   const models = resolveModels(env);
@@ -115,20 +101,7 @@ export async function assembleRun(
 
   const skill = await loadSkill("capture");
 
-  const runtime = new PiRuntime({
-    streamFn: cfStreamFn({
-      AI: env.AI as never,
-      AI_GATEWAY_NAME: env.AI_GATEWAY_NAME,
-      CLOUDFLARE_ACCOUNT_ID: env.CLOUDFLARE_ACCOUNT_ID,
-    }),
-    resolveModel: (id) =>
-      resolveCfModel(id, {
-        AI: env.AI as never,
-        AI_GATEWAY_NAME: env.AI_GATEWAY_NAME,
-        CLOUDFLARE_ACCOUNT_ID: env.CLOUDFLARE_ACCOUNT_ID,
-      }),
-    runtimeVersion: run.agent_runtime_version,
-  });
+  const runtime = createPiRuntime(env, run.agent_runtime_version);
 
   return { ctx, deps, runtime, skill, run };
 }

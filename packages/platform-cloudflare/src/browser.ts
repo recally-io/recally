@@ -5,11 +5,11 @@
 // M0-T06 verifies on real cloud: launch/close semantics, idle expiry, billing
 // during model waits.
 
-export interface BrowserSessionEnv {
+interface BrowserSessionEnv {
   BROWSER: Fetcher;
 }
 
-export interface PageObservation {
+interface PageObservation {
   url: string;
   title: string;
   // Text-tree summary for the agent — real a11y tree shape is M0 work.

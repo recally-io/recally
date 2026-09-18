@@ -1,23 +1,22 @@
 import { newId, toErrorResponse } from "@recally/domain";
+import { getLibrary } from "@recally/storage";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { type AuthContext, requireAuth } from "./auth";
+import { requireAuth } from "./auth";
 import type { Env } from "./env";
 import { itemsRoutes } from "./routes/items";
-import {
-  adminRoutes,
-  askRoutes,
-  contentRoutes,
-  jobsRoutes,
-  publicRoutes,
-  searchRoutes,
-  sharesRoutes,
-} from "./routes/misc";
+import { adminRoutes } from "./routes/admin";
+import { askRoutes } from "./routes/ask";
+import { contentRoutes } from "./routes/content";
+import { jobsRoutes } from "./routes/jobs";
+import { publicRoutes } from "./routes/public-share";
+import { searchRoutes } from "./routes/search";
+import { sharesRoutes } from "./routes/shares";
 
 const app = new Hono<{ Bindings: Env }>();
 
 app.use("*", async (c, next) => {
-  c.set("requestId" as never, newId() as never);
+  c.set("requestId", newId());
   await next();
 });
 
@@ -45,11 +44,9 @@ api.route("/", adminRoutes);
 api.get("/health", (c) => c.json({ ok: true }));
 
 api.get("/me", async (c) => {
-  const auth = c.get("auth") as AuthContext;
+  const auth = c.get("auth");
 
-  const lib = await c.env.DB.prepare("SELECT name FROM libraries WHERE id = ?")
-    .bind(auth.libraryId)
-    .first<{ name: string }>();
+  const lib = await getLibrary(c.env.DB, auth.libraryId);
 
   return c.json({
     library_id: auth.libraryId,
@@ -63,7 +60,7 @@ api.get("/me", async (c) => {
 app.route("/api/v1", api);
 
 app.onError((err, c) => {
-  const requestId = newId();
+  const requestId = c.get("requestId");
 
   if (err instanceof HTTPException) {
     const { status, body } = toErrorResponse(

@@ -1,11 +1,12 @@
 import type { Verification } from "@recally/ai";
-import type { ToolContext } from "@recally/capture";
+import type { ContentBlock, ToolContext } from "@recally/capture";
 import type { ArchiveProposal } from "@recally/contracts";
 import { EXTRACTOR_VERSION, newId, nowIso, PIPELINE_VERSION } from "@recally/domain";
 import { renderAdapterRecord } from "@recally/site-adapters";
 import { r2Keys } from "@recally/storage";
 import type { CommitResult, Committer } from "@recally/tools";
 import { parseBlocks } from "@recally/tools";
+import { selectBlockRange, stringifyBlocksJsonl } from "@recally/tools/content-blocks";
 import type { R2EvidenceStore } from "./evidence";
 import type { D1R2RunStore } from "./run-store";
 
@@ -13,7 +14,7 @@ import type { D1R2RunStore } from "./run-store";
 // snapshot. Deterministic checks here; optional independent model verifier via
 // the `verify` hook — it judges content evidence, not the agent's self-report.
 
-export interface CommitterDeps {
+interface CommitterDeps {
   db: D1Database;
   evidence: R2EvidenceStore;
   runStore: D1R2RunStore;
@@ -62,7 +63,7 @@ export class ArchiveService implements Committer {
 
     // Validate sources + block ranges against stored evidence.
     const problems: string[] = [];
-    const selectedBlocks: Array<{ id: string; kind: string; text: string }> = [];
+    const selectedBlocks: ContentBlock[] = [];
     const knownSources = (await runStore.listSources(ctx)).map((s) => s.sourceId);
     let finalUrl = "";
 
@@ -112,20 +113,18 @@ export class ArchiveService implements Committer {
       }
 
       const { blocks } = await parseBlocks(body);
-      const _byId = new Map(blocks.map((b) => [b.id, b]));
 
       for (const range of ranges) {
-        const startIdx = blocks.findIndex((b) => b.id === range.startBlockId);
-        const endIdx = blocks.findIndex((b) => b.id === range.endBlockId);
+        const selected = selectBlockRange(blocks, range.startBlockId, range.endBlockId);
 
-        if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
+        if (!selected) {
           problems.push(
             `invalid block range ${range.startBlockId}..${range.endBlockId} on ${sourceId} (valid: ${blocks[0]?.id}..${blocks[blocks.length - 1]?.id}, ${blocks.length} blocks)`,
           );
           continue;
         }
 
-        selectedBlocks.push(...blocks.slice(startIdx, endIdx + 1));
+        selectedBlocks.push(...selected);
       }
     }
 
@@ -207,7 +206,7 @@ export class ArchiveService implements Committer {
       )
       .join("\n\n");
 
-    const blocksJsonl = selectedBlocks.map((b) => JSON.stringify(b)).join("\n");
+    const blocksJsonl = stringifyBlocksJsonl(selectedBlocks);
     const now = nowIso();
     const snapshotId = newId();
     const revisionId = newId();

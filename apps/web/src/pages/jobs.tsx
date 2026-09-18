@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { api, type Job, type JobDetail } from "../api";
+import { api, errorMessage, type JobListEntry, type JobDetail } from "../api";
 import { Badge, timeAgo } from "../components/bits";
-
-const JOB_ACTIVE = new Set(["queued", "running", "pending"]);
+import { isJobLive, isJobCancellable } from "../components/job-status";
+import { useRefreshWhileActive } from "../components/use-refresh-while-active";
 
 export function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobListEntry[]>([]);
   const [open, setOpen] = useState<JobDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,7 +15,7 @@ export function JobsPage() {
       api
         .listJobs()
         .then((r) => setJobs(r.jobs))
-        .catch((e) => setError(e.message)),
+        .catch((e) => setError(errorMessage(e))),
     [],
   );
 
@@ -23,19 +23,16 @@ export function JobsPage() {
     void refresh();
   }, [refresh]);
 
-  const hasActive = jobs.some((j) => JOB_ACTIVE.has(j.status));
-  useEffect(() => {
-    if (!hasActive) return;
-    const t = setInterval(() => void refresh(), 4000);
-
-    return () => clearInterval(t);
-  }, [hasActive, refresh]);
+  useRefreshWhileActive(
+    jobs.some((j) => isJobLive(j.status)),
+    refresh,
+  );
 
   const inspect = (id: string) =>
     api
       .getJob(id)
       .then(setOpen)
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(errorMessage(e)));
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-6">
@@ -52,7 +49,7 @@ export function JobsPage() {
               <span className="font-mono text-[11px] text-ink-3">{j.id.slice(0, 8)}</span>
               <span className="text-xs font-medium text-ink-2">{j.kind}</span>
               <span className="truncate text-[12.5px] text-ink-2">
-                {j.item_title ?? j.item_id.slice(0, 8)}
+                {j.item_title ?? j.item_id?.slice(0, 8) ?? "—"}
                 {j.error && <span className="text-warn"> — {j.error}</span>}
               </span>
               <Badge label={j.status} />
@@ -73,7 +70,7 @@ export function JobsPage() {
             <span className="text-xs text-ink-3">
               {open.kind} · attempts {open.attempt_count}
             </span>
-            {JOB_ACTIVE.has(open.status) && (
+            {isJobCancellable(open.status) && (
               <button
                 type="button"
                 className="ml-auto rounded-md border border-line px-2.5 py-1 text-xs text-ink-2 hover:border-warn hover:text-warn"
@@ -85,7 +82,7 @@ export function JobsPage() {
             <button
               type="button"
               className="ml-auto text-xs text-ink-3 hover:text-ink"
-              style={JOB_ACTIVE.has(open.status) ? { marginLeft: 8 } : undefined}
+              style={isJobCancellable(open.status) ? { marginLeft: 8 } : undefined}
               onClick={() => setOpen(null)}
             >
               close
